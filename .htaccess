@@ -1,0 +1,47 @@
+# ============================================================
+#  marketing.monthaus.com — Apache rules
+#  Document root of the subdomain.
+#
+#  These rules are ALSO set in the vhost
+#  (deploy/marketing.monthaus.com.conf). That is deliberate: .htaccess only
+#  takes effect while AllowOverride All is set on this directory, and
+#  Debian's apache2.conf defaults /var/www/ to AllowOverride None. If that
+#  line is ever lost, the vhost still protects credentials.
+# ============================================================
+
+Options -Indexes
+
+# ── Directories that are code, not pages ────────────────────
+#    inc/    include-only PHP: db.php and sso_config.php live here
+#    sql/    migrations        tests/  test suite
+#    cron/   CLI-only scripts  vendor/ PHPMailer
+RedirectMatch 404 ^/(inc|sql|tests|cron|vendor|deploy|docs)(/|$)
+
+# ── Sensitive file types anywhere ───────────────────────────
+# NOTE: json and md are deliberately NOT in this list. The app serves its own
+# i18n translations from /assets/json/locales/*.json and the theme ships
+# 16 json files under assets/. Blocking the extension globally breaks the
+# login page's language loader — it shows up as
+#   "client denied by server configuration: .../assets/json/locales/en.json"
+# in the error log. composer.json, composer.lock and the markdown docs live
+# in deploy/, docs/ and vendor/, which the directory rule above already
+# denies, so nothing is lost by leaving these two out.
+<FilesMatch "\.(sql|log|lock|py|tmp|sh|env|bak|old|orig|swp|conf|example)$">
+    Require all denied
+</FilesMatch>
+
+# ── The MLS key debugger: admin-gated in code, but no reason
+#    to leave it reachable. Comment out when you need it. ────
+<FilesMatch "^mls_key_debug\.php$">
+    Require all denied
+</FilesMatch>
+
+# ── Security headers ────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "SAMEORIGIN"
+    # Not same-origin: the sign-in redirect to Microsoft is cross-site and
+    # same-origin would strip the Referer from it entirely.
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Strict-Transport-Security "max-age=31536000" env=HTTPS
+</IfModule>

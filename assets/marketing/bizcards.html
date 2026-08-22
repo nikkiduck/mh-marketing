@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Card Templates — Mont Haus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Public Sans', sans-serif;
+      background: #f4f5f7;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      background: #111;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .page-header img { height: 36px; }
+    .page-header h1 {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -.01em;
+    }
+    .page-header p {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .content { max-width: 1100px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    .section { margin-bottom: 52px; }
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: #6b7280;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 24px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .card-item { /* plain container — no card appearance */ }
+
+    .card-image {
+      width: 100%;
+      display: block;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 1px 4px rgba(0,0,0,.10);
+      transition: box-shadow .15s, transform .15s;
+    }
+    .card-item:hover .card-image {
+      box-shadow: 0 6px 16px rgba(0,0,0,.14);
+      transform: translateY(-2px);
+    }
+
+    .card-label {
+      margin-top: 8px;
+      padding: 0 2px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      letter-spacing: .2px;
+    }
+
+    .card-item { cursor: zoom-in; }
+
+    /* Lightbox */
+    #lb-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.88);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    #lb-overlay.open { display: flex; }
+    #lb-img {
+      max-width: min(90vw, 900px);
+      max-height: 90vh;
+      object-fit: contain;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+    #lb-close {
+      position: fixed; top: 16px; right: 20px;
+      color: #fff; font-size: 32px; line-height: 1;
+      cursor: pointer; opacity: .7;
+      background: none; border: none; padding: 4px 8px;
+    }
+    #lb-close:hover { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <div>
+    <h1>Business Card Templates</h1>
+    <p>Mont Haus International Realty — design options for reference</p>
+  </div>
+</header>
+
+<div class="content">
+
+  <!-- Front options -->
+  <div class="section">
+    <p class="section-title">Front Options — 10 designs</p>
+    <div class="card-grid">
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-01.png" alt="Front Option 1">
+        <div class="card-label">Front Option 1</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-02.png" alt="Front Option 2">
+        <div class="card-label">Front Option 2</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-03.png" alt="Front Option 3">
+        <div class="card-label">Front Option 3</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-04.png" alt="Front Option 4">
+        <div class="card-label">Front Option 4</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-05.png" alt="Front Option 5">
+        <div class="card-label">Front Option 5</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-06.png" alt="Front Option 6">
+        <div class="card-label">Front Option 6</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-07.png" alt="Front Option 7">
+        <div class="card-label">Front Option 7</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-08.png" alt="Front Option 8">
+        <div class="card-label">Front Option 8</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-09.png" alt="Front Option 9">
+        <div class="card-label">Front Option 9</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-10.png" alt="Front Option 10">
+        <div class="card-label">Front Option 10</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-15.png" alt="Front Option 11">
+        <div class="card-label">Front Option 11</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-16.png" alt="Front Option 12">
+        <div class="card-label">Front Option 12</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Back options -->
+  <div class="section">
+    <p class="section-title">Back Options — 5 designs</p>
+    <div class="card-grid">
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-11.png" alt="Back Option 1">
+        <div class="card-label">Back Option 1</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-12.png" alt="Back Option 2">
+        <div class="card-label">Back Option 2</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-13.png" alt="Back Option 3">
+        <div class="card-label">Back Option 3</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-14.png" alt="Back Option 4">
+        <div class="card-label">Back Option 4</div>
+      </div>
+      <div class="card-item">
+        <img class="card-image" src="bizcards/page-17.png" alt="Back Option 5">
+        <div class="card-label">Back Option 5</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+<!-- Lightbox -->
+<div id="lb-overlay" role="dialog" aria-modal="true">
+  <button id="lb-close" aria-label="Close">&times;</button>
+  <img id="lb-img" src="" alt="">
+</div>
+
+<script>
+  const overlay = document.getElementById('lb-overlay');
+  const lbImg   = document.getElementById('lb-img');
+
+  document.querySelectorAll('.card-image').forEach(img => {
+    img.addEventListener('click', () => {
+      lbImg.src = img.src;
+      lbImg.alt = img.alt;
+      overlay.classList.add('open');
+    });
+  });
+
+  function closeLb() { overlay.classList.remove('open'); lbImg.src = ''; }
+  document.getElementById('lb-close').addEventListener('click', closeLb);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closeLb(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLb(); });
+</script>
+</body>
+</html>

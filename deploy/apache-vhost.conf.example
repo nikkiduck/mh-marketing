@@ -1,0 +1,8 @@
+# DEPRECATED — not needed on SiteGround.
+#
+# SiteGround manages Apache for you; you never touch a vhost config.
+# The rules that actually apply to this site are in .htaccess.
+# This file is left here only because the sandbox couldn't delete it.
+# Safe to delete from your computer before uploading.
+#
+# See README.md for the deployment steps.

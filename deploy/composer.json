@@ -1,0 +1,20 @@
+{
+    "name": "monthaus/marketing-app",
+    "description": "Mont Haus marketing tool — marketing.monthaus.com",
+    "type": "project",
+    "require": {
+        "php": ">=8.2",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "_comment": [
+        "vendor/ is committed, so there is no install step on deploy.",
+        "PHPMailer is the only third-party code in the project — it is used by",
+        "mailer.php for the password-reset emails.",
+        "The Entra sign-in in sso.php has NO dependency: JWKS retrieval, the",
+        "JWK-to-PEM conversion and RS256 verification are all implemented there",
+        "on top of ext/openssl and ext/curl."
+    ]
+}

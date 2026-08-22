@@ -1,0 +1,33 @@
+# ── Credentials — never commit these ─────────────────────────────────────────
+# These live ONLY on the server, created from deploy/*.sample.php.
+# Bare names also match at any depth, but the explicit paths document intent.
+db.php
+inc/db.php
+sso_config.php
+inc/sso_config.php
+.env
+
+# Any local copy of the hub's credentials. The hub's db.php was copied in
+# during the original replication and renamed; a bare "db.php" rule does not
+# match a renamed file, and that file carries live SiteGround, Spark and
+# SendGrid secrets. Ignore the whole folder.
+_to_delete/
+*hub-reference*
+
+# ── Uploaded files ───────────────────────────────────────────────────────────
+receipts/
+assets/uploads/
+
+# ── Logs & system files ──────────────────────────────────────────────────────
+*.log
+.DS_Store
+Thumbs.db
+
+# ── Editors ──────────────────────────────────────────────────────────────────
+.nova/
+.idea/
+.vscode/
+*.swp
+
+# NOTE: vendor/ is deliberately NOT ignored. There is no Composer on the
+# server, so PHPMailer has to arrive with the repo. It is ~676K.

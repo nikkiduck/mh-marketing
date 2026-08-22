@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yard Sign Templates — Mont Haus</title>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Public Sans', sans-serif;
+      background: #f4f5f7;
+      color: #1a1a1a;
+      min-height: 100vh;
+    }
+
+    .page-header {
+      background: #111;
+      padding: 20px 32px;
+    }
+    .page-header h1 {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -.01em;
+    }
+    .page-header p {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .content { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+    .option-section { margin-bottom: 48px; }
+    .option-label {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: #6b7280;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e5e7eb;
+      margin-bottom: 20px;
+    }
+
+    .sign-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 560px) {
+      .sign-pair { grid-template-columns: 1fr; }
+    }
+
+    .sign-item { /* plain container — no card appearance */ }
+
+    .sign-image {
+      width: 100%;
+      display: block;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 1px 4px rgba(0,0,0,.10);
+      transition: box-shadow .15s, transform .15s;
+    }
+    .sign-item:hover .sign-image {
+      box-shadow: 0 6px 16px rgba(0,0,0,.14);
+      transform: translateY(-2px);
+    }
+
+    .sign-label {
+      margin-top: 8px;
+      padding: 0 2px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      letter-spacing: .2px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Yard Sign Templates</h1>
+  <p>Mont Haus International Realty — design options for reference</p>
+</header>
+
+<div class="content">
+
+  <div class="option-section">
+    <p class="option-label">Option 1</p>
+    <div class="sign-pair">
+      <div class="sign-item">
+        <img class="sign-image" src="yardsigns/option-1-team.png" alt="Option 1 (Team)">
+        <div class="sign-label">Option 1 (Team)</div>
+      </div>
+      <div class="sign-item">
+        <img class="sign-image" src="yardsigns/option-1-broker.png" alt="Option 1 (Broker)">
+        <div class="sign-label">Option 1 (Broker)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option-section">
+    <p class="option-label">Option 2</p>
+    <div class="sign-pair">
+      <div class="sign-item">
+        <img class="sign-image" src="yardsigns/option-2-team.png" alt="Option 2 (Team)">
+        <div class="sign-label">Option 2 (Team)</div>
+      </div>
+      <div class="sign-item">
+        <img class="sign-image" src="yardsigns/option-2-broker.png" alt="Option 2 (Broker)">
+        <div class="sign-label">Option 2 (Broker)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option-section">
+    <p class="option-label">Option 3</p>
+    <div class="sign-pair">
+      <div class="sign-item">
+        <img class="sign-image" src="yardsigns/option-3-team.png" alt="Option 3 (Team)">
+        <div class="sign-label">Option 3 (Team)</div>
+      </div>
+      <div class="sign-item">
+        <img class="sign-image" src="yardsigns/option-3-broker.png" alt="Option 3 (Broker)">
+        <div class="sign-label">Option 3 (Broker)</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
