@@ -5,8 +5,12 @@
  * After syncing, re-links mh_brokers.roster_id for any newly added agents.
  * CLI-only — blocked from the web via .htaccess.
  *
- * Cron (SiteGround — daily at 3 AM server time):
- *   0 3 * * * /usr/bin/php /var/www/marketing.monthaus.com/cron/sync_roster.php >> /var/log/mh-marketing/sync_roster.log 2>&1
+ * Cron (Lightsail — daily, UTC). Run AFTER sync_mh_brokers.php: this script
+ * re-links mh_brokers.roster_id at the end, so a broker that appeared in the
+ * same night's broker sync only gets linked if the brokers ran first.
+ *
+ * No --dry-run on this one, unlike sync_mh_brokers.php.
+ *   30 3 * * * /usr/bin/php /var/www/marketing.monthaus.com/cron/sync_roster.php >> /var/log/mh-marketing/sync_roster.log 2>&1
  *
  * Aspen: upserts by agent_key (has UNIQUE KEY uq_agent_key).
  * Vail:  no unique index on vail_agent_key, so we match by email first,

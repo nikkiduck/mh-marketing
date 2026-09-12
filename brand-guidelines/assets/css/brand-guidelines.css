@@ -1,0 +1,472 @@
+/* ============================================================
+   Mont Haus Brand Guidelines — public page
+   Self-contained. Loads nothing from the app's theme, so a change
+   to assets/css/style.css cannot alter this page.
+
+   Type and shell conventions match assets/marketing/bizcards.html
+   (Public Sans, #f4f5f7 ground, black header bar) so the public
+   pages read as a set.
+   ============================================================ */
+
+:root {
+  --ink:        #111111;
+  --body:       #1a1a1a;
+  --muted:      #6b7280;
+  --faint:      #9ca3af;
+  --line:       #e5e7eb;
+  --rule:       #d1d5db;
+  --ground:     #f4f5f7;
+  --panel:      #ffffff;
+  --yes:        #15803d;
+  --no:         #b91c1c;
+  --yes-soft:   #f0fdf4;
+  --no-soft:    #fef2f2;
+  --shell:      1100px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; scroll-padding-top: 88px; }
+
+body {
+  font-family: 'Public Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--ground);
+  color: var(--body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; }
+a { color: #1a5276; }
+
+/* ── Header ───────────────────────────────────────────────── */
+
+.bg-header {
+  background: var(--ink);
+  padding: 20px 32px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.bg-header img { height: 52px; }
+.bg-header h1 {
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+}
+.bg-header p { color: var(--faint); font-size: 12px; margin-top: 2px; }
+
+/* ── Section nav ──────────────────────────────────────────── */
+
+.bg-nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: saturate(180%) blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.bg-nav-inner {
+  max-width: var(--shell);
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.bg-nav-inner::-webkit-scrollbar { display: none; }
+.bg-nav a {
+  flex: 0 0 auto;
+  padding: 14px 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  color: var(--muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+.bg-nav a:hover { color: var(--ink); border-bottom-color: var(--rule); }
+
+/* ── Shell ────────────────────────────────────────────────── */
+
+.bg-content { max-width: var(--shell); margin: 0 auto; padding: 40px 24px 96px; }
+
+.bg-lede {
+  font-size: 17px;
+  color: #374151;
+  max-width: 62ch;
+  margin-bottom: 56px;
+}
+
+.bg-section { margin-bottom: 64px; scroll-margin-top: 80px; }
+.bg-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--muted);
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 28px;
+}
+.bg-h {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  margin-bottom: 10px;
+}
+.bg-sub {
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  color: var(--ink);
+  margin: 36px 0 14px;
+}
+.bg-p { max-width: 68ch; margin-bottom: 16px; color: #374151; }
+.bg-p:last-child { margin-bottom: 0; }
+
+/* ── Logo tiles ───────────────────────────────────────────── */
+
+.bg-logo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 20px;
+}
+.bg-tile { display: flex; flex-direction: column; }
+.bg-tile-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 168px;
+  padding: 28px;
+  background: var(--panel);
+  border: 1px solid var(--rule);
+}
+.bg-tile-art.on-dark { background: var(--ink); border-color: var(--ink); }
+.bg-tile-art img { max-height: 92px; width: auto; }
+.bg-tile-name {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.bg-tile-note { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+/* Slot for artwork that has not been exported yet. */
+.bg-tile-art.pending {
+  background: repeating-linear-gradient(45deg, #fafafa 0 10px, #f1f2f4 10px 20px);
+  border-style: dashed;
+  color: var(--faint);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* ── Do and do-not ────────────────────────────────────────── */
+
+.bg-rules {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.bg-rule {
+  border: 1px solid var(--rule);
+  background: var(--panel);
+  padding: 20px;
+}
+.bg-rule.yes { border-left: 3px solid var(--yes); background: var(--yes-soft); }
+.bg-rule.no  { border-left: 3px solid var(--no);  background: var(--no-soft); }
+.bg-rule-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  margin-bottom: 8px;
+}
+.bg-rule.yes .bg-rule-label { color: var(--yes); }
+.bg-rule.no  .bg-rule-label { color: var(--no); }
+.bg-rule p { font-size: 14px; color: #374151; }
+
+.bg-list { list-style: none; max-width: 68ch; }
+.bg-list li {
+  position: relative;
+  padding: 10px 0 10px 22px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  color: #374151;
+}
+.bg-list li:last-child { border-bottom: 0; }
+.bg-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 19px;
+  width: 6px;
+  height: 6px;
+  background: var(--ink);
+}
+.bg-list.never li::before { background: var(--no); }
+
+/* ── Color and type specimens ────────────────────────────── */
+
+.bg-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 16px;
+}
+.bg-swatch-chip { height: 96px; border: 1px solid var(--rule); }
+.bg-swatch-name { margin-top: 8px; font-size: 13px; font-weight: 600; }
+.bg-swatch-hex { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* ── Downloads ────────────────────────────────────────────── */
+
+.bg-downloads { border-top: 1px solid var(--line); }
+.bg-download {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: inherit;
+}
+.bg-download:hover .bg-download-name { text-decoration: underline; }
+.bg-download-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.bg-download-meta { font-size: 12px; color: var(--muted); white-space: nowrap; }
+
+/* ── Footer ───────────────────────────────────────────────── */
+
+.bg-footer {
+  border-top: 1px solid var(--line);
+  padding: 28px 24px 48px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+
+/* ============================================================
+   BRAND CONTENT COMPONENTS
+   Added when the page was filled in. Page chrome above is
+   unchanged: shell, header, nav and footer still match
+   assets/marketing/bizcards.html.
+
+   The two brand faces are loaded from the Typekit kit in
+   index.html and are used ONLY inside specimen and demo blocks,
+   so the page furniture stays Public Sans. Typekit kits are
+   domain-locked; marketing.monthaus.com must be on the kit's
+   allowed-domain list or these fall back to Cormorant Garamond
+   and the system sans.
+   ============================================================ */
+
+:root {
+  --brand-sans:  apparat-semicond, 'Public Sans', 'Helvetica Neue', Arial, sans-serif;
+  --brand-serif: freight-big-pro, 'Cormorant Garamond', 'Times New Roman', Times, serif;
+  --mh-ink:      #231F20;
+  --mh-rich:     #131210;
+  --mh-bronze:   #8A7350;
+  --mh-brass:    #C3A561;
+  --mh-cream:    #EFECE6;
+}
+
+/* ── Callout ──────────────────────────────────────────────── */
+
+.bg-callout {
+  border-left: 3px solid var(--ink);
+  background: var(--panel);
+  padding: 18px 22px;
+  margin: 24px 0;
+  max-width: 74ch;
+}
+.bg-callout.warn { border-left-color: var(--no); background: var(--no-soft); }
+.bg-callout .bg-callout-title {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .8px; margin-bottom: 8px; color: var(--ink);
+}
+.bg-callout.warn .bg-callout-title { color: var(--no); }
+.bg-callout p { font-size: 14px; color: #374151; }
+.bg-callout p + p { margin-top: 10px; }
+
+/* ── Wrong / right comparison, on dark ────────────────────── */
+
+.bg-cmp {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid #34302B;
+  background: #34302B;
+}
+.bg-cmp > div { padding: 26px 20px 20px; text-align: center; background: var(--mh-rich); }
+.bg-cmp .bg-cmp-art { height: 120px; display: flex; align-items: center; justify-content: center; }
+.bg-cmp .bg-cmp-art img { max-height: 100%; width: auto; }
+.bg-cmp .bg-cmp-tag {
+  margin-top: 16px; font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .8px;
+}
+.bg-cmp .wrong .bg-cmp-tag { color: #E4796B; }
+.bg-cmp .right .bg-cmp-tag { color: #9DBA72; }
+.bg-cmp .bg-cmp-why { font-size: 12px; line-height: 1.5; color: #A8A29A; margin-top: 6px; }
+
+/* ── Diagram panel ────────────────────────────────────────── */
+
+.bg-diagram { background: var(--panel); border: 1px solid var(--rule); padding: 24px; }
+.bg-diagram svg { display: block; width: 100%; height: auto; }
+
+/* ── Tables ───────────────────────────────────────────────── */
+
+.bg-tablewrap { overflow-x: auto; border: 1px solid var(--rule); background: var(--panel); }
+.bg-table { border-collapse: collapse; width: 100%; min-width: 620px; font-size: 13px; }
+.bg-table th, .bg-table td {
+  text-align: left; padding: 9px 14px;
+  border-bottom: 1px solid var(--line); vertical-align: top;
+}
+.bg-table thead th {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .7px;
+  color: var(--muted); background: #fafbfc; white-space: nowrap;
+}
+.bg-table tbody tr:last-child td { border-bottom: 0; }
+.bg-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.bg-table td strong { font-weight: 600; color: var(--ink); }
+.bg-tablenote { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+/* ── Swatch detail ────────────────────────────────────────── */
+
+.bg-swatches.detail { grid-template-columns: repeat(auto-fill, minmax(184px, 1fr)); }
+.bg-swatch-values {
+  margin-top: 6px; display: grid; grid-template-columns: auto 1fr; gap: 2px 10px;
+  font-size: 12px; font-variant-numeric: tabular-nums;
+}
+.bg-swatch-values dt { color: var(--faint); font-size: 10px; text-transform: uppercase; letter-spacing: .6px; align-self: center; }
+.bg-swatch-values dd { color: #374151; }
+.bg-swatch-use {
+  font-size: 12px; line-height: 1.45; color: var(--muted);
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line);
+}
+
+/* ── Type specimens ───────────────────────────────────────── */
+
+.bg-specimen {
+  background: var(--panel); border: 1px solid var(--rule); padding: 24px;
+  display: flex; flex-direction: column;
+}
+.bg-specimen .bg-specimen-note { margin-top: auto; padding-top: 14px; }
+.bg-specimen-head {
+  display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: baseline;
+  border-bottom: 1px solid var(--line); padding-bottom: 12px; margin-bottom: 16px;
+}
+.bg-specimen-name { font-size: 13px; font-weight: 700; }
+.bg-specimen-src { font-size: 12px; color: var(--muted); }
+.bg-specimen-glyphs { font-size: 25px; line-height: 1.3; word-spacing: .05em; }
+.bg-specimen-line { margin-top: 12px; }
+.bg-specimen-note { font-size: 12.5px; color: var(--muted); margin-top: 14px; line-height: 1.55; }
+.is-brand-serif { font-family: var(--brand-serif); font-weight: 300; }
+.is-brand-sans  { font-family: var(--brand-sans); }
+
+/* ── Treatment demos ──────────────────────────────────────── */
+
+.bg-treatments { display: grid; gap: 18px; }
+.bg-treatment {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr);
+  gap: 20px; align-items: center;
+  border-bottom: 1px solid var(--line); padding-bottom: 18px;
+}
+.bg-treatment:last-child { border-bottom: 0; padding-bottom: 0; }
+.bg-treatment-demo {
+  background: var(--panel); border: 1px solid var(--rule);
+  padding: 22px; min-height: 96px;
+  display: flex; align-items: center; justify-content: center;
+}
+.bg-treatment-demo.on-dark { background: var(--mh-rich); border-color: var(--mh-rich); }
+.bg-treatment h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+.bg-treatment p { font-size: 13.5px; color: #374151; }
+
+.d-eyebrow { font-family: var(--brand-sans); font-size: 12px; letter-spacing: .25em; text-transform: uppercase; color: var(--mh-bronze); }
+.d-title   { font-family: var(--brand-serif); font-weight: 300; font-size: 34px; line-height: 1; color: var(--mh-ink); }
+.d-sub     { font-family: var(--brand-serif); font-style: italic; font-weight: 300; font-size: 15px; color: var(--muted); margin-top: 4px; }
+.d-stats   { display: flex; gap: 28px; align-items: flex-end; }
+.d-stats > div { text-align: center; }
+.d-stats .v { font-family: var(--brand-serif); font-weight: 600; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--mh-ink); }
+.d-stats .k { font-family: var(--brand-sans); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--mh-bronze); margin-top: 5px; }
+.d-mix     { font-family: var(--brand-sans); font-size: 26px; line-height: 1.08; text-transform: uppercase; letter-spacing: -.01em; font-weight: 400; color: var(--mh-cream); text-align: center; }
+.d-mix strong { font-weight: 700; }
+
+/* ── Figure galleries ─────────────────────────────────────── */
+
+.bg-figs { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+.bg-figs.wide { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.bg-fig figure, .bg-fig { margin: 0; }
+.bg-figs figure { margin: 0; }
+.bg-figs img { display: block; border: 1px solid var(--rule); width: 100%; }
+.bg-figs figcaption { margin-top: 8px; font-size: 12.5px; line-height: 1.5; color: var(--muted); }
+.bg-figs figcaption strong { display: block; font-size: 12px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+
+/* ── Wrong / right tiles with artwork ─────────────────────── */
+
+.bg-dd { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; }
+.bg-dd figure { margin: 0; }
+.bg-dd .bg-dd-frame {
+  height: 140px; display: flex; align-items: center; justify-content: center;
+  padding: 18px; background: var(--panel); border: 1px solid var(--rule); overflow: hidden;
+}
+.bg-dd .bg-dd-frame.on-dark { background: var(--mh-rich); border-color: var(--mh-rich); }
+.bg-dd .bg-dd-frame img { max-height: 72px; width: auto; }
+.bg-dd .bg-dd-tag {
+  display: block; margin-top: 9px;
+  font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px;
+  color: var(--no);
+}
+.bg-dd figcaption { font-size: 12.5px; line-height: 1.5; color: var(--muted); margin-top: 2px; }
+
+/* ── Say / do not say ─────────────────────────────────────── */
+
+.bg-saysay { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+.bg-saysay ul { list-style: none; }
+.bg-saysay li { font-size: 13.5px; padding: 5px 0 5px 18px; position: relative; color: #374151; }
+.bg-saysay li::before { content: ''; position: absolute; left: 0; top: 13px; width: 6px; height: 6px; }
+.bg-saysay .yes li::before { background: var(--yes); }
+.bg-saysay .no  li::before { background: var(--no); }
+
+/* ── Taglines ─────────────────────────────────────────────── */
+
+.bg-taglines { list-style: none; display: grid; gap: 14px; max-width: 68ch; }
+.bg-taglines li { padding-left: 16px; border-left: 2px solid var(--rule); }
+.bg-taglines .line { font-family: var(--brand-serif); font-weight: 300; font-size: 21px; line-height: 1.25; color: var(--ink); }
+.bg-taglines .use { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--mh-bronze); margin-top: 5px; }
+
+/* ── Two-column prose ─────────────────────────────────────── */
+
+.bg-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; align-items: start; }
+.bg-cols.equal { align-items: stretch; gap: 20px; }
+.bg-card { background: var(--panel); border: 1px solid var(--rule); padding: 20px 22px; }
+.bg-card h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin-bottom: 10px; }
+.bg-card p { font-size: 13.5px; color: #374151; }
+.bg-card p + p { margin-top: 8px; }
+.bg-card .mono { font-size: 13px; line-height: 1.7; }
+.bg-quote { font-family: var(--brand-serif); font-weight: 300; font-size: 19px; line-height: 1.5; color: var(--ink); }
+
+/* ── Mobile ───────────────────────────────────────────────── */
+/* Additive only, same rule as the app: nothing above this block
+   changes for desktop. */
+
+@media (max-width: 700px) {
+  .bg-header { padding: 16px 20px; }
+  .bg-header img { height: 38px; }
+  .bg-content { padding: 28px 20px 72px; }
+  .bg-lede { font-size: 15px; margin-bottom: 40px; }
+  .bg-section { margin-bottom: 48px; }
+  .bg-tile-art { min-height: 132px; padding: 20px; }
+  .bg-download { flex-direction: column; gap: 2px; }
+}
+
+@media (max-width: 700px) {
+  .bg-treatment { grid-template-columns: 1fr; }
+  .bg-cmp { grid-template-columns: minmax(0, 1fr); }
+  .bg-specimen-glyphs { font-size: 22px; }
+  .d-title { font-size: 27px; }
+  .d-mix { font-size: 21px; }
+  .bg-dd .bg-dd-frame { height: 118px; }
+}

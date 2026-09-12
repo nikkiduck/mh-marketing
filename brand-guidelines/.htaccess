@@ -1,0 +1,42 @@
+# ============================================================
+#  marketing.monthaus.com/brand-guidelines/ — PUBLIC directory
+#
+#  This folder is intentionally reachable WITHOUT signing in.
+#  Nothing in here may include inc/auth.php, inc/_nav.php,
+#  inc/_footer.php or inc/_onboarding.php: all four assume a
+#  session, and the first one would put the page behind login.
+#
+#  The parent .htaccess and the vhost still apply. Neither one
+#  lists brand-guidelines, so the only rules inherited here are
+#  the global ones: Options -Indexes, the security headers, and
+#  the denied file extensions
+#  (.sql .log .lock .py .sh .tmp .env .bak .old .orig .swp .conf .example).
+#  Downloads must therefore be .pdf .zip .svg .png .jpg .eps .ai — not any
+#  of those.
+# ============================================================
+
+Require all granted
+Options -Indexes
+
+# ── Search engines ──────────────────────────────────────────
+#  noindex while the page is being built. The guidelines are meant
+#  for agents and for outside vendors given the URL, so being
+#  crawlable is a decision, not a default.
+#
+#  TO MAKE IT SEARCHABLE: delete the X-Robots-Tag line below.
+#  Nothing else needs to change; the page is already public.
+<IfModule mod_headers.c>
+    Header always set X-Robots-Tag "noindex, nofollow"
+</IfModule>
+
+# ── Caching for the static bits ─────────────────────────────
+#  Logos and the PDF change rarely and are downloaded often.
+<IfModule mod_expires.c>
+    ExpiresActive On
+    <FilesMatch "\.(svg|png|jpe?g|webp|woff2?|pdf|zip)$">
+        ExpiresDefault "access plus 7 days"
+    </FilesMatch>
+    <FilesMatch "\.(css|js)$">
+        ExpiresDefault "access plus 1 day"
+    </FilesMatch>
+</IfModule>

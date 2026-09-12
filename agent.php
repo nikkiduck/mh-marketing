@@ -6,6 +6,8 @@
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
 require_once __DIR__ . '/inc/_onboarding.php';
+require_once __DIR__ . '/inc/schema.php';
+require_once __DIR__ . '/inc/financials.php';
 require_login();
 require_role('admin');
 
@@ -97,6 +99,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $platform    = trim($_POST['platform']     ?? '');
         $name        = trim($_POST['name']         ?? '') ?: null;
         $budget      = trim($_POST['budget']       ?? '') ?: null;
+        // one_time : whole amount in the start month
+        // monthly  : budget is a PER-MONTH figure, charged in every month of the run
+        // per_unit : unit_rate × matching days in each month
+        $bill_mode   = in_array($_POST['billing_mode'] ?? '', ['monthly','monthly_flat','per_unit'], true)
+                       ? $_POST['billing_mode'] : 'one_time';
+        $unit_rate   = trim($_POST['unit_rate']  ?? '') ?: null;
+        // '' means "no weekday — type the quantity each month", and must stay
+        // NULL rather than becoming 0, which is a real weekday (Sunday).
+        $unit_wd     = ($_POST['unit_weekday'] ?? '') === '' ? null : (int)$_POST['unit_weekday'];
+        $unit_label  = trim($_POST['unit_label'] ?? '') ?: null;
+        if ($bill_mode !== 'per_unit') { $unit_rate = null; $unit_wd = null; $unit_label = null; }
         $start       = trim($_POST['start_date']   ?? '') ?: null;
         $end         = trim($_POST['end_date']     ?? '') ?: null;
         $camp_notes  = trim($_POST['notes']        ?? '') ?: null;
@@ -115,9 +128,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Ad files are never stored on the campaign row — each creative goes into
             // marketing_campaign_assets so a placement can hold any number of ads,
             // each with its own file and its own target URL.
-            $s = $conn->prepare("INSERT INTO marketing_campaigns (intake_id,platform,name,budget,start_date,end_date,notes,target_url,utm_source,utm_medium,utm_campaign,utm_content,paid_by,paid_broker_amount,paid_mh_amount,sent,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'planned')");
-            // i + 14×s + i = 16, matching the 16 placeholders above
-            $s->bind_param('issssssssssssssi', $id, $platform, $name, $budget, $start, $end, $camp_notes, $target_url, $utm_source, $utm_medium, $utm_camp, $utm_content, $paid_by, $paid_broker, $paid_mh, $sent);
+            $s = $conn->prepare("INSERT INTO marketing_campaigns (intake_id,platform,name,budget,billing_mode,unit_rate,unit_weekday,unit_label,start_date,end_date,notes,target_url,utm_source,utm_medium,utm_campaign,utm_content,paid_by,paid_broker_amount,paid_mh_amount,sent,status) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'planned')");
+            // 20 placeholders. i + 18×s + i = 20 characters in the type string.
+            // Count these every time — a miscounted type string has bitten
+            // this project more than once. unit_weekday binds as 's' because
+            // it is nullable; mysqli sends NULL correctly either way.
+            $s->bind_param('issssssssssssssssssi', $id, $platform, $name, $budget, $bill_mode, $unit_rate, $unit_wd, $unit_label, $start, $end, $camp_notes, $target_url, $utm_source, $utm_medium, $utm_camp, $utm_content, $paid_by, $paid_broker, $paid_mh, $sent);
             $s->execute();
             $new_cid = (int)$conn->insert_id;
             $s->close();
@@ -149,7 +165,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'update_campaign') {
         $cid = (int)($_POST['campaign_id'] ?? 0);
-        $fields = ['platform','name','budget','start_date','end_date','notes','target_url',
+        // Switching away from per_unit must clear the unit columns, or a
+        // campaign flipped to monthly keeps a stale rate that reappears if it
+        // is ever flipped back — a wrong figure with no visible cause.
+        if (array_key_exists('billing_mode', $_POST) && $_POST['billing_mode'] !== 'per_unit') {
+            $_POST['unit_rate'] = ''; $_POST['unit_weekday'] = ''; $_POST['unit_label'] = '';
+        }
+        $fields = ['platform','name','budget','billing_mode','unit_rate','unit_weekday','unit_label',
+                   'start_date','end_date','notes','target_url',
                    'utm_source','utm_medium','utm_campaign','utm_content',
                    'paid_by','paid_broker_amount','paid_mh_amount'];
         $sets = []; $vals = []; $types = '';
@@ -166,6 +189,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($s) { $s->bind_param($types, ...$vals); $s->execute(); $s->close(); }
         }
         header("Location: agent.php?id={$id}&tab=advertising&saved=1"); exit;
+    }
+
+    /* --- The month grid: every month of one placement, saved at once --- */
+    //
+    // Posted as months[YYYY-MM][amount] / [units] / [unit_rate] / [paid_by] /
+    // [paid_broker_amount] / [paid_mh_amount] / [note].
+    //
+    // A month left entirely blank has its row DELETED rather than stored as a
+    // set of NULLs. "No row" and "a row full of nothing" must not be two ways
+    // of saying the same thing — the whole feature rests on a month either
+    // having a figure or visibly not having one.
+    if ($action === 'save_campaign_months') {
+        $cid  = (int)($_POST['campaign_id'] ?? 0);
+        $rows = $_POST['months'] ?? [];
+
+        // The campaign must belong to this agent. Without this, a posted
+        // campaign_id would let one agent's page write another's billing.
+        $own = $conn->prepare("SELECT id FROM marketing_campaigns WHERE id=? AND intake_id=? LIMIT 1");
+        $ok  = false;
+        if ($own) { $own->bind_param('ii', $cid, $id); $own->execute(); $ok = (bool)$own->get_result()->fetch_assoc(); $own->close(); }
+
+        if ($ok && is_array($rows)) {
+            $ins = $conn->prepare(
+                "INSERT INTO marketing_campaign_months
+                    (campaign_id, ym, amount, units, unit_rate,
+                     paid_by, paid_broker_amount, paid_mh_amount, note)
+                 VALUES (?,?,?,?,?,?,?,?,?)
+                 ON DUPLICATE KEY UPDATE
+                    amount=VALUES(amount), units=VALUES(units), unit_rate=VALUES(unit_rate),
+                    paid_by=VALUES(paid_by),
+                    paid_broker_amount=VALUES(paid_broker_amount),
+                    paid_mh_amount=VALUES(paid_mh_amount), note=VALUES(note)"
+            );
+            $del = $conn->prepare("DELETE FROM marketing_campaign_months WHERE campaign_id=? AND ym=?");
+
+            foreach ($rows as $ym => $f) {
+                // YYYY-MM or the row is ignored. A malformed month would create
+                // a row that resolves against nothing and is invisible in the
+                // grid that wrote it.
+                if (!is_array($f) || !preg_match('/^\d{4}-(0[1-9]|1[0-2])$/', (string)$ym)) continue;
+
+                $v = function (string $k) use ($f) {
+                    $x = trim((string)($f[$k] ?? ''));
+                    return $x === '' ? null : $x;
+                };
+                $amount = $v('amount');
+                $units  = $v('units');
+                $urate  = $v('unit_rate');
+                $note   = $v('note');
+                $mpaid  = in_array($f['paid_by'] ?? '', ['broker','mont_haus','split'], true)
+                          ? $f['paid_by'] : null;
+                $mpb    = $mpaid === 'split' ? $v('paid_broker_amount') : null;
+                $mpm    = $mpaid === 'split' ? $v('paid_mh_amount')     : null;
+
+                if ($amount === null && $units === null && $urate === null
+                    && $mpaid === null && $note === null) {
+                    if ($del) { $ymv = (string)$ym; $del->bind_param('is', $cid, $ymv); $del->execute(); }
+                    continue;
+                }
+                // 9 placeholders: i + 8×s = 9 characters in the type string.
+                if ($ins) {
+                    $ymv = (string)$ym;
+                    $ins->bind_param('issssssss', $cid, $ymv, $amount, $units, $urate,
+                                     $mpaid, $mpb, $mpm, $note);
+                    $ins->execute();
+                }
+            }
+            if ($ins) $ins->close();
+            if ($del) $del->close();
+        }
+        header("Location: agent.php?id={$id}&tab=advertising&saved=1#camp-{$cid}"); exit;
     }
 
     /* --- Campaign ad files (multiple per campaign) --- */
@@ -233,6 +327,104 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cid  = (int)($_POST['campaign_id'] ?? 0);
         $sent = (int)($_POST['sent'] ?? 0);
         $conn->query("UPDATE marketing_campaigns SET sent={$sent} WHERE id={$cid} AND intake_id={$id}");
+        header("Location: agent.php?id={$id}&tab=advertising"); exit;
+    }
+
+    /* --- Duplicate a placement -------------------------------------------
+     *
+     * Re-running the same buy in a new month is the common case: same
+     * publication, same creatives, same landing page — a different flight and
+     * usually a different spend. So the copy carries everything that describes
+     * the ad and drops everything that describes THIS run: the dates come over
+     * blank, the status resets to planned, and Sent clears. A copy that
+     * inherited August's dates and a "sent" flag would look like a real, live
+     * placement the moment it appeared, and a forgotten one would quietly
+     * bill twice.
+     *
+     * Month rows (marketing_campaign_months) are deliberately NOT copied —
+     * they belong to the flight, and the new flight has no dates yet.
+     */
+    if ($action === 'duplicate_campaign') {
+        $cid = (int)($_POST['campaign_id'] ?? 0);
+
+        // The placement must belong to this agent, same as everywhere else a
+        // campaign_id arrives from the browser.
+        $src = null;
+        $q = $conn->prepare("SELECT * FROM marketing_campaigns WHERE id=? AND intake_id=? LIMIT 1");
+        if ($q) { $q->bind_param('ii', $cid, $id); $q->execute(); $src = $q->get_result()->fetch_assoc(); $q->close(); }
+
+        $new_cid = 0;
+        if ($src) {
+            // " (Copy)" so the pair is tellable apart at a glance if the edit
+            // form is abandoned. varchar(255), so trim before appending.
+            $name = trim((string)($src['name'] ?? ''));
+            if ($name !== '') {
+                $suffix = ' (Copy)';
+                if (mb_strlen($name . $suffix) > 255) {
+                    $name = mb_substr($name, 0, 255 - mb_strlen($suffix));
+                }
+                $name .= $suffix;
+            } else {
+                $name = null;
+            }
+
+            $v = function (string $k) use ($src) {
+                $x = $src[$k] ?? null;
+                return ($x === null || $x === '') ? null : (string)$x;
+            };
+
+            $s = $conn->prepare(
+                "INSERT INTO marketing_campaigns
+                    (intake_id,platform,name,budget,billing_mode,unit_rate,unit_weekday,unit_label,
+                     start_date,end_date,notes,target_url,utm_source,utm_medium,utm_campaign,utm_content,
+                     paid_by,paid_broker_amount,paid_mh_amount,sent,status)
+                 VALUES (?,?,?,?,?,?,?,?,NULL,NULL,?,?,?,?,?,?,?,?,?,0,'planned')"
+            );
+            // 17 placeholders: i + 16×s = 17 characters in the type string.
+            // Count them against the column list every time this is touched.
+            if ($s) {
+                $platform = (string)$src['platform'];
+                $budget   = $v('budget');
+                $bmode    = $v('billing_mode') ?: 'one_time';
+                $urate    = $v('unit_rate');
+                $uwd      = $v('unit_weekday');
+                $ulabel   = $v('unit_label');
+                $cnotes   = $v('notes');
+                $turl     = $v('target_url');
+                $usrc     = $v('utm_source');
+                $umed     = $v('utm_medium');
+                $ucamp    = $v('utm_campaign');
+                $ucont    = $v('utm_content');
+                $pby      = $v('paid_by');
+                $pbrk     = $v('paid_broker_amount');
+                $pmh      = $v('paid_mh_amount');
+                $s->bind_param('issssssssssssssss', $id, $platform, $name, $budget, $bmode,
+                               $urate, $uwd, $ulabel, $cnotes, $turl,
+                               $usrc, $umed, $ucamp, $ucont, $pby, $pbrk, $pmh);
+                $s->execute();
+                $new_cid = (int)$conn->insert_id;
+                $s->close();
+            }
+
+            // Every creative comes along with its own file and target URL —
+            // that is most of the value of duplicating at all.
+            if ($new_cid) {
+                $a = $conn->prepare(
+                    "INSERT INTO marketing_campaign_assets (campaign_id,label,file_url,target_url,file_type)
+                     SELECT ?, label, file_url, target_url, file_type
+                       FROM marketing_campaign_assets
+                      WHERE campaign_id = ?
+                      ORDER BY id"
+                );
+                if ($a) { $a->bind_param('ii', $new_cid, $cid); $a->execute(); $a->close(); }
+            }
+        }
+
+        if ($new_cid) {
+            // Land on the copy with its edit form already open — the dates and
+            // the spend are the whole reason for the duplicate.
+            header("Location: agent.php?id={$id}&tab=advertising&edit_camp={$new_cid}#camp-{$new_cid}"); exit;
+        }
         header("Location: agent.php?id={$id}&tab=advertising"); exit;
     }
 
@@ -415,7 +607,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     /* --- Inline field updates (contact, social, bio, collateral) --- */
     if ($action === 'update_intake_fields') {
         $allowed = [
-            'agent_name','agent_title','cell_phone','mh_email','alt_email','email_forwarded',
+            'agent_name','initials','agent_title','cell_phone','mh_email','alt_email','email_forwarded',
             'website_url','start_date','headshot_url',
             'social_instagram','social_facebook','social_linkedin','social_tiktok','social_other',
             'bio_url','bio_text','bio_short',
@@ -436,6 +628,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'coll_brochures','coll_br_listing','coll_br_chk_design','coll_br_chk_proof','coll_br_chk_created',
             'coll_other',
         ];
+        // initials arrived with alter_intake_initials_v1.sql. Drop it if that
+        // has not been run rather than letting one unknown column silently
+        // discard the whole form.
+        if (in_array('initials', $allowed, true) && array_key_exists('initials', $_POST)
+            && !mk_column_exists($conn, 'marketing_intakes', 'initials')) {
+            $allowed = array_values(array_diff($allowed, ['initials']));
+        }
+
         $sets = []; $vals = []; $types = '';
         // Platform URL prefixes to strip so handles are stored bare (no @ or domain)
         $social_url_prefixes = [
@@ -518,177 +718,20 @@ uasort($overview_tasks, function ($a, $b) {
 });
 
 // ── Financial summary ─────────────────────────────────────────────────────────
-// Every billable line for this agent, bucketed by the month the spend was
-// incurred: Order Date for collateral, Run Start for a placement. Both fall
-// back to created_at so nothing can drop out of the report entirely.
+// The arithmetic lives in inc/financials.php, because billing.php runs the same
+// calculation across every agent. One implementation: a second copy here would
+// drift, and the first sign of it would be an invoice that disagrees with the
+// screen.
 //
-// Who pays drives the split:
-//   broker     → the whole amount is billed to the broker
-//   mont_haus  → Mont Haus covers the whole amount
-//   split      → the two stored amounts are used as entered
-//   not set    → counted as unassigned; shown, but in neither total, so an
-//                undecided line is visible rather than silently skewing things
-$fin_months = [];   // 'YYYY-MM' => ['label','items'=>[], 'broker','mh','unassigned']
+// $coll_rows and $camp_overrides come back too — the Collateral tab and the
+// month grid both need them, and querying twice would be wasteful and could
+// read a different row mid-request.
+$fin            = mh_agent_financials($conn, $id);
+$fin_months     = $fin['months'];
+$fin_grand      = $fin['grand'];
+$coll_rows      = $fin['coll_rows'];
+$camp_overrides = $fin['camp_overrides'];
 
-function mk_fin_add(array &$months, string $date, array $item): void {
-    $key = substr($date, 0, 7);                       // YYYY-MM
-    if (!isset($months[$key])) {
-        $months[$key] = [
-            'key'        => $key,
-            'label'      => date('F Y', strtotime($key . '-01')),
-            'items'      => [],
-            'broker'     => 0.0,
-            'mh'         => 0.0,
-            'unassigned' => 0.0,
-        ];
-    }
-    $months[$key]['items'][]      = $item;
-    $months[$key]['broker']      += $item['broker'];
-    $months[$key]['mh']          += $item['mh'];
-    $months[$key]['unassigned']  += $item['unassigned'];
-}
-
-/**
- * Display name for a collateral type. Explicit map rather than ucwords() —
- * that would render 'oh_signs' as "Oh Signs". Matches the section headings
- * used on the Collateral tab.
- */
-function mk_coll_type_label(string $type): string {
-    $map = [
-        'business_cards' => 'Business Cards',
-        'yard_signs'     => 'Yard Signs',
-        'oh_signs'       => 'Open House Signs',
-        'postcards'      => 'Postcards',
-        'brochures'      => 'Brochures',
-        'other'          => 'Other',
-    ];
-    return $map[$type] ?? ucwords(str_replace('_', ' ', $type));
-}
-
-/** Split one line's total into broker / MH / unassigned per its paid_by. */
-function mk_fin_split(?string $paid_by, float $total, $broker_amt, $mh_amt): array {
-    switch ($paid_by) {
-        case 'broker':    return ['broker' => $total, 'mh' => 0.0,    'unassigned' => 0.0];
-        case 'mont_haus': return ['broker' => 0.0,    'mh' => $total, 'unassigned' => 0.0];
-        case 'split':     return [
-            'broker'     => (float)($broker_amt ?? 0),
-            'mh'         => (float)($mh_amt ?? 0),
-            'unassigned' => 0.0,
-        ];
-        default:          return ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => $total];
-    }
-}
-
-// Collateral orders.
-// An order can be marked as billed with another (one invoice covering several
-// items). The order holding the cost reports it; the linked ones contribute
-// nothing, so a combined purchase is counted once.
-$coll_rows = [];
-$r = $conn->query("
-    SELECT id, type, label, vendor, cost, ordered_at, created_at, billed_with_order_id,
-           receipt_file, receipt_orig_name,
-           paid_by, paid_broker_amount, paid_mh_amount
-      FROM marketing_collateral_orders
-     WHERE intake_id = {$id}
-");
-if ($r) while ($row = $r->fetch_assoc()) $coll_rows[(int)$row['id']] = $row;
-
-foreach ($coll_rows as $row) {
-        $linked_to = (int)($row['billed_with_order_id'] ?? 0);
-        // A link pointing at a deleted order would silently zero the cost —
-        // treat it as unlinked and flag it in the row instead.
-        $orphaned  = $linked_to && !isset($coll_rows[$linked_to]);
-        $is_linked = $linked_to && !$orphaned;
-
-        $total = (float)($row['cost'] ?? 0);
-        if ($total <= 0 && ($row['paid_by'] ?? '') === '' && !$is_linked) continue;
-        $when  = $row['ordered_at'] ?: ($row['created_at'] ?: date('Y-m-d'));
-
-        if ($is_linked) {
-            // Shown for context, contributes nothing to any total
-            $parent = $coll_rows[$linked_to];
-            $plabel = mk_coll_type_label((string)$parent['type'])
-                    . (trim((string)$parent['label']) !== '' ? ': ' . trim((string)$parent['label']) : '');
-            $type_label  = mk_coll_type_label((string)$row['type']);
-            $order_label = trim((string)$row['label']);
-            mk_fin_add($fin_months, $when, [
-                'kind'        => 'Collateral',
-                'name'        => $order_label !== '' ? "{$type_label}: {$order_label}" : $type_label,
-                'platform'    => trim((string)($row['vendor'] ?? '')),
-                'total'       => 0.0,
-                'broker'      => 0.0,
-                'mh'          => 0.0,
-                'unassigned'  => 0.0,
-                'paid_by'     => $row['paid_by'] ?? null,
-                'date'        => $when,
-                'ref_id'      => (int)$row['id'],
-                'billed_with' => $plabel,
-                'receipt'     => !empty($row['receipt_file']) ? (int)$row['id'] : 0,
-            ]);
-            continue;
-        }
-
-        $parts = mk_fin_split($row['paid_by'] ?? null, $total,
-                              $row['paid_broker_amount'], $row['paid_mh_amount']);
-        // "Business Cards: Initial Order" — the label alone is rarely distinct
-        $type_label = mk_coll_type_label((string)$row['type']);
-        $order_label = trim((string)$row['label']);
-        mk_fin_add($fin_months, $when, array_merge($parts, [
-            'kind'     => 'Collateral',
-            'name'     => $order_label !== '' ? "{$type_label}: {$order_label}" : $type_label,
-            'platform' => trim((string)($row['vendor'] ?? '')),
-            'total'    => $total,
-            'paid_by'  => $row['paid_by'] ?? null,
-            'date'     => $when,
-            'ref_id'   => (int)$row['id'],
-            // Link pointed at an order that no longer exists — say so rather
-            // than quietly counting the cost as if it were never linked
-            'orphaned' => $orphaned,
-            'receipt'  => !empty($row['receipt_file']) ? (int)$row['id'] : 0,
-        ]));
-}
-
-// Advertising placements
-$r = $conn->query("
-    SELECT id, platform, name, budget, start_date, created_at,
-           paid_by, paid_broker_amount, paid_mh_amount
-      FROM marketing_campaigns
-     WHERE intake_id = {$id}
-");
-if ($r) {
-    while ($row = $r->fetch_assoc()) {
-        $total = (float)($row['budget'] ?? 0);
-        if ($total <= 0 && ($row['paid_by'] ?? '') === '') continue;
-        $when  = $row['start_date'] ?: ($row['created_at'] ?: date('Y-m-d'));
-        $parts = mk_fin_split($row['paid_by'] ?? null, $total,
-                              $row['paid_broker_amount'], $row['paid_mh_amount']);
-        // $platform_labels isn't defined until the UI helpers further down, so
-        // keep the raw value and resolve it at render time.
-        mk_fin_add($fin_months, $when, array_merge($parts, [
-            'kind'     => 'Advertising',
-            'name'     => trim((string)($row['name'] ?? '')),
-            'platform' => (string)$row['platform'],
-            'total'    => $total,
-            'paid_by'  => $row['paid_by'] ?? null,
-            'date'     => $when,
-            'ref_id'   => (int)$row['id'],
-        ]));
-    }
-}
-
-krsort($fin_months);                                  // newest month first
-foreach ($fin_months as &$_m) {                       // newest line first within a month
-    usort($_m['items'], fn($a, $b) => strcmp($b['date'], $a['date']));
-}
-unset($_m);
-
-// Running totals across every month shown
-$fin_grand = ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0];
-foreach ($fin_months as $_m) {
-    $fin_grand['broker']     += $_m['broker'];
-    $fin_grand['mh']         += $_m['mh'];
-    $fin_grand['unassigned'] += $_m['unassigned'];
-}
 
 // ── MLS IDs ───────────────────────────────────────────────────────────────────
 $mls_ids = [];
@@ -765,6 +808,12 @@ if ($r) {
         $campaigns[] = $row;
     }
 }
+// Financials renders per-month editors against the campaign row, and it only
+// carries the campaign id on each line. Index once here rather than searching
+// $campaigns for every line.
+$camp_by_id = [];
+foreach ($campaigns as $_c) { $camp_by_id[(int)$_c['id']] = $_c; }
+unset($_c);
 
 // ── Notes ─────────────────────────────────────────────────────────────────────
 $notes = [];
@@ -949,7 +998,25 @@ function money(float $n): string { return '$' . number_format($n, 0); }
 // Financials needs exact figures — money() rounds to whole dollars, which is
 // right for listing prices but wrong when reconciling an invoice.
 function money2(float $n): string { return '$' . number_format($n, 2); }
-function initials(string $name): string {
+/**
+ * A DECIMAL as it should appear in a form field: '400.00' -> '400', '3.50'
+ * -> '3.5'. MySQL always hands back the scale, and putting '3.00' in a number
+ * input makes a plain count look like a calculation.
+ */
+function mk_num($n): string {
+    if ($n === null || $n === '') return '';
+    $s = rtrim(rtrim(number_format((float)$n, 2, '.', ''), '0'), '.');
+    return $s === '' ? '0' : $s;
+}
+/**
+ * Avatar initials. Kept identical to index.php's copy — the roster card and the
+ * profile show the same avatar for the same person, so if these two ever
+ * disagree it is visible immediately and looks like a data bug.
+ */
+function initials(string $name, ?string $override = null): string {
+    $o = strtoupper(trim((string)$override));
+    if ($o !== '') return substr($o, 0, 3);
+
     $p = preg_split('/\s+/', trim($name));
     $i = strtoupper($p[0][0] ?? '');
     if (count($p) > 1) $i .= strtoupper($p[count($p)-1][0] ?? '');
@@ -1090,6 +1157,55 @@ $listings_json = json_encode(array_map(fn($l) => [
                       padding:1px 6px; font-size:10px; font-weight:700; }
     .tab-panel { display:none; }
     .tab-panel.active { display:block; }
+
+    /* ── Tabs, on mobile ───────────────────────────────────────────────────
+       Seven tabs with icons and badges need roughly 900px. On a phone the
+       strip ran off the right edge with Collateral, Advertising and Notes
+       simply unreachable — there was no scroll affordance and no hint they
+       existed.
+
+       So below 860px the strip is replaced by a button that names the tab you
+       are on and drops the full list beneath it. The list is BUILT FROM THE
+       BUTTONS at runtime, not written out a second time in PHP, so the icons,
+       the badge counts and any tab added later come along on their own. */
+    .tab-bar-mobile { display:none; }
+
+    @media (max-width: 860px) {
+      .tab-bar { display:none; }
+      .tab-bar-mobile { display:block; position:relative; margin-bottom:18px; }
+
+      .tab-menu-btn {
+        width:100%; display:flex; align-items:center; gap:10px;
+        padding:12px 14px; font-family:inherit; font-size:14px; font-weight:700;
+        color:#111; background:#fff; border:1px solid #e5e7eb; border-radius:8px;
+        cursor:pointer; text-align:left; box-shadow:0 1px 2px rgba(0,0,0,.05);
+      }
+      .tab-menu-btn .tab-menu-caret { margin-left:auto; color:#9ca3af; font-size:16px; transition:transform .18s; }
+      .tab-menu-btn[aria-expanded="true"] { border-color:#111; border-radius:8px 8px 0 0; }
+      .tab-menu-btn[aria-expanded="true"] .tab-menu-caret { transform:rotate(180deg); }
+
+      .tab-menu-panel {
+        display:none; position:absolute; top:100%; left:0; right:0; z-index:40;
+        background:#fff; border:1px solid #111; border-top:none;
+        border-radius:0 0 8px 8px; overflow:hidden;
+        box-shadow:0 12px 26px rgba(0,0,0,.16);
+      }
+      .tab-menu-panel.open { display:block; }
+
+      .tab-menu-item {
+        width:100%; display:flex; align-items:center; gap:10px;
+        padding:12px 14px; font-family:inherit; font-size:14px; font-weight:600;
+        color:#374151; background:none; border:none; border-top:1px solid #f3f4f6;
+        cursor:pointer; text-align:left;
+      }
+      .tab-menu-item:first-child { border-top:none; }
+      .tab-menu-item.active { color:#111; font-weight:700; background:#f9fafb; box-shadow:inset 3px 0 0 #111; }
+      .tab-menu-item .ti { font-size:16px; color:#9ca3af; flex:none; }
+      .tab-menu-item.active .ti { color:#111; }
+      /* The badge markup is cloned from the tab button, so it keeps whatever
+         inline colour that tab gave it. */
+      .tab-menu-item .badge { margin-left:auto; }
+    }
 
     /* ── Cards ── */
     .card { background:#fff; border-radius:6px; padding:22px 26px;
@@ -1251,6 +1367,9 @@ $listings_json = json_encode(array_map(fn($l) => [
                         padding:2px 8px; border-radius:10px; color:#fff; }
     .campaign-details { display:flex; gap:20px; font-size:12px; color:#6b7280; flex-wrap:wrap; margin-bottom:8px; }
     .campaign-details strong { color:#111; }
+    /* The Advertising tab's title row. Was inline on the element; moved here so
+       the mobile block can restack it (an inline style outranks a media query). */
+    .adv-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
     .camp-actions { display:flex; gap:6px; align-items:center; }
     .camp-actions select { padding:4px 8px; font-size:12px; border:1px solid #d1d5db; border-radius:3px; font-family:inherit; }
     .no-campaigns { text-align:center; padding:32px; color:#9ca3af; font-size:13px; }
@@ -1268,6 +1387,7 @@ $listings_json = json_encode(array_map(fn($l) => [
     .listings-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
     @media(max-width:800px) { .listings-grid { grid-template-columns:repeat(2,1fr); } }
     @media(max-width:500px) { .listings-grid { grid-template-columns:1fr; } }
+
     .listing-card { background:#fff; border-radius:6px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.08); }
     .listing-photo { width:100%; height:140px; object-fit:cover; display:block; background:#f3f4f6; }
     .listing-body { padding:12px 14px; }
@@ -1284,6 +1404,18 @@ $listings_json = json_encode(array_map(fn($l) => [
     /* ── Headshot path dividers ── */
     .ob-path-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.5px;
                      color:#9ca3af; padding:8px 0 2px; display:block; }
+
+    /* ── Split-invoice prompt, top of the Collateral tab ──────────────────
+       flex-wrap rather than a media query: the row is two children, and letting
+       it wrap is the whole mobile behaviour. A rule placed here would lose to
+       the @media block at the end of this stylesheet anyway, so anything that
+       needed overriding would have to go down there instead. */
+    .coll-split-cta { display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+                      justify-content:space-between;
+                      background:#f0f9ff; border:1px solid #bae6fd; border-radius:8px;
+                      padding:11px 14px; margin-bottom:16px; }
+    .coll-split-cta strong { display:block; font-size:13px; color:#075985; }
+    .coll-split-cta span   { display:block; font-size:12px; color:#0369a1; max-width:64ch; }
 
     /* ── Collateral order cards ── */
     .coll-orders { margin-top:10px; padding-top:10px; border-top:1px dashed #e5e7eb; }
@@ -1416,7 +1548,49 @@ $listings_json = json_encode(array_map(fn($l) => [
     .fin-kind.adv  { background:#e0f2fe; color:#075985; }
     .fin-flag { font-size:11px; color:#b45309; font-style:italic; }
     .fin-billed { color:#0184BB; }
+    /* A Financials line produced by a recurring monthly campaign. */
+    .fin-recurring { color:#1d8348; }
+    /* Chip on the campaign card: how it bills and over how many months. */
+    .camp-monthly-chip {
+      display:inline-flex; align-items:center; gap:4px;
+      background:#d5f5e3; color:#1d8348;
+      padding:2px 8px; border-radius:10px; font-size:12px; font-weight:600;
+    }
     .fin-orphan { color:#b45309; }
+    /* A per-day line: rate × days, and where the day count came from. */
+    .fin-units { color:#6b7280; }
+    .fin-units b { font-weight:600; color:#374151; }
+    /* A month with no figure entered. Amber, not red — nothing is broken, a
+       decision has not been made yet. But it must never look like $0. */
+    .fin-needs-qty { color:#b45309; font-weight:600; }
+
+    /* ── The month grid on a recurring placement ─────────────────────────── */
+    .mo-head { margin-top:10px; padding-top:8px; border-top:1px solid #f3f4f6;
+               display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .mo-open-chip { display:inline-flex; align-items:center; gap:4px;
+                    background:#fef3c7; color:#92400e;
+                    padding:1px 8px; border-radius:10px; font-size:11px; font-weight:700; }
+    .mo-table { width:100%; border-collapse:collapse; font-size:12px; margin-top:6px; }
+    .mo-table th { text-align:left; font-size:10px; text-transform:uppercase;
+                   letter-spacing:.4px; color:#9ca3af; padding:4px 8px 4px 0; font-weight:700; }
+    .mo-table td { padding:4px 8px 4px 0; border-top:1px solid #f3f4f6; vertical-align:middle; }
+    .mo-table td.num { text-align:right; padding-right:0; white-space:nowrap; }
+    .mo-m { white-space:nowrap; font-weight:600; color:#374151; }
+    /* Row for a month awaiting a figure — tinted so a column of them reads as
+       a to-do list at a glance rather than needing to be read line by line. */
+    .mo-table tr.mo-unset td { background:#fffbeb; }
+    .mo-none { color:#9ca3af; font-style:italic; }
+    .mo-in       { font-size:12px; padding:4px 6px; width:100px; }
+    .mo-in-w     { width:130px; }
+    .mo-in-note  { width:100%; min-width:140px; }
+    .mo-flag { display:inline-block; font-size:10px; font-weight:700; border-radius:8px;
+               padding:1px 6px; }
+    .mo-flag.unset { background:#fef3c7; color:#92400e; }
+    .mo-flag.zero  { background:#f3f4f6; color:#6b7280; }
+    .mo-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+    .mo-hint { font-size:11px; color:#6b7280; max-width:60ch; }
+    .unit-hint { font-size:11px; color:#6b7280; background:#f9fafb; border-left:2px solid #d1d5db;
+                 padding:6px 10px; margin:0 0 10px; max-width:70ch; }
     .fin-invoice { color:#0184BB; text-decoration:none; margin-right:10px; font-size:11px; }
     .fin-invoice:hover { text-decoration:underline; }
     .fin-table tfoot td { border-top:2px solid #e5e7eb; padding-top:10px; font-size:13px; }
@@ -1452,14 +1626,15 @@ $listings_json = json_encode(array_map(fn($l) => [
     /* Each ad/creative inside a placement */
     .ad-item { padding:6px 0; border-bottom:1px solid #f1f2f4; }
     .ad-item:last-of-type { border-bottom:none; }
-    .ad-target { display:flex; align-items:center; gap:8px; font-size:11px;
-                 padding:0 0 4px 18px; }
-    .ad-target-label { flex-shrink:0; color:#9ca3af; font-weight:600;
-                       display:inline-flex; align-items:center; gap:3px; }
-    .ad-target-note { flex:1; min-width:0; color:#6b7280;
-                      font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
-                      overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-    .ad-target-note.muted { color:#c9cdd3; font-style:italic; font-family:inherit; }
+    /* Divider before a creative's own landing-page buttons, on the same row.
+       The URL itself is never printed — Open and Copy are the whole interface. */
+    .ad-target-sep { flex-shrink:0; color:#9ca3af; font-size:10px; font-weight:700;
+                     text-transform:uppercase; letter-spacing:.4px;
+                     padding-left:10px; margin-left:2px; border-left:1px solid #e5e7eb; }
+    /* A checkbox that belongs on the same line as the buttons beside it. */
+    .chk-inline { display:inline-flex; align-items:center; gap:6px; font-size:13px;
+                  color:#374151; cursor:pointer; margin-left:4px; white-space:nowrap; }
+    .chk-inline input { margin:0; }
 
     /* Repeatable ad rows in the Add Placement form */
     .ads-builder { background:#fff; border:1px solid #e5e7eb; border-radius:6px;
@@ -1520,6 +1695,100 @@ $listings_json = json_encode(array_map(fn($l) => [
                   text-transform:uppercase; letter-spacing:.4px; padding:2px 8px; border-radius:10px; }
     .sent-badge.yes { background:#d1fae5; color:#065f46; }
     .sent-badge.no  { background:#f3f4f6; color:#9ca3af; }
+    /* ══ Mobile: Collateral and Advertising cards ═══════════════════════════
+       Everything in this block is inside a max-width query, so the desktop
+       layout of both tabs is exactly what it was.
+
+       The common problem on a phone was the same in both places: rows built as
+       `display:flex` with several children and no wrap rules. Each row broke
+       wherever it ran out of room, so a card's badges, links and buttons all
+       started at a different left edge and the card read as a pile rather than
+       as a list. The fixes are: give the wrapping rows an explicit direction,
+       pin the status chip to a place of its own, and shrink the buttons to
+       something proportionate to a 390px screen instead of a 1400px one. */
+    @media (max-width: 700px) {
+      .card { padding:16px 14px; }
+
+      /* ── Collateral ───────────────────────────────────────────────────── */
+
+      /* The status chip ("ORDERED") sat after a flex:1 title block, which put
+         it hard against the right edge on a line of its own whenever the title
+         wrapped. Stacking it under the title, left-aligned with everything
+         else, is what makes the card read straight down one edge. */
+      .order-card { padding:12px; }
+      .order-card-header { flex-direction:column; align-items:flex-start; gap:6px; }
+      .order-status-chip { order:-1; }          /* chip first, then title */
+      .order-label { font-size:14px; }
+
+      /* Qty / Cost / Ordered / Delivered — a 16px flex gap gave four items
+         three different left edges once they wrapped. Two fixed columns keep
+         the labels aligned and fit a phone exactly. */
+      .order-details {
+        display:grid; grid-template-columns:repeat(2, minmax(0,1fr));
+        gap:5px 12px; margin-bottom:8px;
+      }
+
+      /* The link pills relied on margin-right and inline wrapping, which left
+         ragged gaps. Flex-wrap gives them one gap in both directions. */
+      .order-card > div:not([class]) { display:flex; flex-wrap:wrap; gap:6px; }
+      .order-link { margin-right:0; padding:5px 10px; font-size:11px; }
+
+      .order-actions { flex-wrap:wrap; gap:8px; }
+      .pay-summary  { gap:6px; }
+      .pay-amounts  { font-size:11.5px; }
+
+      .coll-header { flex-wrap:wrap; gap:8px; }
+      .section-edit-btn { margin-left:0; }      /* auto-margin pushed it off the row */
+      .steps { gap:5px; }
+
+      /* ── Advertising ──────────────────────────────────────────────────── */
+
+      .campaign-card { padding:12px; }
+      .campaign-header { flex-direction:column; align-items:flex-start; gap:6px; }
+      .camp-status-chip { order:-1; }
+      .campaign-platform { font-size:15px; }
+
+      /* Start / End / Rate were a 20px flex gap; same wrapping problem, and the
+         monthly chip has to keep a full line to itself because its text is a
+         sentence ("Every Saturday · 1 month · $250.00"). */
+      .campaign-details { gap:5px 14px; margin-bottom:10px; }
+      .camp-monthly-chip { width:100%; justify-content:flex-start; font-size:11.5px; }
+
+      /* "ADD PLACEMENT" was a full-size .btn — 18px of side padding and 13px
+         uppercase text — which on a phone came out nearly half the card wide
+         and forced the title beside it to wrap onto two lines. Header stacks,
+         button goes back to a proportionate size. */
+      .adv-head { flex-direction:column; align-items:flex-start; gap:10px; }
+      .adv-head .btn { padding:7px 12px; font-size:12px; }
+
+      /* Target URL and each creative were one flex row of label + Open + Copy
+         + Target + Open + Copy + Edit + ✕ — eight children on a 390px screen,
+         which wrapped at a different point on every row.
+
+         Giving the label `flex:0 0 100%` makes it take a whole line by itself,
+         so every button after it falls to the next line and they all wrap
+         against the same left edge. */
+      .link-row { flex-wrap:wrap; gap:6px; padding:8px 0; }
+      .link-row-label {
+        flex:0 0 100%; min-width:0; font-size:12.5px;
+        white-space:normal; overflow:visible;
+      }
+      .link-row .btn-xs { padding:5px 9px; font-size:11px; }
+      .ad-target-sep { padding-left:0; margin-left:0; border-left:none; }
+
+      .ad-files { padding:10px; }
+      .ad-item  { padding:8px 0; }
+
+      /* Status select, Mark Sent, Edit, Delete. Wrapping is fine — they just
+         need to wrap to a consistent left edge and be the smaller size. */
+      .camp-actions { flex-wrap:wrap; gap:8px; }
+      .camp-actions .btn-xs { padding:6px 10px; font-size:11.5px; }
+      .camp-actions select  { flex:1; min-width:130px; }
+
+      .mo-table { font-size:11.5px; }
+      .mo-actions { gap:8px; }
+    }
+
   </style>
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
@@ -1541,7 +1810,7 @@ $listings_json = json_encode(array_map(fn($l) => [
       <?php if ($agent['headshot_url']): ?>
         <img src="<?= val($agent,'headshot_url') ?>" alt="">
       <?php else: ?>
-        <?= htmlspecialchars(initials($agent['agent_name'])) ?>
+        <?= htmlspecialchars(initials($agent['agent_name'], $agent['initials'] ?? null)) ?>
       <?php endif; ?>
     </div>
     <div class="agent-header-info">
@@ -1597,6 +1866,20 @@ $listings_json = json_encode(array_map(fn($l) => [
     </button>
   </div>
 
+  <?php // Mobile tab menu. Empty on purpose — the list is cloned from the
+        // .tab-btn elements above by the script at the bottom of the page, so
+        // there is exactly one definition of what the tabs are. Hidden above
+        // 860px, where the strip fits. ?>
+  <div class="tab-bar-mobile">
+    <button type="button" class="tab-menu-btn" id="tabMenuBtn"
+            aria-expanded="false" aria-controls="tabMenuPanel">
+      <i class="ti ti-list" aria-hidden="true"></i>
+      <span id="tabMenuCurrent">Overview</span>
+      <i class="ti ti-chevron-down tab-menu-caret" aria-hidden="true"></i>
+    </button>
+    <div class="tab-menu-panel" id="tabMenuPanel"></div>
+  </div>
+
   <!-- ══════════════════════════════════════════════ OVERVIEW ══ -->
   <div class="tab-panel <?= $active_tab==='overview'?'active':'' ?>" id="tab-overview">
     <div class="two-col">
@@ -1614,6 +1897,12 @@ $listings_json = json_encode(array_map(fn($l) => [
               <input type="hidden" name="redirect_tab" value="overview">
               <div class="form-row">
                 <label class="grow">Name <input type="text" name="agent_name" class="form-input" value="<?= val($agent,'agent_name') ?>"></label>
+                <label style="max-width:110px;">Initials
+                  <input type="text" name="initials" class="form-input" maxlength="3"
+                         style="text-transform:uppercase;"
+                         placeholder="<?= htmlspecialchars(initials((string)($agent['agent_name'] ?? ''))) ?>"
+                         value="<?= htmlspecialchars($agent['initials'] ?? '') ?>">
+                </label>
                 <label class="grow">Title <input type="text" name="agent_title" class="form-input" value="<?= val($agent,'agent_title') ?>"></label>
               </div>
               <div class="form-row">
@@ -2008,6 +2297,231 @@ $listings_json = json_encode(array_map(fn($l) => [
    * $total_field — the input whose value the split is checked against:
    *         'cost' for a collateral order, 'budget' for a placement
    */
+  /**
+   * Weekday names indexed the way date('w') and unit_weekday both are:
+   * 0 = Sunday. Do not reorder — the index IS the stored value.
+   */
+  function mk_weekday_names(): array {
+      return [0=>'Sunday',1=>'Monday',2=>'Tuesday',3=>'Wednesday',
+              4=>'Thursday',5=>'Friday',6=>'Saturday'];
+  }
+
+  /**
+   * The three per-day fields. Hidden unless Billing is "Per day", shown by the
+   * script at the foot of the Advertising tab.
+   *
+   * $c is the campaign being edited, or [] when adding.
+   */
+  function mk_unit_fields(array $c = []): void {
+      $mode = $c['billing_mode'] ?? '';
+      $wd   = $c['unit_weekday'] ?? null;
+  ?>
+    <?php // What "Budget" means changes completely with the mode, and the word
+          // itself does not. Spell it out rather than leaving the field to be
+          // guessed at — misreading it is what puts a wrong figure on an
+          // invoice. Text is swapped by the script at the foot of the page. ?>
+    <div class="unit-hint js-budget-hint"
+         data-one_time="Budget is the whole charge, and it lands in the month of the start date."
+         data-monthly_flat="Budget is the amount, every month, from the run start onward — no end date means it keeps going until you set one. A new month starts billing on its first day, never before. Change a single month in the Month-by-month grid."
+         data-monthly="Budget here is only a default. It bills nothing on its own — each month's amount is entered in the Month-by-month grid, and a month you have not entered bills nothing and stays flagged."
+         data-per_unit="Budget is ignored in this mode. The money is the rate below, times the days that fall in each month."></div>
+    <div class="form-row js-unit-fields" style="<?= $mode === 'per_unit' ? '' : 'display:none;' ?>">
+      <label>Rate per day
+        <input type="number" name="unit_rate" class="form-input" step="0.01" min="0"
+               placeholder="125.00" value="<?= htmlspecialchars($c['unit_rate'] ?? '') ?>">
+      </label>
+      <label>Which day
+        <select name="unit_weekday" class="form-input">
+          <?php // '' is a real choice, not a prompt: some placements have no
+                // weekly rhythm and the quantity is typed each month. ?>
+          <option value="">No fixed day — enter days each month</option>
+          <?php foreach (mk_weekday_names() as $n => $lbl): ?>
+            <option value="<?= $n ?>" <?= ($wd !== null && $wd !== '' && (int)$wd === $n) ? 'selected' : '' ?>>
+              Every <?= $lbl ?>
+            </option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+      <label class="grow">Unit name
+        <input type="text" name="unit_label" class="form-input" placeholder="day"
+               value="<?= htmlspecialchars($c['unit_label'] ?? '') ?>">
+      </label>
+    </div>
+    <div class="unit-hint js-unit-fields" style="<?= $mode === 'per_unit' ? '' : 'display:none;' ?>">
+      <i class="ti ti-calendar-event"></i>
+      Each month is charged the rate times however many of that day fall inside
+      the run. August 2026 has four Wednesdays and five Saturdays — the same
+      rate gives a different total, which is the point. When the outlet runs
+      fewer than scheduled, change that month's day count in the Month-by-month
+      grid below.
+    </div>
+  <?php
+  }
+
+  /**
+   * The month grid — every month of one recurring placement, one Save.
+   *
+   * This is the ONLY place per-month figures are entered. It replaced a
+   * one-month-at-a-time popover, which was wrong for the way the work actually
+   * happens: Nikki sits down with an invoice and types a column of numbers.
+   *
+   * For `monthly` the amount box IS the money. Blank means the month has not
+   * been decided, and blank is a legitimate long-term state for a month nobody
+   * has budgeted yet — it is not an error and it must not be filled in for her.
+   * The placement's `budget` shows only as the input's placeholder.
+   *
+   * For `per_unit` the day count is pre-filled from the calendar as a real
+   * value, so saving the grid records what was actually counted. Change the
+   * number when the outlet ran short.
+   *
+   * Rendered as a SIBLING of the campaign edit form, never inside it: nested
+   * <form> elements are invalid HTML, the browser drops the inner one, and this
+   * grid would post nothing at all.
+   */
+  function mk_month_grid(array $c, array $months, array $rows, array $resolved, float $total): void {
+      $cid  = (int)$c['id'];
+      $mode = $c['billing_mode'] ?? 'one_time';
+      $per  = ($mode === 'per_unit');
+      $flat = ($mode === 'monthly_flat');
+      $ulbl = $c['unit_label'] ?: 'day';
+      // Months still awaiting a figure. On a standing buy this is normally 0 —
+      // it only fires when the placement has no standing amount at all, which
+      // is the one way monthly_flat can silently bill nothing.
+      $open = 0;
+      foreach ($resolved as $r) { if ($r !== null && !$r['set']) $open++; }
+  ?>
+    <div class="mo-head">
+      <button type="button" class="section-edit-btn" onclick="toggleInline('camp-months-<?= $cid ?>')">
+        <i class="ti ti-calendar-stats"></i>
+        Month by month (<?= count($months) ?>)
+      </button>
+      <?php if ($open): ?>
+        <span class="mo-open-chip" title="These months bill nothing until an amount is entered">
+          <i class="ti ti-alert-circle"></i>
+          <?= $open ?> month<?= $open === 1 ? '' : 's' ?> not set
+        </span>
+      <?php endif; ?>
+    </div>
+
+    <div id="camp-months-<?= $cid ?>" style="<?= $open ? '' : 'display:none;' ?>">
+      <form method="POST">
+        <input type="hidden" name="_action"     value="save_campaign_months">
+        <input type="hidden" name="campaign_id" value="<?= $cid ?>">
+
+        <table class="mo-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <?php if ($per): ?>
+                <th><?= htmlspecialchars(ucfirst($ulbl)) ?>s</th>
+                <th>Rate</th>
+              <?php else: ?>
+                <th>Amount</th>
+              <?php endif; ?>
+              <th>Who pays</th>
+              <th>Note</th>
+              <th class="num">Charge</th>
+            </tr>
+          </thead>
+          <tbody>
+          <?php foreach ($months as $ym):
+                  $row = $rows[$ym] ?? null;
+                  $res = $resolved[$ym] ?? null;
+                  // A per-day month the run never touches: shown, but with
+                  // nothing to fill in, because there was no placement.
+                  $none = ($res === null); ?>
+            <tr class="<?= ($res && !$res['set']) ? 'mo-unset' : '' ?>">
+              <td class="mo-m"><?= date('M Y', strtotime($ym . '-01')) ?></td>
+
+              <?php if ($none): ?>
+                <td colspan="<?= $per ? 4 : 3 ?>" class="mo-none">
+                  no <?= htmlspecialchars($ulbl) ?> falls in this month
+                </td>
+                <td class="num">—</td>
+              <?php else: ?>
+                <?php if ($per): ?>
+                  <td>
+                    <input type="number" class="form-input mo-in" step="0.5" min="0"
+                           name="months[<?= $ym ?>][units]"
+                           value="<?= htmlspecialchars(mk_num($res['units'])) ?>">
+                  </td>
+                  <td>
+                    <input type="number" class="form-input mo-in" step="0.01" min="0"
+                           name="months[<?= $ym ?>][unit_rate]"
+                           placeholder="<?= htmlspecialchars((string)($c['unit_rate'] ?? '')) ?>"
+                           value="<?= htmlspecialchars($row['unit_rate'] ?? '') ?>">
+                  </td>
+                <?php else: ?>
+                  <td>
+                    <?php // Placeholder, never a value. On `monthly` a pre-filled
+                          // amount is a figure nobody typed that would save on the
+                          // next submit as though somebody had; on `monthly_flat`
+                          // blank genuinely means "the standing amount", and
+                          // writing it into every row would turn one decision
+                          // into a dozen stored copies of it. ?>
+                    <input type="number" class="form-input mo-in" step="0.01" min="0"
+                           name="months[<?= $ym ?>][amount]"
+                           placeholder="<?= $c['budget'] ? htmlspecialchars(mk_num($c['budget'])) : ($flat ? 'no standing amount' : 'not set') ?>"
+                           value="<?= htmlspecialchars($row['amount'] ?? '') ?>">
+                  </td>
+                <?php endif; ?>
+
+                <td>
+                  <select name="months[<?= $ym ?>][paid_by]" class="form-input mo-in mo-in-w">
+                    <option value="">same as placement</option>
+                    <?php foreach (['broker'=>'Broker','mont_haus'=>'Mont Haus','split'=>'Split'] as $v=>$l): ?>
+                      <option value="<?= $v ?>" <?= ($row['paid_by'] ?? '') === $v ? 'selected' : '' ?>><?= $l ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </td>
+                <td>
+                  <input type="text" class="form-input mo-in mo-in-note" maxlength="255"
+                         name="months[<?= $ym ?>][note]"
+                         placeholder="<?= $per ? 'e.g. outlet missed one week' : '' ?>"
+                         value="<?= htmlspecialchars($row['note'] ?? '') ?>">
+                </td>
+                <td class="num">
+                  <?php if (!$res['set']): ?>
+                    <span class="mo-flag unset">not set</span>
+                  <?php elseif ($res['zeroed']): ?>
+                    <span class="mo-flag zero">no charge</span>
+                  <?php else: ?>
+                    <strong><?= money2((float)$res['amount']) ?></strong>
+                  <?php endif; ?>
+                </td>
+              <?php endif; ?>
+            </tr>
+          <?php endforeach; ?>
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="<?= $per ? 4 : 3 ?>" class="fin-foot-label"><?= $mode === 'monthly' ? 'Entered so far' : 'So far' ?></td>
+              <td class="num"><strong><?= money2($total) ?></strong></td>
+            </tr>
+          </tfoot>
+        </table>
+
+        <div class="mo-actions">
+          <button type="submit" class="btn btn-primary btn-xs"><i class="ti ti-check"></i> Save months</button>
+          <span class="mo-hint">
+            <?php if ($per): ?>
+              Day counts come from the calendar — change one when the outlet ran short.
+              Blank the rate to use the placement's.
+            <?php elseif ($flat): ?>
+              Blank uses the standing amount. Fill one in to change that month only,
+              or <strong>0</strong> for a month that is deliberately not charged.
+              Months appear here as they begin.
+            <?php else: ?>
+              A month left blank bills nothing and stays flagged. Enter <strong>0</strong>
+              to record a month that is deliberately not charged.
+            <?php endif; ?>
+          </span>
+        </div>
+      </form>
+    </div>
+  <?php
+  }
+
   function mk_who_pays_fields(array $row, string $key, string $total_field = 'cost'): void {
       $paid_by = $row['paid_by'] ?? '';
       $grp = $key !== '' ? $key : ('new' . substr(md5(uniqid('', true)), 0, 6));
@@ -2166,6 +2680,27 @@ $listings_json = json_encode(array_map(fn($l) => [
   <!-- ══════════════════════════════════════════════ COLLATERAL ══ -->
   <div class="tab-panel <?= $active_tab==='collateral'?'active':'' ?>" id="tab-collateral">
     <div class="card">
+      <?php // Combined invoices — one vendor bill covering several agents.
+            //
+            // Entering only each agent's line-item total under-states every one
+            // of them: the discount, rush fee, shipping and sales tax are billed
+            // ONCE, at the bottom of the invoice. order_split.php enters the
+            // invoice once and writes each agent's LANDED cost into the Cost
+            // field of their order on this tab, so nothing downstream changes.
+            //
+            // Deliberately not in the top nav: the 820px breakpoint in
+            // inc/_nav.php was measured against the links already there, and a
+            // fourth would need re-measuring. This is where the work happens. ?>
+      <div class="coll-split-cta">
+        <div>
+          <strong>Signs for several agents on one invoice?</strong>
+          <span>Split it once and every agent gets their true landed cost — merchandise
+                plus their share of the discount, rush, shipping and tax.</span>
+        </div>
+        <a class="btn btn-outline btn-sm" href="order_split.php" style="text-transform:none;font-size:12px;white-space:nowrap;">
+          <i class="ti ti-arrows-split-2"></i> Split an invoice
+        </a>
+      </div>
       <?php
       function step(bool $done, string $label): string {
           $cls = $done ? 'done' : 'todo';
@@ -2411,7 +2946,11 @@ $listings_json = json_encode(array_map(fn($l) => [
   <div class="tab-panel <?= $active_tab==='advertising'?'active':'' ?>" id="tab-advertising">
     <div class="card">
 
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <?php // The flex rules that were inline here now live in .adv-head, in
+            // the stylesheet, unchanged. They had to move: an inline
+            // align-items beats any rule in a media query, so the mobile block
+            // could not have stacked this row while it stayed on the element. ?>
+      <div class="adv-head">
         <div class="card-title" style="margin:0;">Advertising Placements</div>
         <button type="button" class="btn btn-primary btn-sm" onclick="toggleInline('add-campaign-panel')">
           <i class="ti ti-plus"></i> Add Placement
@@ -2434,15 +2973,38 @@ $listings_json = json_encode(array_map(fn($l) => [
               <input type="text" name="name" class="form-input" placeholder="e.g. Full Page — Aug 2026">
             </label>
             <label>Budget <input type="number" name="budget" class="form-input" placeholder="0.00" step="0.01" min="0"></label>
+            <label>Billing
+              <select name="billing_mode" class="form-input js-billing-mode">
+                <option value="one_time">One-time — whole budget in the start month</option>
+                <option value="monthly_flat">Monthly — same amount, ongoing</option>
+                <option value="monthly">Monthly — a different amount each month</option>
+                <option value="per_unit">Per day — rate × days that month</option>
+              </select>
+            </label>
           </div>
+          <?php mk_unit_fields(); ?>
           <div class="form-row">
             <label>Run Start <input type="date" name="start_date" class="form-input"></label>
             <label>Run End   <input type="date" name="end_date"   class="form-input"></label>
             <label class="grow">Notes <textarea name="notes" class="form-input" rows="2" placeholder="Any notes about this placement…"></textarea></label>
           </div>
 
+          <?php // Paste-first. Most placements reuse a URL from an email or a
+                // previous campaign, and forcing those through the builder meant
+                // rebuilding a URL that already existed. The builder is still
+                // here, one click away, for when it earns its keep. ?>
+          <div class="form-row" style="align-items:flex-end;">
+            <label class="grow">Target URL
+              <input type="url" name="target_url" id="targetUrlInput" class="form-input"
+                     placeholder="https://monthaus.com/… — paste one, or build it below">
+            </label>
+            <button type="button" class="btn btn-outline btn-sm" id="toggleUrlBuilder">
+              <i class="ti ti-tools"></i> Build with UTMs
+            </button>
+          </div>
+
           <!-- URL Builder -->
-          <div class="url-builder">
+          <div class="url-builder" id="urlBuilder" style="display:none;">
             <div class="url-builder-title"><i class="ti ti-link"></i> Target URL Builder</div>
             <div class="form-row" style="margin-bottom:8px;">
               <label>Destination
@@ -2467,9 +3029,14 @@ $listings_json = json_encode(array_map(fn($l) => [
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
               <div class="url-preview" id="urlPreview">https://monthaus.com/</div>
+              <?php // Explicit, never automatic. The builder used to write into
+                    // the target field on every keystroke, which would now wipe
+                    // out a URL that had just been pasted. ?>
+              <button type="button" id="useUrlBtn" class="btn btn-primary btn-xs" title="Put this in the Target URL field">
+                <i class="ti ti-arrow-up"></i> Use this
+              </button>
               <button type="button" id="copyUrlBtn" class="btn btn-outline btn-xs" title="Copy URL"><i class="ti ti-copy"></i> Copy</button>
             </div>
-            <input type="hidden" name="target_url" id="targetUrlHidden">
           </div>
 
           <!-- Ads / creatives — add as many as needed, each with its own target URL -->
@@ -2488,18 +3055,15 @@ $listings_json = json_encode(array_map(fn($l) => [
 
           <?php mk_who_pays_fields([], 'campnew', 'budget'); ?>
 
-          <div class="form-row" style="margin-top:12px;">
-            <label style="flex-shrink:0;">
-              <span style="display:block;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">Sent to Media?</span>
-              <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;padding:8px 0;">
-                <input type="checkbox" name="sent" value="1"> Mark as sent
-              </label>
-            </label>
-          </div>
-
-          <div class="btn-row" style="margin-top:10px;">
+          <?php // One line, on the same row as the buttons. It was a nested
+                // label with its own uppercase heading, which gave a single
+                // checkbox three lines and its own section. ?>
+          <div class="btn-row" style="margin-top:14px;align-items:center;">
             <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-check"></i> Save Placement</button>
             <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('add-campaign-panel')">Cancel</button>
+            <label class="chk-inline">
+              <input type="checkbox" name="sent" value="1"> Already sent to media
+            </label>
           </div>
         </form>
       </div>
@@ -2540,8 +3104,58 @@ $listings_json = json_encode(array_map(fn($l) => [
 
           </div>
 
+          <?php
+            // Resolve the whole run once, here, and reuse it for the chip and
+            // the grid below. The run total is the SUM OF THE ENTERED MONTHS —
+            // never an amount × a month count, which was never true and is not
+            // even expressible now that each month carries its own figure.
+            $_mode = $c['billing_mode'] ?: 'one_time';
+            $_rec  = in_array($_mode, ['monthly','monthly_flat','per_unit'], true);
+            $_covs = $camp_overrides[(int)$c['id']] ?? [];
+            $_ms   = $_rec ? mk_campaign_months($c['start_date'] ?: null, $c['end_date'] ?: null) : [];
+            $_res  = [];                       // ym => resolved array, or null when the run misses the month
+            $_tot  = 0.0; $_billed = 0; $_open = 0;
+            foreach ($_ms as $_ym) {
+                $_r = mk_camp_resolve($c, $_ym, $_covs);
+                $_res[$_ym] = $_r;
+                if ($_r === null)      continue;
+                if (!$_r['set'])     { $_open++;  continue; }   // awaiting a figure
+                $_tot += (float)$_r['amount'];
+                $_billed++;
+            }
+          ?>
           <div class="campaign-details">
-            <?php if ($c['budget']): ?><span>Budget: <strong><?= money((float)$c['budget']) ?></strong></span><?php endif; ?>
+            <?php if ($_mode === 'per_unit'): ?>
+              <?php if ($c['unit_rate']): ?>
+                <span>Rate: <strong><?= money2((float)$c['unit_rate']) ?></strong> /
+                  <?= htmlspecialchars($c['unit_label'] ?: 'day') ?></span>
+              <?php endif; ?>
+            <?php elseif ($c['budget']): ?>
+              <?php // Three different meanings, three different words. "Budget"
+                    // on a monthly placement was what made it read as the figure
+                    // that bills when it was only a default. ?>
+              <span><?= $_mode === 'monthly_flat' ? 'Standing' : ($_mode === 'monthly' ? 'Usual' : 'Budget') ?>:
+                <strong><?= money((float)$c['budget']) ?></strong><?= in_array($_mode, ['monthly','monthly_flat'], true) ? ' / month' : '' ?></span>
+            <?php endif; ?>
+
+            <?php if ($_rec): ?>
+              <span class="camp-monthly-chip">
+                <?php if ($_mode === 'per_unit'): ?>
+                  <i class="ti ti-calendar-event"></i>
+                  Every <?= ($c['unit_weekday'] !== null && $c['unit_weekday'] !== '')
+                             ? htmlspecialchars(mk_weekday_names()[(int)$c['unit_weekday']]) : 'month, by quantity' ?>
+                <?php elseif ($_mode === 'monthly_flat'): ?>
+                  <i class="ti ti-infinity"></i>
+                  <?= empty($c['end_date']) ? 'Ongoing' : 'Monthly' ?>
+                <?php else: ?>
+                  <i class="ti ti-repeat"></i> Monthly
+                <?php endif; ?>
+                <?php if ($_billed): ?>
+                  · <?= $_billed ?> month<?= $_billed === 1 ? '' : 's' ?><?= $_mode === 'monthly' ? ' entered' : '' ?>
+                  · <?= money2($_tot) ?>
+                <?php endif; ?>
+              </span>
+            <?php endif; ?>
             <?php if ($c['start_date']): ?><span>Start: <strong><?= date('m/d/Y', strtotime($c['start_date'])) ?></strong></span><?php endif; ?>
             <?php if ($c['end_date']): ?><span>End: <strong><?= date('m/d/Y', strtotime($c['end_date'])) ?></strong></span><?php endif; ?>
           </div>
@@ -2551,7 +3165,9 @@ $listings_json = json_encode(array_map(fn($l) => [
 
           <!-- Placement target URL -->
           <?php if (!empty($c['target_url'])): ?>
-            <div class="link-row" title="<?= htmlspecialchars($c['target_url']) ?>">
+            <?php // No title attribute: hovering anywhere near this row used to
+                  // pop a 150-character tracking URL over the rest of the card. ?>
+            <div class="link-row">
               <span class="link-row-label"><i class="ti ti-link"></i> Target URL</span>
               <a class="btn btn-outline btn-xs" href="<?= htmlspecialchars($c['target_url']) ?>" target="_blank"><i class="ti ti-external-link"></i> Open</a>
               <button type="button" class="btn btn-outline btn-xs copy-btn"
@@ -2565,9 +3181,14 @@ $listings_json = json_encode(array_map(fn($l) => [
             <?php if (!$ad_files): ?>
               <p class="asset-empty" style="margin:0 0 6px;">None yet.</p>
             <?php else: ?>
+              <?php // No URLs printed anywhere here, and no URL in a title
+                    // attribute either. Six creatives each showed a wrapped
+                    // 150-character tracking URL twice over, which buried the
+                    // one thing the row is for: the buttons. Open and Copy do
+                    // everything the text did. ?>
               <?php foreach ($ad_files as $ci => $af): ?>
                 <div class="ad-item">
-                  <div class="link-row" title="<?= htmlspecialchars($af['url']) ?>">
+                  <div class="link-row">
                     <span class="link-row-label">
                       <i class="ti ti-photo"></i> Creative <?= $ci + 1 ?>
                       <?php
@@ -2578,15 +3199,30 @@ $listings_json = json_encode(array_map(fn($l) => [
                         <span class="ad-sublabel"><?= htmlspecialchars($lbl) ?></span>
                       <?php endif; ?>
                     </span>
+
                     <?php if (!empty($af['url'])): ?>
-                      <a class="btn btn-outline btn-xs" href="<?= htmlspecialchars($af['url']) ?>" target="_blank"><i class="ti ti-external-link"></i> Open</a>
-                      <button type="button" class="btn btn-outline btn-xs copy-btn"
+                      <a class="btn btn-outline btn-xs" href="<?= htmlspecialchars($af['url']) ?>" target="_blank"
+                         title="Open the ad file"><i class="ti ti-external-link"></i> Open</a>
+                      <button type="button" class="btn btn-outline btn-xs copy-btn" title="Copy the ad file link"
                               data-copy="<?= htmlspecialchars($af['url']) ?>"><i class="ti ti-copy"></i> Copy</button>
                     <?php else: ?>
                       <span class="asset-none">no file</span>
                     <?php endif; ?>
+
+                    <?php // The creative's own landing page, when it has one.
+                          // Same row, so six creatives are six lines rather
+                          // than twelve. Absent means it inherits the
+                          // placement's target, which is the default. ?>
+                    <?php if (!empty($af['target'])): ?>
+                      <span class="ad-target-sep">Target</span>
+                      <a class="btn btn-outline btn-xs" href="<?= htmlspecialchars($af['target']) ?>" target="_blank"
+                         title="Open this creative's landing page"><i class="ti ti-external-link"></i></a>
+                      <button type="button" class="btn btn-outline btn-xs copy-btn" title="Copy this creative's landing page"
+                              data-copy="<?= htmlspecialchars($af['target']) ?>"><i class="ti ti-copy"></i></button>
+                    <?php endif; ?>
+
                     <?php if (!$af['legacy']): ?>
-                      <button type="button" class="btn btn-outline btn-xs"
+                      <button type="button" class="btn btn-outline btn-xs" title="Edit this creative"
                               onclick="toggleInline('edit-asset-<?= $af['id'] ?>')"><i class="ti ti-pencil"></i> Edit</button>
                     <?php endif; ?>
                     <form method="POST" style="margin:0;" onsubmit="return confirm('Remove this creative?')">
@@ -2600,18 +3236,6 @@ $listings_json = json_encode(array_map(fn($l) => [
                       <button type="submit" class="btn-ghost" title="Remove"><i class="ti ti-x"></i></button>
                     </form>
                   </div>
-
-                  <!-- Only shown when this creative overrides the placement's target URL.
-                       A creative that simply inherits it needs no row — that's the default. -->
-                  <?php if (!empty($af['target'])): ?>
-                  <div class="ad-target">
-                    <span class="ad-target-label"><i class="ti ti-target-arrow"></i> Target</span>
-                    <span class="ad-target-note" title="<?= htmlspecialchars($af['target']) ?>"><?= htmlspecialchars($af['target']) ?></span>
-                    <a class="btn btn-outline btn-xs" href="<?= htmlspecialchars($af['target']) ?>" target="_blank"><i class="ti ti-external-link"></i> Open</a>
-                    <button type="button" class="btn btn-outline btn-xs copy-btn"
-                            data-copy="<?= htmlspecialchars($af['target']) ?>"><i class="ti ti-copy"></i> Copy</button>
-                  </div>
-                  <?php endif; ?>
 
                   <?php if (!$af['legacy']): ?>
                   <div id="edit-asset-<?= $af['id'] ?>" style="display:none;" class="inline-edit-form">
@@ -2694,6 +3318,16 @@ $listings_json = json_encode(array_map(fn($l) => [
             <button type="button" class="btn btn-outline btn-xs" onclick="toggleInline('edit-camp-<?= $c['id'] ?>')">
               <i class="ti ti-pencil"></i> Edit
             </button>
+            <?php // Same buy, new flight. The copy arrives with its dates blank
+                  // and its edit form open, so the next thing on screen is the
+                  // two fields that actually change. ?>
+            <form method="POST" style="margin:0;">
+              <input type="hidden" name="_action" value="duplicate_campaign">
+              <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
+              <button type="submit" class="btn btn-outline btn-xs" title="Copy this placement and its creatives into a new placement">
+                <i class="ti ti-copy"></i> Duplicate
+              </button>
+            </form>
             <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this placement and all its ad files?')">
               <input type="hidden" name="_action" value="delete_campaign">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
@@ -2702,7 +3336,11 @@ $listings_json = json_encode(array_map(fn($l) => [
           </div>
 
           <!-- Edit placement -->
-          <div id="edit-camp-<?= $c['id'] ?>" style="display:none;" class="inline-edit-form">
+          <?php // ?edit_camp=N (set by the Duplicate redirect) opens this one form.
+                // Done server-side rather than in JS so the fields are already
+                // there when the hash handler scrolls to them. ?>
+          <?php $_open_edit = (int)($_GET['edit_camp'] ?? 0) === (int)$c['id']; ?>
+          <div id="edit-camp-<?= $c['id'] ?>"<?= $_open_edit ? '' : ' style="display:none;"' ?> class="inline-edit-form">
             <form method="POST">
               <input type="hidden" name="_action" value="update_campaign">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
@@ -2720,7 +3358,17 @@ $listings_json = json_encode(array_map(fn($l) => [
                 <label>Budget
                   <input type="number" name="budget" class="form-input" step="0.01" min="0" value="<?= htmlspecialchars($c['budget'] ?? '') ?>">
                 </label>
+                <label>Billing
+                  <?php $_mode = $c['billing_mode'] ?: 'one_time'; ?>
+                  <select name="billing_mode" class="form-input js-billing-mode">
+                    <option value="one_time" <?= $_mode === 'one_time' ? 'selected' : '' ?>>One-time — whole budget in the start month</option>
+                    <option value="monthly_flat" <?= $_mode === 'monthly_flat' ? 'selected' : '' ?>>Monthly — same amount, ongoing</option>
+                    <option value="monthly"  <?= $_mode === 'monthly'  ? 'selected' : '' ?>>Monthly — a different amount each month</option>
+                    <option value="per_unit" <?= $_mode === 'per_unit' ? 'selected' : '' ?>>Per day — rate × days that month</option>
+                  </select>
+                </label>
               </div>
+              <?php mk_unit_fields($c); ?>
               <div class="form-row">
                 <label>Run Start <input type="date" name="start_date" class="form-input" value="<?= htmlspecialchars($c['start_date'] ?? '') ?>"></label>
                 <label>Run End   <input type="date" name="end_date"   class="form-input" value="<?= htmlspecialchars($c['end_date'] ?? '') ?>"></label>
@@ -2744,6 +3392,12 @@ $listings_json = json_encode(array_map(fn($l) => [
               </div>
             </form>
           </div>
+
+          <?php // ── Month-by-month, for a recurring placement ──────────────
+                // A sibling of the edit form, never a child: nested <form>
+                // elements are invalid HTML and the browser drops the inner
+                // one, so this grid would post nothing. ?>
+          <?php if ($_rec && $_ms) mk_month_grid($c, $_ms, $_covs, $_res, $_tot); ?>
         </div>
         <?php endforeach; ?>
       <?php endif; ?>
@@ -3157,6 +3811,48 @@ $listings_json = json_encode(array_map(fn($l) => [
                 <?php if ($sub !== '' && $sub !== $nm): ?>
                   <div class="fin-item-sub"><?= htmlspecialchars($sub) ?></div>
                 <?php endif; ?>
+                <?php if (($it['mode'] ?? '') === 'per_unit'):
+                        $_u = (float)($it['units'] ?? 0);
+                        $_r = (float)($it['rate']  ?? 0);
+                        $_l = $it['unit_label'] ?: 'day'; ?>
+                  <div class="fin-item-sub fin-units">
+                    <i class="ti ti-repeat" style="font-size:10px;"></i>
+                    <?php if (($it['unit_src'] ?? '') === 'unset'): ?>
+                      <span class="fin-needs-qty">quantity not set for this month</span>
+                    <?php else: ?>
+                      <b><?= mk_num($_u) ?></b>
+                      <?= htmlspecialchars($_l) ?><?= $_u == 1.0 ? '' : 's' ?>
+                      &times; <b><?= money2($_r) ?></b>
+                      <?php if (($it['unit_src'] ?? '') === 'override'): ?>
+                        &middot; <span title="typed in, not counted from the calendar">corrected</span>
+                      <?php endif; ?>
+                    <?php endif; ?>
+                  </div>
+                <?php elseif (!empty($it['recurring'])): ?>
+                  <div class="fin-item-sub fin-recurring">
+                    <i class="ti ti-repeat" style="font-size:10px;"></i> monthly
+                  </div>
+                <?php endif; ?>
+
+                <?php // A month nobody has entered a figure for. This line is
+                      // what the rewrite exists to produce: it bills nothing,
+                      // and it says so where the money is being reconciled,
+                      // instead of quietly inheriting a number. The link goes
+                      // to the grid that fixes it. ?>
+                <?php if (!empty($it['recurring']) && isset($it['set']) && !$it['set']): ?>
+                  <div class="fin-item-sub fin-needs-qty">
+                    <i class="ti ti-alert-circle" style="font-size:10px;"></i>
+                    <?= ($it['mode'] ?? '') === 'per_unit' ? 'nothing billed' : 'amount not set — nothing billed' ?>
+                    &middot;
+                    <a class="fin-item-link" href="agent.php?id=<?= $id ?>&amp;tab=advertising#camp-<?= $ref ?>">enter it</a>
+                  </div>
+                <?php elseif (!empty($it['zeroed'])): ?>
+                  <div class="fin-item-sub fin-recurring">no charge this month</div>
+                <?php endif; ?>
+
+                <?php if (!empty($it['ov_note'])): ?>
+                  <div class="fin-item-sub fin-recurring"><?= htmlspecialchars($it['ov_note']) ?></div>
+                <?php endif; ?>
                 <?php if (!empty($it['billed_with'])): ?>
                   <div class="fin-item-sub fin-billed">
                     <i class="ti ti-link" style="font-size:10px;"></i>
@@ -3198,6 +3894,10 @@ $listings_json = json_encode(array_map(fn($l) => [
                 <?php endif; ?>
               </td>
             </tr>
+            <?php // Financials is read-only for advertising. Figures are
+                  // entered in one place — the month grid on the placement —
+                  // so there is no second surface to keep in step, and no way
+                  // to change a month without seeing the rest of its run. ?>
           <?php endforeach; ?>
           </tbody>
           <tfoot>
@@ -3299,8 +3999,70 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b === btn));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + t));
     history.replaceState(null, '', '?id=<?= $id ?>&tab=' + t);
+    if (window.mhSyncTabMenu) window.mhSyncTabMenu();
   });
 });
+
+// ── The same tabs, as a menu, on a phone ─────────────────────────────────────
+//
+// Below 860px the horizontal strip is hidden by CSS and this takes over. It
+// does NOT re-implement tab switching: each menu item forwards its click to the
+// real .tab-btn, so there is one code path and one source of truth for what a
+// tab does. The items are cloned from those buttons too, which is why the icons
+// and the badge counts appear here without being written out twice.
+(function () {
+  var btn   = document.getElementById('tabMenuBtn');
+  var panel = document.getElementById('tabMenuPanel');
+  var label = document.getElementById('tabMenuCurrent');
+  var tabs  = Array.prototype.slice.call(document.querySelectorAll('.tab-bar .tab-btn'));
+  if (!btn || !panel || !label || !tabs.length) return;
+
+  function open(isOpen) {
+    panel.classList.toggle('open', isOpen);
+    btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  }
+
+  tabs.forEach(function (tab) {
+    var item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'tab-menu-item';
+    item.dataset.tab = tab.dataset.tab;
+    // innerHTML from a server-rendered sibling in this same document — the icon
+    // markup and the badge, nothing user-supplied and nothing fetched.
+    item.innerHTML = tab.innerHTML;
+    item.addEventListener('click', function () {
+      open(false);
+      tab.click();                       // the one implementation of "switch tab"
+    });
+    panel.appendChild(item);
+  });
+
+  // Repaints the button's caption and the checked item from whichever .tab-btn
+  // is currently active, so it stays right no matter what moved the tab —
+  // a menu tap, the strip at desktop width, or the ?tab= link from Financials.
+  window.mhSyncTabMenu = function () {
+    var active = document.querySelector('.tab-bar .tab-btn.active') || tabs[0];
+    var t = active.dataset.tab;
+    // textContent, not innerHTML: the caption wants the tab's words without its
+    // icon or its badge, both of which the menu row already shows.
+    label.textContent = active.textContent.trim().replace(/\s+/g, ' ');
+    panel.querySelectorAll('.tab-menu-item').forEach(function (i) {
+      i.classList.toggle('active', i.dataset.tab === t);
+    });
+  };
+  window.mhSyncTabMenu();
+
+  btn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    open(!panel.classList.contains('open'));
+  });
+  document.addEventListener('click', function (e) {
+    if (panel.classList.contains('open') && !panel.contains(e.target)) open(false);
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && panel.classList.contains('open')) { open(false); btn.focus(); }
+  });
+})();
 
 // ── Arriving from a Financials link ──────────────────────────────────────────
 // The server already set the right tab via ?tab=, so the target is visible.
@@ -3410,6 +4172,29 @@ function toggleInline(id) {
   if (!el) return;
   el.style.display = el.style.display === 'none' ? '' : 'none';
 }
+
+// ── Billing mode: per-day fields, and what "Budget" means ───────────────────
+// Scoped to the select's own form. Several campaign forms sit on the page at
+// once, so a document-wide querySelectorAll would toggle all of them together.
+function mhApplyBillingMode(sel) {
+  const form = sel.closest('form');
+  if (!form) return;
+  const on = sel.value === 'per_unit';
+  form.querySelectorAll('.js-unit-fields').forEach(el => { el.style.display = on ? '' : 'none'; });
+  // The hint is the only thing telling you whether Budget bills or not.
+  form.querySelectorAll('.js-budget-hint').forEach(el => {
+    el.textContent = el.dataset[sel.value] || '';
+  });
+}
+document.addEventListener('change', function (e) {
+  const sel = e.target.closest ? e.target.closest('.js-billing-mode') : null;
+  if (sel) mhApplyBillingMode(sel);
+});
+// Run once at load so a saved placement opens showing the right hint, rather
+// than a blank one until something is touched.
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelectorAll('.js-billing-mode').forEach(mhApplyBillingMode);
+});
 
 // ── Task filter (Tasks tab) ───────────────────────────────────────────────────
 function applyTaskFilter(f) {
@@ -3590,9 +4375,31 @@ document.querySelectorAll('.bio-tab-btn').forEach(btn => {
   const custWrap   = document.getElementById('customPathWrap');
   const custPath   = document.getElementById('urlCustomPath');
   const preview    = document.getElementById('urlPreview');
-  const hidden     = document.getElementById('targetUrlHidden');
+  const target     = document.getElementById('targetUrlInput');
   const copyBtn    = document.getElementById('copyUrlBtn');
+  const useBtn     = document.getElementById('useUrlBtn');
+  const toggleBtn  = document.getElementById('toggleUrlBuilder');
+  const builder    = document.getElementById('urlBuilder');
   if (!pathType) return;
+
+  // The builder starts closed: pasting is the common case, building is not.
+  toggleBtn?.addEventListener('click', () => {
+    const open = builder.style.display === 'none';
+    builder.style.display = open ? '' : 'none';
+    toggleBtn.innerHTML = open
+      ? '<i class="ti ti-x"></i> Hide builder'
+      : '<i class="ti ti-tools"></i> Build with UTMs';
+  });
+
+  // Nothing the builder does reaches the Target URL field on its own — only
+  // this button does. A pasted URL therefore survives any amount of fiddling
+  // with the UTM boxes.
+  useBtn?.addEventListener('click', () => {
+    if (!target) return;
+    target.value = preview.textContent.trim();
+    useBtn.innerHTML = '<i class="ti ti-check"></i> Added';
+    setTimeout(() => { useBtn.innerHTML = '<i class="ti ti-arrow-up"></i> Use this'; }, 1500);
+  });
 
   // Populate listing options
   listings.forEach(l => {
@@ -3620,8 +4427,7 @@ document.querySelectorAll('.bio-tab-btn').forEach(btn => {
     if (cam) params.push('utm_campaign=' + encodeURIComponent(cam));
     if (con) params.push('utm_content='  + encodeURIComponent(con));
     const url = base + (params.length ? '?' + params.join('&') : '');
-    if (preview) preview.textContent = url;
-    if (hidden)  hidden.value = url;
+    if (preview) preview.textContent = url;   // preview only — see useBtn above
   }
 
   pathType.addEventListener('change', () => {

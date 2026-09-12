@@ -113,6 +113,664 @@ SELECT email FROM users WHERE role='super_admin' AND password IS NOT NULL AND pa
 If the Entra client secret expires — it does, silently, on its expiry date —
 that password is the only way back in.
 
+## Accounts and roles — users.php
+
+The only surface that creates a `users` row or writes `users.role`.
+`require_role('super_admin')`, and reachable from the gear beside your name in
+the header.
+
+**Accounts are created without a password.** A new user gets a name, an email
+and a role; `sso_resolve_user()` matches that address at their first Microsoft
+sign-in and stamps `entra_object_id`, after which the address can change and the
+link holds. There is no temp password to send, leak, or forget to rotate. The
+one password that must exist — break-glass — is not created here: the page warns
+when no active super_admin has one and otherwise never touches the column.
+
+**No migration.** Every column it uses already exists: `role` got its third
+value in `alter_users_role_v1.sql` and `password` became nullable in
+`sso_schema.sql`, both already run.
+
+### The role is never taken from the post
+
+It is checked against a whitelist before any write. This is not routine input
+hygiene — it is the specific failure `alter_users_role_v1.sql` documents.
+Assigning a value the enum does not carry stores the **empty string** outside
+strict mode, `$hierarchy['']` misses, `$user_level` becomes `-1`, and that
+person is below every threshold: locked out of every page in the app, with
+nothing in any log. It is the known origin of the blank role on
+nikki.boxer@monthaus.com.
+
+Same reason the page checks `information_schema` for the enum's contents and
+**removes** `super_admin` from the forms when the column cannot store it, rather
+than offering it and letting the write mangle itself. An account already holding
+a role the enum has lost still shows it, so nobody is silently demoted by a
+stale schema — but it cannot be saved, because writing it back would blank it.
+
+### The three lockout guards
+
+All server-side, all asserted by tripping them in `tests/render_users.php`. The
+disabled controls in the markup are a courtesy; the redirect is the guard.
+
+- **You cannot change your own role.** The role is copied into the session at
+  sign-in, so demoting yourself leaves a session that still works until it ends
+  and an account that cannot get back in afterwards. Another super_admin can do
+  it.
+- **You cannot deactivate yourself.**
+- **The last *active* super_admin can be neither demoted nor deactivated.**
+  Counted with a query at the moment of the write, not from the rendered list —
+  the page in the browser could be minutes stale, and this is the one mistake
+  with no way back except the database.
+
+Deleting a user is deliberately not offered. Deactivating is the offboard:
+`marketing_billing_months.billed_by`, `paid_by_user` and every other reference
+still resolve to a name, and Billing's tabs 2 and 3 exist precisely so a former
+person's history stays visible.
+
+### The allowlist is shown, not managed
+
+`ACCESS_ALLOWLIST` in `inc/config.php` is a **second gate**, enforced in
+`require_login()` and independent of `users.role`. Somebody added here signs in
+perfectly and then gets a 403 until their address is on that line — a confusing
+failure, so the page renders an Access column and names the file and constant.
+
+It is not editable from the page on purpose. Making it so would mean either a
+migration moving the gate into the database — a real change to how access works,
+worth a decision of its own — or a web page with write access to its own config.
+While the list is short and temporary, saying plainly who is on it is worth more
+than a checkbox.
+
+### The gear is in the user block, not the nav run
+
+`inc/_nav.php` renders it inside `.mh-user`, icon-only, `is_super_admin()` only.
+The 820px breakpoint was measured against the labelled `.mh-nav-link` anchors
+and a fifth would need re-measuring first — see the `order_split.php` note below
+for the same reasoning. A 26px icon beside the avatar does not move where the
+bar runs out of room, and it grows exactly one person's header.
+
+## Advertising: how a placement reaches Financials
+
+`marketing_campaigns.billing_mode` decides how a placement is charged:
+
+- **`one_time`** — the whole `budget` lands in the month of `start_date`.
+  The original behaviour, and the default, so no historical figure moved when
+  the other two were added.
+- **`monthly_flat`** — a **standing buy**. `budget` is the amount, every month,
+  from the start month onward, with no end date meaning it keeps going until
+  one is set. A per-month row overrides any single month.
+- **`monthly`** — a buy that **varies**. One line per month, each carrying the
+  amount entered for that month in `marketing_campaign_months`; a month nobody
+  entered bills nothing. Never prorated: a month of impressions that starts on
+  the 15th still owes the whole month.
+- **`per_unit`** — `unit_rate` × the matching days in that month. A Wednesday
+  marquee at $125/day is $500 where there are four Wednesdays and $625 where
+  there are five. That is not a rounding artefact; it is what the outlet
+  invoices.
+
+### The rule that governs all of this
+
+**No figure is ever repeated forward unless somebody said to repeat it.**
+
+That single rule produces the two monthly modes, and they are two modes rather
+than one mode with a heuristic because guessing which one a placement is would
+be guessing about money:
+
+- **`monthly`** — the buy varies. Every month is entered, and a month nobody
+  has entered bills **nothing** and says so. Agents budget a month at a time;
+  an amount that quietly copies itself into October is a figure nobody agreed
+  to, and it would go out on an invoice. So the blank is deliberately loud: an
+  amber row in the grid, a "N months not set" chip on the placement, and an
+  "amount not set — nothing billed" line in Financials linking back to the grid.
+  `budget` here is **only the grid's placeholder** — `mk_camp_resolve()` must
+  never fall back to it, and the test suite's **THE FALLBACK GUARD** section
+  exists solely to fail if somebody reintroduces that.
+- **`monthly_flat`** — the buy is standing. "$1,000 a month, no end date" is a
+  decision already made, once, when the placement was set up. Repeating it is
+  honouring an instruction, not inventing one, so `budget` genuinely bills
+  every month. Making Nikki retype 1000 each month would be busywork that gets
+  forgotten — producing exactly the unbilled month `monthly` protects against.
+
+The one way `monthly_flat` can silently bill nothing is a standing buy with no
+standing amount. That resolves to not-set and is flagged like any other blank.
+
+`per_unit` is different again, and principled: the quantity is *derivable*. The
+calendar supplies the day count and a stored row only overrides a month the
+outlet ran short. Nothing is being guessed there either.
+
+### Blank, zero, and no line at all
+
+Three distinct outcomes that must stay distinct:
+
+| State | Bills | Shows as |
+|---|---|---|
+| no row, or `amount` NULL | nothing | **not set** — amber, needs a decision |
+| `amount` = 0.00 | nothing | **no charge** — decided, grey |
+| per-day month the run never touches | nothing | *no line at all* |
+
+Typing `0` is how you record a month that is deliberately not charged. That is
+why `0.00` and NULL cannot be collapsed, and why a row carrying only a note
+still counts as not set — `mk_camp_resolve()` returns `set`, `zeroed` and
+`edited` separately for exactly this.
+
+### Month expansion
+
+`mk_campaign_months()` expands the run for all three recurring modes:
+
+- whole calendar months, from the month of `start_date` to the month of
+  `end_date`. A run of Aug 15 – Sep 2 is two months, not one and a bit.
+- **no `end_date` means open-ended**: it runs through the *current* month and
+  grows by one each month.
+- capped at 60 months, so a mistyped year gives a wrong number rather than
+  thousands of rows.
+
+**`$started_only` — Financials always passes `true`; the grid passes `false`.**
+
+A month that has not begun has not been delivered and cannot be owed. Showing
+September in August makes that month's totals wrong and the running totals
+above them worse. So Financials shows nothing beyond the current month, *even
+when an end date commits the run further out*, and a placement booked to start
+next March produces no line at all until March.
+
+The grid passes `false` on purpose, so a committed run stays visible there and
+a future month can be entered ahead of time. It simply will not reach
+Financials until it arrives. Note the two calls therefore return different
+lists for the same placement — that is the design, not a bug to reconcile.
+
+`mk_weekday_days()` counts occurrences for `per_unit`, clipped to the run — a
+placement starting on the 20th did not run on the 6th. Note this clipping is
+the *opposite* of `monthly`, and deliberately so: a per-day buy is priced by
+the day, a monthly buy is not.
+
+### Entering the figures
+
+`mk_month_grid()` renders the only place per-month figures are entered: a
+column of months with an amount (or days × rate) box on each, one Save.
+Financials is **read-only** for advertising — it links back here. One surface,
+so there is nothing to keep in step, and no way to change a month without
+seeing the rest of its run.
+
+An earlier build had a one-month-at-a-time popover in Financials. It was wrong
+for the way the work happens: Nikki sits down with an invoice and types a
+column of numbers.
+
+Two constraints on that grid:
+
+- It is a **sibling** of the campaign edit form, never a child. Nested `<form>`
+  elements are invalid HTML, the browser drops the inner one, and the grid
+  would post nothing at all.
+- The monthly amount input takes the placement's budget as a **placeholder,
+  never a value**. A pre-filled figure is one nobody typed, and it would save
+  on the next submit as though somebody had.
+
+Run totals are the **sum of the entered months** — not an amount times a month
+count, which is no longer even expressible.
+
+### Advertising tab layout
+
+Three rules that came from the page getting unusable rather than from taste:
+
+- **No URL is ever printed as text, and none goes in a `title` attribute.**
+  Six creatives each carrying a 150-character tracking URL twice over buried
+  the buttons that actually do the work, and the hover tooltip covered the rest
+  of the card. Open and Copy do everything the text did. A creative is one row:
+  name, size, Open/Copy for the file, Open/Copy for its landing page, Edit,
+  remove.
+- **The Target URL field is paste-first.** Most placements reuse a URL from an
+  email or a previous campaign. The UTM builder is collapsed behind "Build with
+  UTMs" and writes into the field **only** when "Use this" is clicked. It used
+  to write on every keystroke, which is fine against a hidden input and
+  destructive against a visible one somebody has just pasted into.
+- **Duplicate carries the ad, not the flight.** The same buy re-run in a new
+  month is the common case (`RoS August` → `RoS September`, half the spend), so
+  Duplicate copies the platform, name + " (Copy)", budget, billing mode, target
+  URL, UTMs, who-pays and **every creative with its own file and landing URL** —
+  and deliberately drops `start_date`, `end_date`, `status` and `sent`. A copy
+  that inherited last month's dates and a Sent flag reads as a live placement
+  the moment it appears, and a forgotten one bills twice. Month rows
+  (`marketing_campaign_months`) are not copied either — they belong to the
+  flight. `mk_campaign_months()` returns `[]` for a null start, so a dateless
+  copy is invisible in Financials until the new dates are typed. The redirect
+  carries `?edit_camp=N#camp-N`; `edit_camp` opens that one edit form
+  server-side, so the dates and the spend are the first thing on screen.
+
+- There must be exactly **one** `name="target_url"` in the add form. When the
+  builder's hidden input was left in alongside the new visible one, PHP would
+  take the last of the two and the pasted value would vanish with no error.
+
+### If you change any of this
+
+Run the test first — it fails loudly rather than silently:
+
+```bash
+php tests/test_campaign_billing.php     # 64 assertions
+```
+
+It pulls `mk_campaign_months()`, `mk_weekday_days()` and `mk_camp_resolve()`
+out of `agent.php` by regex rather than copying them, so it cannot pass against
+a stale copy. The cases are the real situations, pinned to a real calendar:
+August 2026 has four Wednesdays and five Saturdays.
+
+For anything touching the rendered panel, rebuild the render harness as well —
+a stub `class mysqli` under `php -n` returning crafted campaign and month rows,
+then read the Financials table and the grid's input values out of the HTML.
+Check the October case specifically: `value=""` with the budget only as
+`placeholder`. Reasoning about the arithmetic is not the same as seeing it.
+
+## The agent roster card
+
+`index.php` cards carry: avatar, name (the link to the profile), MLS badges,
+then one bottom row — open-tasks badge and balance marker on the left, Archive
+floated right.
+
+**Removed over successive passes:** the Profile button and the intake pencil
+(the name is the link, and `intake.php` is the superseded form), then the status
+chip. Whatever is added back, keep the bottom row to a single line.
+
+**The status chip is redundant, not missing.** `$avatar_bg` already encodes
+status by colour — black active, orange pending, grey archived, pale grey
+no-intake — so the chip said ACTIVE on nearly every card and repeated what was
+already on screen. If a status ever stops being distinguishable by avatar
+colour, that mapping is the thing to fix, not the chip to reinstate.
+
+Cards without an intake keep their own `.card-actions-row` with Create Intake
+and the roster-record pencil: those are real actions, not decoration.
+
+**The name comes from `COALESCE(mi.agent_name, r.name)`.** The marketing record
+wins where there is one. `office_roster.name` is overwritten from Spark at 03:00
+nightly, so a name corrected there silently reverts — and `agent.php` has always
+shown the intake's name, so the roster and the profile disagreeing about the
+same person was the visible symptom.
+
+**Both arms of that UNION must select the same columns in the same order.**
+Adding one to either without the other is a fatal query error that takes the
+landing page down.
+
+### Colour split on the badges
+
+Open tasks are **blue**; a balance due is **orange**. Tasks are work in
+progress, money is the thing to chase. Sharing one colour would have made the
+badge that matters indistinguishable from the one that usually doesn't.
+
+The balance badge is a **marker, not a figure**: a small `$` circle, no amount.
+The roster is for scanning, and the number belongs on Billing where it can
+actually be acted on. The amount stays in the `title`, so hovering answers "how
+much" without a click.
+
+It appears only when something is owed, links to `billing.php`, and uses the
+same definition of outstanding as that page — every unpaid month's broker
+total, via `mh_agent_financials()`. One function, so the badge and the Billing
+page cannot quote different numbers.
+
+That does mean a `mh_agent_financials()` pass per agent on the landing page.
+There is no cheaper aggregate: a month's charge depends on billing mode, the
+calendar and per-month overrides, so it cannot be reduced to a `SUM` over a
+column. If the roster ever feels slow, that is where to look first.
+
+### Avatar initials
+
+Derived as first-letter-of-first-word plus first-letter-of-last-word, unless
+`marketing_intakes.initials` is set. Deriving is right for a person and wrong
+for anything else — "Weber Boxer Group" gives WG — so the override exists to be
+typed into the Initials box on the Overview tab. Blank means keep deriving.
+
+`initials()` is defined identically in `index.php` and `agent.php`. They must
+stay in step: the roster card and the profile show the same avatar for the same
+person, so a divergence is immediately visible and reads as a data bug.
+
+## index.php closes its connection early
+
+`index.php` calls `$conn->close()` right after loading the roster, well before
+the page renders. **Anything added below that line which touches the database is
+a fatal**, and the message is a good one:
+
+```
+PHP Fatal error: Uncaught Error: mysqli object is already closed
+```
+
+The balance-badge block was written below it and every page load 500'd. Both
+the balance queries and `mh_agent_financials()` now sit above the close, with a
+comment there saying so.
+
+If a new feature needs data on this page, gather it before the close rather
+than moving the close down — the close is early on purpose, so the connection
+is not held open through rendering.
+
+### The render harness must fail the same way the server does
+
+That bug shipped because the stub `mysqli::close()` in the test harness was
+`return true;` and nothing more, so the harness rendered the broken file
+perfectly. Real mysqli throws on **any** use after close.
+
+The stub now sets a flag in `close()` and every `query()`/`prepare()` checks it.
+Verified both directions: the old ordering throws in the harness, the fixed one
+renders. When adding to that stub, put the method on the right class — `mh_stmt`
+also has a `close()`, and the first edit landed there instead of on `mysqli`.
+
+**The general rule:** a stub that is more forgiving than the real thing is worse
+than no stub, because it converts a crash into a pass. Make stubs strict.
+
+## Deploying a page before its migration
+
+`inc/schema.php` provides `mk_column_exists()`, and both `index.php` and
+`agent.php` use it to guard the `initials` column. This is not defensive
+programming for its own sake — both failure modes are **silent**:
+
+- `agent.php` builds one UPDATE from every posted field and does
+  `if ($s) { ...execute... }`. An unknown column makes `prepare()` fail, so the
+  write is skipped entirely and the page still redirects saying "saved". Every
+  edit on that form quietly stops working.
+- `index.php` names the column in its roster query. A failed query leaves
+  `$agents` empty, so the page renders perfectly with no agents on it.
+
+Neither shows an error to anyone. Guarding costs one `information_schema`
+lookup, cached per request.
+
+The guard is scaffolding for the deploy window, not a permanent abstraction —
+once a migration has been applied everywhere, the guard around it can be
+removed.
+
+## Billing — the collections page
+
+`billing.php` has three tabs, and only the first is a collections view.
+
+| Tab | Question | Scope |
+|---|---|---|
+| **Due from agent** | What needs doing next | Active agents; settled months older than last month drop off |
+| **Monthly breakdown** | What did each month cost, and who absorbed it | Every month, every agent, former included |
+| **Agent totals** | Where does each relationship stand overall | All time, every agent, former included |
+
+### Every tab comes from one pass, and the scopes must not be crossed
+
+`mh_agent_financials()` already returns `broker`, `mh`, `unassigned` and the item
+list per agent-month. Billing used to read `broker` and discard the rest, so all
+three tabs and the breakdown modal came from data the page was already computing:
+no new query, no migration.
+
+The trap is scope. Tab 1 filters twice — settled months older than last month are
+hidden, and only active agents are listed. Both are right for a to-do list and
+wrong for a total:
+
+- Build the all-time figures from tab 1's filtered set and **"covered by Mont Haus
+  to date" shrinks every time a month is marked paid**.
+- Carry the `is_active = 1` filter into them and **every offboarded agent's spend
+  silently vanishes** from the company's own numbers.
+
+So tabs 2 and 3 are computed from `$fin['months']` *before* the tab-1 filters run,
+the intake query no longer filters on `is_active`, and each tab decides for itself.
+Former agents appear on tabs 2 and 3 with a **Former** tag. The render harness
+marks every month paid and asserts the Mont Haus totals do not move.
+
+### Three columns, never two
+
+Agent / Mont Haus / **Undecided**. A line whose Who Pays is unset belongs to
+neither party — `mk_fin_split()` deliberately keeps it visible rather than letting
+it skew a total. Folding it into either column overstates that column by exactly
+that amount and hides work that still needs doing. The column is always rendered,
+even at zero.
+
+Mont Haus's share has **no paid state**, and none should be invented for it. It is
+absorbed, not invoiced — spend, not a receivable. Only the broker figure has
+`billed_at` / `paid_at` in `marketing_billing_months`.
+
+### The tab lives in the URL
+
+`?tab=due|monthly|agents`, validated server-side with a fallback to `due`.
+Switching tabs is client-side (all three panels are already rendered) and updates
+the URL via `history.replaceState`, so a reload — or the Billed/Paid checkboxes,
+which POST and redirect — comes back to the tab you were on. The **Show settled
+history** link carries the tab too.
+
+### The amount is the breakdown trigger
+
+Every month row's amount opens a `<dialog>` listing what the month is made of,
+with each line's own three-way split. It replaced the "This cycle" chip, which
+only ever meant "not old, not billed" — something the absence of the other four
+chips already says — while occupying the one part of the row that could carry
+something useful. The trigger is on **every** row, not just the ones that used to
+show that chip: "what is this made of" is the same question in any state.
+
+The dialog is filled from JSON embedded in the page, not from an endpoint — an
+endpoint would re-run `mh_agent_financials()` to return figures the browser is
+already holding. Only months that reach tab 1 are included, since that is the only
+place the modal opens from.
+
+Style note: `.bl-amt-btn` is `inline-block`, never `width:100%`. Full width puts
+the dashed underline across the whole cell, so the rule starts well left of the
+number and reads as a stray line rather than an affordance.
+
+### The spreadsheet link
+
+`ADVERTISING_SHEET_URL` in `inc/config.php` points at the SharePoint digital
+advertising workbook, linked from the top of the page. Config rather than
+hard-coded because SharePoint share URLs carry a token in `?e=` and get
+regenerated when a link is re-shared — that should be a config change, not a
+code edit.
+
+`billing.php` renders it behind `defined()`, so publishing the page against a
+stale `config.php` drops the link rather than fataling. Both directions were
+rendered and checked.
+
+### It computes nothing
+
+Every figure comes from `mh_agent_financials()` in `inc/financials.php`, the
+same function that renders an agent's Financials tab. That extraction is the
+whole reason the page is safe to have: two implementations of "what does this
+agent owe" would eventually disagree, and the first sign of it would be a
+broker holding an invoice that does not match the screen.
+
+`marketing_billing_months` stores **state only** — `billed_at`, `paid_at`, who
+ticked them. It does not store what an agent owes.
+
+### `billed_amount` is the one stored figure, and it is not a duplicate
+
+It is the total frozen at the moment BILLED was ticked: what the invoice
+actually says. If the underlying campaigns later change, the two disagreeing is
+the useful signal — an invoice is out in the world for the old number. The page
+shows both and flags it rather than quietly adopting the new one.
+
+Unticking BILLED clears the snapshot, because a frozen figure attached to a
+month nobody has invoiced is worse than none.
+
+Ticking PAID on a month that was never invoiced stamps `billed_at` too. A paid
+month that was never billed would be a hole in the record.
+
+### The five states
+
+| State | Condition | Colour |
+|---|---|---|
+| Paid | `paid_at` set | green — hidden entirely once 2+ months old |
+| Invoiced | billed, unpaid, this month or last | yellow |
+| Overdue | billed, unpaid, 2+ months old | red |
+| Not invoiced | unbilled, 2+ months old | amber |
+| This cycle | unbilled, this month or last | grey |
+
+**Red and amber are deliberately different colours.** Red is "they owe us and
+it is late" — the broker's move. Amber is "nobody has invoiced this" — ours.
+Same urgency, different owner, and the page is only scannable if the two piles
+are distinguishable at a glance.
+
+An agent with no visible months is omitted from the page completely.
+
+### bm_age() — plain integers, never DateTime::diff()
+
+The first version used `DateTime::diff()` and got the **sign backwards**: every
+past month returned negative, so `$age >= 2` was never true and nothing could
+ever turn red or amber. The page looked perfectly normal. It was caught only by
+printing the ages for a range of months and comparing them to what they should
+be.
+
+`(year * 12 + month)` subtraction has no sign to get wrong. Leave it alone.
+
+## Splitting one invoice across several agents
+
+`order_split.php`. A vendor bills the discount, the rush fee, the shipping and
+the sales tax **once**, at the bottom of the invoice, however many agents' signs
+are on it. Entering only each agent's line-item total therefore under-states
+every one of them, and the order never reconciles to the card statement.
+
+Oakley IND-650292 is the case it was built from: $2,368.40 of merchandise
+charged as $3,647.04. Every $1.00 of sticker price actually cost $1.54.
+
+### It changes nothing downstream, and that is the point
+
+`marketing_collateral_orders.cost` is already the one number the rest of the app
+reads — `mh_agent_financials()` derives the Financials tab, `billing.php` and the
+roster balance badge from it and from nothing else. `order_split.php` writes the
+**landed** cost into that field, so every downstream surface is correct with no
+edit to any of them.
+
+That is why this is a new page plus one migration rather than a change to the
+money. If a future version needs to touch `inc/financials.php`, stop and ask why
+— the reason it does not is load-bearing.
+
+### The rule
+
+Every bottom-of-invoice line is allocated pro-rata by each row's share of the
+merchandise subtotal. One percentage drives all five adjustments, so there is no
+line on which anyone could argue one agent was favoured, and no per-line
+judgement to be made differently next time.
+
+`mh_invoice_allocate()` in **`inc/invoice_split.php`** is the whole of it. That
+file queries nothing and echoes nothing, so the test suite tests the real
+function rather than a copy — unlike `test_campaign_billing.php`, which has to
+regex it out of `agent.php`.
+
+Two things in that file worth knowing before changing it:
+
+- **Tax needs no rate, and none is stored.** Merchandise, discount and rush are
+  all split by the same share, so whatever combination of them the vendor's
+  taxable base is, that base splits by the same share too. Allocating tax by
+  share is therefore *exact*, not an approximation. The **THE TAX BASE
+  INDEPENDENCE** section of the test proves it against three different candidate
+  bases and is what fails if somebody "improves" the tax line into something
+  that needs to know which one is right.
+- **`grand_total` is the authority, not the sum of the parts.** It is the number
+  on the card statement. Rounding five allocations across three rows leaves the
+  sum a cent or two out, and that residual is assigned to the largest row so the
+  costs always sum to it *exactly*. When the entered charges do not add up,
+  `reconciles` comes back false and the page refuses to save — it must never
+  absorb a mistyped figure into whoever happens to be biggest.
+
+### The house line
+
+Merchandise belonging to no agent — generic office stock, like the 20 unbranded
+Open House signs on IND-650292 — goes on the house line. It is **in** the
+allocation pool but is never written to anybody, and only its merchandise figure
+is stored, on `marketing_vendor_invoices.house_merch`.
+
+Both halves of that matter:
+
+- Leaving it **out of the pool** would make the agents absorb the freight and tax
+  on signs that were never theirs. On IND-650292 that would have charged two
+  agents 74% more than they owe.
+- **Not storing it** would mean the agent rows no longer add up to
+  `merch_subtotal`, so reopening the invoice would either refuse to load its own
+  saved data or silently inflate everyone's share.
+
+### `billed_with_order_id` does not combine with this
+
+Two mechanisms, opposite directions, and an order must never carry both:
+
+| Column | What it does |
+|---|---|
+| `billed_with_order_id` | de-duplicates a combined purchase inside **one** agent's record — the order holding the cost reports it, the linked ones contribute $0 |
+| `vendor_invoice_id` | divides one invoice **across** agents — every row carries its own true share |
+
+An order with both set is counted as zero by `mh_agent_financials()` while still
+holding an allocated cost, so the money would vanish from Financials with nothing
+on screen saying so. `order_split.php` therefore clears `billed_with_order_id` on
+every row it writes, and refuses to adopt an order that already has one set.
+
+### What it writes, and what it leaves alone
+
+On an order it owns it writes `type`, `label`, `qty`, `cost`, `merch_amount`,
+`vendor`, `vendor_url`, `order_number`, `ordered_at`, `paid_by`, `status`,
+`tracking_number`, `tracking_url`, `vendor_invoice_id`.
+
+**Fulfilment is invoice-level, not per line.** `status`, `tracking_number` and
+`tracking_url` are entered once in the invoice header and stored on
+`marketing_vendor_invoices`. One invoice is one shipment — the vendor makes it
+together and sends it in one box — so a status per agent line would be the same
+value typed several times and free to disagree with itself. They are then copied
+onto **every** collateral order the split writes, so the Collateral tab still
+shows tracking per order: entered once, fanned out.
+
+The consequence is deliberate: editing one order's tracking on the Collateral tab
+and then re-saving the invoice here overwrites it. If a shipment ever genuinely
+arrives in two boxes, that is the assumption to revisit.
+
+Status defaults to **`ordered`**, not `pending`. An invoice being typed here is
+one that has been placed; defaulting to `pending` would mark every order on it as
+not yet ordered.
+
+It does **not** write `delivered_at`, `file_url` or `notes` on an existing order.
+Those are not on this form, so writing them would blank them. `notes` is written
+on INSERT only, where there is nothing to lose.
+
+### The lines table sizes with min-width, never width
+
+Nine columns, each with a `min-width` floor, and `table.os-lines` carrying a
+`min-width` of **at least the sum of those floors plus 8px-a-side padding**
+(currently 1140px).
+
+`width` on a `<th>` is a suggestion the table overrules to make columns fit, and
+it takes the space from whichever column holds the *narrowest content* — which is
+Qty. A `width:70px` Qty column rendered about 20px wide once two more columns were
+added. `min-width` is a floor the table cannot go under, so it overflows into
+`.os-table-scroll` instead of crushing a cell.
+
+Leaving the table's own `min-width` stale has the same effect as a bare `width`:
+the table compresses to that figure and overrules every column floor together. The
+render harness asserts all three — no bare `width=` in the header, nine columns,
+and the table floor covering the sum.
+
+Measured, not eyeballed: Qty's input is 116px at every width from 390px to 1440px,
+the table scrolls inside its wrapper below 1280px, and the page never scrolls
+sideways at any width. Note when using Playwright for this that `newPage()` takes
+`viewport`, not `viewportSize` — the wrong key is silently ignored and every
+reading comes back at the default 1280px, which looks like a clean result.
+
+Deleting an invoice record **keeps** the collateral orders and their costs — the
+orders were really placed, and an agent's history should not disappear because
+the invoice record was tidied up. They are unlinked instead.
+
+### Receipts are copied per order, not shared
+
+Each collateral order gets its **own physical copy** of the invoice receipt.
+`agent.php`'s `delete_collateral_receipt` physically unlinks the file, so three
+orders pointing at one filename would mean clearing the receipt on one agent
+silently breaking the link for the other two. A few duplicated PDFs is the better
+trade. `receipt.php` also takes `?invoice_id=` for the invoice's own copy.
+
+### The JavaScript is a second implementation, and is labelled one
+
+The live preview at the bottom of `order_split.php` is a transliteration of
+`mh_invoice_allocate()`, kept because a server round-trip per keystroke cannot
+move the figures as you type. It decides nothing: Save recomputes in PHP and the
+page redisplays the server's numbers. Change one, change the other in the same
+commit. Note `r2()` there — PHP's `round()` is half-away-from-zero and JS's
+`Math.round` is half-up, which differ on negatives, and the discount line is
+always negative.
+
+### Before changing any of it
+
+```bash
+php tests/test_invoice_split.php     # 70 assertions — the arithmetic
+php tests/render_order_split.php     # 29 assertions — the rendered page
+```
+
+The render harness builds a sandbox in the temp directory with a **strict** stub
+mysqli: `close()` sets a flag every `query()`/`prepare()` checks, `bind_param()`
+throws when the type string and the argument count disagree, and an unfixtured
+SQL statement **throws** rather than returning no rows. A stub more forgiving
+than the real thing converts a crash into a pass — see the `mysqli::close()`
+story above. It runs the page under `php -n` so that ext/mysqli is absent and the
+stub class is the only one defined.
+
+The entry points are the top of the Collateral tab in `agent.php` and the header
+of `billing.php`. Deliberately **not** the top nav: the 820px breakpoint in
+`inc/_nav.php` was measured against the links already there, and a fourth would
+need re-measuring first.
+
 ## Spark MLS API — v1 vs RESO OData
 
 The agent keys stored in `office_roster.agent_key` / `vail_agent_key` are
@@ -265,6 +923,67 @@ runner. So:
 
 - Deliver SQL as a `.sql` file in `sql/`.
 - Keep statements copy-pasteable and in the order they must run.
+
+### The STATUS line is the source of truth
+
+Every migration carries a `STATUS:` line in its header comment, and it is the
+one record of what has actually been applied. The protocol:
+
+- **I write `STATUS: not yet run`.** Nikki changes it to `STATUS: run` once she
+  has run it in TablePlus. Older files use the longer
+  `STATUS: already run (date) — what it did` form; either reads fine.
+- **Read it before assuming anything about the schema.** The live database is
+  not visible from here, so this file header is the only evidence available.
+  `grep -m1 -i -- '-- *STATUS:' sql/*.sql` lists the lot in one go.
+- **Never redeliver a migration marked run.** Writing the file again would
+  replace her stamp with `not yet run`, and the next session would tell her to
+  run a migration that has already been applied — which, on a non-idempotent
+  ALTER, is a confusing error rather than a no-op. If a run migration turns out
+  to be wrong, write the next-numbered file that corrects it.
+- When a delivered file gets revised before being run, say so plainly and give
+  the one query that distinguishes the versions. `alter_campaign_billing_v2.sql`
+  was rewritten twice in a day; its header carries the `SHOW COLUMNS FROM
+  marketing_campaign_months` check that tells the two apart.
+
+Current state, checked 2026-08-24: everything is run except
+`vendor_invoices_v2_fulfilment.sql` — `order_split.php` shows a notice naming it
+and does nothing until it has been applied. No other page is affected.
+
+### Never edit a CREATE TABLE migration that has already run
+
+`vendor_invoices_v1.sql` was edited to add `status`, `tracking_number` and
+`tracking_url` to the `CREATE TABLE`, on the belief it was still unrun. It had
+already been applied. Because the file is a `CREATE TABLE IF NOT EXISTS`, running
+the edited version **did nothing and reported success** — the table existed, so
+the whole statement was skipped. The page then failed on save with
+`Unknown column 'status' in 'field list'`.
+
+`v1` has been restored to the table as it was actually created, and the three
+columns ship as `vendor_invoices_v2_fulfilment.sql`, an `ALTER`. The rule: once a
+`CREATE TABLE` migration has been applied anywhere, every later change is a new
+`ALTER` file, however small. "Not yet run" in this document is a claim about the
+hub, and it can be stale.
+
+**The guard must cover every migration the page writes to, not just the first.**
+`order_split.php` originally checked only v1's objects, which is why a
+half-migrated database rendered the form, accepted an invoice and then threw a
+driver error. It now checks each migration separately and names the missing file —
+and when v1 is present but v2 is not, it says explicitly that re-running v1 will
+not help, because that is the obvious next move and it silently does nothing.
+
+The render harness reproduces that half-migrated state. Doing so needed
+param-aware fixtures (`__by_params`): `mk_column_exists()` binds the table and
+column as parameters, so every call has identical SQL and matching on query text
+alone cannot tell one column check from another.
+
+Current state, checked 2026-08-24: `vendor_invoices_v1.sql` is **run**;
+`vendor_invoices_v2_fulfilment.sql` is **not yet run**. Verify with
+`SHOW COLUMNS FROM marketing_vendor_invoices WHERE Field IN ('status','tracking_number','tracking_url');`
+— three rows means v2 has been applied.
+
+`offboard_bonnie_scott.sql` now carries `STATUS: run`; the note here used to say
+it was deferred. The file header is the source of truth, so this summary was the
+stale one.
 - **Batch large INSERTs.** A single 265-row / 32KB statement silently landed
   only 144 rows through the MariaDB client against MySQL 8.4 — no error, just
   a short table. `sql/build_bootstrap.py` now emits batches of 25. Anything
@@ -300,8 +1019,55 @@ runner. So:
 The framework CSS sets `.pc-container { position: relative; top: 74px }`. Overriding
 `top` on a page leaves a phantom black gap. Use `top: 0; margin-top: 70px` instead.
 
-The site header is `inc/_nav.php`, included by `index.php`, `agent.php` and
-`intake.php`. It relies on `.mh-header-inner`, `.mh-logo`, `.mh-nav`,
+### The 169px gap under the header
+
+`<body class="layout-extended">` brings a rule the pages cannot beat:
+
+```css
+.layout-extended .pc-container, .layout-extended .pc-sidebar { top: 169px }
+```
+
+That 169px is 74px of header plus ~95px reserved for a `.pc-tab-wrapper`
+secondary nav bar. **None of our pages have that bar**, so it was 95px of dead
+white space on every one of them.
+
+Each page already had `.pc-container { top: 0 }` and it never did anything —
+one class against two loses on specificity regardless of source order. The page
+looked like it was setting the value; the browser was ignoring it.
+
+The override now lives in **`inc/_nav.php`**, which is a departure from that
+partial's "user-menu styles only" rule and deliberate: every page that includes
+it had the bug, so a page-by-page fix would leave the next new page to inherit
+it. It matches the framework's own selector and lands later in the document.
+
+Two things not to do:
+
+- Don't remove `layout-extended` from `<body>`. It also supplies
+  `--pc-header-background` (the dark header) and `.pc-header { left: 0 }`.
+- Don't try to fix it with a single-class selector in a page's `<style>`. That
+  is exactly what was already there and losing.
+
+Verified by measurement, not by eye: headless Chromium against the real
+stylesheet, reading `getComputedStyle`. Computed `top` was 169px before and 0px
+after, and the page heading moved from y=263 to y=94. A gap this size is easy to
+mistake for padding somewhere — find the winning rule rather than adding
+negative margin on top of it.
+
+The same rule then carries `padding-top: 20px` for actual breathing room.
+**Keep the two separate.** `margin-top` clears the fixed header and must equal
+its height; `padding-top` is the gap you see. Merging them into one number loses
+which half is structural.
+
+That padding is also what stops margin collapsing. `index.php`'s `.wrap` asks
+for `margin: 32px auto`, and with nothing between it and `.pc-container` the
+32px collapsed straight out through the container and did nothing — which is
+why that page sat flush against the nav while others looked fine. Remove the
+padding and it goes flush again.
+
+The site header is `inc/_nav.php`, included by `index.php`, `agent.php`,
+`intake.php` and `billing.php`. Its links are Marketing and Billing; the Hub
+link was removed at Nikki's request. `HUB_URL` still exists in `inc/config.php`
+and nothing reads it any more. It relies on `.mh-header-inner`, `.mh-logo`, `.mh-nav`,
 `.mh-nav-link` and `.mh-nav-divider`, which those pages define in their own
 inline `<style>` blocks; only the user-menu rules live in the partial. Set
 `$nav_extra` before including to add a trailing crumb.
@@ -310,6 +1076,67 @@ inline `<style>` blocks; only the user-menu rules live in the partial. Set
 and does not use `_nav.php`. Including it there would render unstyled, because
 the two pages load different CSS frameworks.
 
+### Mobile
+
+The pages were built wide and used on a phone, which is a different problem
+from being "responsive": nothing was broken at desktop width, so every fix here
+is additive and lives inside a `max-width` media query. **Desktop was verified
+pixel-identical before and after** — headless Chromium at 1400px, screenshots of
+the roster, Billing and the agent page diffed against the same pages rendered
+from the previous revision. Keep it that way: if a change to one of these
+surfaces cannot be made inside a media query, it is a change to both.
+
+Breakpoints, and why each one is where it is — measured from where the content
+actually runs out of room, not from a device table:
+
+| Where | Breakpoint | What runs out |
+|---|---|---|
+| `inc/_nav.php` | 820px | Marketing, Billing, the user chip, Sign out, plus a crumb |
+| `agent.php` tabs | 860px | seven tabs with icons and badges |
+| `agent.php` cards | 700px | Collateral / Advertising card internals |
+| `index.php` toolbar | 620px | search plus four sort buttons |
+| `billing.php` rows | 640px | month, amount, chip and two checkboxes |
+
+Four things worth knowing before touching any of it:
+
+- **Media queries carry no extra specificity.** A mobile block placed *above* a
+  base rule loses to it. `agent.php`'s mobile block therefore sits at the very
+  end of its `<style>`, after every rule it overrides. This was not a
+  hypothetical: the block was first written next to the other media queries
+  around the listings grid, and `.order-details { display:grid }` silently lost
+  to the `display:flex` defined ninety lines further down. The page looked
+  almost right, which is the worst way for it to fail.
+
+- **An inline `style` beats a media query outright.** The Advertising tab's
+  title row had its flex rules on the element, so no `max-width` block could
+  restack it. Those rules moved into `.adv-head` in the stylesheet, unchanged.
+  Any row that might need to stack on a phone must not carry inline layout.
+
+- **The mobile controls are never a second copy of the markup.** The nav panel
+  contains the same `<a>` elements as the bar; the agent tab menu is cloned
+  from the `.tab-btn` elements at runtime and forwards each click to the real
+  button; the roster's sort `<select>` and the sort buttons share one state and
+  one `applyAll()`. So a tab or a nav link added in one place appears in both,
+  and there is still exactly one implementation of "switch tab" and "sort".
+  `.sort-row` is `display:contents` at desktop for the same reason — it wraps
+  the controls for the mobile rules without changing the desktop flex layout.
+
+- **`bl-tag.current` — "This cycle" — is hidden on mobile, and only that tag.**
+  It is what every uninvoiced current month says, so it carries no information
+  and was the widest thing in the row. Paid / Invoiced / Overdue / Not invoiced
+  all stay: each is something to act on. The whole `.bl-chips` wrapper is
+  hidden rather than the tag alone, so the empty grid row and its gap go with
+  it — safe because `current` means "not yet invoiced" and `.bl-drift` only
+  renders on a month that *has* been invoiced. The two can never co-occur; if
+  that ever stops being true, this rule has to become narrower.
+
+Verify by measurement, as with the 169px gap. The harness used here extracts
+each page's `<style>` block, renders representative markup at 390px, 320px and
+1400px, and asserts computed geometry — that the amount is right-aligned to its
+row, that wrapped button rows share one left edge, that nothing exceeds the
+viewport width. Reasoning about flex-wrap is not the same as seeing where it
+wrapped.
+
 ## Marketing tool structure
 
 - `index.php` — agent roster. `office_roster` UNION ALL intake-only agents so newly
@@ -317,6 +1144,8 @@ the two pages load different CSS frameworks.
 - `agent.php` — the primary editing surface. All adding/editing happens here and in its
   tabs: Overview | Tasks | Collateral | Advertising | Assets & Docs | Notes.
 - `intake.php` — legacy form, largely superseded by `agent.php`.
+- `order_split.php` — one vendor invoice, several agents. Writes the landed cost into
+  each agent's collateral order. See "Splitting one invoice across several agents".
 - `_onboarding.php` — seeds the onboarding checklist task tree for a new agent. Safe to
   call repeatedly; skips if tasks already exist.
 - `office_roster` is the master agent table; `marketing_intakes.roster_id` links to it.

@@ -41,3 +41,20 @@ define('RECEIPTS_DIR', __DIR__ . '/../../receipts/');
  * falls back to the normal role checks.
  */
 define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com,jm.drai@monthaus.com');
+
+/**
+ * ADVERTISING_SHEET_URL — the working digital-advertising spreadsheet.
+ *
+ * Linked from the top of billing.php. It lives in SharePoint and still holds
+ * detail this app has not absorbed yet, so it sits next to the totals rather
+ * than in somebody's bookmarks.
+ *
+ * Here rather than hard-coded in the page so a re-shared link is a config
+ * change, not a code edit. SharePoint share URLs carry a token in `?e=` and do
+ * get regenerated.
+ *
+ * Empty or undefined hides the link — billing.php checks before rendering it,
+ * so publishing that page without this one degrades quietly instead of fataling.
+ */
+define('ADVERTISING_SHEET_URL',
+    'https://monthausllc.sharepoint.com/:x:/s/marketing/IQD2mCUD7tywR4KMubl8HJhhAai2pArG9tMmGohgSNm9etk?e=UF2ZSX');

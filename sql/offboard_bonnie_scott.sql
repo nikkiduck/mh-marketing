@@ -1,7 +1,7 @@
 -- ============================================================================
 --  offboard_bonnie_scott.sql — revoke access for a departed employee
 --
---  STATUS: not yet run
+--  STATUS: run
 --
 --  bonnie.scott@monthaus.com (user id 11) has left Mont Haus. She came across
 --  in bootstrap.sql as one of the two `admin` accounts.

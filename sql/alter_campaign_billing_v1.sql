@@ -1,0 +1,27 @@
+-- ============================================================================
+--  alter_campaign_billing_v1.sql
+--
+--  STATUS: SUPERSEDED — DO NOT RUN.
+--
+--  Replaced by alter_campaign_billing_v2.sql before it was ever applied.
+--
+--  v1 added a two-value billing_mode (one_time / monthly) and a
+--  marketing_campaign_months table keyed (campaign_id, ym). Both are in v2,
+--  plus the two things v1 could not express:
+--
+--    · a per-day rate, where the month's total is the rate times the number of
+--      matching days on the calendar (four Wednesdays in August, five
+--      Saturdays in the same August)
+--    · a rate change that carries forward from a given month, so raising a buy
+--      in September does not rewrite what was owed in August
+--
+--  The v2 table also widens the unique key to (campaign_id, ym,
+--  effective_forward), which v1's key would have prevented.
+--
+--  If you already ran v1 — you almost certainly did not, it was superseded the
+--  same day — run section 1b of v2 rather than section 1, and skip v2's
+--  section 2. That path is marked in the file.
+--
+--  Kept as a file, empty of statements, so that a copy of it downloaded before
+--  the replacement cannot be run by mistake.
+-- ============================================================================

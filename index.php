@@ -7,6 +7,8 @@
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
 require_once __DIR__ . '/inc/_onboarding.php';
+require_once __DIR__ . '/inc/schema.php';
+require_once __DIR__ . '/inc/financials.php';
 require_login();
 require_role('admin');
 
@@ -55,11 +57,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ── Load full roster from office_roster + marketing_intakes ───────────────────
 // office_roster is master; marketing_intakes joined for status, tasks, headshot.
 // UNION ALL also picks up intakes not yet linked to a roster entry.
+// The card name uses COALESCE(mi.agent_name, r.name): the marketing record wins
+// where there is one. office_roster.name is overwritten from Spark at 03:00
+// nightly, so a name corrected there silently reverts — and agent.php has
+// always shown the intake's name, so the roster disagreeing with the profile
+// about the same person was the visible symptom.
+//
+// Both arms of the UNION must select the same columns in the same order. Adding
+// one to either without the other is a fatal query error that takes down the
+// landing page, so count them after any edit here.
+// Selected only once alter_intake_initials_v1.sql has run. Naming a column that
+// does not exist fails the whole query, and a failed query here renders an empty
+// roster with no error at all.
+$has_initials = mk_column_exists($conn, 'marketing_intakes', 'initials');
+$col_initials = $has_initials ? 'mi.initials' : 'NULL';
+
 $agents = [];
 $res = $conn->query("
     SELECT
         r.id              AS roster_id,
-        r.name            AS agent_name,
+        COALESCE(mi.agent_name, r.name) AS agent_name,
+        {$col_initials}   AS initials,
         r.title           AS agent_title,
         r.markets,
         r.agent_key,
@@ -87,6 +105,7 @@ $res = $conn->query("
     SELECT
         NULL              AS roster_id,
         mi.agent_name     AS agent_name,
+        {$col_initials}   AS initials,
         mi.agent_title    AS agent_title,
         NULL              AS markets,
         mi.mls_id_aspen   AS agent_key,
@@ -114,6 +133,37 @@ $res = $conn->query("
     ORDER BY updated_at IS NULL, updated_at DESC, agent_name ASC
 ");
 if ($res) $agents = $res->fetch_all(MYSQLI_ASSOC);
+
+// Balances are computed here, BEFORE the connection is closed. This block was
+// first written below $conn->close() and every page load died with "mysqli
+// object is already closed" — a fatal the render harness missed because its
+// stub close() was a no-op. Anything added later that touches the database
+// must go above this line.
+// ── Outstanding balance per agent ─────────────────────────────────────────────
+// Same definition as billing.php: every month the broker owes for that has not
+// been marked paid. Both read mh_agent_financials(), so the roster badge and
+// the Billing page can never quote different numbers.
+//
+// One pass per agent with an intake — a few queries each. There is no cheaper
+// aggregate available: a month's charge depends on billing mode, the calendar
+// and per-month overrides, so it cannot be reduced to a SUM over a column.
+$paid_months = [];   // [intake_id][ym] => true
+$r = $conn->query("SELECT intake_id, ym FROM marketing_billing_months WHERE paid_at IS NOT NULL");
+if ($r) while ($row = $r->fetch_assoc()) $paid_months[(int)$row['intake_id']][$row['ym']] = true;
+
+$balances = [];      // [intake_id] => outstanding
+foreach ($agents as $a) {
+    $iid = (int)($a['intake_id'] ?? 0);
+    if (!$iid || isset($balances[$iid])) continue;
+    $fin = mh_agent_financials($conn, $iid);
+    $out = 0.0;
+    foreach ($fin['months'] as $ym => $m) {
+        if (isset($paid_months[$iid][$ym])) continue;
+        $out += (float)$m['broker'];
+    }
+    $balances[$iid] = $out;
+}
+
 $conn->close();
 
 // ── Count by display-status ───────────────────────────────────────────────────
@@ -127,7 +177,17 @@ foreach ($agents as $a) {
     }
 }
 
-function initials(string $name): string {
+/**
+ * Avatar initials. Derived from the name unless an override is stored.
+ *
+ * Deriving works for a person and not for anything else — "Weber Boxer Group"
+ * gives WG — so marketing_intakes.initials exists to be typed in. NULL or ''
+ * means keep deriving, which is every ordinary agent.
+ */
+function initials(string $name, ?string $override = null): string {
+    $o = strtoupper(trim((string)$override));
+    if ($o !== '') return substr($o, 0, 3);
+
     $parts = preg_split('/\s+/', trim($name));
     $i = strtoupper($parts[0][0] ?? '');
     if (count($parts) > 1) $i .= strtoupper($parts[count($parts)-1][0] ?? '');
@@ -246,6 +306,15 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
     .sort-btn.active-sort { background:#111; color:#fff; border-color:#111; }
     .sort-btn .ti { font-size:11px; }
 
+    /* ── Sort, on desktop ──────────────────────────────────────────────────
+       .sort-row is a wrapper added purely so the mobile rules below have
+       something to grab. `display:contents` makes it vanish from the layout,
+       so the label and the buttons remain direct flex children of .toolbar and
+       sit exactly where they always did. The <select> is the mobile control
+       and is not rendered here. */
+    .sort-row    { display:contents; }
+    .sort-select { display:none; }
+
     .filter-bar {
       display:flex; gap:6px; margin-bottom:20px;
       border-bottom:2px solid #e5e7eb; padding-bottom:0;
@@ -272,6 +341,47 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
     @media (max-width:1100px) { .agent-grid { grid-template-columns: repeat(3, 1fr); } }
     @media (max-width:760px)  { .agent-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (max-width:480px)  { .agent-grid { grid-template-columns: 1fr; } }
+
+    /* ── Toolbar and filters, on mobile ────────────────────────────────────
+       Four sort buttons in a row need about 520px. Below that they wrapped
+       into a second and third line, and at phone width the last one ran off
+       the right edge entirely.
+
+       So: search gets its own full-width line, and Sort moves underneath it as
+       a native <select>. Native because the OS picker is a better control than
+       anything built here — it is full-screen, scrollable and already familiar.
+
+       The buttons still exist in the DOM (hidden); the select and the buttons
+       are kept in sync by the script at the bottom of the page, so whichever
+       one is on screen drives the same sort state. */
+    @media (max-width: 620px) {
+      .toolbar { flex-direction:column; align-items:stretch; gap:9px; }
+      .search-wrap { max-width:none; width:100%; }
+      #agentSearch { padding:9px 10px 9px 32px; font-size:16px; }  /* 16px: iOS zooms the page on focus below it */
+
+      .sort-row  { display:flex; align-items:center; gap:9px; }
+      .sort-btns { display:none; }
+      .sort-select {
+        display:block; flex:1; min-width:0;
+        padding:9px 30px 9px 11px; font-size:14px; font-weight:600;
+        color:#111; background:#fff; border:1px solid #d1d5db; border-radius:4px;
+        font-family:inherit; cursor:pointer;
+        appearance:none; -webkit-appearance:none;
+        background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%236b7280'%3E%3Cpath d='M4 6h8l-4 5z'/%3E%3C/svg%3E");
+        background-repeat:no-repeat; background-position:right 9px center; background-size:15px;
+      }
+      .sort-select:focus { outline:none; border-color:#75BDB6; box-shadow:0 0 0 2px rgba(117,189,182,.2); }
+
+      /* Four status tabs don't fit either, but unlike sort they are one tap
+         each and read fine as a scrolling strip. Scroll it rather than wrap it
+         so the underline stays one continuous line. */
+      .filter-bar {
+        overflow-x:auto; -webkit-overflow-scrolling:touch;
+        scrollbar-width:none; margin-bottom:16px;
+      }
+      .filter-bar::-webkit-scrollbar { display:none; }
+      .filter-tab { padding:8px 12px; flex:none; }
+    }
 
     /* ── Agent card ── */
     .agent-card {
@@ -316,7 +426,17 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
     .mls-tag.mls-ok      { background:#f0fdf4; color:#15803d; }
     .mls-tag.mls-missing { background:#fef2f2; color:#b91c1c; }
 
-    .card-bottom { display:flex; align-items:center; justify-content:space-between; gap:6px; }
+    /* Badges pack left, the archive icon floats right on the spacer. Was
+       space-between, which spread three children evenly and left a gap between
+       the task count and the balance marker — they belong together. */
+    .card-bottom { display:flex; align-items:center; justify-content:flex-start;
+                   gap:6px; margin-top:10px; padding-top:10px;
+                   border-top:1px solid #f3f4f6; }
+    .card-bottom .spacer { flex:1; }
+    /* The bin is a destructive action sitting on every card — quiet until the
+       card is hovered, then fully legible. */
+    .card-bottom .btn-ghost { opacity:.45; transition:opacity .15s; }
+    .agent-card:hover .card-bottom .btn-ghost { opacity:1; }
     .status-chip {
       display:inline-block; font-size:9px; font-weight:700;
       text-transform:uppercase; letter-spacing:.5px;
@@ -329,14 +449,27 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
       display:inline-flex; align-items:center; gap:4px;
       font-size:11px; font-weight:700; padding:3px 9px; border-radius:10px;
     }
-    .tasks-badge.has-tasks { background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; }
+    /* Open tasks are work, not a problem — blue. Orange is reserved for money,
+       so the one badge that means "chase somebody" is the one that stands out. */
+    .tasks-badge.has-tasks { background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; }
     .tasks-badge.no-tasks  { background:#f0fdf4; color:#86efac; border:1px solid #bbf7d0; font-weight:600; }
+    /* Balance due: a marker rather than a figure. Sized as a circle so it reads
+       as a flag next to the task count instead of competing with it. */
+    .balance-badge {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:22px; height:22px; border-radius:50%;
+      font-size:12px; font-weight:800; line-height:1;
+      background:#fff7ed; color:#c2410c; border:1px solid #fed7aa;
+      text-decoration:none; flex:none;
+    }
+    .balance-badge:hover { background:#c2410c; color:#fff; border-color:#c2410c; }
 
     .card-actions-row {
       display:flex; gap:5px; align-items:center;
       border-top:1px solid #f3f4f6; padding-top:10px;
     }
     .card-actions-row .spacer { flex:1; }
+
 
     .empty-state { text-align:center; padding:60px 0; color:#9ca3af; font-size:14px; }
     .empty-state .ti { font-size:36px; display:block; margin-bottom:10px; color:#d1d5db; }
@@ -373,20 +506,40 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
         <i class="ti ti-search"></i>
         <input type="text" id="agentSearch" placeholder="Search agents…" autocomplete="off">
       </div>
-      <span class="sort-label">Sort:</span>
-      <div class="sort-btns">
-        <button class="sort-btn active-sort" data-sort="updated" data-dir="desc">
-          Recently Updated <i class="ti ti-chevron-down"></i>
-        </button>
-        <button class="sort-btn" data-sort="first" data-dir="asc">
-          First Name <i class="ti ti-chevron-up"></i>
-        </button>
-        <button class="sort-btn" data-sort="last" data-dir="asc">
-          Last Name <i class="ti ti-chevron-up"></i>
-        </button>
-        <button class="sort-btn" data-sort="start" data-dir="asc">
-          Start Date <i class="ti ti-chevron-up"></i>
-        </button>
+      <?php // .sort-row is display:contents on desktop, so the label and the
+            // buttons stay direct children of .toolbar and nothing about the
+            // wide layout moves. Below 620px it becomes the row that carries
+            // the <select> beneath the search field. ?>
+      <div class="sort-row">
+        <span class="sort-label">Sort:</span>
+        <div class="sort-btns">
+          <button class="sort-btn active-sort" data-sort="updated" data-dir="desc">
+            Recently Updated <i class="ti ti-chevron-down"></i>
+          </button>
+          <button class="sort-btn" data-sort="first" data-dir="asc">
+            First Name <i class="ti ti-chevron-up"></i>
+          </button>
+          <button class="sort-btn" data-sort="last" data-dir="asc">
+            Last Name <i class="ti ti-chevron-up"></i>
+          </button>
+          <button class="sort-btn" data-sort="start" data-dir="asc">
+            Start Date <i class="ti ti-chevron-up"></i>
+          </button>
+        </div>
+        <?php // Mobile control. Each option is "field:direction" so a single
+              // tap picks both — a separate direction toggle would be one more
+              // thing to find on a small screen. The pairs are the same ones
+              // the buttons produce on their first and second click. ?>
+        <select class="sort-select" id="sortSelect" aria-label="Sort agents by">
+          <option value="updated:desc" selected>Recently Updated</option>
+          <option value="updated:asc">Least Recently Updated</option>
+          <option value="first:asc">First Name (A–Z)</option>
+          <option value="first:desc">First Name (Z–A)</option>
+          <option value="last:asc">Last Name (A–Z)</option>
+          <option value="last:desc">Last Name (Z–A)</option>
+          <option value="start:asc">Start Date (Oldest first)</option>
+          <option value="start:desc">Start Date (Newest first)</option>
+        </select>
       </div>
     </div>
 
@@ -448,7 +601,7 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
             <?php if (!empty($a['headshot_url'])): ?>
               <img src="<?= htmlspecialchars($a['headshot_url']) ?>" alt="">
             <?php else: ?>
-              <?= htmlspecialchars(initials($a['agent_name'])) ?>
+              <?= htmlspecialchars(initials($a['agent_name'], $a['initials'] ?? null)) ?>
             <?php endif; ?>
           </div>
           <div class="agent-info">
@@ -495,9 +648,15 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
           <?php endif; ?>
         </div>
 
-        <div class="card-bottom">
-          <?php if ($has_intake): ?>
-            <span class="status-chip" style="background:<?= $chip_color ?>;"><?= $chip_text ?></span>
+        <?php // ── One row: badges left, archive right ───────────────────────
+              // The status chip is gone. It said ACTIVE on almost every card,
+              // and the avatar already carries status by colour — black active,
+              // orange pending, grey archived, pale grey no-intake — so the chip
+              // was repeating what was already on screen. Profile and the intake
+              // pencil went earlier: the name is the link to the profile, and
+              // intake.php is the superseded form. ?>
+        <?php if ($has_intake): ?>
+          <div class="card-bottom">
             <?php if ($open_tasks > 0): ?>
               <span class="tasks-badge has-tasks">
                 <i class="ti ti-list-check" style="font-size:10px;"></i> <?= $open_tasks ?>
@@ -507,19 +666,19 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
                 <i class="ti ti-check" style="font-size:10px;"></i> Done
               </span>
             <?php endif; ?>
-          <?php else: ?>
-            <span class="status-chip no-intake-chip">No Intake</span>
-          <?php endif; ?>
-        </div>
+            <?php // A marker, not a figure. The roster is for scanning; the amount
+                  // belongs on Billing, where it can be acted on. It stays in the
+                  // tooltip so hovering still answers "how much" without a click.
+                  //
+                  // Shown only when something is actually owed — a badge on every
+                  // card would mark nothing. ?>
+            <?php $bal = $balances[(int)$a['intake_id']] ?? 0.0; ?>
+            <?php if ($bal > 0): ?>
+              <a class="balance-badge" href="billing.php"
+                 title="Outstanding <?= htmlspecialchars('$' . number_format($bal, 2)) ?> — open Billing"
+                 aria-label="Has an outstanding balance">$</a>
+            <?php endif; ?>
 
-        <div class="card-actions-row">
-          <?php if ($has_intake): ?>
-            <a class="btn btn-primary btn-sm" href="agent.php?id=<?= $a['intake_id'] ?>">
-              <i class="ti ti-eye"></i> Profile
-            </a>
-            <a class="btn btn-outline btn-sm" href="intake.php?id=<?= $a['intake_id'] ?>">
-              <i class="ti ti-pencil"></i>
-            </a>
             <span class="spacer"></span>
             <?php if ($status !== 'archived'): ?>
               <form method="POST" style="margin:0;" onsubmit="return confirm('Archive <?= htmlspecialchars(addslashes($a['agent_name'])) ?>?')">
@@ -534,7 +693,9 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
                 <button type="submit" class="btn-ghost" title="Restore" style="color:#10b981;"><i class="ti ti-refresh"></i></button>
               </form>
             <?php endif; ?>
-          <?php else: ?>
+          </div>
+        <?php else: ?>
+          <div class="card-actions-row">
             <form method="POST" action="roster.php" style="margin:0;">
               <input type="hidden" name="action" value="create_intake">
               <input type="hidden" name="roster_id" value="<?= $a['roster_id'] ?>">
@@ -546,8 +707,8 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
             <a class="btn-ghost" href="roster.php#card-<?= $a['roster_id'] ?>" title="Edit roster record">
               <i class="ti ti-pencil"></i>
             </a>
-          <?php endif; ?>
-        </div>
+          </div>
+        <?php endif; ?>
 
       </div>
       <?php endforeach; ?>
@@ -568,6 +729,7 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
   const searchEl   = document.getElementById('agentSearch');
   const filterTabs = document.querySelectorAll('.filter-tab');
   const sortBtns   = document.querySelectorAll('.sort-btn');
+  const sortSelect = document.getElementById('sortSelect');
 
   let currentFilter = 'active';
   // Matches the SQL ordering: most recently edited first. The client re-sorts
@@ -608,6 +770,23 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
     });
   });
 
+  // Repaints the buttons AND the <select> from currentSort/currentDir. Only
+  // one of the two is on screen at any width, but both are kept correct so
+  // rotating the phone never shows a control disagreeing with the list.
+  function syncSortControls() {
+    sortBtns.forEach(b => {
+      const isActive = b.dataset.sort === currentSort;
+      b.classList.toggle('active-sort', isActive);
+      const icon = b.querySelector('.ti');
+      if (icon) {
+        icon.className = 'ti ' + (isActive
+          ? (currentDir === 'asc' ? 'ti-chevron-up' : 'ti-chevron-down')
+          : 'ti-chevron-up');
+      }
+    });
+    if (sortSelect) sortSelect.value = currentSort + ':' + currentDir;
+  }
+
   sortBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       const newSort = btn.dataset.sort;
@@ -619,19 +798,20 @@ $status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#
         // newest-first, names read A-Z.
         currentDir  = btn.dataset.dir || 'asc';
       }
-      sortBtns.forEach(b => {
-        const isActive = b.dataset.sort === currentSort;
-        b.classList.toggle('active-sort', isActive);
-        const icon = b.querySelector('.ti');
-        if (icon) {
-          icon.className = 'ti ' + (isActive
-            ? (currentDir === 'asc' ? 'ti-chevron-up' : 'ti-chevron-down')
-            : 'ti-chevron-up');
-        }
-      });
+      syncSortControls();
       applyAll();
     });
   });
+
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      const parts = sortSelect.value.split(':');
+      currentSort = parts[0];
+      currentDir  = parts[1] === 'desc' ? 'desc' : 'asc';
+      syncSortControls();
+      applyAll();
+    });
+  }
 
   if (searchEl) {
     searchEl.addEventListener('input', () => {

@@ -15,6 +15,10 @@
  * Usage:
  *   php sync_mh_brokers.php           # live run
  *   php sync_mh_brokers.php --dry-run # print names, no DB writes
+ *
+ * Cron (Lightsail — daily, UTC). Runs BEFORE sync_roster.php, which re-links
+ * mh_brokers.roster_id at the end of its own run:
+ *   0 3 * * * /usr/bin/php /var/www/marketing.monthaus.com/cron/sync_mh_brokers.php >> /var/log/mh-marketing/sync_mh_brokers.log 2>&1
  */
 
 if (PHP_SAPI !== 'cli') {

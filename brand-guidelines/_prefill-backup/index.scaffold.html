@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand Guidelines — Mont Haus</title>
+
+<!--
+  PUBLIC PAGE. No sign-in.
+
+  This file is plain HTML on purpose. It must never include inc/auth.php,
+  inc/_nav.php, inc/_footer.php or inc/_onboarding.php: the first puts the
+  page behind login, the other three assume a session.
+
+  If this is ever rewritten as index.php, note that Apache's DirectoryIndex
+  lists index.php BEFORE index.html, so the .php file would win and this one
+  would go dark rather than error. Delete one or the other, do not keep both.
+
+  Search engines: blocked in this folder's .htaccess via X-Robots-Tag while
+  the page is being built. Delete that line to open it up.
+
+  Everything below marked TO SUPPLY is a placeholder, not content.
+
+  The SVGs in assets/logos/ were copied from the app's /assets/images/ to give the
+  page something real to render. Swap them for the Final Logos exports before this
+  goes out: that folder is the source of truth, and only five of its directories are
+  live (MH Full Stack, M Mark, Triangle Mark, Triangle Groups, MH Full Horizontal).
+-->
+
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/brand-guidelines.css">
+<link rel="icon" href="/assets/images/favicon.svg">
+</head>
+<body>
+
+<header class="bg-header">
+  <img src="assets/logos/MH_vert-stack_white.svg" alt="Mont Haus">
+  <div>
+    <h1>Brand Guidelines</h1>
+    <p>For Mont Haus brokers, print partners, ad reps and designers</p>
+  </div>
+</header>
+
+<nav class="bg-nav">
+  <div class="bg-nav-inner">
+    <a href="#logos">Logo system</a>
+    <a href="#reversed">Reversed logos</a>
+    <a href="#space">Clear space</a>
+    <a href="#colour">Colour</a>
+    <a href="#type">Typography</a>
+    <a href="#imagery">Imagery</a>
+    <a href="#voice">Voice and copy</a>
+    <a href="#never">Never do this</a>
+    <a href="#reference">Reference pieces</a>
+    <a href="#downloads">Downloads</a>
+  </div>
+</nav>
+
+<main class="bg-content">
+
+  <p class="bg-lede">
+    <!-- TO SUPPLY: one paragraph on what Mont Haus is and what this page is for. -->
+    This page is the single reference for how the Mont Haus identity is used. It covers
+    the logo system, colour, type, imagery and the way we write, and it is written to be
+    handed to anyone producing work in our name, inside the firm or outside it.
+    Everything shown here is downloadable at the bottom of the page.
+  </p>
+
+  <!-- ══ LOGO SYSTEM ══════════════════════════════════════════════════ -->
+  <section class="bg-section" id="logos">
+    <h2 class="bg-section-title">Logo system</h2>
+
+    <p class="bg-p">
+      Five marks are live. Anything else found in an older folder is retired and
+      should not be used.
+    </p>
+
+    <div class="bg-logo-grid">
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/MH_vert-stack_black.svg" alt="MH Full Stack"></div>
+        <div class="bg-tile-name">MH Full Stack</div>
+        <div class="bg-tile-note">The primary lockup. Default choice.</div>
+      </div>
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/M-mark_black.svg" alt="M Mark"></div>
+        <div class="bg-tile-name">M Mark</div>
+        <div class="bg-tile-note">May be used prominently.</div>
+      </div>
+
+      <div class="bg-tile">
+        <div class="bg-tile-art pending">Triangle Mark (black)<br>TO SUPPLY</div>
+        <div class="bg-tile-name">Triangle Mark</div>
+        <div class="bg-tile-note">Occasionally prominent, more often a background element.</div>
+      </div>
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/triangle_marks_blk.svg" alt="Triangle Groups"></div>
+        <div class="bg-tile-name">Triangle Groups</div>
+        <div class="bg-tile-note">Background or small accent only. Never stands in for the logo.</div>
+      </div>
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/mh_horz-black.svg" alt="MH Full Horizontal"></div>
+        <div class="bg-tile-name">MH Full Horizontal</div>
+        <div class="bg-tile-note">Restricted. See below.</div>
+      </div>
+
+    </div>
+
+    <h3 class="bg-sub">When each one is used</h3>
+    <ul class="bg-list">
+      <li><strong>MH Full Stack</strong> is the proper treatment of the name and the default in almost every application.</li>
+      <li><strong>MH Full Horizontal</strong> is only for placements that require a long, narrow lockup, such as a Vail Daily classified ad. Outside that constraint it is not a proper treatment of the name, so reach for the stack instead.</li>
+      <li><strong>The M Mark</strong> can carry a piece on its own and may be used at any prominence.</li>
+      <li><strong>The Triangle Mark</strong> (the large single triangle) can occasionally be used prominently, but its usual job is as a background element.</li>
+      <li><strong>Triangle Groups</strong> (the multi-triangle artwork) is a background texture or a small accent. It is never a prominent mark in place of the logo.</li>
+    </ul>
+  </section>
+
+  <!-- ══ REVERSED ═════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="reversed">
+    <h2 class="bg-section-title">Reversed logos, for light on dark</h2>
+
+    <p class="bg-p">
+      There is a separate white artwork set. It exists because the diagonal slash in the M
+      reads too small when the dark artwork is simply flipped to white, so the reversed files
+      are drawn for the job rather than derived from the black ones.
+    </p>
+
+    <div class="bg-logo-grid">
+      <div class="bg-tile">
+        <div class="bg-tile-art on-dark"><img src="assets/logos/MH_vert-stack_white.svg" alt="MH Full Stack, white"></div>
+        <div class="bg-tile-name">MH-stack-logo_white</div>
+      </div>
+      <div class="bg-tile">
+        <div class="bg-tile-art on-dark"><img src="assets/logos/M-mark_white.svg" alt="M Mark, white"></div>
+        <div class="bg-tile-name">M-mark_white</div>
+      </div>
+      <div class="bg-tile">
+        <div class="bg-tile-art on-dark pending">triangle_mark-white<br>TO SUPPLY</div>
+        <div class="bg-tile-name">triangle_mark-white</div>
+      </div>
+    </div>
+
+    <div class="bg-rules" style="margin-top:28px">
+      <div class="bg-rule yes">
+        <div class="bg-rule-label">Do</div>
+        <p>Use the drawn white files whenever the mark sits on a dark ground.</p>
+      </div>
+      <div class="bg-rule no">
+        <div class="bg-rule-label">Never</div>
+        <p>Reverse a black logo to make a white one. The result is not the white logo.</p>
+      </div>
+      <div class="bg-rule no">
+        <div class="bg-rule-label">Not available</div>
+        <p>There is no white horizontal lockup, and the horizontal should not be used on dark at all.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CLEAR SPACE ══════════════════════════════════════════════════ -->
+  <section class="bg-section" id="space">
+    <h2 class="bg-section-title">Clear space and minimum size</h2>
+    <p class="bg-p">TO SUPPLY: clear-space rule (a measure tied to part of the mark), minimum print size, minimum screen size.</p>
+  </section>
+
+  <!-- ══ COLOUR ═══════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="colour">
+    <h2 class="bg-section-title">Colour</h2>
+    <p class="bg-p">TO SUPPLY: confirm the palette and the print values. The two below are placeholders taken from existing pages, not an approved palette.</p>
+
+    <div class="bg-swatches">
+      <div>
+        <div class="bg-swatch-chip" style="background:#111111"></div>
+        <div class="bg-swatch-name">Black</div>
+        <div class="bg-swatch-hex">#111111 · CMYK TO SUPPLY · PMS TO SUPPLY</div>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#ffffff"></div>
+        <div class="bg-swatch-name">White</div>
+        <div class="bg-swatch-hex">#FFFFFF</div>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:repeating-linear-gradient(45deg,#fafafa 0 10px,#f1f2f4 10px 20px)"></div>
+        <div class="bg-swatch-name">Accent</div>
+        <div class="bg-swatch-hex">TO SUPPLY</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ TYPE ═════════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="type">
+    <h2 class="bg-section-title">Typography</h2>
+    <p class="bg-p">TO SUPPLY: the display face, the text face, licensed weights, the substitute a vendor may use when the licensed face is unavailable, and how each is set (case, tracking, alignment).</p>
+  </section>
+
+  <!-- ══ IMAGERY ══════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="imagery">
+    <h2 class="bg-section-title">Photography and imagery</h2>
+    <p class="bg-p">TO SUPPLY: what our photography looks like, how it is cropped and treated, and what to avoid.</p>
+  </section>
+
+  <!-- ══ VOICE ════════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="voice">
+    <h2 class="bg-section-title">Voice and copy</h2>
+    <p class="bg-p">TO SUPPLY: how we sound, plus the copy standards a vendor needs: how the firm's name is written, how a broker is credited, required disclosures and licence lines, and the standard property-description conventions.</p>
+  </section>
+
+  <!-- ══ NEVER ════════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="never">
+    <h2 class="bg-section-title">Never do this</h2>
+    <p class="bg-p">Each of these has a right version. Pair every item with a wrong and right image once the examples are shot.</p>
+
+    <ul class="bg-list never">
+      <li>Do not reverse the black logo to make a white one. Use the drawn white file.</li>
+      <li>Do not use the horizontal lockup where the stack fits.</li>
+      <li>Do not use the horizontal lockup on a dark ground.</li>
+      <li>Do not use Triangle Groups in place of the logo.</li>
+      <li>Do not pull artwork from a retired folder. Five directories are live: MH Full Stack, M Mark, Triangle Mark, Triangle Groups, MH Full Horizontal.</li>
+      <li>TO SUPPLY: stretching, recolouring, outlining, adding effects, rebuilding the lockup, setting the name in another face.</li>
+    </ul>
+  </section>
+
+  <!-- ══ REFERENCE ════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="reference">
+    <h2 class="bg-section-title">On-brand reference pieces</h2>
+    <p class="bg-p">Work that already does it right. Use these before starting anything new.</p>
+
+    <div class="bg-downloads">
+      <a class="bg-download" href="#"><span class="bg-download-name">2026 Listing Presentation</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">221 Wrights Road brochure</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">633 W Main flyer</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">450 Solar Way direct-mail postcard</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">Corporate social posts</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="/assets/marketing/bizcards.html"><span class="bg-download-name">Business card options</span><span class="bg-download-meta">Web page</span></a>
+      <a class="bg-download" href="/assets/marketing/yardsigns.html"><span class="bg-download-name">Yard sign options</span><span class="bg-download-meta">Web page</span></a>
+    </div>
+  </section>
+
+  <!-- ══ DOWNLOADS ════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="downloads">
+    <h2 class="bg-section-title">Downloads</h2>
+    <p class="bg-p">
+      Put files in <code>assets/pdf/</code> and <code>assets/logos/</code>. Use .pdf, .zip,
+      .svg, .png, .jpg, .eps or .ai. The server blocks several extensions site-wide, so a
+      download saved as .conf, .sql, .env, .old, .bak, .orig, .log, .lock, .py, .sh or
+      .example will 403 with nothing on screen explaining why.
+    </p>
+
+    <div class="bg-downloads">
+      <a class="bg-download" href="#"><span class="bg-download-name">Brand guidelines, print-ready PDF</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">Full logo set, all five marks, black and white</span><span class="bg-download-meta">TO SUPPLY · .zip</span></a>
+      <a class="bg-download" href="assets/logos/MH_vert-stack_black.svg"><span class="bg-download-name">MH Full Stack, black</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/MH_vert-stack_white.svg"><span class="bg-download-name">MH Full Stack, white</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/M-mark_black.svg"><span class="bg-download-name">M Mark, black</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/M-mark_white.svg"><span class="bg-download-name">M Mark, white</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/mh_horz-black.svg"><span class="bg-download-name">MH Full Horizontal, black</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/triangle_marks_blk.svg"><span class="bg-download-name">Triangle Groups, black</span><span class="bg-download-meta">SVG</span></a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="bg-footer">
+  Mont Haus International Realty · Aspen, Colorado<br>
+  Questions about a use not covered here: <a href="mailto:nikki.boxer@monthaus.com">nikki.boxer@monthaus.com</a>
+</footer>
+
+</body>
+</html>

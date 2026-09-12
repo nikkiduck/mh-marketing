@@ -473,11 +473,18 @@ function sso_establish_session(mysqli $conn, array $user): void
     $_SESSION['agent_key']       = $user['agent_key'] ?? '';
     $_SESSION['auth_method']     = 'microsoft';
 
-    // An SSO account has no password to change, but honour the flag if an
-    // admin set it on an account that still has one.
-    if (!empty($user['must_change_password'])) {
-        $_SESSION['must_change_password'] = true;
-    }
+    // The old registration flow (temp password -> set_password.php) is retired.
+    // A Microsoft sign-in proves identity without a portal password, so an SSO
+    // session is never gated on a password change. This is not cosmetic: the
+    // page that gate points at, change_password.php, requires the account's
+    // CURRENT password and verifies it with password_verify(). An agent who
+    // was onboarded under the old flow and never claimed their temp password
+    // cannot satisfy that form, and require_login() pins them on it -- which
+    // locks them out of the portal entirely. See sql/clear_legacy_password_flag.sql.
+    //
+    // Password sign-in (login.php) still honours the flag; there the account
+    // demonstrably has a working password to change.
+    unset($_SESSION['must_change_password']);
 
     if ($upd = $conn->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")) {
         $upd->bind_param('i', $user['id']);

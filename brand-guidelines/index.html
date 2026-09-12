@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brand Guidelines — Mont Haus</title>
+
+<!--
+  PUBLIC PAGE. No sign-in.
+
+  This file is plain HTML on purpose. It must never include inc/auth.php,
+  inc/_nav.php, inc/_footer.php or inc/_onboarding.php: the first puts the
+  page behind login, the other three assume a session.
+
+  If this is ever rewritten as index.php, note that Apache's DirectoryIndex
+  lists index.php BEFORE index.html, so the .php file would win and this one
+  would go dark rather than error. Delete one or the other, do not keep both.
+
+  Search engines: blocked in this folder's .htaccess via X-Robots-Tag while
+  the page is being built. Delete that line to open it up.
+
+  CONTENT: filled in September 2026 from the approved work in market — the
+  2026 Listing Presentation, the 221 Wrights Road and 633 West Main brochures,
+  the 450 Solar Way direct mail, the corporate social library, and the Final
+  Logos artwork. Point sizes, tracking values and color builds are measured
+  from those files rather than estimated.
+
+  LOGOS: assets/logos/ now holds Final Logos exports, not the app's copies.
+  Only five directories in Final Logos are live (MH Full Stack, M Mark,
+  Triangle Mark, Triangle Groups, MH Full Horizontal); everything else there
+  is retired.
+
+  TYPE: the Typekit kit below serves apparat-semicond and freight-big-pro for
+  the specimen and demo blocks only — the page furniture stays Public Sans.
+  Typekit kits are domain-locked, so marketing.monthaus.com has to be on the
+  kit's allowed-domain list or the specimens fall back to Cormorant Garamond.
+
+  STILL OPEN: Pantone equivalents for the palette have never been specified,
+  so the color table gives hex, RGB and CMYK only. Ask before a spot job.
+-->
+
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://use.typekit.net/keq2dji.css">
+<link rel="stylesheet" href="assets/css/brand-guidelines.css">
+<link rel="icon" href="/assets/images/favicon.svg">
+</head>
+<body>
+
+<header class="bg-header">
+  <img src="assets/logos/MH_vert-stack_white.svg" alt="Mont Haus">
+  <div>
+    <h1>Brand Guidelines</h1>
+    <p>For Mont Haus brokers, print partners, ad reps and designers</p>
+  </div>
+</header>
+
+<nav class="bg-nav">
+  <div class="bg-nav-inner">
+    <a href="#logos">Logo system</a>
+    <a href="#reversed">Reversed logos</a>
+    <a href="#space">Clear space</a>
+    <a href="#color">Color</a>
+    <a href="#type">Typography</a>
+    <a href="#imagery">Imagery</a>
+    <a href="#voice">Voice and copy</a>
+    <a href="#never">Never do this</a>
+    <a href="#reference">Reference pieces</a>
+    <a href="#downloads">Downloads</a>
+  </div>
+</nav>
+
+<main class="bg-content">
+
+  <p class="bg-lede">
+    This page is the single reference for how the Mont Haus identity is used. It covers
+    the logo system, color, type, imagery and the way we write, and it is written to be
+    handed to anyone producing work in our name, inside the firm or outside it.
+    Everything shown here is downloadable at the bottom of the page.
+  </p>
+
+  <!-- ══ LOGO SYSTEM ══════════════════════════════════════════════════ -->
+  <section class="bg-section" id="logos">
+    <h2 class="bg-section-title">Logo system</h2>
+
+    <p class="bg-p">
+      Our logo system contains five marks. Nothing is a font: every lockup is outlined
+      vector art and must be placed, never rebuilt.
+    </p>
+
+    <div class="bg-logo-grid">
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/MH_vert-stack_black.svg" alt="MH Full Stack"></div>
+        <div class="bg-tile-name">MH Full Stack</div>
+        <div class="bg-tile-note">The proper treatment of the name and the default in almost every application.</div>
+      </div>
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/M-mark_black.svg" alt="M Mark"></div>
+        <div class="bg-tile-name">M Mark</div>
+        <div class="bg-tile-note">May be used prominently or as an accent/background element.</div>
+      </div>
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/triangle_mark-black.svg" alt="Triangle Mark"></div>
+        <div class="bg-tile-name">Triangle Mark</div>
+        <div class="bg-tile-note">Occasionally prominent, more often a background element.</div>
+      </div>
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/triangle_marks_blk.svg" alt="Triangle Groups"></div>
+        <div class="bg-tile-name">Triangle Groups</div>
+        <div class="bg-tile-note">Background or small accent only. Never stands in for the logo.</div>
+      </div>
+
+      <div class="bg-tile">
+        <div class="bg-tile-art"><img src="assets/logos/mh_horz-black.svg" alt="MH Full Horizontal"></div>
+        <div class="bg-tile-name">MH Full Horizontal</div>
+        <div class="bg-tile-note">Restricted. Only use with express permission.</div>
+      </div>
+
+    </div>
+
+    <h3 class="bg-sub">Scaling Elements</h3>
+    <p class="bg-p">
+      The proportions of the primary logo's two elements are fixed and should only be scaled together and proportionally.
+    </p>
+    <p class="bg-p">
+      Similarly, the proportions of the triangles in the Triangle Group mark are fixed and should not be changed nor should any the individual triangles be removed or adjusted.
+    </p>
+  </section>
+
+  <!-- ══ REVERSED ═════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="reversed">
+    <h2 class="bg-section-title">Reversed logos, for light on dark</h2>
+
+    <p class="bg-p">
+      <strong>There is a separate white/light artwork set.</strong> It exists because the diagonal slash in the M
+      reads too small when the dark artwork is simply flipped to white, so the reversed files
+      are drawn for the job rather than derived from the black ones.
+    </p>
+
+    <div class="bg-logo-grid">
+      <div class="bg-tile">
+        <div class="bg-tile-art on-dark"><img src="assets/logos/MH_vert-stack_white.svg" alt="MH Full Stack, white"></div>
+      </div>
+      <div class="bg-tile">
+        <div class="bg-tile-art on-dark"><img src="assets/logos/M-mark_white.svg" alt="M Mark, white"></div>
+      </div>
+      <div class="bg-tile">
+        <div class="bg-tile-art on-dark"><img src="assets/logos/triangle_mark-white.svg" alt="Triangle Mark, white"></div>
+      </div>
+    </div>
+
+    <h3 class="bg-sub">What' the difference?</h3>
+
+    <div class="bg-cmp">
+      <div class="right">
+        <div class="bg-cmp-art"><img src="assets/logos/MH_vert-stack_white.svg" alt="Stack lockup, reversed artwork"></div>
+        <div class="bg-cmp-tag">Right</div>
+        <div class="bg-cmp-why">Cut widened and spacing corrected.</div>
+      </div>
+      <div class="wrong">
+        <div class="bg-cmp-art"><img src="assets/img/demo-naive-reverse-stack.svg" alt="Stack lockup, black artwork simply reversed"></div>
+        <div class="bg-cmp-tag">Wrong</div>
+        <div class="bg-cmp-why">A hairline through the M.</div>
+      </div>
+      <div class="right">
+        <div class="bg-cmp-art"><img src="assets/logos/M-mark_white.svg" alt="M Mark, reversed artwork"></div>
+        <div class="bg-cmp-tag">Right</div>
+        <div class="bg-cmp-why">The cut is opened and reads properly at any size.</div>
+      </div>
+      <div class="wrong">
+        <div class="bg-cmp-art"><img src="assets/img/demo-naive-reverse-mmark.svg" alt="M Mark, black artwork simply reversed"></div>
+        <div class="bg-cmp-tag">Wrong</div>
+        <div class="bg-cmp-why">The cut appears too thin.</div>
+      </div>
+    </div>
+
+    <div class="bg-rules" style="margin-top:28px">
+      <div class="bg-rule yes">
+        <div class="bg-rule-label">Do</div>
+        <p>Use the drawn white files whenever the mark sits on a dark ground. A cream tint is made by recoloring the reversed artwork, never the black.</p>
+      </div>
+      <div class="bg-rule no">
+        <div class="bg-rule-label">Don't</div>
+        <p>Never reverse a black logo to make a white one. The result is not the white logo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CLEAR SPACE ══════════════════════════════════════════════════ 
+  <section class="bg-section" id="space">
+    <h2 class="bg-section-title">Clear space and minimum size</h2>
+
+    <div class="bg-cols">
+      <div class="bg-diagram">
+        <svg viewBox="0 0 580 400" role="img" aria-label="Clear space diagram: one cap height of the MONT letterforms on all four sides">
+          <rect x="0" y="0" width="580" height="400" fill="#ffffff"></rect>
+          <rect x="30" y="30" width="460" height="340" fill="none" stroke="#d1d5db" stroke-width="1" stroke-dasharray="5 5"></rect>
+          <rect x="141" y="103" width="238" height="194" fill="none" stroke="#8A7350" stroke-width="1"></rect>
+          <image href="assets/logos/MH_vert-stack_black.svg" x="141" y="103" width="238" height="194" preserveAspectRatio="xMidYMid meet"></image>
+          <g fill="#8A7350" opacity="0.16">
+            <rect x="141" y="31" width="238" height="72"></rect>
+            <rect x="141" y="297" width="238" height="72"></rect>
+            <rect x="69" y="103" width="72" height="194"></rect>
+            <rect x="379" y="103" width="72" height="194"></rect>
+          </g>
+          <g font-family="'Public Sans', sans-serif" font-size="14" fill="#8A7350" font-weight="700">
+            <text x="260" y="74" text-anchor="middle">X</text>
+            <text x="260" y="340" text-anchor="middle">X</text>
+            <text x="105" y="206" text-anchor="middle">X</text>
+            <text x="415" y="206" text-anchor="middle">X</text>
+          </g>
+          <g stroke="#111111" stroke-width="1">
+            <line x1="404" y1="103" x2="428" y2="103"></line>
+            <line x1="404" y1="175" x2="428" y2="175"></line>
+            <line x1="416" y1="103" x2="416" y2="175"></line>
+          </g>
+          <text x="436" y="145" font-family="'Public Sans', sans-serif" font-size="12" font-weight="600" fill="#111111">X = CAP HEIGHT</text>
+          <text x="436" y="162" font-family="'Public Sans', sans-serif" font-size="12" fill="#6b7280">OF &ldquo;MONT&rdquo;</text>
+        </svg>
+      </div>
+
+      <div>
+        <h3 class="bg-sub" style="margin-top:0">Clear space</h3>
+        <p class="bg-p">
+          Keep a margin of <strong>X</strong> on all four sides, where X is the cap height of the MONT
+          letterforms: <strong>37% of the lockup's total height, or 27% of its width</strong>. Nothing enters
+          that zone. No type, no rules, no photo edge, no second logo.
+        </p>
+        <p class="bg-p">
+          This is the margin already used on the 450 Solar Way postcard, where a 0.95&nbsp;in lockup sits
+          0.25&nbsp;in from both trim edges.
+        </p>
+
+        <h3 class="bg-sub">Minimum size</h3>
+        <div class="bg-tablewrap">
+          <table class="bg-table" style="min-width:0">
+            <thead><tr><th>Asset</th><th>Print</th><th>Screen</th></tr></thead>
+            <tbody>
+              <tr><td><strong>MH Full Stack</strong></td><td class="num">0.875 in wide</td><td class="num">120 px wide</td></tr>
+              <tr><td><strong>MH Full Horizontal</strong></td><td class="num">1.75 in wide</td><td class="num">240 px wide</td></tr>
+              <tr><td><strong>M Mark</strong></td><td class="num">0.25 in wide</td><td class="num">32 px wide</td></tr>
+              <tr><td><strong>Triangle Mark</strong></td><td class="num">0.1875 in wide</td><td class="num">24 px wide</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="bg-tablenote">
+          Below these, the Apparat Light descriptor fills in and the diagonal cut closes. If a space is
+          smaller than the minimum, switch to the M Mark rather than shrinking the lockup.
+        </p>
+      </div>
+    </div>
+  </section>
+  -->
+
+  <!-- ══ COLOR ═══════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="color">
+    <h2 class="bg-section-title">Color</h2>
+
+    <p class="bg-p">
+      The current palette is rich black, cream, and a bronze that shifts to brass when it
+      sits on dark. Photography provides additional color.
+    </p>
+
+    <h3 class="bg-sub">Core</h3>
+    <div class="bg-swatches detail">
+      <div>
+        <div class="bg-swatch-chip" style="background:#231F20"></div>
+        <div class="bg-swatch-name">Ink Black</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#231F20</dd>
+          <dt>RGB</dt><dd>35 31 32</dd>
+          <dt>CMYK</dt><dd>0 0 0 100</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#131210"></div>
+        <div class="bg-swatch-name">Rich Black</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#131210</dd>
+          <dt>RGB</dt><dd>19 18 16</dd>
+          <dt>CMYK</dt><dd>71 66 68 80</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#8A7350"></div>
+        <div class="bg-swatch-name">Bronze</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#8A7350</dd>
+          <dt>RGB</dt><dd>138 115 80</dd>
+          <dt>CMYK</dt><dd>23 31 62 1</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#C3A561"></div>
+        <div class="bg-swatch-name">Brass</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#C3A561</dd>
+          <dt>RGB</dt><dd>195 165 97</dd>
+          <dt>CMYK</dt><dd>25 33 70 3</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#EFECE6"></div>
+        <div class="bg-swatch-name">Cream</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#EFECE6</dd>
+          <dt>RGB</dt><dd>239 236 230</dd>
+          <dt>CMYK</dt><dd>5 4 8 0</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!--//<h3 class="bg-sub">Neutrals</h3>
+    <div class="bg-swatches detail">
+      <div>
+        <div class="bg-swatch-chip" style="background:#F1ECE2"></div>
+        <div class="bg-swatch-name">Paper Cream</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#F1ECE2</dd>
+          <dt>RGB</dt><dd>241 236 226</dd>
+          <dt>CMYK</dt><dd>5 6 11 0</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#E9E8E5"></div>
+        <div class="bg-swatch-name">Mist</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#E9E8E5</dd>
+          <dt>RGB</dt><dd>233 232 229</dd>
+          <dt>CMYK</dt><dd>8 6 7 0</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#808285"></div>
+        <div class="bg-swatch-name">Stone Gray</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#808285</dd>
+          <dt>RGB</dt><dd>128 130 133</dd>
+          <dt>CMYK</dt><dd>0 0 0 58</dd>
+        </dl>
+        <div class="bg-swatch-use">The gray logo variant, captions, photo credits, disclaimer type.</div>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#FFFFFF"></div>
+        <div class="bg-swatch-name">White</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#FFFFFF</dd>
+          <dt>RGB</dt><dd>255 255 255</dd>
+          <dt>CMYK</dt><dd>0 0 0 0</dd>
+        </dl>
+      </div>
+    </div>
+
+    <h3 class="bg-sub">Presentation accents, restricted</h3>
+    <p class="bg-p">
+      Three colors exist in the 2026 Listing Presentation and nowhere else: the duotone section
+      dividers and the editorial pull quotes. <strong>They are not available for listing marketing</strong> — no
+      flyers, postcards, signs or listing social posts.
+    </p>
+    <div class="bg-swatches detail">
+      <div>
+        <div class="bg-swatch-chip" style="background:#E0B526;height:64px"></div>
+        <div class="bg-swatch-name">Alpine Gold</div>
+        <div class="bg-swatch-hex">#E0B526 · duotone dividers</div>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#CE9411;height:64px"></div>
+        <div class="bg-swatch-name">Editorial Gold</div>
+        <div class="bg-swatch-hex">#CE9411 · pull quotes</div>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#3E8FA8;height:64px"></div>
+        <div class="bg-swatch-name">Glacier Blue</div>
+        <div class="bg-swatch-hex">#3E8FA8 · duotone dividers</div>
+      </div>
+    </div>
+
+    <h3 class="bg-sub">How the palette is spent</h3>
+    <div class="bg-tablewrap">
+      <table class="bg-table" style="min-width:0">
+        <thead><tr><th>Share</th><th>Color</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td class="num">~60%</td><td><strong>Photography</strong></td><td>Full-bleed imagery carries the piece</td></tr>
+          <tr><td class="num">~30%</td><td><strong>Black and cream</strong></td><td>Panels, type, page grounds</td></tr>
+          <tr><td class="num">~8%</td><td><strong>White</strong></td><td>Reversed type, plan pages</td></tr>
+          <tr><td class="num">~2%</td><td><strong>Bronze / brass</strong></td><td>Eyebrows, hairlines, numerals</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bg-tablenote">Bronze is a seasoning, not an ingredient. If a piece looks gold, there is too much of it. Pantone equivalents have not been specified: ask before running a spot job.</p>//-->
+  </section>
+
+  <!-- ══ TYPE ═════════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="type">
+    <h2 class="bg-section-title">Typography</h2>
+
+    <div class="bg-cols equal">
+
+      <div class="bg-specimen">
+        <div class="bg-specimen-head">
+          <span class="bg-specimen-name">Apparat SemiCondensed</span>
+          <span class="bg-specimen-src">Adobe Fonts · Light / Regular / Medium / Semibold</span>
+        </div>
+        <div class="bg-specimen-glyphs is-brand-sans" style="letter-spacing:.05em">ABCDEFGHIJKLM<br>NOPQRSTUVWXYZ</div>
+        <div class="bg-specimen-line is-brand-sans" style="letter-spacing:.24em;text-transform:uppercase;font-size:14px;color:#8A7350">Stunning Brush Creek Remodel</div>
+        <p class="bg-specimen-note">
+          The working typeface. Weight determined by context and background for readability.
+        </p>
+      </div>
+
+      <div class="bg-specimen">
+        <div class="bg-specimen-head">
+          <span class="bg-specimen-name">FreightBig Pro</span>
+          <span class="bg-specimen-src">Adobe Fonts · Light / Book / Medium / Semibold</span>
+        </div>
+        <div class="bg-specimen-glyphs is-brand-serif">ABCDEFGHIJKLM<br>NOPQRSTUVWXYZ</div>
+        <div class="bg-specimen-line is-brand-serif" style="font-size:26px;">A Red Mountain Retreat</div>
+        <p class="bg-specimen-note">
+          <strong>The reading serif.</strong> Use it for larger blocks of text where a serif is wanted but clarity is imperative, as with the Listing Presentation.
+        </p>
+      </div>
+
+      <div class="bg-specimen">
+        <div class="bg-specimen-head">
+          <span class="bg-specimen-name">Cormorant Garamond</span>
+          <span class="bg-specimen-src">Google Fonts · free · Light / Light Italic / Regular</span>
+        </div>
+        <div class="bg-specimen-glyphs" style="font-family:'Cormorant Garamond','Times New Roman',serif;font-weight:300;">ABCDEFGHIJKLM<br>NOPQRSTUVWXYZ</div>
+        <div class="bg-specimen-line" style="font-family:'Cormorant Garamond','Times New Roman',serif;font-weight:300;font-size:26px;">633 West Main</div>
+        <p class="bg-specimen-note">
+          <strong>The display serif.</strong> Use it for elegant, larger treatments — a property name on a
+          cover, the italic subtitle beneath it, a section title. The
+          <a href="https://docs.monthaus.com/633-WMain-Aspen">633 West Main brochure</a> is a good reference.
+        </p>
+      </div>
+
+    </div>
+
+<!--//
+    <h3 class="bg-sub">The type scale</h3>
+    <p class="bg-p">
+      Sizes and tracking measured from the approved files. Tracking is in InDesign units, thousandths
+      of an em; divide by 1000 for CSS <code>em</code>.
+    </p>
+    <div class="bg-tablewrap">
+      <table class="bg-table">
+        <thead><tr><th>Role</th><th>Face</th><th>Weight</th><th>Size</th><th>Tracking</th><th>Case</th><th>Source</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Property name</strong></td><td>FreightBig Pro</td><td>Light</td><td class="num">50 pt</td><td class="num">0</td><td>Title Case</td><td>450 Solar Way postcard, 8.5 × 5.5 in</td></tr>
+          <tr><td><strong>Photo eyebrow</strong></td><td>Apparat SemiCond</td><td>Regular</td><td class="num">8.5 pt</td><td class="num">+250</td><td>ALL CAPS</td><td>Postcard front, bronze</td></tr>
+          <tr><td><strong>Property subtitle</strong></td><td>Apparat SemiCond</td><td>Regular</td><td class="num">10 pt</td><td class="num">+100</td><td>Title Case</td><td>Postcard front</td></tr>
+          <tr><td><strong>Panel headline</strong></td><td>FreightBig Pro</td><td>Medium</td><td class="num">17 pt</td><td class="num">+10</td><td>Sentence case</td><td>Postcard back</td></tr>
+          <tr><td><strong>Status / price line</strong></td><td>Apparat SemiCond</td><td>Regular</td><td class="num">7 pt</td><td class="num">+200</td><td>ALL CAPS</td><td>Postcard back, brass</td></tr>
+          <tr><td><strong>Body copy</strong></td><td>Apparat SemiCond</td><td>Regular</td><td class="num">10 pt</td><td class="num">0</td><td>Sentence case</td><td>Postcard back</td></tr>
+          <tr><td><strong>Statistic value</strong></td><td>FreightBig Pro</td><td>Semibold</td><td class="num">14 pt</td><td class="num">0</td><td>Numerals</td><td>Postcard stat row</td></tr>
+          <tr><td><strong>Statistic label</strong></td><td>Apparat SemiCond</td><td>Medium</td><td class="num">6 pt</td><td class="num">+200</td><td>ALL CAPS</td><td>Postcard stat row, brass</td></tr>
+          <tr><td><strong>Agent name</strong></td><td>FreightBig Pro</td><td>Semibold</td><td class="num">13 pt</td><td class="num">0</td><td>Title Case</td><td>Postcard back</td></tr>
+          <tr><td><strong>Agent phone</strong></td><td>Apparat SemiCond</td><td>Semibold</td><td class="num">8 pt</td><td class="num">+200</td><td>Numerals</td><td>Postcard back</td></tr>
+          <tr><td><strong>Agent email</strong></td><td>Apparat SemiCond</td><td>Semibold</td><td class="num">7 pt</td><td class="num">0</td><td>lowercase</td><td>Postcard back</td></tr>
+          <tr><td><strong>Firm address block</strong></td><td>Apparat SemiCond</td><td>Medium</td><td class="num">7 pt</td><td class="num">+100</td><td>ALL CAPS</td><td>Postcard return address, bronze</td></tr>
+          <tr><td><strong>Section divider</strong></td><td>Apparat SemiCond</td><td>Regular + Black</td><td class="num">92 pt</td><td class="num">−10</td><td>ALL CAPS</td><td>2026 Listing Presentation, 11 × 8.5 in</td></tr>
+          <tr><td><strong>Editorial headline</strong></td><td>FreightBig Pro</td><td>Medium</td><td class="num">44–46 pt</td><td class="num">0</td><td>Sentence case</td><td>Listing Presentation</td></tr>
+          <tr><td><strong>Pull quote</strong></td><td>FreightBig Pro</td><td>Medium</td><td class="num">24 pt</td><td class="num">0</td><td>Sentence case</td><td>Listing Presentation, Editorial Gold</td></tr>
+          <tr><td><strong>Social tagline</strong></td><td>Apparat SemiCond</td><td>Regular</td><td class="num">52–63 pt</td><td class="num">0</td><td>Sentence case</td><td>Corporate posts, 1080 × 1440 px</td></tr>
+          <tr><td><strong>Logo descriptor</strong></td><td>Apparat SemiCond</td><td>Light</td><td class="num">—</td><td class="num">+90</td><td>ALL CAPS</td><td>Logo artwork, do not reset</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="bg-tablenote">Sizes scale with format. Hold the ratios and the tracking; those are what make a piece look like ours.</p>
+-->
+    <h3 class="bg-sub">Treatments</h3>
+    <div class="bg-treatments">
+      <div class="bg-treatment">
+        <div class="bg-treatment-demo"><span class="d-eyebrow">Aspen · Colorado</span></div>
+        <div>
+          <h4>The tracked eyebrow</h4>
+          <p>All caps, Apparat SemiCondensed, tracked between +100 and +250, bronze on light or brass on dark. Interpuncts separate the parts, not hyphens and not slashes.</p>
+        </div>
+      </div>
+      <div class="bg-treatment">
+        <div class="bg-treatment-demo" style="flex-direction:column;align-items:flex-start">
+          <span class="d-title">633 West Main</span>
+          <span class="d-sub">A Victorian in the Aspen core</span>
+        </div>
+        <div>
+          <h4>Name and subtitle</h4>
+          <p>The property name in the display serif, Light, set large. Directly beneath it, one line of italic at roughly 40% of that size.</p>
+        </div>
+      </div>
+      <div class="bg-treatment">
+        <div class="bg-treatment-demo">
+          <div class="d-stats">
+            <div><div class="v">3</div><div class="k">Beds</div></div>
+            <div><div class="v">4</div><div class="k">Baths</div></div>
+            <div><div class="v">2,969</div><div class="k">Sq Ft</div></div>
+            <div><div class="v">2.73</div><div class="k">Acres</div></div>
+          </div>
+        </div>
+        <div>
+          <h4>The statistic row</h4>
+          <p>Serif numerals over tracked-caps labels, evenly spaced, sitting between two hairlines. Numerals use tabular figures so columns line up. Labels are bronze or brass; values take the ground's text color.</p>
+        </div>
+      </div>
+      <div class="bg-treatment">
+        <div class="bg-treatment-demo on-dark">
+          <div class="d-mix">Alpine roots.<br><strong>Global vision.</strong></div>
+        </div>
+        <div>
+          <h4>The two-weight headline</h4>
+          <p>A device used in the Listing Presentation dividers: one phrase set in two weights of the same face, Regular against Black, all caps.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 class="bg-sub">Substitutes, if needed</h3>
+    <p class="bg-p">
+      Certain apps, email programs, and email signature files can't use our preferred Adobe fonts. Below are the approved stand-ins, only for use as needed.
+    </p>
+    <div class="bg-tablewrap">
+      <table class="bg-table" style="min-width:0">
+        <thead><tr><th>Brand face</th><th>Substitute</th></tr></thead>
+        <tbody>
+          <tr><td><strong>FreightBig Pro</strong></td><td>Cormorant Garamond (free, Google Fonts)</td><td>e.g., Web, email, Word, presentations</td></tr>
+          <tr><td><strong>Either serif</strong></td><td>Times New Roman</td></tr>
+          <tr><td><strong>Apparat SemiCondensed</strong></td><td>Arial, Helvetica, Calibri (in that order)</td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ══ IMAGERY ══════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="imagery">
+    <h2 class="bg-section-title">Photography and imagery</h2>
+
+    <p class="bg-p">
+      Listing photography is warm, low, and shot at the edges of the day: interiors lit from within,
+      exteriors at dusk with the house glowing. Corporate photography is the opposite register — wide
+      alpine landscape, saturated, no architecture at all, used full bleed with the logo reversed over
+      the sky.
+    </p>
+
+    <h3 class="bg-sub">Organizing elements</h3>
+    <ul class="bg-list">
+      <li><strong>Photography goes to the trim.</strong> Cover images, section images and interior spreads bleed off all four sides. Framed, floating, drop-shadowed or rounded photographs are not part of this system.</li>
+      <li><strong>Type sits on the image, not beside it.</strong> Property names and captions reverse out of the lower third, aligned left to the page margin. Avoid adding a black box behind it.</li>
+      <li><strong>The triangle watermark is oversized and nearly invisible.</strong> One Triangle Mark at Mist gray, cropping off the right and bottom edges, sitting behind the text. If a reader notices it as a graphic, it is too strong.</li>
+    </ul>
+
+    <h3 class="bg-sub">Treatment and resolution</h3>
+    <div class="bg-cols">
+      <div>
+        <p class="bg-p">
+          Do not apply filters, vignettes, borders or color grades. Do not stretch an image
+          to fill a frame; crop it. Every listing image must be one we have the rights to use, and when a  photograph is not ours, credit it in Stone Gray at caption size.
+        </p>
+      </div>
+      <div class="bg-tablewrap">
+        <table class="bg-table" style="min-width:0">
+          <thead><tr><th>Use</th><th>Requirement</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Print, full bleed</strong></td><td class="num">300 ppi at final size</td></tr>
+            <tr><td><strong>Large-format signage</strong></td><td class="num">150 ppi at final size</td></tr>
+            <tr><td><strong>Social, portrait</strong></td><td class="num">1080 × 1440 px</td></tr>
+            <tr><td><strong>Web hero</strong></td><td class="num">2400 px wide</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ VOICE ════════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="voice">
+    <h2 class="bg-section-title">Voice and copy</h2>
+    <!-- <p class="bg-p">
+      Restrained, specific, and confident enough not to shout. We describe what is actually there — the
+      drive up through the lavender, the view from Independence Pass to Mount Sopris — and let the
+      reader draw the conclusion.
+    </p>
+
+    <div class="bg-saysay">
+      <div class="bg-rule yes">
+        <div class="bg-rule-label">We write</div>
+        <ul class="yes">
+          <li>Concrete detail over adjectives</li>
+          <li>Complete sentences, sparingly punctuated</li>
+          <li>Sentence case in body copy</li>
+          <li>Numerals for beds, baths, acres, square feet</li>
+          <li>Named places: Red Mountain, Brush Creek, the Core</li>
+        </ul>
+      </div>
+      <div class="bg-rule no">
+        <div class="bg-rule-label">We do not write</div>
+        <ul class="no">
+          <li>&ldquo;Stunning,&rdquo; &ldquo;luxurious,&rdquo; &ldquo;must see,&rdquo; &ldquo;dream home&rdquo;</li>
+          <li>Exclamation points, ever</li>
+          <li>ALL CAPS for emphasis in running copy</li>
+          <li>Emoji in corporate posts, or hashtag stacks</li>
+          <li>Abbreviations: BR, BA, gorg, w/</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3 class="bg-sub">The firm's name, and standing details</h3>-->
+    <div class="bg-cols">
+      <div class="bg-card">
+        <h4>Our name</h4>
+        <p>Full name on first reference and in any legal or contractual context: <strong>Mont Haus International Realty</strong>. After that, <strong>Mont Haus</strong> alone.</p>
+        <p>Two words, both capitalized, no hyphen, no internal capital. Not MontHaus, not Mont-Haus, not MHIR, not Mont Haus Realty, and not MONT HAUS in running copy (the all-caps form belongs to the logo artwork only).</p>
+      </div>
+      <div class="bg-card">
+        <h4>Standing details</h4>
+        <p class="mono">
+          <strong>Aspen</strong><br>600 E Hopkins Ave, Ste 304<br>Aspen, CO 81611
+        </p>
+        <p class="mono">
+          <strong>Vail</strong><br>183 Gore Creek Drive<br>Vail, CO 81657
+        </p>
+        <p class="mono"><strong>Web</strong> monthaus.com &nbsp;·&nbsp; <strong>Instagram</strong> @monthausrealty</p>
+      </div>
+    </div>
+
+    <h3 class="bg-sub">Approved taglines</h3>
+    <ul class="bg-taglines">
+      <li><span class="line">Alpine Roots. Global Vision.</span></li>
+      <li><span class="line">Stewards of Extraordinary Places</span></li>
+      <li><span class="line">The Mountains Call. Mont Haus Answers.</span></li>
+      <li><span class="line">Remarkable Real Estate Demands Remarkable Representation</span></li>
+      <li><span class="line">There are places in this world that don't just change your address, they change your life.</span></li>
+    </ul>
+
+    <h3 class="bg-sub">Boilerplate</h3>
+    <div class="bg-card">
+      <p class="bg-quote">
+        Mont Haus International Realty was born in the mountains of Colorado, where a deep respect for
+        the alpine landscape shapes everything we do. From Aspen and Vail to Denver, we connect
+        exceptional properties with buyers and investors from the world's most influential markets,
+        serving not simply to facilitate transactions, but as trusted advisors and stewards of
+        remarkable real estate assets.
+      </p>
+      <p style="font-size:12px;color:#6b7280;margin-top:12px">Use verbatim in press releases, listing presentations and partner materials. Shorten from the end if space requires; do not rewrite.</p>
+    </div>
+  </section>
+
+  <!-- ══ NEVER ════════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="never">
+    <h2 class="bg-section-title">Never do this</h2>
+    <p class="bg-p">Every item below has happened. None of it is a matter of taste.</p>
+
+    <div class="bg-dd">
+      <figure>
+        <div class="bg-dd-frame on-dark"><img src="assets/img/demo-naive-reverse-stack.svg" alt="Black logo simply reversed to white"></div>
+        <span class="bg-dd-tag">Do not reverse the black art</span>
+        <figcaption>The diagonal cut closes to a hairline. Open MH-stack-logo_white, M-mark_white or triangle_mark-white instead.</figcaption>
+      </figure>
+      <figure>
+        <div class="bg-dd-frame"><img src="assets/logos/MH_vert-stack_black.svg" style="transform:scaleX(1.55);max-height:60px" alt="Stretched logo"></div>
+        <span class="bg-dd-tag">Do not stretch</span>
+        <figcaption>Hold shift. The lockup is 1.356 : 1 and never anything else.</figcaption>
+      </figure>
+      <figure>
+        <div class="bg-dd-frame"><img src="assets/logos/MH_vert-stack_black.svg" style="transform:rotate(-13deg);max-height:62px" alt="Rotated logo"></div>
+        <span class="bg-dd-tag">Do not rotate</span>
+        <figcaption>The logo is always horizontal, including on vertical signage.</figcaption>
+      </figure>
+      <figure>
+        <div class="bg-dd-frame" style="background:#3E8FA8"><img src="assets/logos/MH_vert-stack_white.svg" style="filter:sepia(1) saturate(6) hue-rotate(320deg);max-height:66px" alt="Recolored logo"></div>
+        <span class="bg-dd-tag">Do not recolor</span>
+        <figcaption>Black, cream, white or the supplied gray. Never a listing's accent color, never a gradient.</figcaption>
+      </figure>
+      <figure>
+        <div class="bg-dd-frame"><img src="assets/logos/MH_vert-stack_black.svg" style="max-height:66px;filter:drop-shadow(4px 5px 3px rgba(0,0,0,.55))" alt="Logo with drop shadow"></div>
+        <span class="bg-dd-tag">Do not add effects</span>
+        <figcaption>No shadow, glow, outline, bevel or stroke to help it pop.</figcaption>
+      </figure>
+      <figure>
+        <div class="bg-dd-frame" style="padding:3px"><img src="assets/logos/MH_vert-stack_black.svg" style="max-height:126px" alt="Logo with no clear space"></div>
+        <span class="bg-dd-tag">Do not crowd</span>
+        <figcaption>One cap height of clear space on every side, always.</figcaption>
+      </figure>
+      <figure>
+        <div class="bg-dd-frame"><span style="font-family:Arial,sans-serif;font-weight:700;font-size:25px;letter-spacing:-.5px;line-height:1;text-align:center;color:#111">MONT<br>HAUS<br><span style="font-size:8px;font-weight:400;letter-spacing:2px">INTERNATIONAL REALTY</span></span></div>
+        <span class="bg-dd-tag">Do not retype</span>
+        <figcaption>The wordmark is drawn artwork. Setting it in a font, any font, produces a different company.</figcaption>
+      </figure>
+      <figure>
+        <div class="bg-dd-frame on-dark"><img src="assets/logos/triangle_marks_wht.svg" style="max-height:66px" alt="Triangle group used as a logo"></div>
+        <span class="bg-dd-tag">Do not promote the group</span>
+        <figcaption>Triangle Groups is texture. It never stands where the logo should be, not on a cover, a sign, an avatar or a card front.</figcaption>
+      </figure>
+    </div>
+
+    <h3 class="bg-sub">And in the layout</h3>
+    <ul class="bg-list never">
+      <li>Do not reverse the black logo to make a white one. Use the drawn white file.</li>
+      <li>Do not use the horizontal lockup where the stack fits.</li>
+      <li>Do not use the horizontal lockup on a dark ground. No reversed version exists; use the M Mark.</li>
+      <li>Do not use Triangle Groups in place of the logo.</li>
+      <li>Do not pull artwork from a retired folder. Five directories are live: MH Full Stack, M Mark, Triangle Mark, Triangle Groups, MH Full Horizontal.</li>
+      <li>Do not put the logo inside a white box on a photograph. Move it to a clear area, or place the reversed file over a dark one.</li>
+      <li>Do not use two logos on one surface. One lockup per side of a card, one per page, one per post.</li>
+      <li>Do not mix the display serifs in a single piece. FreightBig or Cormorant, not both.</li>
+      <li>Do not tighten the tracking on caps eyebrows to make a line fit. Shorten the line.</li>
+      <li>Do not set body copy in the display serif, and do not set headlines in Apparat outside the Listing Presentation dividers.</li>
+      <li>Do not add borders, rounded corners, gradients or drop shadows to photographs, panels or text blocks.</li>
+      <li>Do not use the restricted presentation colors — Alpine Gold, Editorial Gold, Glacier Blue — on listing marketing.</li>
+      <li>Do not build a personal sub-brand. Agent team names, personal logos, alternate color schemes and custom marks are not permitted on Mont Haus collateral.</li>
+      <li>Do not send anything to print without a proof to marketing. A five-minute question is cheaper than a reprint.</li>
+    </ul>
+  </section>
+
+  <!-- ══ REFERENCE ════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="reference">
+    <h2 class="bg-section-title">On-brand reference pieces</h2>
+    <p class="bg-p">Work that already does it right. Use these before starting anything new: find the closest example and follow it.</p>
+
+    <h3 class="bg-sub">Listing brochure</h3>
+    <div class="bg-figs">
+      <figure><img src="assets/img/ex_broch_cover.jpg" alt="221 Wrights Road brochure cover"><figcaption><strong>Cover</strong>Full-bleed dusk exterior; name and italic subtitle reversed into the lower left; tracked-caps location eyebrow above.</figcaption></figure>
+      <figure><img src="assets/img/ex_broch_dark.jpg" alt="Dark interstitial page"><figcaption><strong>Interstitial</strong>Black field, centered serif paragraph, a short brass rule, a statistic row. Nothing else on the page.</figcaption></figure>
+      <figure><img src="assets/img/ex_broch_photo.jpg" alt="Interior spread with caption chip"><figcaption><strong>Interior spread</strong>One image to the trim, one caption chip, one line of description centered beneath.</figcaption></figure>
+      <figure><img src="assets/img/ex_broch_cream.jpg" alt="Floor plan page on cream"><figcaption><strong>Plans</strong>Cream ground, plan floated with generous margin, level and square footage as a serif and label pair.</figcaption></figure>
+    </div>
+
+    <h3 class="bg-sub">Agent listing flyer</h3>
+    <div class="bg-figs wide">
+      <figure><img src="assets/img/ex_main_cover.jpg" alt="633 West Main cover"><figcaption><strong>633 West Main, cover</strong>The same architecture as the development brochure, at agent scale. Any Mont Haus agent's listing book should be indistinguishable in structure from this one.</figcaption></figure>
+      <figure><img src="assets/img/ex_main_particulars.jpg" alt="The Particulars specification page"><figcaption><strong>The Particulars</strong>Four columns of tracked-caps headers in brass over short specification lines. This is the approved way to present features, not bullet lists.</figcaption></figure>
+    </div>
+
+    <h3 class="bg-sub">Direct mail</h3>
+    <div class="bg-figs wide">
+      <figure><img src="assets/img/ex_postcard_front.jpg" alt="450 Solar Way postcard front"><figcaption><strong>Front</strong>Full-bleed image, cream logo at 0.95 in in the top-left corner with 0.25 in of clear space, name and subtitle lower right above a short rule.</figcaption></figure>
+      <figure><img src="assets/img/ex_postcard_back.jpg" alt="450 Solar Way postcard back"><figcaption><strong>Back</strong>Black panel, image strip, headline, body, statistic row, two agents with headshots, logo bottom right. Return address in bronze tracked caps.</figcaption></figure>
+    </div>
+
+    <h3 class="bg-sub">Corporate social</h3>
+    <div class="bg-figs">
+      <figure><img src="assets/img/ex_social1.jpg" alt="Corporate social post"><figcaption><strong>1080 × 1440</strong>Alpine landscape to the edges, oversized logo reversed at partial opacity across the sky.</figcaption></figure>
+      <figure><img src="assets/img/ex_social2.jpg" alt="Corporate social post"><figcaption><strong>Tagline placement</strong>One approved line, sentence case, lower third, left aligned to the same margin as the logo.</figcaption></figure>
+      <figure><img src="assets/img/ex_social3.jpg" alt="Corporate social post"><figcaption><strong>Contrast</strong>The logo goes where the sky is open. Never over a busy ridgeline or a tree canopy.</figcaption></figure>
+    </div>
+
+    <h3 class="bg-sub">Business cards</h3>
+    <div class="bg-figs">
+      <figure><img src="assets/img/ex_card_logo.jpg" alt="Business card with stack logo"><figcaption><strong>Stack back</strong>Preferred. Cream lockup centered on black.</figcaption></figure>
+      <figure><img src="assets/img/ex_card_tri.jpg" alt="Business card with triangle mark"><figcaption><strong>Triangle back</strong>Permitted. The large Triangle Mark on a plain black field is the one place it appears as a foreground graphic.</figcaption></figure>
+      <figure><img src="assets/img/ex_card_trigroup.jpg" alt="Business card with triangle group accent"><figcaption><strong>Group accent</strong>Permitted at small scale, as texture. The group never fills the card.</figcaption></figure>
+      <figure><img src="assets/img/ex_card_info.jpg" alt="Business card information side"><figcaption><strong>Information side</strong>Name in tracked caps, title and contact in Apparat, mark right aligned. Order is fixed: name, title, phone, email, address, monthaus.com.</figcaption></figure>
+    </div>
+
+    <h3 class="bg-sub">Corporate presentation</h3>
+    <div class="bg-figs wide">
+      <figure><img src="assets/img/ex_lp_divider.jpg" alt="Listing presentation divider"><figcaption><strong>Divider</strong>The two-weight headline over a duotone image. This device belongs to the Listing Presentation and stays there.</figcaption></figure>
+      <figure><img src="assets/img/ex_lp_editorial.jpg" alt="Listing presentation editorial page"><figcaption><strong>Editorial page</strong>Serif headline hung from a vertical hairline, two narrow text columns, a gold pull quote low right, oversized triangle watermark behind.</figcaption></figure>
+    </div>
+
+    <h3 class="bg-sub">The source files</h3>
+    <div class="bg-downloads">
+      <a class="bg-download" href="#"><span class="bg-download-name">2026 Listing Presentation</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">221 Wrights Road brochure</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="https://docs.monthaus.com/633-WMain-Aspen"><span class="bg-download-name">633 West Main brochure</span><span class="bg-download-meta">Web page</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">450 Solar Way direct-mail postcard</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">Corporate social posts</span><span class="bg-download-meta">TO SUPPLY</span></a>
+      <a class="bg-download" href="/assets/marketing/bizcards.html"><span class="bg-download-name">Business card options</span><span class="bg-download-meta">Web page</span></a>
+      <a class="bg-download" href="/assets/marketing/yardsigns.html"><span class="bg-download-name">Yard sign options</span><span class="bg-download-meta">Web page</span></a>
+    </div>
+  </section>
+
+  <!-- ══ DOWNLOADS ════════════════════════════════════════════════════ -->
+  <section class="bg-section" id="downloads">
+    <h2 class="bg-section-title">Downloads</h2>
+    <p class="bg-p">
+      Put files in <code>assets/pdf/</code> and <code>assets/logos/</code>. Use .pdf, .zip,
+      .svg, .png, .jpg, .eps or .ai. The server blocks several extensions site-wide, so a
+      download saved as .conf, .sql, .env, .old, .bak, .orig, .log, .lock, .py, .sh or
+      .example will 403 with nothing on screen explaining why.
+    </p>
+    <p class="bg-p">
+      The SVGs below are the Final Logos exports. Print vendors, sign fabricators and anyone setting
+      new type should be sent .ai or .eps from Final Logos instead: the fonts in those are outlined, so
+      no font license has to change hands.
+    </p>
+
+    <div class="bg-downloads">
+      <a class="bg-download" href="assets/pdf/MontHaus-Brand-Standards.pdf"><span class="bg-download-name">Brand guidelines, print-ready PDF</span><span class="bg-download-meta">PDF · 36 pp · 11 × 8.5 in</span></a>
+      <a class="bg-download" href="#"><span class="bg-download-name">Full logo set, all five marks, black and white</span><span class="bg-download-meta">TO SUPPLY · .zip</span></a>
+      <a class="bg-download" href="assets/logos/MH_vert-stack_black.svg"><span class="bg-download-name">MH Full Stack, black</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/MH_vert-stack_white.svg"><span class="bg-download-name">MH Full Stack, white</span><span class="bg-download-meta">SVG · drawn for dark grounds</span></a>
+      <a class="bg-download" href="assets/logos/MH_vert-stack_gray.svg"><span class="bg-download-name">MH Full Stack, Stone Gray</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/M-mark_black.svg"><span class="bg-download-name">M Mark, black</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/M-mark_white.svg"><span class="bg-download-name">M Mark, white</span><span class="bg-download-meta">SVG · drawn for dark grounds</span></a>
+      <a class="bg-download" href="assets/logos/triangle_mark-black.svg"><span class="bg-download-name">Triangle Mark, black</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/triangle_mark-white.svg"><span class="bg-download-name">Triangle Mark, white</span><span class="bg-download-meta">SVG · drawn for dark grounds</span></a>
+      <a class="bg-download" href="assets/logos/triangle_mark-bronze.svg"><span class="bg-download-name">Triangle Mark, bronze outlined</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/triangle_marks_blk.svg"><span class="bg-download-name">Triangle Groups, black</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/triangle_marks_wht.svg"><span class="bg-download-name">Triangle Groups, white</span><span class="bg-download-meta">SVG</span></a>
+      <a class="bg-download" href="assets/logos/mh_horz-black.svg"><span class="bg-download-name">MH Full Horizontal, black</span><span class="bg-download-meta">SVG · restricted use</span></a>
+    </div>
+  </section>
+
+</main>
+
+<footer class="bg-footer">
+  Mont Haus International Realty · Aspen, Colorado<br>
+  Questions about a use not covered here: <a href="mailto:nikki.boxer@monthaus.com">nikki.boxer@monthaus.com</a>
+</footer>
+
+</body>
+</html>

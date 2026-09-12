@@ -9,6 +9,13 @@
  *
  *   receipt.php?order_id=42            → inline
  *   receipt.php?order_id=42&dl=1       → download
+ *   receipt.php?invoice_id=3           → the combined invoice behind a split
+ *
+ * invoice_id serves marketing_vendor_invoices, which order_split.php writes.
+ * The two are separate physical files on purpose: every collateral order gets
+ * its OWN copy of the invoice receipt, because clearing the receipt on one
+ * order physically unlinks the file, and a shared one would break the link for
+ * every other agent on that invoice.
  */
 
 require_once __DIR__ . '/inc/auth.php';
@@ -16,21 +23,33 @@ require_once __DIR__ . '/inc/db.php';
 require_login();
 require_role('admin');
 
-$order_id = (int)($_GET['order_id'] ?? 0);
-if (!$order_id) { http_response_code(400); exit('Missing order_id.'); }
+$order_id   = (int)($_GET['order_id']   ?? 0);
+$invoice_id = (int)($_GET['invoice_id'] ?? 0);
+if (!$order_id && !$invoice_id) { http_response_code(400); exit('Missing order_id or invoice_id.'); }
 
-$stmt = $conn->prepare(
-    "SELECT receipt_file, receipt_orig_name
-       FROM marketing_collateral_orders
-      WHERE id = ? LIMIT 1"
-);
-if (!$stmt) { http_response_code(500); exit('Database error.'); }
-$stmt->bind_param('i', $order_id);
+// Table and id chosen here, never interpolated from input — the only thing that
+// reaches the query is a bound integer.
+if ($order_id) {
+    $sql  = "SELECT receipt_file, receipt_orig_name FROM marketing_collateral_orders WHERE id = ? LIMIT 1";
+    $want = $order_id;
+    $miss = 'No receipt on this order.';
+} else {
+    $sql  = "SELECT receipt_file, receipt_orig_name FROM marketing_vendor_invoices WHERE id = ? LIMIT 1";
+    $want = $invoice_id;
+    $miss = 'No receipt on this invoice.';
+}
+
+// prepare() fails rather than throwing when marketing_vendor_invoices has not
+// been created yet — see sql/vendor_invoices_v1.sql. A 500 with a real message
+// beats a blank page.
+$stmt = $conn->prepare($sql);
+if (!$stmt) { http_response_code(500); exit('Database error — has sql/vendor_invoices_v1.sql been run?'); }
+$stmt->bind_param('i', $want);
 $stmt->execute();
 $row = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 
-if (!$row || empty($row['receipt_file'])) { http_response_code(404); exit('No receipt on this order.'); }
+if (!$row || empty($row['receipt_file'])) { http_response_code(404); exit($miss); }
 
 // basename() defends against any traversal that reached the column
 $stored = basename((string)$row['receipt_file']);
