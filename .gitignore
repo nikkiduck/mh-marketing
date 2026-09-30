@@ -14,6 +14,21 @@ inc/sso_config.php
 _to_delete/
 *hub-reference*
 
+# ── Data exports, never in the docroot or git ────────────────────────────────
+# Subscriber emails exported from the hub. Keep it outside the project folder
+# (Nova publishes everything here); the import reads it from /home/admin/.
+hot_sheets_export.json
+
+# Screenshots from earlier Claude sessions, not part of the site
+Claude outputs/
+
+# SMB placeholders for files deleted while another machine had them open
+.smbdelete*
+
+# Bulk-profile inputs for cron/import_profiles.php: agent contact details
+# and bios. Data, not code; denied on the web by .htaccess and the vhost.
+import/
+
 # ── Uploaded files ───────────────────────────────────────────────────────────
 receipts/
 assets/uploads/

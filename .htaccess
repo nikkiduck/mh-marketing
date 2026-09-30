@@ -15,7 +15,8 @@ Options -Indexes
 #    inc/    include-only PHP: db.php and sso_config.php live here
 #    sql/    migrations        tests/  test suite
 #    cron/   CLI-only scripts  vendor/ PHPMailer
-RedirectMatch 404 ^/(inc|sql|tests|cron|vendor|deploy|docs)(/|$)
+#    import/ bulk-profile inputs for cron/import_profiles.php (bios, CSV)
+RedirectMatch 404 ^/(inc|sql|tests|cron|vendor|deploy|docs|import)(/|$)
 
 # ── Sensitive file types anywhere ───────────────────────────
 # NOTE: json and md are deliberately NOT in this list. The app serves its own
