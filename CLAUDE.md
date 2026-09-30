@@ -355,6 +355,103 @@ then read the Financials table and the grid's input values out of the HTML.
 Check the October case specifically: `value=""` with the budget only as
 `placeholder`. Reasoning about the arithmetic is not the same as seeing it.
 
+## The agent roster (index.php, rebuilt 2026-09-21)
+
+A table by default, cards as an option (per-browser, localStorage, wrapped in
+try/catch). Every row is shaped once in PHP (`$rows`) and both views render
+from it with the same data-* attributes the script filters and sorts on.
+"Needs attention" chips filter by `data-attn` (onboard, web_pending,
+web_incomplete, balance); the Pipeline chip links out. Onboard / Offboard /
+Restore are `inc/agent_lifecycle.php` (mk_onboard, mk_offboard), which report
+back what they did as a flash list. Archived intakes come from their own query
+(the UNION arms join is_active = 1 only). The rules below about the UNION, the
+early close, balances and initials() all still hold. The card notes that
+follow describe the old card layout; the optional card view keeps its spirit.
+
+### Teams (2026-09-22)
+- `marketing_intakes.entity_type` 'agent' | 'team'; members in `team_members`.
+- Any query that means "a person" (email/name matching, feed, listing credit,
+  slugs) must append `mk_team_sql($conn[, $alias])` from inc/agent_roster.php.
+  It returns '' until the migration has run.
+- Team MLS IDs live as `is_alias = 1` identities on the credited members only (not
+  every member: WB's is on Jonathan and Scott, not Sara), never on the team.
+- Split a mixed team/person row with cron/split_team.php (see docs/AGENT_ROSTER_PLAN.md).
+
+### Roster statuses (2026-09-22)
+- Active = with MH in the MLS; Inactive = `departure_detected_at` set (the sync
+  never changes web_status, FUB or Hot Sheets for a departure; Nikki offboards
+  by hand); Archived = offboarded. 'roster' / 'pending' are legacy, read as Active.
+- Nikki can also mark someone Inactive by hand (status 'inactive': in the MLS
+  under MH but not an active broker, e.g. the TC) by clicking the Active badge
+  on the roster; clicking Inactive makes them Active again. The sync never
+  writes status, so it sticks. Only MLS departures get the red dot and chip.
+- "Onboarding" is only the marketing checklist (marketing_tasks category
+  'onboarding'), never a status.
+- Hot Sheet subscriptions are never automatic: ticking the checklist item
+  MK_HS_TASK ('Hot Sheets: Subscribe') calls mk_hs_subscribe (agent.php
+  toggle_task); un-ticking calls mk_hs_pause.
+- Roster change emails: inc/roster_alerts.php, ROSTER_ALERT_EMAILS.
+
+### Bulk profiles
+- cron/import_profiles.php: import/headshots, import/bios, import/profiles.csv →
+  marketing_intakes; photos are written to agent-photos/ and referenced as
+  SITE_URL . '/agent-photos/...', which is what api/roster.php counts as hosted.
+- Fills blanks only unless --overwrite. --from-mls fills contact fields from mls_*.
+
+### The agent page (2026-09-25)
+- Overview is gone: Profile is the default tab and holds Contact, Social,
+  Website, Headshots (with the crop), Bio, Board identities, Subscriptions,
+  Tasks and the MLS mirror. ?tab=overview redirects to it.
+- Hot Sheets: the card links to subscribers.php (frequency, pause, remove);
+  only the first Subscribe happens on the agent page.
+- subscribers.php is the marketing version of the hub's hot-sheets page.
+  Unsubscribed is the person's own choice and is never undone there.
+- agent-photos/ must belong to www-data or every photo save fails
+  (mk_photo_perm_hint() says so in the error).
+
+### One place for agents (2026-09-23)
+- agent.php has a Profile tab: website status/slug/sort/office/service area/FUB,
+  headshot upload (inc/photos.php writes agent-photos/<slug>.jpg and
+  -square.jpg, the URLs api/roster.php counts as hosted), the bio (moved from
+  Assets), board identities (add/remove) and the Hot Sheet switch, which is the
+  same thing as the MK_HS_TASK checklist item and keeps it in step.
+- Colour: GD cannot read ICC profiles, so an Adobe RGB or Display P3 photo
+  comes out oversaturated (red skin). mk_photo_srgb() converts it when Imagick
+  is installed (assets/icc/sRGB.icc is the target profile) and otherwise saves
+  it as-is and returns a note, shown on the agent page beside Saved.
+- Two crop tools (mkCropTool in agent.php): the profile photo at 4:5, saved
+  1200x1500, which is the shape of the website's broker cards, and the square
+  at 600x600. The square is cut BEFORE the profile photo is rewritten, since
+  both boxes were framed against the photo as it stands.
+- The face crop is Cropper.js (CDN, same version as the site admin): pick a
+  file or press "Crop from the profile photo", frame it, and the BOX is sent
+  (crop_x/y/w/h + crop_src), with mk_crop_photo() doing the cut server-side.
+  Do not go back to exporting the canvas: a photo hosted elsewhere taints it,
+  toDataURL throws, and the save looks fine but writes nothing (2026-09-23).
+  The data-URL path is still accepted as a fallback.
+- agent.php also accepts ?slug=, so the site can link here without our row ids.
+- site.monthaus.com/admin/agent.php is READ-ONLY: its save/status posts flash a
+  notice and change nothing, the form is inside a disabled fieldset, and it
+  links to marketing. Editing there used to be silently overwritten by the feed.
+- PUBLIC_SITE_URL (inc/config.php) is where "view public profile" points.
+
+### Website order and title line breaks (2026-09-29)
+- `website_order.php` (admin only, "Website Order" button on the roster) sets
+  the public broker grid's order by dragging. It shows approved, active,
+  non-team agents four across, in the site's order (`sort_order`, then name).
+  The drag is hand-written HTML5, no library, on purpose (a CDN outage once
+  cost the agent page its crop tool); arrow buttons do the same for touch.
+  Save writes `sort_order` 1..n in one transaction, ignoring ids not currently
+  on the site, then offers "Sync to Website" (`mk_site_sync()`). It pushes
+  nothing itself. The per-agent `sort_order` box on `agent.php` still exists.
+  It is an `mk_team_sql()` caller, so it belongs in the leadership/staff audit.
+- The title on `agent.php` is a 2-row textarea: a newline means "break the
+  broker card here". Saving normalises `\r\n`, trims around each break and
+  collapses blank lines; the profile shows it with `nl2br`. `api/roster.php`
+  passes the newline through, and the site's `agent_title_html()`
+  (`webroot/_roster.php`) applies the same normalisation and `nl2br`, so the
+  public cards break in the same place.
+
 ## The agent roster card
 
 `index.php` cards carry: avatar, name (the link to the profile), MLS badges,
@@ -913,6 +1010,78 @@ Two jobs, both pulling from the Spark API — not from the hub:
 `sync_roster.php` also re-links `marketing_intakes.roster_id` at the end of
 its run. That used to be the hub's job; it is this site's now.
 
+**This list is out of date (2026-09-30).** `cron/` now holds twelve scripts.
+`sync_anyprop_roster.php`, `sync_hot_sheet_listings.php`, `send_hot_sheet.php`
+and `parse_pipeline_events.php` are meant to be scheduled; the rest are
+one-off tools (see HANDOFF.md section 6 and `docs/AGENT_ROSTER_PLAN.md`).
+What is actually installed has not been checked. Get the live list before
+changing anything, and replace this section with it:
+
+```bash
+sudo crontab -u admin -l; sudo crontab -l; ls -la /etc/cron.d/
+```
+
+## Stepping between agents (2026-09-29)
+
+`agent.php` carries a chevron either side of a switcher in the breadcrumb row:
+previous agent, a dropdown of everyone, "7 of 26", next agent. Alt with an
+arrow key does the same (Alt, not a bare arrow, so it cannot fight a text box,
+the bio editor or the crop tool).
+
+The set and the order are the roster's Active tab: `is_active = 1`, not
+archived, teams excluded, by last name. Somebody archived is not in it, so the
+strip is simply absent on their page rather than wrong.
+
+The tab travels with you, and that is the part to be careful with. The tab
+buttons switch panels in the page and rewrite the address bar with
+`history.replaceState`, so the `tab=` the server baked into those links is
+stale the moment Nikki clicks a tab. The JS therefore reads the tab from
+`location.search` at click time and builds the URL then. The server-rendered
+href stays correct for the first click and for anyone without JS.
+
+## Deploying files (and how a half-deploy hides itself)
+
+File ownership and modes, settled 2026-09-28. `admin` is in the `www-data`
+group; directories are `2775`, files `0664`, and `inc/db.php` /
+`inc/sso_config.php` are `0660`. Both Apache and Nikki can therefore write
+every file, which is what lets her save straight from Nova over SFTP. Do NOT
+tell her to `chown www-data:www-data` a file any more: that leaves it
+read-only to her and Nova hangs on the failed save rather than reporting it.
+The site's `config.php` is owned by `admin`, so it needs group `www-data` and
+`0640`; `0660` alone locked Apache out of it and the sync endpoint 500'd.
+
+**The failure mode to know about.** A PHP fatal in the middle of a page, with
+`display_errors` off, truncates the response and says nothing: no error on
+screen, nothing in the browser console, no closing tags. On 2026-09-28
+`agent.php` was uploaded but `inc/photos.php` was not, so `mk_ini_bytes()` was
+undefined, output stopped mid-`<script>`, and every line after it (both
+`mkCropTool()` calls, the Quill setup) never reached the browser. The crop
+buttons rendered and did nothing. It reads exactly like a JavaScript problem
+and is not one. When a page's JS "stops working" for no visible reason, check
+where the HTML actually ends before touching the JavaScript, and check
+`/var/log/apache2/error.log` (this box is Ubuntu 24.04 with journald, there is
+no `/var/log/syslog`).
+
+**Uploading is per file and easy to get partly wrong.** `deploy/manifest.md5`
+lists every `.php` under the root, `inc/`, `api/` and `cron/`, plus
+`assets/css/mh-theme.css`. It deliberately omits `inc/db.php`,
+`inc/sso_config.php`, `agent-photos/` and `assets/vendor/`, whose server copies
+are meant to differ. Regenerate it from the working folder, then on the server:
+
+```
+cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
+```
+
+Silence means the server matches. `FAILED` means the copies differ, which is
+not the same as the server being behind — compare sizes and dates before
+overwriting, since a file may have been edited up there.
+
+**No CDNs on the agent page.** Cropper and Quill are served from
+`assets/vendor/` (downloaded on the server with curl). The CDN tags remain as a
+fallback that only fires when a local copy is missing. `mkCropTool()` binds
+nothing without `Cropper`, so a missing library used to leave the crop buttons
+silently dead; it now disables the button and says so on the page.
+
 ## Migrations are run by hand
 
 Nikki runs all SQL by hand — **TablePlus**, connected over an SSH tunnel
@@ -1137,6 +1306,117 @@ row, that wrapped button rows share one left edge, that nothing exceeds the
 viewport width. Reasoning about flex-wrap is not the same as seeing where it
 wrapped.
 
+## The one agent roster (Anyprop, feed to monthaus.com)
+
+`docs/AGENT_ROSTER_PLAN.md` is the plan and the runbook. The short version:
+
+- `marketing_intakes` is the agent table for everything, the public website
+  included (`sql/agent_roster_v1.sql`). `web_status` (website) is separate from
+  `status` (onboarding). `status = 'roster'` is a row the Anyprop sync created
+  for an agent marketing has not onboarded: drawn as a no-intake card, and
+  "Create Intake" promotes that same row rather than inserting another.
+- `agent_mls_ids` holds one row per board identity, `UNIQUE (market,
+  mls_agent_id, intake_id)`: a team ID is an `is_alias` row on each member.
+  `marketing_agent_mls_ids` (one per board) is superseded but still read by
+  `agent.php` until the Website card lands.
+- `mls_*` columns are written only by `cron/sync_anyprop_roster.php`; it never
+  writes a curated field. The feed falls back to `mls_*` where curated is blank.
+- `last_seen_at IS NULL` on an identity means Anyprop has never returned it.
+  The sync never deactivates anyone over such a row. Keep that guard.
+- `api/roster.php` is public (no `auth.php`), guarded by `ROSTER_FEED_TOKEN`
+  in the `Authorization` header only. It publishes only photos this portal
+  hosts; a Dropbox link is not an image.
+- Shared helpers (slugs, bio cleaning, phone format) live in
+  `inc/agent_roster.php`. `mk_clean_bio()` is what reaches the public website.
+- "Sync to Website" on the roster (2026-09-28, `inc/site_sync.php`) does not
+  push anything. It POSTs to the site's `webroot/api/sync_agents.php` with
+  `AGENT_SYNC_TOKEN`, and the SITE pulls `api/roster.php` as it always has,
+  so there is one direction of travel and the nightly cron is unchanged. That
+  endpoint runs the site's own `sync_agents_from_marketing.php` by including it
+  with `MH_SYNC_EMBED` defined, which is why that script's CLI guard checks for
+  the constant. The flash shows the tally, anything that went wrong, and the
+  full log; a run with no `✓` tally is reported as failed whatever the HTTP
+  code said.
+
+## Hot Sheets (in progress)
+
+`docs/HOT_SHEETS_PLAN.md` (plan + runbook). Built so far: `hs_listing_state` /
+`hs_listing_changes` (`sql/hot_sheets_v1.sql`) filled by
+`cron/sync_hot_sheet_listings.php`, which logs EVERY transition; never add back
+the hub's "skip if an un-notified row of this type exists" rule, it is how
+sales went missing. Emails: `cron/send_hot_sheet.php` + `inc/hs_*.php`.
+`HOT_SHEET_ALLOWED_RECIPIENTS` (config.php, checked in `hs_send_email()`)
+keeps the new system to Nikki until go-live; do not move that check out of
+the send function. Latest Updates is a computed Monday window, not a
+notified_at flag. Paperless Pipeline: `api/pipeline_webhook.php` (header
+token only) → `cron/parse_pipeline_events.php` → `pipeline_review.php`;
+`pl_map_status()` returning null means "never publish", keep it that way.
+Until go-live the hub's review queue is mirrored here by the import. Hot Sheets moves here from the hub. Listings come
+from site.monthaus.com's `api/listings.php` (the site is the only Anyprop
+listings consumer); change tracking, subscribers, emails and Paperless Pipeline
+live here. The hub's copy keeps running on Spark until the new site is live.
+
+## Dynamic QR codes (qr.monthaus.com, 2026-09-28)
+
+Printed QR codes encode `https://qr.monthaus.com/<code>`; where each one opens
+is changed in `qr_codes.php` without reprinting. Same instance, same docroot,
+same database as this site.
+
+- `qr.php` (docroot) is the redirect. `deploy/qr.monthaus.com.conf` rewrites
+  EVERY request on that host to it with `[END]`, so nothing else in the docroot
+  is reachable through qr.monthaus.com. On marketing.monthaus.com it just
+  sends you to `qr_codes.php`.
+- Always **302 + `Cache-Control: no-store`, never 301.** A cached 301 would
+  stop a code from ever being repointed for anyone who scanned it once.
+- **Never an error page.** Unknown, paused, database down, fatal: all go to
+  `QR_FALLBACK_URL`. `inc/db.php` die()s on a failed connect, so qr.php
+  registers a shutdown function that turns any unplanned exit into that
+  redirect. Keep it.
+- Destinations must pass `qr_dest_error()` (https, `QR_ALLOWED_DOMAIN` or a
+  subdomain), and qr.php re-checks the stored URL at scan time, so it can
+  never become an open redirect.
+- `dest_type = 'profile'` is resolved at scan time to
+  `PUBLIC_SITE_URL/broker.php?s=<slug>`, so those codes move to monthaus.com
+  by themselves when PUBLIC_SITE_URL changes at go-live.
+- Codes are **immutable and never deleted** (they are in print). Pause sends
+  scans to the fallback; repoint and resume to reuse. Every change is logged in
+  `qr_code_changes`; scans are counted in `qr_codes.scan_count` and per
+  Mountain-time day in `qr_scans_daily` (no IP or user agent stored).
+- Scans are sent on with `utm_source=qr&utm_medium=print&utm_campaign=<code>`
+  unless the destination has its own `utm_source` (`QR_ADD_UTM`).
+- QR images are drawn in the browser (qrcode-generator 1.4.4 from cdnjs),
+  error correction Q, 4-module quiet zone. SVG for print, 2400px PNG.
+- Migration: `sql/qr_codes_v1.sql`. Constants: `QR_*` in `inc/config.php`
+  (defaults also in `inc/qr.php`). Never change `QR_BASE_URL` once printed.
+- `marketing_intakes.coll_oh_qr_code` / `coll_oh_qr_url` (open house signs in
+  the old intake form) predate this and are not connected to it.
+
+### Server setup (one time)
+
+1. DNS (AWS DNS zone for monthaus.com): A record `qr` -> the same static IP
+   as marketing.monthaus.com (35.161.76.244 on 2026-09-28).
+2. Upload with Nova, then on the instance:
+
+```bash
+sudo mkdir -p /var/www/letsencrypt
+sudo cp /var/www/marketing.monthaus.com/deploy/qr.monthaus.com.conf /etc/apache2/sites-available/qr.monthaus.com.conf
+sudo a2ensite qr.monthaus.com
+sudo /usr/sbin/apache2ctl configtest && sudo systemctl reload apache2
+sudo certbot certonly --webroot -w /var/www/letsencrypt -d qr.monthaus.com
+sudo systemctl reload apache2
+sudo certbot renew --dry-run
+```
+
+The :443 block is inside `<IfFile>` on the certificate, so the file loads
+before the cert exists (serving only the ACME challenge on :80) and HTTPS
+comes up on the reload after certbot. Webroot, not `--apache`: the Apache
+plugin rewrites vhost files, which is how 000-default.conf once hijacked this
+site's hostname.
+
+3. Check: `curl -sI https://qr.monthaus.com/anything` must be a 302 to
+   https://monthaus.com, and `curl -s -o /dev/null -w "%{http_code}\n"
+   https://qr.monthaus.com/inc/db.php` must also be a 302 (never the file).
+
 ## Marketing tool structure
 
 - `index.php` — agent roster. `office_roster` UNION ALL intake-only agents so newly
@@ -1167,7 +1447,7 @@ point: a role change can't silently widen access during the build.
 or undefined disables the restriction and access falls back to role checks
 alone.
 
-Currently: nikki.boxer, jonathan.boxer, jm.drai.
+Currently: nikki.boxer, jonathan.boxer, jm.drai, mary.lappe.
 
 ### Offboarding
 
@@ -1243,6 +1523,7 @@ inc/     include-only PHP. db.php and sso_config.php live here, holding the
 sql/     migrations       tests/   the sign-in test suite
 cron/    CLI-only         vendor/  PHPMailer
 deploy/  vhost + samples  docs/    markdown
+import/  bulk-profile inputs (bios, headshots, profiles.csv)
 ```
 
 Two consequences worth remembering:
