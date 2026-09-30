@@ -42,8 +42,19 @@ if ($action === 'create_intake') {
     $roster_id = (int)($_POST['roster_id'] ?? 0);
     if ($roster_id) {
         // Check not already linked
-        $chk = $conn->query("SELECT id FROM marketing_intakes WHERE roster_id={$roster_id} LIMIT 1");
-        if (!$chk->fetch_assoc()) {
+        $chk = $conn->query("SELECT id, status FROM marketing_intakes WHERE roster_id={$roster_id} LIMIT 1");
+        $linked = $chk->fetch_assoc();
+        // Linked to a row the Anyprop sync created (status 'roster'): that row
+        // becomes the intake, keeping its MLS identities and website fields.
+        if ($linked && $linked['status'] === 'roster') {
+            $lid = (int)$linked['id'];
+            $conn->query("UPDATE marketing_intakes SET status='active', intake_date=CURDATE() WHERE id={$lid}");
+            require_once __DIR__ . '/inc/_onboarding.php';
+            mkt_seed_onboarding_tasks($conn, $lid);
+            header("Location: agent.php?id={$lid}&tab=tasks&seeded=1");
+            exit;
+        }
+        if (!$linked) {
             $r = $conn->query("SELECT name, email, phone, title FROM office_roster WHERE id={$roster_id} LIMIT 1");
             $ag = $r->fetch_assoc();
             $name  = $conn->real_escape_string($ag['name']);

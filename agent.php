@@ -5,17 +5,41 @@
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/config.php';           // SITE_URL, PUBLIC_SITE_URL
 require_once __DIR__ . '/inc/_onboarding.php';
 require_once __DIR__ . '/inc/schema.php';
 require_once __DIR__ . '/inc/financials.php';
+require_once __DIR__ . '/inc/agent_lifecycle.php';   // Hot Sheets checklist item
+require_once __DIR__ . '/inc/agent_roster.php';     // mk_slug_base() for the web address
+require_once __DIR__ . '/inc/photos.php';           // headshots, and PHP's upload limits
+require_once __DIR__ . '/inc/qr.php';               // QR codes card on the Profile tab
 require_login();
 require_role('admin');
 
 $id = (int)($_GET['id'] ?? 0);
+// ?slug=jonathan-boxer works too, so the website's admin can link straight here
+// without knowing our row numbers (2026-09-23).
+if (!$id && !empty($_GET['slug'])) {
+    $st = $conn->prepare("SELECT id FROM marketing_intakes WHERE slug = ? LIMIT 1");
+    $sl = trim((string)$_GET['slug']);
+    $st->bind_param('s', $sl); $st->execute();
+    $row = $st->get_result()->fetch_row(); $st->close();
+    if ($row) $id = (int)$row[0];
+}
 if (!$id) { header('Location: index.php'); exit; }
 
 // ── POST actions ──────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // A photo bigger than PHP's post_max_size arrives as an empty request:
+    // no $_POST, no $_FILES, no error, so the page just reloaded unchanged
+    // (Nikki, 2026-09-28). Catch it and say what happened.
+    if (!$_POST && !$_FILES && (int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 0) {
+        $limit = ini_get('post_max_size');
+        header("Location: agent.php?id={$id}&tab=profile&err="
+             . urlencode("That file is larger than this server accepts in one go ({$limit}). "
+                       . 'Use a smaller image, or ask for the limit to be raised.'));
+        exit;
+    }
     $action = $_POST['_action'] ?? '';
     $rtab   = $_POST['redirect_tab'] ?? 'tasks';
 
@@ -35,6 +59,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $status = trim($_POST['new_status'] ?? 'open');
         $done   = $status === 'done' ? 'NOW()' : 'NULL';
         $conn->query("UPDATE marketing_tasks SET status='{$conn->real_escape_string($status)}', completed_at={$done} WHERE id={$tid} AND intake_id={$id}");
+        // "Hot Sheets: Subscribe": the tick IS the subscription (Nikki,
+        // 2026-09-22). If it cannot subscribe them, the tick is undone and
+        // the reason shown.
+        $tt = $conn->query("SELECT title FROM marketing_tasks WHERE id={$tid} AND intake_id={$id}")->fetch_row();
+        if ($tt && $tt[0] === MK_HS_TASK) {
+            if ($status === 'done') {
+                $msg = mk_hs_subscribe($conn, $id);
+                if (!str_starts_with($msg, 'Subscribed') && !str_contains($msg, 'already gets') && !str_starts_with($msg, 'Re-activated')) {
+                    $conn->query("UPDATE marketing_tasks SET status='open', completed_at=NULL WHERE id={$tid}");
+                    header("Location: agent.php?id={$id}&tab={$rtab}&err=" . urlencode($msg)); exit;
+                }
+                header("Location: agent.php?id={$id}&tab={$rtab}&saved=1"); exit;
+            }
+            mk_hs_pause($conn, $id);
+        }
         header("Location: agent.php?id={$id}&tab={$rtab}"); exit;
     }
 
@@ -43,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $furl = trim($_POST['file_url'] ?? '') ?: null;
         $s = $conn->prepare("UPDATE marketing_tasks SET file_url=? WHERE id=? AND intake_id=?");
         $s->bind_param('sii', $furl, $tid, $id); $s->execute(); $s->close();
-        header("Location: agent.php?id={$id}&tab=overview"); exit;
+        header("Location: agent.php?id={$id}&tab=profile"); exit;
     }
 
     if ($action === 'update_task_due') {
@@ -51,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $due = trim($_POST['due_date'] ?? '') ?: null;
         $s = $conn->prepare("UPDATE marketing_tasks SET due_date=? WHERE id=? AND intake_id=?");
         $s->bind_param('sii', $due, $tid, $id); $s->execute(); $s->close();
-        header("Location: agent.php?id={$id}&tab=overview"); exit;
+        header("Location: agent.php?id={$id}&tab=profile"); exit;
     }
 
     if ($action === 'add_task') {
@@ -577,7 +616,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'toggle_email_forwarded') {
         $val = (int)($_POST['email_forwarded'] ?? 0);
         $conn->query("UPDATE marketing_intakes SET email_forwarded={$val} WHERE id={$id}");
-        header("Location: agent.php?id={$id}&tab=overview"); exit;
+        header("Location: agent.php?id={$id}&tab=profile"); exit;
     }
 
     /* --- Assets: extra one-off links --- */
@@ -602,6 +641,153 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $s   = $conn->prepare("DELETE FROM marketing_asset_links WHERE id=? AND intake_id=?");
         if ($s) { $s->bind_param('ii', $lid, $id); $s->execute(); $s->close(); }
         header("Location: agent.php?id={$id}&tab=assets"); exit;
+    }
+
+    /* --- Profile tab: website, photos, board identities, subscriptions ---
+       Everything the site admin used to edit lives here now: marketing is the
+       one place, and the website reads it from the feed (Nikki, 2026-09-23). */
+    if ($action === 'web_status') {
+        $to = $_POST['to'] ?? '';
+        if (in_array($to, ['approved', 'pending', 'inactive'], true) && mk_column_exists($conn, 'marketing_intakes', 'web_status')) {
+            $appr = $to === 'approved' ? 'NOW()' : 'web_approved_at';
+            $conn->query("UPDATE marketing_intakes SET web_status = '{$to}', web_approved_at = {$appr} WHERE id = {$id}");
+        }
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+    }
+
+    if ($action === 'update_web') {
+        $err = '';
+        $slug = mk_slug_base((string)($_POST['slug'] ?? ''));
+        if ($slug !== '') {
+            $chk = $conn->prepare("SELECT id FROM marketing_intakes WHERE slug = ? AND id <> ? LIMIT 1");
+            $chk->bind_param('si', $slug, $id); $chk->execute();
+            if ($chk->get_result()->fetch_row()) { $err = "The web address \"{$slug}\" belongs to another agent."; $slug = ''; }
+            $chk->close();
+        }
+        if ($err === '') {
+            $sort   = (int)($_POST['sort_order'] ?? 0);
+            $office = trim((string)($_POST['office'] ?? '')) ?: null;
+            $area   = trim((string)($_POST['service_area'] ?? '')) ?: null;
+            $fub    = isset($_POST['in_fub']) ? 1 : 0;
+            $sql = "UPDATE marketing_intakes SET sort_order = ?, office = ?, service_area = ?, in_fub = ?"
+                 . ($slug !== '' ? ', slug = ?' : '') . " WHERE id = ?";
+            $st = $conn->prepare($sql);
+            if ($slug !== '') { $st->bind_param('issisi', $sort, $office, $area, $fub, $slug, $id); }
+            else              { $st->bind_param('issii', $sort, $office, $area, $fub, $id); }
+            $st->execute(); $st->close();
+        }
+        header("Location: agent.php?id={$id}&tab=profile" . ($err ? '&err=' . urlencode($err) : '&saved=1')); exit;
+    }
+
+    // Headshots, stored here and served from this portal, which is what the
+    // website accepts (a Dropbox link is a page, not an image).
+    if ($action === 'upload_photos') {
+        require_once __DIR__ . '/inc/photos.php';
+        $photo_note = '';   // e.g. a photo tagged Adobe RGB rather than sRGB
+        $row  = $conn->query("SELECT slug, headshot_url FROM marketing_intakes WHERE id = {$id}")->fetch_assoc();
+        $slug = trim((string)($row['slug'] ?? '')) ?: ('agent-' . $id);
+        $agent_photo_url = (string)($row['headshot_url'] ?? '');
+        // The crop tool sends the box it framed, in the picture's own pixels,
+        // and the cropping happens here. (It also sends the square it made,
+        // used only as a fallback: a photo hosted elsewhere taints the canvas
+        // and that export fails silently in the browser.)
+        $crop_w = (float)($_POST['crop_w'] ?? 0);
+        if ($crop_w > 0) {
+            $from = ($_POST['crop_src'] ?? '') === 'file' && !empty($_FILES['headshot_face']['tmp_name'])
+                  ? (string)$_FILES['headshot_face']['tmp_name']
+                  : mk_photo_file($agent_photo_url);
+            $res = mk_crop_photo($from, ['x' => (float)($_POST['crop_x'] ?? 0), 'y' => (float)($_POST['crop_y'] ?? 0),
+                                         'w' => $crop_w, 'h' => (float)($_POST['crop_h'] ?? $crop_w)], $slug . '-square');
+            if (!empty($res['error'])) { header("Location: agent.php?id={$id}&tab=profile&err=" . urlencode($res['error'])); exit; }
+            $st = $conn->prepare("UPDATE marketing_intakes SET headshot_face_url = ? WHERE id = ?");
+            $st->bind_param('si', $res['url'], $id); $st->execute(); $st->close();
+            $photo_note = $photo_note ?: (string)($res['note'] ?? '');
+        } elseif (!empty($_POST['headshot_face_data'])) {
+            $res = mk_store_photo_data((string)$_POST['headshot_face_data'], $slug . '-square');
+            if ($res && !empty($res['error'])) { header("Location: agent.php?id={$id}&tab=profile&err=" . urlencode($res['error'])); exit; }
+            if ($res) {
+                $st = $conn->prepare("UPDATE marketing_intakes SET headshot_face_url = ? WHERE id = ?");
+                $st->bind_param('si', $res['url'], $id); $st->execute(); $st->close();
+            }
+        }
+        // After the square, not before: both boxes were framed against the
+        // photo as it is now, and cropping the profile photo rewrites that
+        // file (2026-09-27).
+        $pcrop_w = (float)($_POST['pcrop_w'] ?? 0);
+        if ($pcrop_w > 0) {
+            $from = ($_POST['pcrop_src'] ?? '') === 'file' && !empty($_FILES['headshot']['tmp_name'])
+                  ? (string)$_FILES['headshot']['tmp_name']
+                  : mk_photo_file($agent_photo_url);
+            $res = mk_crop_photo($from, ['x' => (float)($_POST['pcrop_x'] ?? 0), 'y' => (float)($_POST['pcrop_y'] ?? 0),
+                                         'w' => $pcrop_w, 'h' => (float)($_POST['pcrop_h'] ?? $pcrop_w)],
+                                 $slug, 1200, 1500);
+            if (!empty($res['error'])) { header("Location: agent.php?id={$id}&tab=profile&err=" . urlencode($res['error'])); exit; }
+            $st = $conn->prepare("UPDATE marketing_intakes SET headshot_url = ? WHERE id = ?");
+            $st->bind_param('si', $res['url'], $id); $st->execute(); $st->close();
+            $photo_note = $photo_note ?: (string)($res['note'] ?? '');
+        }
+
+        foreach ([['headshot', '', false, 'headshot_url'], ['headshot_face', '-square', true, 'headshot_face_url']] as [$field, $suffix, $face, $col]) {
+            if ($field === 'headshot' && $pcrop_w > 0) continue;   // already cropped above
+            $res = mk_store_photo($field, $slug . $suffix, $face);
+            if ($res === null) continue;
+            if (!empty($res['error'])) { header("Location: agent.php?id={$id}&tab=profile&err=" . urlencode($res['error'])); exit; }
+            $st = $conn->prepare("UPDATE marketing_intakes SET `{$col}` = ? WHERE id = ?");
+            $st->bind_param('si', $res['url'], $id); $st->execute(); $st->close();
+            $photo_note = $photo_note ?: (string)($res['note'] ?? '');
+            // A profile photo on its own also gives us the square one, so a new
+            // agent is never left without the picture the cards and lists use.
+            if (!$face && empty($_FILES['headshot_face']['name']) && empty($_POST['headshot_face_data'])
+                && $crop_w <= 0 && !empty($res['square_url'])) {
+                $st = $conn->prepare("UPDATE marketing_intakes SET headshot_face_url = ? WHERE id = ?");
+                $st->bind_param('si', $res['square_url'], $id); $st->execute(); $st->close();
+            }
+        }
+        foreach ([['remove_headshot', 'headshot_url'], ['remove_headshot_face', 'headshot_face_url']] as [$flag, $col]) {
+            if (!empty($_POST[$flag])) $conn->query("UPDATE marketing_intakes SET `{$col}` = NULL WHERE id = {$id}");
+        }
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"
+             . ($photo_note !== '' ? '&note=' . urlencode($photo_note) : '')); exit;
+    }
+
+    if ($action === 'add_identity' && mk_table_exists($conn, 'agent_mls_ids')) {
+        $market = strtolower(trim((string)($_POST['market'] ?? '')));
+        $mls_id = trim((string)($_POST['mls_agent_id'] ?? ''));
+        $alias  = isset($_POST['is_alias']) ? 1 : 0;
+        if ($market !== '' && $mls_id !== '') {
+            // last_seen_at stays NULL: an identity the feed has never returned
+            // is never used to mark anyone Inactive.
+            $st = $conn->prepare("INSERT IGNORE INTO agent_mls_ids (intake_id, market, mls_agent_id, member_status, is_alias)
+                                  VALUES (?, ?, ?, 'Active', ?)");
+            $st->bind_param('issi', $id, $market, $mls_id, $alias); $st->execute(); $st->close();
+        }
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+    }
+
+    if ($action === 'remove_identity' && mk_table_exists($conn, 'agent_mls_ids')) {
+        $iid = (int)($_POST['identity_id'] ?? 0);
+        if ($iid) $conn->query("DELETE FROM agent_mls_ids WHERE id = {$iid} AND intake_id = {$id}");
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+    }
+
+    // Hot Sheets: the same switch as the checklist item, kept in step with it.
+    if ($action === 'hs_toggle') {
+        $on = ($_POST['to'] ?? '') === 'on';
+        $msg = '';
+        if ($on) {
+            $msg = mk_hs_subscribe($conn, $id);
+            $ok  = str_starts_with($msg, 'Subscribed') || str_contains($msg, 'already gets') || str_starts_with($msg, 'Re-activated');
+        } else {
+            mk_hs_pause($conn, $id);
+            $ok = true;
+        }
+        // The checklist item and this switch are the same thing, so keep them
+        // in step: only tick it when they really are subscribed.
+        if ($ok) {
+            $conn->query("UPDATE marketing_tasks SET status = '" . ($on ? 'done' : 'open') . "', completed_at = " . ($on ? 'NOW()' : 'NULL')
+                       . " WHERE intake_id = {$id} AND category = 'onboarding' AND title = '" . $conn->real_escape_string(MK_HS_TASK) . "'");
+        }
+        header("Location: agent.php?id={$id}&tab=profile" . ($ok ? '&saved=1' : '&err=' . urlencode((string)$msg))); exit;
     }
 
     /* --- Inline field updates (contact, social, bio, collateral) --- */
@@ -649,6 +835,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ($allowed as $f) {
             if (!array_key_exists($f, $_POST)) continue;
             $v = trim($_POST[$f]);
+            // Title is a small text box: a newline in it means "break the
+            // broker card here" (2026-09-28). Keep single newlines, drop the
+            // browser's \r and any padding around them.
+            if ($f === 'agent_title' && $v !== '') {
+                $v = preg_replace('/[ \t]*\n[ \t]*/', "\n", str_replace(["\r\n", "\r"], "\n", $v));
+                $v = preg_replace('/\n{2,}/', "\n", $v);
+            }
             // Normalize handle fields: strip platform URL prefix then leading @
             if (isset($social_url_prefixes[$f]) && $v !== '') {
                 foreach ($social_url_prefixes[$f] as $prefix) {
@@ -671,7 +864,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $s = $conn->prepare("UPDATE marketing_intakes SET " . implode(', ', $sets) . " WHERE id=?");
             if ($s) { $s->bind_param($types, ...$vals); $s->execute(); $s->close(); }
         }
-        $rtab = $_POST['redirect_tab'] ?? 'overview';
+        $rtab = $_POST['redirect_tab'] ?? 'profile';
         header("Location: agent.php?id={$id}&tab={$rtab}&saved=1"); exit;
     }
 }
@@ -988,10 +1181,83 @@ usort($listings, function ($a, $b) {
     return ((float)($b['price'] ?? 0)) <=> ((float)($a['price'] ?? 0));
 });
 
+// ── Profile tab data ────────────────────────────────────────────────────────
+const MK_BOARD_LABEL = ['aspen' => 'Aspen', 'vail' => 'Vail', 'cren' => 'CREN', 'recolorado' => 'REColorado',
+                        'elevate' => 'Elevate', 'altitude' => 'Altitude'];
+function e_attr($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
+
+$agent_slug = trim((string)($agent['slug'] ?? ''));
+$web_status = (string)($agent['web_status'] ?? 'pending');
+$web_label  = ['approved' => 'On the website', 'pending' => 'Waiting for approval', 'inactive' => 'Off the website'];
+$web_actions = ['approved' => 'Put on the site', 'pending' => 'Back to waiting', 'inactive' => 'Take off the site'];
+unset($web_actions[$web_status]);
+if ($web_status === 'pending') unset($web_actions['inactive']);   // one step at a time
+
+// What the website still wants from us.
+$hosted = fn($u) => $u && (str_starts_with((string)$u, 'photo.php') || str_starts_with((string)$u, rtrim(SITE_URL, '/') . '/'));
+$web_missing = [];
+if (!$hosted($agent['headshot_url'] ?? ''))      $web_missing[] = 'a headshot we host';
+if (trim(strip_tags((string)($agent['bio_text'] ?? ''))) === '') $web_missing[] = 'a bio';
+if ($agent_slug === '')                          $web_missing[] = 'a web address';
+
+$office_options = ['aspen', 'vail'];
+$r_off = $conn->query("SELECT DISTINCT office FROM marketing_intakes WHERE office IS NOT NULL AND office <> ''");
+if ($r_off) while ($o = $r_off->fetch_row()) $office_options[] = strtolower(trim($o[0]));
+if (!empty($agent['office'])) $office_options[] = strtolower(trim((string)$agent['office']));
+$office_options = array_values(array_unique(array_filter($office_options)));
+sort($office_options);
+
+$identities = [];
+if (mk_table_exists($conn, 'agent_mls_ids')) {
+    $r_id = $conn->query("SELECT * FROM agent_mls_ids WHERE intake_id = {$id} ORDER BY is_alias, market");
+    if ($r_id) $identities = $r_id->fetch_all(MYSQLI_ASSOC);
+}
+$hs_on = mk_hs_subscribed($conn, $id);
+$hs_email = mk_agent_email($agent);
+
+// QR codes (qr_codes.php). Read here because the connection closes just below.
+$qr_rows = [];
+if (mk_table_exists($conn, 'qr_codes')) {
+    $r_qr = $conn->query("SELECT id, code, label, dest_type, dest_url, is_active, scan_count
+                            FROM qr_codes WHERE intake_id = {$id} ORDER BY created_at");
+    if ($r_qr) $qr_rows = $r_qr->fetch_all(MYSQLI_ASSOC);
+}
+
+// Who sits either side of this agent, so the page can be stepped through
+// without going back to the roster each time (Nikki, 2026-09-29). Same set and
+// same order as the roster's Active tab: everyone still with Mont Haus, by last
+// name, teams left out. An archived agent is not in the list, so the arrows are
+// simply absent for them.
+$nav_agents = [];
+$nav_name = "COALESCE(NULLIF(TRIM(mi.agent_name), ''), mi.mls_full_name)";
+$r_nav = $conn->query("
+    SELECT mi.id, {$nav_name} AS name
+      FROM marketing_intakes mi
+     WHERE mi.is_active = 1 AND mi.status <> 'archived'"
+     . mk_team_sql($conn, 'mi') . "
+       AND TRIM(COALESCE({$nav_name}, '')) <> ''
+     ORDER BY SUBSTRING_INDEX(TRIM({$nav_name}), ' ', -1), {$nav_name}, mi.id");
+if ($r_nav) $nav_agents = $r_nav->fetch_all(MYSQLI_ASSOC);
+
 $conn->close();
 
 // ── UI helpers ────────────────────────────────────────────────────────────────
-$active_tab = $_GET['tab'] ?? 'overview';
+// Profile is the page: Overview was folded into it (Nikki, 2026-09-25).
+$active_tab = $_GET['tab'] ?? 'profile';
+
+// Position in that list, and the two neighbours.
+$nav_pos = null; $nav_prev = null; $nav_next = null;
+foreach ($nav_agents as $i => $n) {
+    if ((int)$n['id'] === $id) {
+        $nav_pos  = $i;
+        $nav_prev = $nav_agents[$i - 1] ?? null;
+        $nav_next = $nav_agents[$i + 1] ?? null;
+        break;
+    }
+}
+if ($active_tab === 'overview') $active_tab = 'profile';
+
+
 
 function val(array $row, string $key): string { return htmlspecialchars($row[$key] ?? ''); }
 function money(float $n): string { return '$' . number_format($n, 0); }
@@ -1023,9 +1289,13 @@ function initials(string $name, ?string $override = null): string {
     return substr($i, 0, 2);
 }
 
+// Active = with Mont Haus in the MLS (2026-09-22): old 'roster' / 'pending'
+// rows are Active; a row the MLS stopped listing under MH is Inactive.
 $status       = $agent['status'] ?: 'active';
-$status_label = ['active' => 'Active', 'pending' => 'Pending', 'archived' => 'Archived'];
-$status_color = ['active' => '#10b981', 'pending' => '#f97316', 'archived' => '#9ca3af'];
+if (in_array($status, ['roster', 'pending'], true)) $status = 'active';
+if ($status === 'active' && !empty($agent['departure_detected_at'])) $status = 'inactive';
+$status_label = ['active' => 'Active', 'inactive' => 'Inactive', 'archived' => 'Archived'];
+$status_color = ['active' => '#10b981', 'inactive' => '#dc2626', 'archived' => '#9ca3af'];
 $chip_color   = $status_color[$status] ?? '#9ca3af';
 $chip_text    = $status_label[$status] ?? $status;
 
@@ -1073,7 +1343,15 @@ $listings_json = json_encode(array_map(fn($l) => [
   <link rel="stylesheet" href="/assets/fonts/tabler-icons.min.css">
   <link rel="stylesheet" href="/assets/css/style.css" id="main-style-link">
   <link rel="stylesheet" href="/assets/css/style-preset.css">
+  <!-- The bio editor and the crop tool are served from this portal rather than
+       from a CDN (2026-09-28). When cdn.jsdelivr.net could not be reached the
+       crop buttons went quietly dead, because mkCropTool() binds nothing
+       without Cropper. The CDN stays below as a fallback, so the page still
+       works if these local copies are ever missing. -->
+  <link rel="stylesheet" href="/assets/vendor/quill.snow.css">
+  <link rel="stylesheet" href="/assets/vendor/cropper.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
     :root { --bs-primary: #0184BB; }
@@ -1117,6 +1395,21 @@ $listings_json = json_encode(array_map(fn($l) => [
                   color:#9ca3af; margin-bottom:20px; }
     .breadcrumb a { color:#6b7280; text-decoration:none; }
     .breadcrumb a:hover { color:#111; }
+    .breadcrumb { margin-bottom:0; }
+    .crumb-row { display:flex; align-items:center; justify-content:space-between;
+                 gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+
+    /* ── Stepping between agents ── */
+    .agent-step { display:flex; align-items:center; gap:6px; }
+    .step-btn { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px;
+                border:1px solid #d1d5db; border-radius:3px; background:#fff; color:#374151;
+                text-decoration:none; font-size:14px; line-height:1; transition:background .15s, color .15s, border-color .15s; }
+    .step-btn:hover { background:#f3f4f6; color:#111; border-color:#9ca3af; }
+    .step-btn.off   { opacity:.3; cursor:default; }
+    .step-jump { max-width:190px; padding:5px 8px; font-family:inherit; font-size:12px;
+                 border:1px solid #d1d5db; border-radius:3px; background:#fff; color:#374151; cursor:pointer; }
+    .step-count { font-size:11px; color:#9ca3af; white-space:nowrap; }
+    @media (max-width:620px) { .step-jump { max-width:130px; } .step-count { display:none; } }
 
     /* ── Agent header ── */
     .agent-header {
@@ -1213,12 +1506,24 @@ $listings_json = json_encode(array_map(fn($l) => [
     .card-title { font-size:14px; font-weight:700; color:#111; margin:0 0 16px;
                   padding-bottom:10px; border-bottom:1px solid #f3f4f6; }
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+    /* Profile tab */
+    .pill { display:inline-block; font-size:11px; font-weight:600; border-radius:10px; padding:2px 9px; white-space:nowrap; }
+    .pill.w-approved { background:#f0fdf4; color:#15803d; } .pill.w-pending { background:#fff7ed; color:#c2410c; }
+    .pill.w-inactive { background:#f3f4f6; color:#6b7280; }
+    .tag-team { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+                background:#111; color:#fff; border-radius:4px; padding:1px 5px; }
+    .mini-table td { padding:5px 6px; border-bottom:1px solid #f3f4f6; font-size:13px; vertical-align:middle; }
+    .mini-table tr:last-child td { border-bottom:0; }
+    .hint { font-size:12px; color:#9ca3af; }
+    .face-crop-stage { margin-top:10px; max-width:100%; }
+    .face-crop-stage img { display:block; max-width:100%; max-height:340px; }
     @media(max-width:700px) { .two-col { grid-template-columns:1fr; } }
 
     /* ── Overview info rows ── */
     .info-row { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; font-size:13px; }
     .info-label { font-weight:600; color:#6b7280; min-width:110px; flex-shrink:0; font-size:12px; text-transform:uppercase; letter-spacing:.3px; }
     .info-value { color:#111; }
+    .info-value .unset { color:#b6b0a2; font-style:italic; }
     .info-value a { color:#0184BB; text-decoration:none; }
     .info-value a:hover { text-decoration:underline; }
 
@@ -1342,6 +1647,18 @@ $listings_json = json_encode(array_map(fn($l) => [
     .form-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
     .form-row label { display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.3px; }
     .form-row label.grow { flex:1; min-width:140px; }
+    /* A tickbox and its wording, not a field label. The rule above stacks its
+       children and shouts the text in grey uppercase, which is right for
+       "LABEL above input" and wrong here: it put the box on one line and the
+       word "Remove" on the next (2026-09-28). */
+    .form-row label.admin-check, label.admin-check {
+        display:inline-flex; flex-direction:row; align-items:center; gap:7px;
+        width:auto; min-width:0; margin:6px 0 10px;
+        font-size:13px; font-weight:400; color:#374151;
+        text-transform:none; letter-spacing:0; cursor:pointer;
+    }
+    .form-row label.admin-check input[type="checkbox"],
+    label.admin-check input[type="checkbox"] { flex:0 0 auto; width:15px; height:15px; margin:0; }
     .form-input { padding:7px 10px; font-size:13px; border:1px solid #d1d5db; border-radius:4px; font-family:inherit; color:#111; width:100%; }
     .form-input:focus { outline:none; border-color:#75BDB6; box-shadow:0 0 0 2px rgba(117,189,182,.2); }
     textarea.form-input { resize:vertical; min-height:70px; }
@@ -1798,10 +2115,41 @@ $listings_json = json_encode(array_map(fn($l) => [
 <div class="pc-container">
 <div class="wrap">
 
-  <div class="breadcrumb">
-    <a href="index.php">Agent Roster</a>
-    <i class="ti ti-chevron-right" style="font-size:11px;"></i>
-    <span><?= val($agent,'agent_name') ?></span>
+  <div class="crumb-row">
+    <div class="breadcrumb">
+      <a href="index.php">Agent Roster</a>
+      <i class="ti ti-chevron-right" style="font-size:11px;"></i>
+      <span><?= val($agent,'agent_name') ?></span>
+    </div>
+
+    <?php if ($nav_pos !== null && count($nav_agents) > 1): ?>
+    <!-- Step through the roster without going back to it. Same order as the
+         roster's Active tab; the tab you are on comes with you. -->
+    <div class="agent-step">
+      <?php if ($nav_prev): ?>
+        <a class="step-btn" data-step="prev" title="<?= e_attr($nav_prev['name']) ?>"
+           href="agent.php?id=<?= (int)$nav_prev['id'] ?>&amp;tab=<?= e_attr($active_tab) ?>"
+           aria-label="Previous agent: <?= e_attr($nav_prev['name']) ?>"><i class="ti ti-chevron-left"></i></a>
+      <?php else: ?>
+        <span class="step-btn off" aria-hidden="true"><i class="ti ti-chevron-left"></i></span>
+      <?php endif; ?>
+
+      <select class="step-jump" id="agentJump" data-tab="<?= e_attr($active_tab) ?>" aria-label="Jump to another agent">
+        <?php foreach ($nav_agents as $n): ?>
+          <option value="<?= (int)$n['id'] ?>"<?= (int)$n['id'] === $id ? ' selected' : '' ?>><?= e_attr($n['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
+      <span class="step-count"><?= $nav_pos + 1 ?> of <?= count($nav_agents) ?></span>
+
+      <?php if ($nav_next): ?>
+        <a class="step-btn" data-step="next" title="<?= e_attr($nav_next['name']) ?>"
+           href="agent.php?id=<?= (int)$nav_next['id'] ?>&amp;tab=<?= e_attr($active_tab) ?>"
+           aria-label="Next agent: <?= e_attr($nav_next['name']) ?>"><i class="ti ti-chevron-right"></i></a>
+      <?php else: ?>
+        <span class="step-btn off" aria-hidden="true"><i class="ti ti-chevron-right"></i></span>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
   </div>
 
   <!-- Agent header -->
@@ -1835,6 +2183,11 @@ $listings_json = json_encode(array_map(fn($l) => [
       <?php if (isset($_GET['saved'])): ?>
         <span class="saved-flash"><i class="ti ti-check"></i> Saved</span>
       <?php endif; ?>
+      <?php if (!empty($_GET['note'])): ?>
+        <span class="saved-flash" style="background:#fbf7ec;color:#7a5f30;max-width:640px;white-space:normal;text-align:left;">
+          <i class="ti ti-color-swatch"></i> <?= htmlspecialchars($_GET['note']) ?>
+        </span>
+      <?php endif; ?>
       <?php if (!empty($_GET['err'])): ?>
         <span class="saved-flash" style="background:#fee2e2;color:#991b1b;">
           <i class="ti ti-alert-triangle"></i> <?= htmlspecialchars($_GET['err']) ?>
@@ -1845,7 +2198,7 @@ $listings_json = json_encode(array_map(fn($l) => [
 
   <!-- Tab bar -->
   <div class="tab-bar">
-    <button class="tab-btn <?= $active_tab==='overview'?'active':'' ?>"   data-tab="overview">  <i class="ti ti-user"></i> Overview</button>
+    <button class="tab-btn <?= $active_tab==='profile'?'active':'' ?>"   data-tab="profile"><i class="ti ti-user"></i> Profile</button>
     <button class="tab-btn <?= $active_tab==='assets'?'active':'' ?>"    data-tab="assets"><i class="ti ti-folder"></i> Assets</button>
     <button class="tab-btn <?= $active_tab==='financials'?'active':'' ?>" data-tab="financials">
       <i class="ti ti-receipt-2"></i> Financials
@@ -1880,11 +2233,11 @@ $listings_json = json_encode(array_map(fn($l) => [
     <div class="tab-menu-panel" id="tabMenuPanel"></div>
   </div>
 
-  <!-- ══════════════════════════════════════════════ OVERVIEW ══ -->
-  <div class="tab-panel <?= $active_tab==='overview'?'active':'' ?>" id="tab-overview">
+  <!-- ══════════════════════════════════════════════ PROFILE ══ -->
+  <!-- Everything the website shows, edited here and nowhere else: the site
+       admin is a read-only view of what the feed sent it (Nikki, 2026-09-23). -->
+  <div class="tab-panel <?= $active_tab==='profile'?'active':'' ?>" id="tab-profile">
     <div class="two-col">
-
-      <!-- Left: Contact + Social + MLS IDs -->
       <div>
         <div class="card">
           <div class="card-title" style="display:flex;align-items:center;">
@@ -1903,11 +2256,13 @@ $listings_json = json_encode(array_map(fn($l) => [
                          placeholder="<?= htmlspecialchars(initials((string)($agent['agent_name'] ?? ''))) ?>"
                          value="<?= htmlspecialchars($agent['initials'] ?? '') ?>">
                 </label>
-                <label class="grow">Title <input type="text" name="agent_title" class="form-input" value="<?= val($agent,'agent_title') ?>"></label>
+                <label class="grow">Title
+                  <textarea name="agent_title" class="form-input" rows="2" style="resize:vertical;"><?= val($agent,'agent_title') ?></textarea>
+                  <span class="hint" style="text-transform:none;letter-spacing:0;font-weight:400;">Press Enter where the website's broker card should break the line. Everywhere else it reads as one line.</span>
+                </label>
               </div>
               <div class="form-row">
                 <label class="grow">Cell Phone <input type="text" name="cell_phone" class="form-input" value="<?= val($agent,'cell_phone') ?>"></label>
-                <label class="grow">Start Date <input type="date" name="start_date" class="form-input" value="<?= val($agent,'start_date') ?>"></label>
               </div>
               <div class="form-row">
                 <label class="grow">MH Email <input type="email" name="mh_email" class="form-input" value="<?= val($agent,'mh_email') ?>"></label>
@@ -1929,8 +2284,36 @@ $listings_json = json_encode(array_map(fn($l) => [
               </div>
             </form>
           </div>
-          <?php if ($agent['cell_phone']): ?>
-            <div class="info-row"><span class="info-label">Phone</span><span class="info-value"><?= val($agent,'cell_phone') ?></span></div>
+          <!-- Read view. Every field shows, blank ones included, so the card
+               answers "what do we have for this person" without opening Edit
+               (Nikki, 2026-09-29). Title keeps its line break here, which is
+               the only place to see where the website's card will break. -->
+          <div class="info-row">
+            <span class="info-label">Name</span>
+            <span class="info-value"><?= $agent['agent_name'] !== '' ? val($agent,'agent_name') : '<span class="unset">Not set</span>' ?></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Initials</span>
+            <span class="info-value">
+              <?php if (trim((string)($agent['initials'] ?? '')) !== ''): ?>
+                <?= htmlspecialchars($agent['initials']) ?>
+              <?php else: ?>
+                <span class="unset"><?= htmlspecialchars(initials((string)($agent['agent_name'] ?? ''))) ?> (from the name)</span>
+              <?php endif; ?>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Title</span>
+            <span class="info-value"><?= trim((string)$agent['agent_title']) !== ''
+                ? nl2br(val($agent,'agent_title'), false)
+                : '<span class="unset">Not set</span>' ?></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Phone</span>
+            <span class="info-value"><?= $agent['cell_phone'] !== '' ? val($agent,'cell_phone') : '<span class="unset">Not set</span>' ?></span>
+          </div>
+          <?php if (!$agent['mh_email']): ?>
+            <div class="info-row"><span class="info-label">MH Email</span><span class="info-value"><span class="unset">Not set</span></span></div>
           <?php endif; ?>
           <?php if ($agent['mh_email']): ?>
             <div class="info-row">
@@ -1950,14 +2333,12 @@ $listings_json = json_encode(array_map(fn($l) => [
               </span>
             </div>
           <?php endif; ?>
-          <?php if ($agent['alt_email'] ?? null): ?>
-            <div class="info-row"><span class="info-label">Alt Email</span><span class="info-value"><a href="mailto:<?= val($agent,'alt_email') ?>"><?= val($agent,'alt_email') ?></a></span></div>
-          <?php endif; ?>
-          <?php if ($agent['start_date']): ?>
-            <div class="info-row"><span class="info-label">Start Date</span><span class="info-value"><?= date('M j, Y', strtotime($agent['start_date'])) ?></span></div>
-          <?php elseif ($agent['intake_date']): ?>
-            <div class="info-row"><span class="info-label">Start Date</span><span class="info-value"><?= date('M j, Y', strtotime($agent['intake_date'])) ?></span></div>
-          <?php endif; ?>
+          <div class="info-row">
+            <span class="info-label">Alt Email</span>
+            <span class="info-value"><?= trim((string)($agent['alt_email'] ?? '')) !== ''
+                ? '<a href="mailto:' . val($agent,'alt_email') . '">' . val($agent,'alt_email') . '</a>'
+                : '<span class="unset">Not set</span>' ?></span>
+          </div>
         </div>
 
         <div class="card">
@@ -2020,30 +2401,269 @@ $listings_json = json_encode(array_map(fn($l) => [
           <?php endif; ?>
         </div>
 
+        <!-- ── Website ──────────────────────────────────────────────────── -->
         <div class="card">
-          <div class="card-title">MLS IDs</div>
-          <?php if ($mls_ids): ?>
-            <table class="mls-table">
-              <thead><tr><th>Board</th><th>MLS ID</th><th>Spark Key</th></tr></thead>
-              <tbody>
-              <?php foreach ($mls_ids as $m): ?>
-                <tr>
-                  <td><span class="board-chip"><?= htmlspecialchars($m['board']) ?></span></td>
-                  <td class="mono"><?= htmlspecialchars($m['mls_id'] ?? '—') ?></td>
-                  <td class="mono"><?= $m['spark_key'] ? htmlspecialchars($m['spark_key']) : '<span style="color:#d1d5db">—</span>' ?></td>
-                </tr>
+          <div class="card-title" style="display:flex;align-items:center;">
+            <i class="ti ti-world" style="margin-right:6px;"></i> Website
+            <?php if ($web_status === 'approved' && $agent_slug !== ''): ?>
+              <a class="section-edit-btn" href="<?= e_attr(rtrim(PUBLIC_SITE_URL, '/') . '/broker.php?s=' . $agent_slug) ?>" target="_blank" style="text-decoration:none;">
+                View public profile <i class="ti ti-external-link"></i></a>
+            <?php endif; ?>
+          </div>
+
+          <div class="fld" style="align-items:center;">
+            <span class="fld-label">Status</span>
+            <span class="pill w-<?= e_attr($web_status) ?>"><?= htmlspecialchars($web_label[$web_status] ?? $web_status) ?></span>
+            <span style="flex:1;"></span>
+            <div class="btn-row" style="margin:0;gap:6px;flex-wrap:nowrap;">
+              <?php foreach ($web_actions as $to => $label): ?>
+                <form method="POST" style="margin:0;">
+                  <input type="hidden" name="_action" value="web_status">
+                  <input type="hidden" name="to" value="<?= $to ?>">
+                  <button type="submit" class="btn btn-<?= $to === 'approved' ? 'primary' : 'outline' ?> btn-xs"><?= $label ?></button>
+                </form>
               <?php endforeach; ?>
-              </tbody>
-            </table>
-          <?php else: ?>
-            <p style="font-size:13px;color:#9ca3af;margin:0;">No MLS IDs on file. <a href="roster.php">Add via Roster</a>.</p>
+            </div>
+          </div>
+          <?php if ($web_missing): ?>
+            <p class="hint" style="margin:6px 0 0;">Still missing for the website: <?= htmlspecialchars(implode(', ', $web_missing)) ?>.</p>
           <?php endif; ?>
+
+          <form method="POST" style="margin-top:14px;">
+            <input type="hidden" name="_action" value="update_web">
+            <div class="form-row">
+              <label class="grow">Web address
+                <input type="text" name="slug" class="form-input" value="<?= e_attr($agent_slug) ?>" placeholder="firstname-lastname">
+              </label>
+              <label style="width:110px;">Sort order
+                <input type="number" name="sort_order" class="form-input" value="<?= (int)($agent['sort_order'] ?? 0) ?>">
+              </label>
+            </div>
+            <div class="form-row">
+              <label class="grow">Office
+                <select name="office" class="form-input">
+                  <option value="">Not set</option>
+                  <?php foreach ($office_options as $o): ?>
+                    <option value="<?= e_attr($o) ?>" <?= ($agent['office'] ?? '') === $o ? 'selected' : '' ?>><?= htmlspecialchars(ucwords(str_replace('-', ' ', $o))) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </label>
+              <label class="grow">Service area
+                <input type="text" name="service_area" class="form-input" value="<?= val($agent,'service_area') ?>" placeholder="Aspen and Snowmass">
+              </label>
+            </div>
+            <label class="admin-check" style="display:flex;align-items:center;gap:8px;margin:4px 0 12px;">
+              <input type="checkbox" name="in_fub" value="1" <?= !empty($agent['in_fub']) ? 'checked' : '' ?>> In the FUB lead rotation
+            </label>
+            <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save website details</button></div>
+          </form>
         </div>
+
+        <!-- ── Photos ───────────────────────────────────────────────────── -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-camera" style="margin-right:6px;"></i> Headshots</div>
+          <form method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="_action" value="upload_photos">
+            <div class="form-row" style="align-items:flex-start;">
+              <div class="grow">
+                <span class="fld-label">Profile photo</span>
+                <?php if (!empty($agent['headshot_url'])): ?>
+                  <img src="<?= e_attr($agent['headshot_url']) ?>" alt="" style="max-width:190px;display:block;margin:6px 0;border:1px solid var(--mh-line,#e5e7eb);">
+                  <label class="admin-check"><input type="checkbox" name="remove_headshot" value="1"> Remove</label>
+                <?php endif; ?>
+                <input type="file" name="headshot" id="photoInput" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:6px;">
+                <input type="hidden" name="pcrop_x" id="pcropX"><input type="hidden" name="pcrop_y" id="pcropY">
+                <input type="hidden" name="pcrop_w" id="pcropW"><input type="hidden" name="pcrop_h" id="pcropH">
+                <input type="hidden" name="pcrop_src" id="pcropSrc">
+                <?php if (!empty($agent['headshot_url'])): ?>
+                  <button type="button" class="btn btn-outline btn-xs" id="reCropPhotoBtn" style="margin-top:8px;"
+                          data-src="<?= e_attr($agent['headshot_url']) ?>">Re-crop this photo</button>
+                <?php endif; ?>
+                <div id="photoCropWrap" hidden>
+                  <div class="face-crop-stage"><img id="photoCropImg" src="" alt=""></div>
+                  <p class="hint" style="margin:6px 0 0;">Drag and zoom to frame them. The shape matches the website's broker cards, so everyone lines up.</p>
+                </div>
+              </div>
+              <div class="grow">
+                <span class="fld-label">Square version (cards and lists)</span>
+                <?php if (!empty($agent['headshot_face_url'])): ?>
+                  <img src="<?= e_attr($agent['headshot_face_url']) ?>" alt="" style="width:130px;height:130px;object-fit:cover;display:block;margin:6px 0;border:1px solid var(--mh-line,#e5e7eb);">
+                  <label class="admin-check"><input type="checkbox" name="remove_headshot_face" value="1"> Remove</label>
+                <?php endif; ?>
+                <input type="file" name="headshot_face" id="faceInput" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:6px;">
+                <input type="hidden" name="headshot_face_data" id="faceData">
+                <input type="hidden" name="crop_x" id="cropX"><input type="hidden" name="crop_y" id="cropY">
+                <input type="hidden" name="crop_w" id="cropW"><input type="hidden" name="crop_h" id="cropH">
+                <input type="hidden" name="crop_src" id="cropSrc">
+                <?php if (!empty($agent['headshot_url'])): ?>
+                  <button type="button" class="btn btn-outline btn-sm" id="reCropBtn" style="margin-top:8px;"
+                          data-src="<?= e_attr($agent['headshot_url']) ?>">Crop from the profile photo</button>
+                <?php endif; ?>
+                <div id="faceCropWrap" hidden>
+                  <div class="face-crop-stage"><img id="faceCropImg" src="" alt=""></div>
+                  <p class="hint" style="margin:6px 0 0;">Drag and zoom to frame the face. It is saved when you press Save photos.</p>
+                </div>
+              </div>
+            </div>
+            <p class="hint" style="margin:6px 0 10px;">A profile photo on its own also makes the square version, cropped from the top middle. Upload a square one only when that crop is wrong.</p>
+            <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save photos</button></div>
+          </form>
+        </div>
+
+    <!-- ── Bio ──────────────────────────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;">
+        <i class="ti ti-file-text" style="margin-right:6px;"></i> Bio
+        <button class="section-edit-btn" type="button" onclick="toggleInline('edit-bio-assets')">Edit</button>
       </div>
 
-      <!-- Right: open tasks. Completing one removes it here; it stays under
-           the Tasks tab under the Completed filter. -->
+      <?php if (!empty($agent['bio_url'])): ?>
+        <div class="asset-link-row" style="margin-bottom:10px;">
+          <i class="ti ti-file-description"></i>
+          <span class="asset-link-label">Bio Document</span>
+          <a href="<?= htmlspecialchars($agent['bio_url']) ?>" target="_blank" class="asset-link-a">
+            <i class="ti ti-external-link"></i> Open
+          </a>
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($agent['bio_text']) || !empty($agent['bio_short'])): ?>
+        <div class="bio-tabs">
+          <?php if (!empty($agent['bio_text'])): ?><button class="bio-tab-btn active" data-bio="assets-full">Full Bio</button><?php endif; ?>
+          <?php if (!empty($agent['bio_short'])): ?><button class="bio-tab-btn <?= empty($agent['bio_text'])?'active':'' ?>" data-bio="assets-short">Short / Social</button><?php endif; ?>
+        </div>
+        <?php if (!empty($agent['bio_text'])): ?>
+          <div class="bio-panel active" id="bio-assets-full">
+            <div class="bio-content rich"><?= strip_tags($agent['bio_text'], '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
+          </div>
+        <?php endif; ?>
+        <?php if (!empty($agent['bio_short'])): ?>
+          <div class="bio-panel <?= empty($agent['bio_text'])?'active':'' ?>" id="bio-assets-short">
+            <div class="bio-content"><?= nl2br(htmlspecialchars($agent['bio_short'])) ?></div>
+          </div>
+        <?php endif; ?>
+      <?php else: ?>
+        <p class="asset-empty">No bio yet. Click Edit to add one.</p>
+      <?php endif; ?>
+
+      <div id="edit-bio-assets" style="display:none;" class="inline-edit-form">
+        <form method="POST" id="bioForm">
+          <input type="hidden" name="_action" value="update_intake_fields">
+          <input type="hidden" name="redirect_tab" value="profile">
+          <div class="fld">
+            <span class="fld-label">Bio Document URL</span>
+            <input type="url" name="bio_url" class="form-input" style="max-width:420px;"
+                   value="<?= val($agent,'bio_url') ?>" placeholder="https://drive.google.com/…">
+          </div>
+          <div class="fld" style="flex-direction:column;align-items:stretch;">
+            <span class="fld-label" style="margin-bottom:6px;">Full Bio</span>
+            <div id="bioEditor"><?= strip_tags($agent['bio_text'] ?? '', '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
+            <textarea name="bio_text" id="bioTextHidden" style="display:none;"></textarea>
+          </div>
+          <div class="fld" style="flex-direction:column;align-items:stretch;">
+            <span class="fld-label" style="margin-bottom:6px;">Short / Social Bio</span>
+            <textarea name="bio_short" class="form-input" rows="3"
+                      placeholder="Short bio for social media…"><?= htmlspecialchars($agent['bio_short'] ?? '') ?></textarea>
+          </div>
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('edit-bio-assets')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+      </div>
+
       <div>
+        <!-- ── Board identities ─────────────────────────────────────────── -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-license" style="margin-right:6px;"></i> Board identities</div>
+          <?php if ($identities): ?>
+            <table class="mini-table" style="width:100%;">
+              <?php foreach ($identities as $i): ?>
+                <tr>
+                  <td style="text-transform:uppercase;font-size:11px;letter-spacing:.06em;color:#6b7280;"><?= htmlspecialchars(MK_BOARD_LABEL[$i['market']] ?? $i['market']) ?></td>
+                  <td style="font-weight:600;"><?= htmlspecialchars($i['mls_agent_id']) ?>
+                    <?php if ((int)$i['is_alias']): ?><span class="tag-team" style="margin-left:6px;">Team ID</span><?php endif; ?>
+                    <?php if ($i['member_status'] !== 'Active'): ?><span class="pill w-inactive" style="margin-left:6px;">Off the feed</span><?php endif; ?>
+                  </td>
+                  <td style="text-align:right;color:#9ca3af;font-size:12px;">
+                    <?= $i['last_seen_at'] ? 'seen ' . htmlspecialchars(date('M j', strtotime($i['last_seen_at']))) : 'added by hand' ?>
+                  </td>
+                  <td style="text-align:right;width:28px;">
+                    <form method="POST" style="margin:0;" onsubmit="return confirm('Remove this MLS ID from <?= e_attr(addslashes($agent['agent_name'] ?? '')) ?>?');">
+                      <input type="hidden" name="_action" value="remove_identity">
+                      <input type="hidden" name="identity_id" value="<?= (int)$i['id'] ?>">
+                      <button type="submit" class="btn-ghost" title="Remove"><i class="ti ti-x"></i></button>
+                    </form>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </table>
+          <?php else: ?>
+            <p class="hint" style="margin:0 0 10px;">No MLS IDs yet. The sync adds them; add one by hand for a board it does not cover.</p>
+          <?php endif; ?>
+          <form method="POST" style="margin-top:10px;">
+            <input type="hidden" name="_action" value="add_identity">
+            <div class="form-row">
+              <label style="width:150px;">Board
+                <select name="market" class="form-input">
+                  <?php foreach (MK_BOARD_LABEL as $slug => $label): ?><option value="<?= $slug ?>"><?= $label ?></option><?php endforeach; ?>
+                </select>
+              </label>
+              <label class="grow">MLS ID <input type="text" name="mls_agent_id" class="form-input" placeholder="55061958"></label>
+            </div>
+            <label class="admin-check" style="display:flex;align-items:center;gap:8px;margin:4px 0 10px;">
+              <input type="checkbox" name="is_alias" value="1"> This is a team ID, not theirs alone
+            </label>
+            <div class="btn-row"><button type="submit" class="btn btn-outline btn-sm">Add MLS ID</button></div>
+          </form>
+        </div>
+
+        <!-- ── Subscriptions ────────────────────────────────────────────── -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-mail" style="margin-right:6px;"></i> Subscriptions</div>
+          <div class="fld">
+            <span class="fld-label">Hot Sheets</span>
+            <span class="pill <?= $hs_on ? 'w-approved' : 'w-inactive' ?>"><?= $hs_on ? 'Weekly' : 'Not subscribed' ?></span>
+            <span style="flex:1;"></span>
+            <?php if ($hs_on): ?>
+              <a class="btn btn-outline btn-xs" href="subscribers.php?q=<?= urlencode($hs_email) ?>">Manage</a>
+            <?php else: ?>
+              <form method="POST" style="margin:0;">
+                <input type="hidden" name="_action" value="hs_toggle">
+                <input type="hidden" name="to" value="on">
+                <button type="submit" class="btn btn-primary btn-xs">Subscribe</button>
+              </form>
+            <?php endif; ?>
+          </div>
+          <p class="hint" style="margin:6px 0 0;">Subscribing here ticks the "<?= htmlspecialchars(MK_HS_TASK) ?>" item on their checklist. Manage opens the Hot Sheet subscriber list, where frequency, pausing and unsubscribing live.</p>
+          <div class="fld" style="margin-top:12px;">
+            <span class="fld-label">FUB rotation</span>
+            <span class="pill <?= !empty($agent['in_fub']) ? 'w-approved' : 'w-inactive' ?>"><?= !empty($agent['in_fub']) ? 'In rotation' : 'Not in rotation' ?></span>
+            <span style="flex:1;"></span>
+            <span class="hint">Set it under Website</span>
+          </div>
+        </div>
+
+        <!-- ── QR codes (qr_codes.php) ──────────────────────────────────── -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-qrcode" style="margin-right:6px;"></i> QR codes</div>
+          <?php foreach ($qr_rows as $qr): ?>
+            <div class="fld">
+              <span class="fld-label"><?= e_attr($qr['label'] !== '' ? $qr['label'] : 'QR code') ?></span>
+              <a href="qr_codes.php?intake=<?= $id ?>#qr-<?= (int) $qr['id'] ?>"><?= e_attr(preg_replace('~^https://~', '', qr_public_url($qr['code']))) ?></a>
+              <span style="flex:1;"></span>
+              <span class="hint"><?= number_format((int) $qr['scan_count']) ?> scans</span>
+              <span class="pill <?= (int) $qr['is_active'] ? 'w-approved' : 'w-inactive' ?>" style="margin-left:8px;"><?= (int) $qr['is_active'] ? 'Live' : 'Paused' ?></span>
+            </div>
+          <?php endforeach; ?>
+          <?php if (!$qr_rows): ?><p class="hint" style="margin:0 0 8px;">No QR codes yet.</p><?php endif; ?>
+          <div class="btn-row" style="margin-top:8px;">
+            <a class="btn btn-outline btn-xs" href="qr_codes.php?intake=<?= $id ?>"><?= $qr_rows ? 'Manage QR codes' : 'Create a QR code' ?></a>
+          </div>
+        </div>
+
         <div class="card">
           <div class="card-title">Tasks</div>
           <div class="ob-list">
@@ -2061,7 +2681,7 @@ $listings_json = json_encode(array_map(fn($l) => [
                   <input type="hidden" name="_action" value="toggle_task">
                   <input type="hidden" name="task_id" value="<?= $pt['id'] ?>">
                   <input type="hidden" name="new_status" value="done">
-                  <input type="hidden" name="redirect_tab" value="overview">
+                  <input type="hidden" name="redirect_tab" value="profile">
                   <button type="submit" class="ob-check-btn" title="Mark done">
                     <i class="ti ti-circle"></i>
                   </button>
@@ -2098,9 +2718,20 @@ $listings_json = json_encode(array_map(fn($l) => [
             </div>
           <?php endif; ?>
         </div>
+
+        <!-- ── From the MLS ─────────────────────────────────────────────── -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-database" style="margin-right:6px;"></i> From the MLS</div>
+          <table class="mini-table" style="width:100%;">
+            <tr><td class="fld-label">Name</td><td><?= val($agent,'mls_full_name') ?: '<span class="hint">not synced yet</span>' ?></td></tr>
+            <tr><td class="fld-label">Email</td><td><?= val($agent,'mls_email') ?></td></tr>
+            <tr><td class="fld-label">Phone</td><td><?= val($agent,'mls_phone') ?></td></tr>
+            <tr><td class="fld-label">Last sync</td><td><?= !empty($agent['mls_synced_at']) ? htmlspecialchars(date('M j, Y', strtotime($agent['mls_synced_at']))) : '<span class="hint">never</span>' ?></td></tr>
+          </table>
+          <p class="hint" style="margin:8px 0 0;">The MLS record is never edited here. What the website shows comes from the fields above.</p>
+        </div>
       </div>
     </div>
-
   </div>
 
   <!-- ══════════════════════════════════════════════ TASKS ══ -->
@@ -3578,69 +4209,6 @@ $listings_json = json_encode(array_map(fn($l) => [
       </div>
     </div>
 
-    <!-- ── Bio ──────────────────────────────────────────────────────────── -->
-    <div class="card">
-      <div class="card-title" style="display:flex;align-items:center;">
-        <i class="ti ti-file-text" style="margin-right:6px;"></i> Bio
-        <button class="section-edit-btn" type="button" onclick="toggleInline('edit-bio-assets')">Edit</button>
-      </div>
-
-      <?php if (!empty($agent['bio_url'])): ?>
-        <div class="asset-link-row" style="margin-bottom:10px;">
-          <i class="ti ti-file-description"></i>
-          <span class="asset-link-label">Bio Document</span>
-          <a href="<?= htmlspecialchars($agent['bio_url']) ?>" target="_blank" class="asset-link-a">
-            <i class="ti ti-external-link"></i> Open
-          </a>
-        </div>
-      <?php endif; ?>
-
-      <?php if (!empty($agent['bio_text']) || !empty($agent['bio_short'])): ?>
-        <div class="bio-tabs">
-          <?php if (!empty($agent['bio_text'])): ?><button class="bio-tab-btn active" data-bio="assets-full">Full Bio</button><?php endif; ?>
-          <?php if (!empty($agent['bio_short'])): ?><button class="bio-tab-btn <?= empty($agent['bio_text'])?'active':'' ?>" data-bio="assets-short">Short / Social</button><?php endif; ?>
-        </div>
-        <?php if (!empty($agent['bio_text'])): ?>
-          <div class="bio-panel active" id="bio-assets-full">
-            <div class="bio-content rich"><?= strip_tags($agent['bio_text'], '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
-          </div>
-        <?php endif; ?>
-        <?php if (!empty($agent['bio_short'])): ?>
-          <div class="bio-panel <?= empty($agent['bio_text'])?'active':'' ?>" id="bio-assets-short">
-            <div class="bio-content"><?= nl2br(htmlspecialchars($agent['bio_short'])) ?></div>
-          </div>
-        <?php endif; ?>
-      <?php else: ?>
-        <p class="asset-empty">No bio yet. Click Edit to add one.</p>
-      <?php endif; ?>
-
-      <div id="edit-bio-assets" style="display:none;" class="inline-edit-form">
-        <form method="POST" id="bioForm">
-          <input type="hidden" name="_action" value="update_intake_fields">
-          <input type="hidden" name="redirect_tab" value="assets">
-          <div class="fld">
-            <span class="fld-label">Bio Document URL</span>
-            <input type="url" name="bio_url" class="form-input" style="max-width:420px;"
-                   value="<?= val($agent,'bio_url') ?>" placeholder="https://drive.google.com/…">
-          </div>
-          <div class="fld" style="flex-direction:column;align-items:stretch;">
-            <span class="fld-label" style="margin-bottom:6px;">Full Bio</span>
-            <div id="bioEditor"><?= strip_tags($agent['bio_text'] ?? '', '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
-            <textarea name="bio_text" id="bioTextHidden" style="display:none;"></textarea>
-          </div>
-          <div class="fld" style="flex-direction:column;align-items:stretch;">
-            <span class="fld-label" style="margin-bottom:6px;">Short / Social Bio</span>
-            <textarea name="bio_short" class="form-input" rows="3"
-                      placeholder="Short bio for social media…"><?= htmlspecialchars($agent['bio_short'] ?? '') ?></textarea>
-          </div>
-          <div class="btn-row">
-            <button type="submit" class="btn btn-primary btn-sm">Save</button>
-            <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('edit-bio-assets')">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
-
     <!-- ── Other Docs ───────────────────────────────────────────────────── -->
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;">
@@ -3990,7 +4558,20 @@ $listings_json = json_encode(array_map(fn($l) => [
 </div><!-- /wrap -->
 </div><!-- /pc-container -->
 
-<script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
+<!-- This portal's own copies first (see the note by the stylesheets above). -->
+<script src="/assets/vendor/quill.js"></script>
+<script src="/assets/vendor/cropper.min.js"></script>
+<script>
+// Only if a local copy is missing: pull that one library from the CDN, written
+// into the page here so it is in place before the script below runs. Nothing
+// loads twice, and nothing is fetched at all when the local copies are there.
+if (typeof Quill === 'undefined') {
+    document.write('<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"><\/scr' + 'ipt>');
+}
+if (typeof Cropper === 'undefined') {
+    document.write('<scr' + 'ipt src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"><\/scr' + 'ipt>');
+}
+</script>
 <script>
 // ── Tab switching ─────────────────────────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -4314,6 +4895,138 @@ document.querySelectorAll('.bio-tab-btn').forEach(btn => {
   chk.addEventListener('change', sync);
   sync();
 })();
+
+// ── Crop tools (Profile tab) ────────────────────────────────────────────────
+// Two of them: the profile photo (4:5, the shape of the website's broker
+// cards) and the square used on cards and lists. Both send the box in the
+// picture's own pixels and let the server do the cutting, because a photo
+// hosted elsewhere cannot be exported from a canvas (2026-09-23).
+// ── Stepping between agents (2026-09-29) ─────────────────────────────────────
+(function () {
+  var jump = document.getElementById('agentJump');
+
+  // The tab you are on is switched in the page and written into the address
+  // bar, so read it from there rather than from what the server baked into
+  // these links. Otherwise moving to the next agent always landed on Profile.
+  function currentTab() {
+    var t = new URLSearchParams(location.search).get('tab');
+    return t || (jump && jump.dataset.tab) || 'profile';
+  }
+  function goTo(id) {
+    if (!id) return;
+    location.href = 'agent.php?id=' + encodeURIComponent(id) + '&tab=' + encodeURIComponent(currentTab());
+  }
+  function idOf(link) {
+    var m = (link.getAttribute('href') || '').match(/[?&]id=(\d+)/);
+    return m ? m[1] : null;
+  }
+
+  if (jump) jump.addEventListener('change', function () { goTo(jump.value); });
+
+  document.addEventListener('click', function (e) {
+    var link = e.target.closest ? e.target.closest('.step-btn[data-step]') : null;
+    if (!link || e.metaKey || e.ctrlKey || e.shiftKey || e.button) return;   // let cmd-click open a tab
+    e.preventDefault();
+    goTo(idOf(link));
+  });
+
+  // Alt with an arrow key does the same as the chevrons. Alt, so it cannot
+  // fight the cursor keys inside a text box, the bio editor or the crop tool.
+  document.addEventListener('keydown', function (e) {
+    if (!e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    var link = document.querySelector('.step-btn[data-step="' + (e.key === 'ArrowLeft' ? 'prev' : 'next') + '"]');
+    if (!link) return;
+    e.preventDefault();
+    goTo(idOf(link));
+  });
+})();
+
+function mkCropTool(opts) {
+  var input = document.getElementById(opts.input);
+  if (!input) return;
+  // Without Cropper this used to bind nothing, so the crop buttons did nothing
+  // at all and said nothing either (2026-09-28). Say it on the page instead.
+  if (typeof Cropper === 'undefined') {
+    var dead = document.getElementById(opts.button);
+    if (dead) {
+      dead.disabled = true;
+      dead.style.opacity = '.55';
+      dead.style.cursor = 'not-allowed';
+      var why = document.createElement('p');
+      why.className = 'hint';
+      why.style.margin = '6px 0 0';
+      why.textContent = 'The crop tool did not load, so this button is off. Reload the page. If it keeps happening, assets/vendor/cropper.min.js is missing from the server.';
+      dead.insertAdjacentElement('afterend', why);
+    }
+    return;
+  }
+  var wrap = document.getElementById(opts.wrap);
+  var img  = document.getElementById(opts.img);
+  var form = input.closest('form');
+  var cropper = null, source = 'file';
+
+  function frame(src) {
+    wrap.hidden = false;
+    if (cropper) { cropper.destroy(); cropper = null; }
+    img.onload = function () {
+      cropper = new Cropper(img, { aspectRatio: opts.ratio, viewMode: 1, autoCropArea: 0.8, background: false });
+      img.onload = null;
+    };
+    img.src = src;
+  }
+
+  input.addEventListener('change', function () {
+    if (input.files && input.files[0]) { source = 'file'; frame(URL.createObjectURL(input.files[0])); }
+  });
+
+  var reCrop = opts.button ? document.getElementById(opts.button) : null;
+  if (reCrop) {
+    reCrop.addEventListener('click', function () {
+      source = 'current';
+      input.value = '';            // crop what is stored, not a picked file
+      frame(reCrop.dataset.src);
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }
+
+  form.addEventListener('submit', function () {
+    if (!cropper) return;
+    var d = cropper.getData(true);
+    document.getElementById(opts.fields.x).value = d.x;
+    document.getElementById(opts.fields.y).value = d.y;
+    document.getElementById(opts.fields.w).value = d.width;
+    document.getElementById(opts.fields.h).value = d.height;
+    document.getElementById(opts.fields.src).value = source;
+    if (opts.fields.data) {
+      try {
+        document.getElementById(opts.fields.data).value =
+          cropper.getCroppedCanvas({ width: 800, height: 800 }).toDataURL('image/jpeg', 0.92);
+      } catch (e) { /* cross-origin photo: the box above is enough */ }
+    }
+  });
+}
+
+// The same limit, checked before the browser sends anything, so a big file is
+// caught at once rather than after a long upload.
+(function () {
+  var max = <?= (int)min(mk_ini_bytes(ini_get('upload_max_filesize')), mk_ini_bytes(ini_get('post_max_size'))) ?>;
+  var form = document.getElementById('photoInput') ? document.getElementById('photoInput').closest('form') : null;
+  if (!form || !max) return;
+  form.addEventListener('submit', function (e) {
+    var big = ['photoInput', 'faceInput'].map(function (id) { return document.getElementById(id); })
+      .filter(function (i) { return i && i.files && i.files[0] && i.files[0].size > max; });
+    if (!big.length) return;
+    e.preventDefault();
+    alert('That image is ' + Math.round(big[0].files[0].size / 1048576) + ' MB, and this server accepts up to '
+        + Math.floor(max / 1048576) + ' MB. Please use a smaller one.');
+  });
+})();
+
+mkCropTool({ input: 'photoInput', wrap: 'photoCropWrap', img: 'photoCropImg', button: 'reCropPhotoBtn',
+             ratio: 4 / 5, fields: { x: 'pcropX', y: 'pcropY', w: 'pcropW', h: 'pcropH', src: 'pcropSrc' } });
+mkCropTool({ input: 'faceInput', wrap: 'faceCropWrap', img: 'faceCropImg', button: 'reCropBtn',
+             ratio: 1, fields: { x: 'cropX', y: 'cropY', w: 'cropW', h: 'cropH', src: 'cropSrc', data: 'faceData' } });
 
 // ── Bio rich-text editor (Quill) ─────────────────────────────────────────────
 (function () {

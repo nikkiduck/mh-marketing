@@ -9,6 +9,9 @@
  * Insert the default onboarding tasks + sub-tasks.
  * Safe to call multiple times — skips if tasks already exist.
  */
+/** The checklist item whose tick subscribes the agent to the Hot Sheets. */
+if (!defined('MK_HS_TASK')) define('MK_HS_TASK', 'Hot Sheets: Subscribe');
+
 function mkt_seed_onboarding_tasks(mysqli $conn, int $intake_id): void {
     $r = $conn->query("SELECT COUNT(*) AS c FROM marketing_tasks WHERE intake_id={$intake_id} AND category='onboarding'");
     if ($r && (int)$r->fetch_assoc()['c'] > 0) return;
@@ -31,12 +34,16 @@ function mkt_seed_onboarding_tasks(mysqli $conn, int $intake_id): void {
     $t2 = $ins('Email Signature',            null, 20);
     $t3 = $ins('QR Code',                    null, 30);
     $t4 = $ins('Marketing Overview Meeting', null, 40);  // date picker on parent
+    // Ticking this subscribes them (agent.php → mk_hs_subscribe). Nikki,
+    // 2026-09-22: no automatic subscription; she explains the Hot Sheets in
+    // the marketing meeting first, so the first one is not a surprise.
+    $t45 = $ins(MK_HS_TASK,                  null, 45);
     $t5 = $ins('Bio Received',               null, 50);
     $t6 = $ins('Headshot Received',          null, 60);
     $t7 = $ins('Added to MH Website',        null, 70);
     $t8 = $ins('Instagram Announcement',     null, 80);  // date picker on parent
     $t9 = $ins('B2B Announcement',           null, 90);  // date picker on parent
 
-    // No sub-tasks. The checklist is a flat list of 9 items.
+    // No sub-tasks. The checklist is a flat list of 10 items.
     // File links (email signature, QR code SVG, headshots) live on the Assets tab.
 }

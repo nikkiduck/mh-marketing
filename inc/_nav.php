@@ -30,6 +30,14 @@ $mh_initials = substr($mh_initials, 0, 2) ?: '?';
 
 $mh_active = $nav_active ?? 'marketing';
 ?>
+<!-- One look across the portal and the website's admin (Nikki, 2026-09-23).
+     Loaded here, in the body, so it lands after each page's own <style> block
+     and wins the ties without a pile of !important. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/mh-theme.css?v=20260928">
+
 <style>
   /* ── The gap under the header ──────────────────────────────────────────────
      The theme's `layout-extended` reserves 169px above .pc-container: 74px for

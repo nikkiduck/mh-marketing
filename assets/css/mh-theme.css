@@ -1,0 +1,317 @@
+/* ============================================================================
+   mh-theme.css — the Mont Haus look for the marketing portal.
+
+   Nikki, 2026-09-23: one product, one look. This is the design language of
+   site.monthaus.com's admin (Cormorant Garamond headings, Jost text, ivory
+   page, white cards, champagne gold, square corners, wide letter-spaced
+   labels), laid over the Able Pro theme and the page-level styles.
+
+   Loaded from inc/_nav.php, which every page includes, and therefore last in
+   the document: single-class page rules lose to the same rules here without
+   needing !important. The few !important marks below are where the framework
+   itself sets the property inline-hard.
+   ========================================================================= */
+
+:root {
+    --mh-page:    #fdfbf6;   /* page: barely-there ivory */
+    --mh-panel:   #ffffff;   /* cards and panels */
+    --mh-line:    #e3dccb;   /* hairlines: light taupe */
+    --mh-ink:     #211d15;   /* primary text: warm near-black */
+    --mh-dim:     #5c5440;   /* secondary text */
+    --mh-label:   #564e3c;   /* small caps labels */
+    --mh-gold:    #c9a96a;
+    --mh-gold-dk: #8a6d3a;   /* gold that passes on white */
+    --mh-serif:   'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+    --mh-sans:    'Jost', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+/* ── Page ─────────────────────────────────────────────────────────────── */
+body,
+body.layout-extended {
+    background: var(--mh-page);
+    color: var(--mh-ink);
+    font-family: var(--mh-sans);
+    font-weight: 300;
+    letter-spacing: 0.015em;
+    -webkit-font-smoothing: antialiased;
+}
+.pc-container, .wrap { background: transparent; }
+
+h1, h2, h3, h4,
+.mk-page-header h1,
+.card-title,
+.agent-name-lg {
+    font-family: var(--mh-serif);
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    color: var(--mh-ink);
+}
+.mk-page-header h1 { font-size: 2.4rem; line-height: 1.1; }
+.card-title {
+    font-size: 1.15rem;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--mh-line);
+}
+
+/* ── Cards and panels ─────────────────────────────────────────────────── */
+.card, .agent-card, .admin-panel, .flash, .tab-panel > .card {
+    background: var(--mh-panel);
+    border: 1px solid var(--mh-line);
+    border-radius: 0;
+    box-shadow: none;
+}
+.card { padding: 1.6rem 1.8rem; }
+.agent-card { padding: 1rem 1.1rem; }
+.agent-card.to-onboard { border: 1px dashed var(--mh-line); }
+
+/* ── Labels and quiet text ────────────────────────────────────────────── */
+.fld-label, .admin-label, .mini-table .fld-label,
+.roster-table th, .mini-table th, table.admin-table th {
+    font-family: var(--mh-sans);
+    font-size: 0.62rem;
+    font-weight: 400;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--mh-label);
+}
+.hint, .muted, .empty-state { color: var(--mh-dim); }
+a { color: var(--mh-gold-dk); }
+a:hover { color: var(--mh-gold); }
+
+/* ── Buttons ──────────────────────────────────────────────────────────── */
+.btn, .btn-primary, .btn-outline, .btn-danger, button.filter-tab, .attn-chip {
+    font-family: var(--mh-sans);
+    border-radius: 0;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    font-size: 0.66rem;
+    font-weight: 400;
+    transition: all 0.35s ease;
+}
+.btn-primary {
+    color: var(--mh-gold-dk);
+    background: transparent;
+    border: 1px solid var(--mh-gold);
+    padding: 0.7rem 1.6rem;
+}
+.btn-primary:hover { background: var(--mh-gold); color: #fff; border-color: var(--mh-gold); }
+.btn-outline {
+    color: var(--mh-dim);
+    background: transparent;
+    border: 1px solid var(--mh-line);
+    padding: 0.7rem 1.4rem;
+}
+.btn-outline:hover { border-color: var(--mh-gold); color: var(--mh-ink); }
+.btn-sm { padding: 0.5rem 1.1rem; font-size: 0.6rem; }
+.btn-danger { color: #a13434; background: transparent; border: 1px solid #e3c9c9; }
+.btn-danger:hover { background: #a13434; color: #fff; border-color: #a13434; }
+.btn-ghost { color: var(--mh-dim); background: transparent; border: 0; }
+.btn-ghost:hover { color: var(--mh-gold-dk); }
+.section-edit-btn {
+    font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--mh-gold-dk); background: transparent; border: 0;
+}
+
+/* ── Inputs ───────────────────────────────────────────────────────────── */
+.form-input, input[type="text"], input[type="email"], input[type="url"],
+input[type="number"], input[type="date"], input[type="search"], select, textarea {
+    background: #fff;
+    border: 1px solid var(--mh-line);
+    border-radius: 0;
+    color: var(--mh-ink);
+    font-family: var(--mh-sans);
+    font-size: 0.85rem;
+}
+.form-input:focus, select:focus, textarea:focus, input:focus {
+    outline: none;
+    border-color: var(--mh-gold);
+    box-shadow: none;
+}
+.search-wrap input { border-radius: 0; }
+
+/* ── Tables ───────────────────────────────────────────────────────────── */
+.roster-table, .mini-table, table.admin-table { background: var(--mh-panel); }
+.roster-table { border: 1px solid var(--mh-line); border-radius: 0; }
+.roster-table th { border-bottom: 1px solid var(--mh-line); background: transparent; }
+.roster-table td, .mini-table td { border-bottom: 1px solid #f1ece0; color: var(--mh-ink); }
+.roster-table tbody tr:hover { background: #faf7ef; }
+.who-name { font-family: var(--mh-serif); font-size: 1.05rem; color: var(--mh-ink); }
+.boards { color: var(--mh-dim); letter-spacing: 0.04em; font-size: 0.8rem; }
+
+/* ── Chips, pills, tags ───────────────────────────────────────────────── */
+.pill, .tag-team, .tag-member, .tasks-badge, .balance-badge, .count {
+    border-radius: 0;
+    font-family: var(--mh-sans);
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+}
+.pill.s-active, .pill.w-approved { background: #eef3ea; color: #4a7a4a; }
+.pill.s-inactive, .pill.w-inactive { background: #f4f1ea; color: #8a8271; }
+.pill.s-archived { background: #f4f1ea; color: #8a8271; }
+.pill.w-pending { background: #faf3e4; color: #8a6d3a; }
+.tag-team { background: var(--mh-ink); color: var(--mh-page); }
+.tag-member { border: 1px solid var(--mh-line); color: var(--mh-gold-dk); background: transparent; }
+.ck { color: var(--mh-gold-dk); letter-spacing: 0.08em; }
+.attn-chip {
+    background: var(--mh-panel);
+    border: 1px solid var(--mh-line);
+    color: var(--mh-dim);
+    padding: 0.55rem 0.9rem;
+}
+.attn-chip b { color: var(--mh-ink); font-weight: 500; }
+.attn-chip:hover, .attn-chip.on { border-color: var(--mh-gold); color: var(--mh-ink); }
+.attn-chip.alert { border-color: #e3c9c9; background: #fdf6f4; color: #8a3a3a; }
+.attn-chip.money b { color: var(--mh-gold-dk); }
+.attn-ok { color: var(--mh-dim); font-size: 0.78rem; letter-spacing: 0.06em; }
+
+/* ── Filter tabs and agent tabs ───────────────────────────────────────── */
+.filter-tab, .tab-btn {
+    background: transparent;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--mh-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-size: 0.66rem;
+}
+.filter-tab.active-tab, .tab-btn.active {
+    color: var(--mh-ink);
+    border-bottom-color: var(--mh-gold);
+}
+.filter-tab .count { background: #f4f1ea; color: var(--mh-dim); border-radius: 0; }
+.tab-bar { border-bottom: 1px solid var(--mh-line); }
+
+/* ── Meters and avatars ───────────────────────────────────────────────── */
+.meter-bar { background: #efe9dc; border-radius: 0; }
+.meter-bar i { background: var(--mh-gold); border-radius: 0; }
+.meter { color: var(--mh-dim); }
+.meter.full .meter-bar i { background: #4a7a4a; }
+.agent-avatar, .agent-avatar-lg { border-radius: 50%; font-family: var(--mh-serif); }
+
+/* ── Flash ────────────────────────────────────────────────────────────── */
+.flash {
+    background: #fbf7ec;
+    border: 1px solid var(--mh-line);
+    color: #4c4636;
+    border-radius: 0;
+}
+.flash strong { font-family: var(--mh-serif); font-weight: 400; font-size: 1.05rem; }
+/* Something did not go through (a website sync that could not run, say). */
+.flash.bad { background: #fbf1ee; border-color: #d8bcb2; color: #7a4632; }
+/* The website sync's own output, folded away under "Full log". */
+.flash-log { margin-top: 8px; }
+.flash-log > summary {
+    cursor: pointer; font-family: var(--mh-sans); font-size: 0.68rem;
+    letter-spacing: 0.16em; text-transform: uppercase; color: var(--mh-dim);
+}
+.flash-log > pre {
+    margin: 8px 0 0; padding: 10px 12px; max-height: 320px; overflow: auto;
+    background: #fff; border: 1px solid var(--mh-line);
+    font-size: 11.5px; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+}
+
+/* ── Header ───────────────────────────────────────────────────────────── */
+.pc-header, .layout-extended .pc-header {
+    background: var(--mh-ink) !important;
+    border-bottom: 1px solid #3a3325;
+}
+.mh-nav-link { font-family: var(--mh-sans); letter-spacing: 0.22em; text-transform: uppercase; font-size: 0.66rem; }
+.mh-nav-link.active, .mh-nav-link:hover { color: var(--mh-gold); }
+
+/* ── Dialogs ──────────────────────────────────────────────────────────── */
+dialog.confirm {
+    border: 1px solid var(--mh-line);
+    border-radius: 0;
+    background: var(--mh-panel);
+    color: var(--mh-ink);
+}
+dialog.confirm h3 { font-family: var(--mh-serif); font-weight: 400; }
+
+/* ── Small screens keep the same proportions ──────────────────────────── */
+@media (max-width: 700px) {
+    .mk-page-header h1 { font-size: 1.9rem; }
+    .card { padding: 1.1rem 1rem; }
+}
+
+/* ── Agent page: header chips, tabs, section headings ─────────────────── */
+.section-title {
+    font-family: var(--mh-serif);
+    font-weight: 400;
+    font-size: 1.3rem;
+    letter-spacing: 0.01em;
+    color: var(--mh-ink);
+}
+.status-chip {
+    border-radius: 0;
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-size: 0.58rem;
+}
+.tasks-summary, .tasks-badge, .balance-badge, .tab-count, .task-count {
+    border-radius: 0;
+    font-family: var(--mh-sans);
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    font-size: 0.62rem;
+}
+.tasks-summary.has  { background: #fbf7ec; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
+.tasks-summary.clear { background: #f3f6f1; color: #4a7a4a; border: 1px solid #dfe6da; }
+.tasks-badge  { background: #fbf7ec; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
+.balance-badge { background: #fbf7ec; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
+.tab-btn .count, .tab-btn span.badge, .tab-badge {
+    background: var(--mh-gold); color: #fff; border-radius: 0; font-size: 0.58rem;
+}
+.agent-avatar-lg { border-radius: 50%; }
+.bio-tab-btn {
+    border: 0; border-bottom: 2px solid transparent; background: transparent;
+    color: var(--mh-dim); text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.62rem;
+}
+.bio-tab-btn.active { color: var(--mh-ink); border-bottom-color: var(--mh-gold); }
+.bio-content, .bio-content.rich { font-family: var(--mh-sans); color: var(--mh-ink); line-height: 1.7; }
+.task-row { border-bottom: 1px solid #f1ece0; }
+.kv-grid, .detail-table td { color: var(--mh-ink); }
+
+/* ── Billing (.bl-sub is the subtitle line under the heading, not a tab) ──────────────────────────────────────────────────────────── */
+.bl-tab {
+    color: var(--mh-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 0.66rem;
+    border-bottom: 2px solid transparent;
+}
+.bl-tab.active { color: var(--mh-ink); border-bottom-color: var(--mh-gold); }
+.bl-agent a, .bl-agent-name, a.bl-agent-name { color: var(--mh-ink); font-family: var(--mh-serif); font-size: 1.15rem; }
+.bl-card, .bl-stat { background: var(--mh-panel); border: 1px solid var(--mh-line); border-radius: 0; box-shadow: none; }
+.bl-stat-label { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mh-label); }
+.bl-stat-value { font-family: var(--mh-serif); font-size: 1.9rem; }
+.bl-pill, .bl-badge, .mh-split {
+    border-radius: 0; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.58rem; font-weight: 400;
+}
+
+/* ── Anything still on the old theme blue ────────────────────────────── */
+a[style*="#0184BB"], .link-blue { color: var(--mh-gold-dk) !important; }
+
+/* Small actions that sit next to a status, e.g. the website buttons on the
+   Profile tab: they must not wrap onto two lines. */
+.btn.btn-xs, .btn-xs {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+/* ── Headshots sit at the top of their frame ──────────────────────────────
+   A photo cropped to a circle or a square is centred by default, which cuts
+   the head off a standing shot (Nikki, 2026-09-27). Faces are near the top,
+   so every frame that holds a person aligns there. Listing photos are left
+   centred: a house looks right in the middle. */
+.agent-avatar img,
+.agent-avatar-lg img,
+.photo-preview img,
+.card img[style*="object-fit"] { object-position: 50% 0; }
