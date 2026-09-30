@@ -1000,26 +1000,38 @@ The real fix is rewriting those two queries with `ANY_VALUE()` or a correct
 
 ### Cron
 
-Two jobs, both pulling from the Spark API — not from the hub:
+admin's crontab, times UTC (read from the server 2026-09-30). root and
+www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
+(certbot, e2scrub, php session cleanup). Logs in `/var/log/mh-marketing/`.
 
 ```
-0  3 * * *  /usr/bin/php /var/www/marketing.monthaus.com/cron/sync_roster.php
-30 3 * * *  /usr/bin/php /var/www/marketing.monthaus.com/cron/sync_mh_brokers.php
+0  3 * * *  cron/sync_mh_brokers.php          >> sync_mh_brokers.log     Spark, legacy
+30 3 * * *  cron/sync_roster.php              >> sync_roster.log         Spark, legacy
+45 3 * * *  cron/activate_roster.php          >> activate_roster.log
+40 12 * * * cron/sync_hot_sheet_listings.php  >> hot_sheet_sync.log      06:40 MDT
+0 13 * * *  cron/send_hot_sheet.php           >> hot_sheet_send.log      07:00 MDT
+*  * * * *  /bin/date                          >> cron_test.log           leftover test
 ```
 
-`sync_roster.php` also re-links `marketing_intakes.roster_id` at the end of
-its run. That used to be the hub's job; it is this site's now.
+(Each line is really `/usr/bin/php /var/www/marketing.monthaus.com/cron/...`
+with the log under `/var/log/mh-marketing/`; shortened here.)
 
-**This list is out of date (2026-09-30).** `cron/` now holds twelve scripts.
-`sync_anyprop_roster.php`, `sync_hot_sheet_listings.php`, `send_hot_sheet.php`
-and `parse_pipeline_events.php` are meant to be scheduled; the rest are
-one-off tools (see HANDOFF.md section 6 and `docs/AGENT_ROSTER_PLAN.md`).
-What is actually installed has not been checked. Get the live list before
-changing anything, and replace this section with it:
-
-```bash
-sudo crontab -u admin -l; sudo crontab -l; ls -la /etc/cron.d/
-```
+- Brokers run before the roster on purpose: `sync_roster.php` re-links
+  `mh_brokers.roster_id` and `marketing_intakes.roster_id` at the end of its
+  run, so a broker appearing tonight is only linked if brokers ran first.
+- `activate_roster.php` is scheduled nightly although the roster plan calls
+  it a one-off; it only promotes 'roster'/'pending' rows and links Spark-era
+  people, so a quiet night is a no-op ("0" counts in its log).
+- `send_hot_sheet.php` still only mails `HOT_SHEET_ALLOWED_RECIPIENTS`;
+  everyone else is logged as "blocked by the allowlist".
+- The every-minute `/bin/date` job is a leftover test: its log was 1.6 MB on
+  2026-09-30 and grows about 0.5 MB a week. Remove it (with Nikki's OK).
+- **Not scheduled:** `sync_anyprop_roster.php` (the real roster sync; the
+  roster's mls_* fields only refresh when it is run by hand) and
+  `parse_pipeline_events.php` (webhook bodies queue in `hs_pipeline_events`
+  until it is run). The rest of `cron/` is one-off tools
+  (`import_*`, `merge_agents`, `split_team`); see `docs/AGENT_ROSTER_PLAN.md`.
+- No log rotation covers `/var/log/mh-marketing/`.
 
 ## Stepping between agents (2026-09-29)
 
