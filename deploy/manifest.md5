@@ -57,7 +57,7 @@ f3327ec6854ed5362ede027a9b198064  oauth_start.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 e476b97fd392340003bddd09f7ce308d  pipeline_review.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
-2a1299f7685602a2312f3e4f127cf11e  qr_codes.php
+cde35f48b7d3404a5dc0c98d5bb4adac  qr_codes.php
 70fce00dc60a09f6be11d7e5e7062afe  receipt.php
 433c74fae7846a5d72927080970946b5  reset-password.php
 ca68a15b0b84050ceb029fd6d34fc829  roster.php

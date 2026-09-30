@@ -1401,7 +1401,10 @@ same database as this site.
 - `dest_type = 'profile'` is resolved at scan time to
   `PUBLIC_SITE_URL/broker.php?s=<slug>`, so those codes move to monthaus.com
   by themselves when PUBLIC_SITE_URL changes at go-live.
-- Codes are **immutable and never deleted** (they are in print). Pause sends
+- Codes are **immutable, and never deleted once scanned** (they are in
+  print). Since 2026-09-30 a code with `scan_count = 0` shows Delete (row,
+  its changes and daily counts go; the name becomes free); the DELETE
+  re-checks `scan_count = 0`, and the Test link counts as a scan. Pause sends
   scans to the fallback; repoint and resume to reuse. Every change is logged in
   `qr_code_changes`; scans are counted in `qr_codes.scan_count` and per
   Mountain-time day in `qr_scans_daily` (no IP or user agent stored).

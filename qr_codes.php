@@ -9,8 +9,11 @@
  *
  * What the page deliberately does NOT offer:
  *   · renaming a code: the old one is on a sign somewhere;
- *   · deleting a code: same reason. Pause sends scans to QR_FALLBACK_URL,
- *     and a paused code can be repointed and resumed for a new use.
+ *   · deleting a code that has ever been scanned: it is on a sign somewhere.
+ *     Pause sends scans to QR_FALLBACK_URL, and a paused code can be
+ *     repointed and resumed for a new use. A code with no scans at all can be
+ *     deleted (2026-09-30), so test codes and mistakes do not pile up; the
+ *     page's own Test link counts as a scan, which ends that.
  *
  * The QR images are drawn in the browser (qrcode-generator, cdnjs) and
  * downloaded as SVG for print or PNG for everything else. Nothing is stored.
@@ -148,6 +151,34 @@ if ($ready && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     foreach ($changes as [$what, $o, $n]) qr_log_change($conn, $qid, $what, $o, $n, $me);
                     $flash = ['ok', 'Saved. ' . qr_public_url($cur['code']) . ' now opens ' . ($type === 'profile' ? 'the profile page' : $url) . '.'];
                 }
+            }
+        }
+    }
+
+    elseif ($action === 'delete') {
+        // Only a code nobody has ever scanned: anything scanned is in print.
+        // scan_count is re-checked in the DELETE itself, so a scan arriving
+        // between the page load and the click still wins.
+        $qid = (int) ($_POST['id'] ?? 0);
+        $cur = $qid ? $conn->query("SELECT * FROM qr_codes WHERE id = {$qid} LIMIT 1")->fetch_assoc() : null;
+        if (!$cur) {
+            $flash = ['err', 'That code could not be found.'];
+        } elseif ((int) $cur['scan_count'] > 0) {
+            $flash = ['err', qr_public_url($cur['code']) . ' has been scanned, so it may be printed somewhere and cannot be deleted. Pause it instead.'];
+            $anchor = '#qr-' . $qid;
+        } else {
+            $conn->begin_transaction();
+            try {
+                $conn->query("DELETE FROM qr_codes WHERE id = {$qid} AND scan_count = 0");
+                if ($conn->affected_rows !== 1) throw new RuntimeException('it was scanned a moment ago, so it was kept.');
+                $conn->query("DELETE FROM qr_code_changes WHERE qr_id = {$qid}");
+                $conn->query("DELETE FROM qr_scans_daily WHERE qr_id = {$qid}");
+                $conn->commit();
+                $flash = ['ok', 'Deleted ' . qr_public_url($cur['code']) . '. The name can be used again.'];
+            } catch (Throwable $e) {
+                $conn->rollback();
+                $flash = ['err', 'Could not delete: ' . $e->getMessage()];
+                $anchor = '#qr-' . $qid;
             }
         }
     }
@@ -290,6 +321,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     .qr-actions { display:flex; flex-direction:column; gap:6px; align-items:stretch; min-width:130px; }
     .qr-actions form { margin:0; }
     .qr-actions .btn { width:100%; }
+    .qr-actions .qr-del { color:#b91c1c; border-color:#fecaca; }
     .btn-xs { padding:4px 10px; font-size:11px; line-height:1.3; white-space:nowrap; }
     details.qr-more { margin-top:10px; }
     details.qr-more summary { cursor:pointer; font-size:12px; color:#75BDB6; font-weight:600; display:inline-block; margin-right:14px; }
@@ -539,6 +571,16 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
                   <button type="submit" class="btn btn-primary btn-xs"><i class="ti ti-player-play"></i> Resume</button>
                 <?php endif; ?>
               </form>
+              <?php if ((int) $c['scan_count'] === 0): ?>
+                <form method="POST">
+                  <input type="hidden" name="_action" value="delete">
+                  <input type="hidden" name="id" value="<?= $qid ?>">
+                  <input type="hidden" name="csrf_token" value="<?= e($csrf) ?>">
+                  <input type="hidden" name="back_intake" value="<?= $filter ?>">
+                  <button type="submit" class="btn btn-outline btn-xs qr-del" title="Only codes that have never been scanned can be deleted"
+                          onclick="return confirm('Delete <?= e($c['code']) ?> for good? It has never been scanned. Its history goes with it, and the name can be used again.');"><i class="ti ti-trash"></i> Delete</button>
+                </form>
+              <?php endif; ?>
             </div>
           </div>
         <?php endforeach; ?>
@@ -546,7 +588,8 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     <?php endforeach; ?>
 
     <p class="hint">
-      Codes are never deleted, because the old one is printed somewhere. To retire one, pause it; to reuse one, repoint it and resume.
+      A code that has been scanned is never deleted, because it is printed somewhere. To retire one, pause it; to reuse one, repoint it and resume.
+      A code with no scans yet can be deleted. The Test link counts as a scan.
       Every scan is sent on with <code>utm_source=qr</code> and the code as <code>utm_campaign</code>, so visits show up in the website's analytics.
       The centre mark is only artwork: a code opens the same address with the triangle, the M or no mark, so a sign can be reprinted either way.
       Each download is scanned on this page before it is saved, and codes longer than 34 characters are drawn without a mark.
