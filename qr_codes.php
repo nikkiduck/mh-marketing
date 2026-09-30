@@ -379,6 +379,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
             <div class="prefix"><span><?= e(preg_replace('~^https://~', '', QR_BASE_URL)) ?>/</span>
               <input type="text" name="code" id="newCode" class="form-input" maxlength="40" required
                      pattern="[a-z0-9][a-z0-9\-]*[a-z0-9]" placeholder="jboxer" value="<?= e($draft['code'] ?? '') ?>"></div>
+            <span class="hint" id="codeSize" style="display:block;margin-top:4px;">Shorter codes print with bigger squares and scan from further away. 10 characters or fewer is best for signs.</span>
           </div>
           <div style="flex:1 1 200px;">
             <span class="fld-label">Label</span>
@@ -463,6 +464,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
                 &middot; <?= number_format($recent[$qid] ?? 0) ?> in the last 30 days
                 <?php if ($c['last_scan_at']): ?>&middot; last <?= e(mt($c['last_scan_at'])) ?><?php endif; ?>
               </div>
+              <div class="qr-meta" data-density></div>
 
               <details class="qr-more">
                 <summary>Change</summary>
@@ -567,13 +569,21 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
   // Without a mark: error correction Q, exactly the pattern this page drew
   // before marks existed. With one: H, and the mark in the centre. The mark is
   // chosen here, per browser (localStorage), and is not stored with the code:
-  // the encoded address is the same either way.
-  var ready = !!(window.qrcode && window.MHQR), MARK_KEY = 'mh_qr_mark', mark = 'triangle';
+  // the encoded address is the same either way. Default None (2026-09-30):
+  // most codes print about 2.5in wide, where a plain code is usually one size
+  // step less dense and keeps its full damage margin. See CLAUDE.md.
+  var ready = !!(window.qrcode && window.MHQR), MARK_KEY = 'mh_qr_mark', mark = '';
   try {
     var saved = localStorage.getItem(MARK_KEY);
     if (saved === '' || (saved && window.MHQR && MHQR.MARKS[saved])) mark = saved;
   } catch (e) {}
   function markFor(text) { return mark && MHQR.canMark(text) ? mark : ''; }
+  // "33 squares across": the module count, quiet zone excluded. What decides
+  // how far away a printed code still scans; fewer is better.
+  function density(text) {
+    var plain = MHQR.layout(text, '').n, marked = MHQR.canMark(text) ? MHQR.layout(text, 'triangle').n : null;
+    return { plain: plain, marked: marked };
+  }
   function draw() {
     document.querySelectorAll('[data-mark]').forEach(function (b) { b.classList.toggle('on', b.dataset.mark === mark); });
     if (!ready) return;
@@ -581,6 +591,12 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
       var t = el.dataset.qr, m = markFor(t);
       el.innerHTML = MHQR.svg(t, m);
       el.title = t + (mark && !m ? ' (too long for a centre mark: drawn without one)' : '');
+      var dn = el.closest('.qr-row') && el.closest('.qr-row').querySelector('[data-density]');
+      if (dn) {
+        var d = density(t);
+        dn.textContent = (m ? d.marked + ' squares across with the ' + MHQR.MARKS[m].label + ' (' + d.plain + ' without)'
+                            : d.plain + ' squares across' + (d.marked ? ' (' + d.marked + ' with a centre mark)' : ' (too long for a centre mark)'));
+      }
     });
   }
   function save(blob, name) {
@@ -655,7 +671,18 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     var v = nc.value.toLowerCase().replace(/[\s_]+/g, '-').replace(/[^a-z0-9-]/g, '');
     if (v !== nc.value) nc.value = v;
     nc.setCustomValidity(TAKEN.indexOf(v) >= 0 ? 'That code is already taken.' : '');
+    sizeHint();
   });
+  var cs = document.getElementById('codeSize'), csDefault = cs ? cs.textContent : '';
+  function sizeHint() {
+    if (!cs || !ready) return;
+    var v = nc.value;
+    if (!v) { cs.textContent = csDefault; return; }
+    var d = density(<?= json_encode(rtrim(QR_BASE_URL, '/') . '/') ?> + v);
+    cs.textContent = v.length + ' character' + (v.length === 1 ? '' : 's') + ': ' + d.plain + ' squares across'
+      + (d.marked ? ', ' + d.marked + ' with a centre mark' : ', too long for a centre mark')
+      + (v.length > 10 ? '. 10 or fewer is best for signs.' : '.');
+  }
   function suggest() {
     if (touched) return;
     var slug = nb.options[nb.selectedIndex].dataset.slug || '';
@@ -664,8 +691,9 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     while (TAKEN.indexOf(c) >= 0) c = slug + '-' + (i++);
     nc.value = c;
   }
-  nb.addEventListener('change', suggest);
+  nb.addEventListener('change', function () { suggest(); sizeHint(); });
   suggest();
+  sizeHint();
 })();
 </script>
 <?php endif; ?>

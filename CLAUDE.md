@@ -1412,7 +1412,8 @@ same database as this site.
 - **Centre marks (2026-09-30).** `assets/js/mh-qr.js` draws every code (the
   page no longer has its own drawing code). The header's "Centre mark"
   chooser (Triangle / M / None, per browser in localStorage, default
-  Triangle) applies to previews and downloads; nothing is stored with the
+  None: most codes print about 2.5in wide on 18x24 signs, where a plain code
+  is usually one size step less dense and keeps its full damage margin) applies to previews and downloads; nothing is stored with the
   code, because the encoded address is identical either way. With a mark:
   error correction H instead of Q, modules under the mark and a 0.6-module
   white outline are left out, mark at 34% (triangle) / 25% (M) of the code's
@@ -1424,6 +1425,10 @@ same database as this site.
   code is never saved when the checker failed to load. `tests/qr_marks.html`
   (serve the project root over http) decodes every mark x code length with
   jsQR and ZXing, sharp and blurred; run it after changing mh-qr.js.
+  Squares across (quiet zone excluded) by code length, measured 2026-09-30:
+  <=8 chars 29 plain / 33 marked; 9-10: 33 / 33; 11-21: 33 / 37; 22-34:
+  37 / 41. So the form recommends codes of 10 characters or fewer, and each
+  code shows its count.
 - Migration: `sql/qr_codes_v1.sql`. Constants: `QR_*` in `inc/config.php`
   (defaults also in `inc/qr.php`). Never change `QR_BASE_URL` once printed.
 - `marketing_intakes.coll_oh_qr_code` / `coll_oh_qr_url` (open house signs in
