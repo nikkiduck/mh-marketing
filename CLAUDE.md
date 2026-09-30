@@ -1093,6 +1093,19 @@ runner. So:
 - Deliver SQL as a `.sql` file in `sql/`.
 - Keep statements copy-pasteable and in the order they must run.
 
+### Claude can read the live database (2026-09-30)
+
+`ssh mh-marketing "mysql -e '...'"` connects as `claude_ro`: SELECT and SHOW
+VIEW on `dbmarketing_monthaus` only, TLS required, password only in the
+server's `/home/admin/.my.cnf` (0600). Use it to verify schema and data
+instead of asking Nikki to run read queries. It cannot write, so migrations
+are still hers, as the master user in TablePlus. Every server write (files,
+Apache, cron) needs her OK first.
+
+On 2026-09-30 it confirmed MySQL 8.4.11, `utf8mb4_0900_ai_ci`, and that
+agent_roster v1/v2, hot_sheets v1/v2/v3 and qr_codes_v1 had all been applied
+(every table and column present) despite their headers saying not yet run.
+
 ### The STATUS line is the source of truth
 
 Every migration carries a `STATUS:` line in its header comment, and it is the

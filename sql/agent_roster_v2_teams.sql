@@ -1,6 +1,6 @@
 -- ============================================================================
 -- agent_roster_v2_teams.sql — teams as marketing entities
--- STATUS: not yet run
+-- STATUS: run (verified against the live schema 2026-09-30: every table and column present)
 --
 -- Run ONCE in TablePlus as the master user, after agent_roster_v1.sql.
 -- Not idempotent (a second run: "Duplicate column name"; expected, harmless).

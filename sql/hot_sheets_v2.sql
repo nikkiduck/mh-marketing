@@ -1,6 +1,6 @@
 -- ============================================================================
 -- hot_sheets_v2.sql — subscribers, send log, manual listings (pocket + buyer rep)
--- STATUS: not yet run
+-- STATUS: run (verified against the live schema 2026-09-30: every table and column present)
 --
 -- See docs/HOT_SHEETS_PLAN.md. Run ONCE in TablePlus as the master user, after
 -- hot_sheets_v1.sql. Once run, change these tables only with a NEW ALTER file.

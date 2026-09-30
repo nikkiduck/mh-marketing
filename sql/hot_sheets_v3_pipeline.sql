@@ -1,6 +1,6 @@
 -- ============================================================================
 -- hot_sheets_v3_pipeline.sql — Paperless Pipeline events + review queue
--- STATUS: not yet run
+-- STATUS: run (verified against the live schema 2026-09-30: every table and column present)
 --
 -- See docs/HOT_SHEETS_PLAN.md. Run ONCE in TablePlus as the master user, after
 -- hot_sheets_v2.sql. Same shape as the hub's pipeline_schema.sql, with:

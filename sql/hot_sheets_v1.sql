@@ -1,6 +1,6 @@
 -- ============================================================================
 -- hot_sheets_v1.sql — Hot Sheets listing state + change log
--- STATUS: not yet run
+-- STATUS: run (verified against the live schema 2026-09-30: every table and column present)
 --
 -- See docs/HOT_SHEETS_PLAN.md. Run ONCE in TablePlus as the master user.
 -- CREATE TABLE IF NOT EXISTS is fine (standard MySQL). Once run, any change to

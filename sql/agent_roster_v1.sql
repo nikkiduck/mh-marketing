@@ -1,6 +1,6 @@
 -- ============================================================================
 -- agent_roster_v1.sql — marketing_intakes becomes the one agent roster
--- STATUS: not yet run
+-- STATUS: run (verified against the live schema 2026-09-30: every table and column present)
 --
 -- See docs/AGENT_ROSTER_PLAN.md. Adds the public-website fields and a
 -- per-board MLS identity table, so this portal can own every agent fact and

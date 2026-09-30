@@ -1,6 +1,6 @@
 -- ============================================================================
 -- qr_codes_v1.sql — dynamic QR codes served from qr.monthaus.com
--- STATUS: not yet run
+-- STATUS: run (verified against the live schema 2026-09-30: every table and column present)
 --
 -- Run ONCE in TablePlus as the master user. Once run, change these tables only
 -- with a NEW ALTER file (see CLAUDE.md, "Never edit a CREATE TABLE migration
