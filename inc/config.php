@@ -40,7 +40,7 @@ define('RECEIPTS_DIR', __DIR__ . '/../../receipts/');
  * An empty or undefined value disables the restriction entirely and access
  * falls back to the normal role checks.
  */
-define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com,jm.drai@monthaus.com');
+define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com,jm.drai@monthaus.com,mary.lappe@monthaus.com');
 
 /**
  * ADVERTISING_SHEET_URL — the working digital-advertising spreadsheet.
@@ -58,3 +58,74 @@ define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com
  */
 define('ADVERTISING_SHEET_URL',
     'https://monthausllc.sharepoint.com/:x:/s/marketing/IQD2mCUD7tywR4KMubl8HJhhAai2pArG9tMmGohgSNm9etk?e=UF2ZSX');
+
+/**
+ * Hot Sheets: where listings come from. site.monthaus.com is the only system
+ * that pulls listings from Anyprop; cron/sync_hot_sheet_listings.php reads this
+ * feed. The token (LISTINGS_FEED_TOKEN) is a secret and lives in inc/db.php.
+ */
+/**
+ * The public website these agents appear on: the "view public profile" link on
+ * the agent page, and where the marketing portal points people. Change to
+ * https://monthaus.com at go-live.
+ */
+define('PUBLIC_SITE_URL', 'https://site.monthaus.com');
+
+define('LISTINGS_FEED_URL', 'https://site.monthaus.com/api/listings.php');
+
+/**
+ * "Sync to Website" on the roster. It asks the website to pull this portal's
+ * roster feed right now, which is the same work its nightly cron does
+ * (inc/site_sync.php). The shared secret is AGENT_SYNC_TOKEN in inc/db.php.
+ *
+ * Empty or undefined hides the button, so this portal still works on its own.
+ */
+define('SITE_AGENT_SYNC_URL', 'https://site.monthaus.com/api/sync_agents.php');
+
+
+/**
+ * Hot Sheets: who the new system may email. While the hub's Hot Sheets still
+ * serves everyone, this is the ONLY gate that matters: cron/send_hot_sheet.php
+ * skips (and logs as 'blocked') any address not listed here, whatever
+ * hs_subscribers says. Comma-separated. Empty string = no restriction, which is
+ * the go-live switch, not something to set casually.
+ */
+define('HOT_SHEET_ALLOWED_RECIPIENTS', 'nikki.boxer@monthaus.com');
+
+// Sender, and where the email's images are served from (public, no sign-in).
+define('HOT_SHEET_FROM_EMAIL', 'hotsheet@monthaus.com');
+define('HOT_SHEET_FROM_NAME',  'Mont Haus Hot Sheet');
+define('HOT_SHEET_ASSET_BASE', SITE_URL . '/assets/hotsheet/');
+
+/**
+ * Paperless Pipeline (cron/parse_pipeline_events.php, pipeline_review.php).
+ * Comma-separated. The webhook secret is a credential and lives in inc/db.php.
+ *
+ * EXCLUDED: accounts Paperless attaches to every deal that are never agents
+ * (tc@ is the Paperless admin / transaction-coordination account).
+ * CONDITIONAL: attached by role, sometimes genuinely on the deal (the managing
+ * broker). Never credited automatically; the review card offers to add them
+ * when they are listed first.
+ * NOTIFY: who is told when something is waiting in the review queue.
+ */
+define('PIPELINE_EXCLUDED_AGENT_EMAILS',    'tc@monthaus.com');
+define('PIPELINE_CONDITIONAL_AGENT_EMAILS', 'jm.drai@monthaus.com');
+define('PIPELINE_NOTIFY_EMAILS',            'nikki.boxer@monthaus.com');
+// Roster changes from the MLS syncs (new agents, agents no longer with MH in
+// the MLS, agents back again). Comma separated. inc/roster_alerts.php.
+define('ROSTER_ALERT_EMAILS',               'nikki.boxer@monthaus.com');
+
+/**
+ * Dynamic QR codes (qr_codes.php, qr.php, inc/qr.php).
+ *
+ * QR_BASE_URL is the address printed inside every code. NEVER change it once
+ * codes are in print: every sign would stop working.
+ * QR_FALLBACK_URL is where unknown, paused or broken codes land.
+ * QR_ALLOWED_DOMAIN: destinations must be on this domain or a subdomain.
+ * Profile-page codes follow PUBLIC_SITE_URL above, so they move to
+ * monthaus.com by themselves when that constant changes at go-live.
+ */
+define('QR_BASE_URL',       'https://qr.monthaus.com');
+define('QR_FALLBACK_URL',   'https://monthaus.com');
+define('QR_ALLOWED_DOMAIN', 'monthaus.com');
+define('QR_ADD_UTM',        true);

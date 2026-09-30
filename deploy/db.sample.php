@@ -19,6 +19,40 @@ define('VAIL_SPARK_ACCESS_TOKEN', 'PASTE_VAIL_TOKEN');    // Vail MLS
 define('VAIL_OFFICE_MLS_ID',      'oaltixrealty');        // Mont Haus office, Vail board
 define('ASPEN_OFFICE_ID',         'PASTE_ASPEN_OFFICE_ID');
 
+// ── Anyprop MLS API ──────────────────────────────────────────────────────────
+// cron/sync_anyprop_roster.php. Replaces Spark. Token is fetched per run.
+define('ANYPROP_USERNAME', 'PASTE_ANYPROP_USERNAME');
+define('ANYPROP_PASSWORD', 'PASTE_ANYPROP_PASSWORD');
+// Mont Haus office per board, 'OriginatingSystemName:OfficeMlsId'. Skips the
+// office search, which does not find the CREN office at all (2026-09-21).
+define('ANYPROP_MH_OFFICE_IDS', ['agsmls:805522330']);
+// Known Mont Haus agents on boards whose office id is not confirmed. Fetched
+// by id; each one's own record supplies the office, which then pulls the rest
+// of that office. CREN ids are Jonathan Boxer and Jackson Horn (from the
+// public site's Constellation data).
+define('ANYPROP_MH_MEMBER_IDS', ['cren:13985', 'cren:13986']);
+
+// ── Roster feed for monthaus.com (api/roster.php) ────────────────────────────
+// Shared secret; the website sends it as "Authorization: Bearer ...". At least
+// 24 characters or the feed refuses every request. Generate one with:
+//   php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+define('ROSTER_FEED_TOKEN', 'PASTE_64_HEX_CHARS');
+
+// ── Listings feed from site.monthaus.com (Hot Sheets) ────────────────────────
+// Same value as LISTINGS_FEED_TOKEN in the site's config.php.
+define('LISTINGS_FEED_TOKEN', 'PASTE_64_HEX_CHARS');
+
+// ── "Sync to Website" on the roster (inc/site_sync.php) ──────────────────────
+// Same value as AGENT_SYNC_TOKEN in the site's config.php. Without it the
+// button says so rather than syncing. Generate one with:
+//   php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+define('AGENT_SYNC_TOKEN', 'PASTE_64_HEX_CHARS');
+
+// ── Paperless Pipeline webhook (api/pipeline_webhook.php) ─────────────────────
+// Zapier sends it as the X-Pipeline-Token header. 24+ characters.
+//   php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
+define('PIPELINE_WEBHOOK_SECRET', 'PASTE_64_HEX_CHARS');
+
 // ── Other services ───────────────────────────────────────────────────────────
 define('SENDGRID_API_KEY', 'PASTE_SENDGRID_KEY');   // mailer.php — password resets
 define('LOFTY_API_KEY',    'PASTE_LOFTY_KEY');
