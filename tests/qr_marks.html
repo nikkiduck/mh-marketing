@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  tests/qr_marks.html — does every QR code with a centre mark still scan?
+
+  Loads the real assets/js/mh-qr.js (not a copy) and decodes each rendering
+  with two independent decoders, jsQR and ZXing, at several sizes, including
+  a small blurred one standing in for a sign read from across the street.
+  The blur test is set where every plain code still passes (3px per module,
+  1px blur). Harsher, with the marks at 34% (triangle) / 25% (M) of the code's
+  width, 2026-09-30: 4px + 1.3px blur, plain 9/10 and marked 9/10; 5px + 2px
+  blur, plain 10/10 and marked 7/10. That is the real cost of a centre mark.
+  Serve the project root over http (file:// cannot load the script) and open
+  /tests/qr_marks.html. "ALL PASS" in the title bar is the result.
+  Also the page to scan with a phone before printing anything new.
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QR marks test</title>
+<style>
+  body { font: 14px/1.4 -apple-system, system-ui, sans-serif; margin: 24px; background: #fff; color: #111; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  #summary { font-weight: 700; margin: 0 0 18px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+  .cell { border: 1px solid #ddd; border-radius: 6px; padding: 10px; }
+  .cell svg { width: 100%; height: auto; display: block; }
+  .cap { font-size: 12px; word-break: break-all; margin-top: 6px; }
+  .ok { color: #137333; } .bad { color: #b3261e; font-weight: 700; } .na { color: #666; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+<script src="../assets/js/mh-qr.js"></script>
+</head><body>
+<h1>QR codes with a centre mark</h1>
+<p id="summary">Running…</p>
+<div class="grid" id="grid"></div>
+<script>
+(function () {
+  var BASE = 'https://qr.monthaus.com/';
+  var CODES = ['ss', 'ssmith-yardsign', 'jboxer-open-house-26', 'weber-boxer-group-82-northway',
+               'weber-boxer-group-82-northway-sign', 'weber-boxer-group-82-northway-signs'];
+  var MARKS = ['', 'triangle', 'm'];
+
+  function zxing(cv) {
+    var d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data;
+    var lum = new Uint8ClampedArray(cv.width * cv.height);
+    for (var i = 0; i < lum.length; i++) lum[i] = (d[i * 4] * 299 + d[i * 4 + 1] * 587 + d[i * 4 + 2] * 114) / 1000;
+    try {
+      var src = new ZXing.RGBLuminanceSource(lum, cv.width, cv.height);
+      return new ZXing.QRCodeReader().decode(new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(src))).getText();
+    } catch (e) { return null; }
+  }
+  function jsqr(cv) {
+    var d = cv.getContext('2d').getImageData(0, 0, cv.width, cv.height);
+    var r = jsQR(d.data, d.width, d.height, { inversionAttempts: 'dontInvert' });
+    return r ? r.data : null;
+  }
+  // The same drawing, shrunk and softened: 3px per module with a 1px blur.
+  function blurred(text, mark) {
+    var src = MHQR.canvas(text, mark, 8), n = src.width / 8, cv = document.createElement('canvas');
+    cv.width = cv.height = n * 3;
+    var x = cv.getContext('2d'); x.filter = 'blur(1px)'; x.imageSmoothingEnabled = true;
+    x.drawImage(src, 0, 0, cv.width, cv.height);
+    return cv;
+  }
+
+  var grid = document.getElementById('grid'), fails = 0, runs = 0, skipped = 0;
+  CODES.forEach(function (code) {
+    var text = BASE + code;
+    MARKS.forEach(function (mark) {
+      var cell = document.createElement('div'); cell.className = 'cell'; grid.appendChild(cell);
+      var name = (mark || 'no mark') + ' · ' + code + ' (' + code.length + ')';
+      if (mark && !MHQR.canMark(text)) {
+        skipped++;
+        cell.innerHTML = '<div class="cap na">' + name + '<br>too long for a mark: canMark() refuses, as intended</div>';
+        return;
+      }
+      var L = MHQR.layout(text, mark), rows = [];
+      [['jsQR 10px', jsqr, MHQR.canvas(text, mark, 10)], ['jsQR 3px', jsqr, MHQR.canvas(text, mark, 3)],
+       ['ZXing 10px', zxing, MHQR.canvas(text, mark, 10)], ['ZXing 3px', zxing, MHQR.canvas(text, mark, 3)],
+       ['jsQR 3px blur', jsqr, blurred(text, mark)], ['ZXing 3px blur', zxing, blurred(text, mark)]
+      ].forEach(function (t) {
+        var got = t[1](t[2]), ok = got === text; runs++; if (!ok) fails++;
+        rows.push('<span class="' + (ok ? 'ok' : 'bad') + '">' + (ok ? '✓' : '✗') + ' ' + t[0] + '</span>');
+      });
+      var v = MHQR.verify(text, mark);
+      cell.innerHTML = MHQR.svg(text, mark) + '<div class="cap"><b>' + name + '</b> · v' + L.version
+        + ' · verify() ' + (v ? '✓' : '<span class="bad">✗</span>') + '<br>' + rows.join(' · ') + '</div>';
+      if (!v) fails++;
+    });
+  });
+  var s = document.getElementById('summary');
+  s.textContent = (fails ? fails + ' FAILED' : 'ALL PASS') + ' — ' + runs + ' decodes, ' + skipped + ' long codes correctly refused a mark';
+  s.className = fails ? 'bad' : 'ok';
+  document.title = (fails ? 'FAIL ' : 'ALL PASS ') + 'QR marks test';
+})();
+</script>
+</body></html>

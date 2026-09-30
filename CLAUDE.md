@@ -1000,17 +1000,16 @@ The real fix is rewriting those two queries with `ANY_VALUE()` or a correct
 
 ### Cron
 
-admin's crontab, times UTC (read from the server 2026-09-30). root and
+admin's crontab, times UTC (read from the server and trimmed 2026-09-30;
+the previous version is in `/home/admin/deploy-backups/20260930/crontab.before`). root and
 www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 (certbot, e2scrub, php session cleanup). Logs in `/var/log/mh-marketing/`.
 
 ```
 0  3 * * *  cron/sync_mh_brokers.php          >> sync_mh_brokers.log     Spark, legacy
 30 3 * * *  cron/sync_roster.php              >> sync_roster.log         Spark, legacy
-45 3 * * *  cron/activate_roster.php          >> activate_roster.log
 40 12 * * * cron/sync_hot_sheet_listings.php  >> hot_sheet_sync.log      06:40 MDT
 0 13 * * *  cron/send_hot_sheet.php           >> hot_sheet_send.log      07:00 MDT
-*  * * * *  /bin/date                          >> cron_test.log           leftover test
 ```
 
 (Each line is really `/usr/bin/php /var/www/marketing.monthaus.com/cron/...`
@@ -1019,13 +1018,12 @@ with the log under `/var/log/mh-marketing/`; shortened here.)
 - Brokers run before the roster on purpose: `sync_roster.php` re-links
   `mh_brokers.roster_id` and `marketing_intakes.roster_id` at the end of its
   run, so a broker appearing tonight is only linked if brokers ran first.
-- `activate_roster.php` is scheduled nightly although the roster plan calls
-  it a one-off; it only promotes 'roster'/'pending' rows and links Spark-era
-  people, so a quiet night is a no-op ("0" counts in its log).
+- Removed 2026-09-30 at Nikki's request: `activate_roster.php` (nightly
+  03:45; to be rescheduled when the roster is tidied up) and a leftover
+  every-minute `/bin/date` test job. Its `cron_test.log` (1.6 MB) is still
+  in `/var/log/mh-marketing/` and can be deleted.
 - `send_hot_sheet.php` still only mails `HOT_SHEET_ALLOWED_RECIPIENTS`;
   everyone else is logged as "blocked by the allowlist".
-- The every-minute `/bin/date` job is a leftover test: its log was 1.6 MB on
-  2026-09-30 and grows about 0.5 MB a week. Remove it (with Nikki's OK).
 - **Not scheduled:** `sync_anyprop_roster.php` (the real roster sync; the
   roster's mls_* fields only refresh when it is run by hand) and
   `parse_pipeline_events.php` (webhook bodies queue in `hs_pipeline_events`
@@ -1411,6 +1409,21 @@ same database as this site.
   unless the destination has its own `utm_source` (`QR_ADD_UTM`).
 - QR images are drawn in the browser (qrcode-generator 1.4.4 from cdnjs),
   error correction Q, 4-module quiet zone. SVG for print, 2400px PNG.
+- **Centre marks (2026-09-30).** `assets/js/mh-qr.js` draws every code (the
+  page no longer has its own drawing code). The header's "Centre mark"
+  chooser (Triangle / M / None, per browser in localStorage, default
+  Triangle) applies to previews and downloads; nothing is stored with the
+  code, because the encoded address is identical either way. With a mark:
+  error correction H instead of Q, modules under the mark and a 0.6-module
+  white outline are left out, mark at 34% (triangle) / 25% (M) of the code's
+  width, outlines copied from Final Logos. Without one the pattern is exactly
+  what the page drew before. Versions 7+ (codes over 34 characters) have an
+  alignment pattern at the centre, so they are drawn without a mark and the
+  download asks first. Every download is decoded on the page with jsQR
+  (`MHQR.verify()`) and refused if it does not read back exactly; a marked
+  code is never saved when the checker failed to load. `tests/qr_marks.html`
+  (serve the project root over http) decodes every mark x code length with
+  jsQR and ZXing, sharp and blurred; run it after changing mh-qr.js.
 - Migration: `sql/qr_codes_v1.sql`. Constants: `QR_*` in `inc/config.php`
   (defaults also in `inc/qr.php`). Never change `QR_BASE_URL` once printed.
 - `marketing_intakes.coll_oh_qr_code` / `coll_oh_qr_url` (open house signs in

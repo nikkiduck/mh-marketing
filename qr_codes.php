@@ -246,6 +246,10 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
     .hdr-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .seg { display:inline-flex; align-items:stretch; border:1px solid #e5e7eb; border-radius:6px; overflow:hidden; background:#fff; }
+    .seg-label { font-size:12px; color:#6b7280; padding:0 8px; display:flex; align-items:center; }
+    .seg button { border:0; border-left:1px solid #e5e7eb; background:#fff; padding:6px 11px; font-size:12px; font-weight:600; color:#374151; cursor:pointer; }
+    .seg button.on { background:#1f2937; color:#fff; }
     .wrap { max-width:1100px; margin:32px auto 60px; padding:0 20px; }
     .mk-page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
     .card { background:#fff; border-radius:6px; padding:22px 26px; margin-bottom:18px; }
@@ -320,6 +324,14 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
         </p>
       </div>
       <div class="hdr-actions">
+        <?php if ($ready): ?>
+          <div class="seg" role="group" aria-label="Centre mark" title="The mark drawn in the middle of the previews and downloads. Every code opens the same address either way.">
+            <span class="seg-label">Centre mark</span>
+            <button type="button" data-mark="triangle">Triangle</button>
+            <button type="button" data-mark="m">M</button>
+            <button type="button" data-mark="">None</button>
+          </div>
+        <?php endif; ?>
         <form method="GET" style="margin:0;">
           <select name="intake" class="form-input" style="width:auto;min-width:200px;" onchange="this.form.submit()">
             <option value="0">Every broker</option>
@@ -534,6 +546,8 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     <p class="hint">
       Codes are never deleted, because the old one is printed somewhere. To retire one, pause it; to reuse one, repoint it and resume.
       Every scan is sent on with <code>utm_source=qr</code> and the code as <code>utm_campaign</code>, so visits show up in the website's analytics.
+      The centre mark is only artwork: a code opens the same address with the triangle, the M or no mark, so a sign can be reprinted either way.
+      Each download is scanned on this page before it is saved, and codes longer than 34 characters are drawn without a mark.
     </p>
 
     <?php endif; ?>
@@ -542,51 +556,63 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
 
 <?php if ($ready): ?>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+<script src="assets/js/mh-qr.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mh-qr.js') ?>"></script>
 <script>
 (function () {
   var PROFILE_BASE = <?= json_encode(rtrim(defined('PUBLIC_SITE_URL') ? PUBLIC_SITE_URL : QR_FALLBACK_URL, '/') . '/broker.php?s=') ?>;
   var TAKEN = <?= json_encode(array_values($taken)) ?>;
 
-  // ── QR drawing ──────────────────────────────────────────────────────────
-  // Error correction Q (recovers ~25% damage): these live outdoors on signs.
-  // Quiet zone of 4 modules, which scanners need and designers like to crop.
-  function matrix(text) {
-    var q = qrcode(0, 'Q'); q.addData(text); q.make(); return q;
-  }
-  function svgFor(text) {
-    var q = matrix(text), n = q.getModuleCount(), m = 4, size = n + m * 2, d = '';
-    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++)
-      if (q.isDark(r, c)) d += 'M' + (c + m) + ' ' + (r + m) + 'h1v1h-1z';
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + size + ' ' + size + '" shape-rendering="crispEdges">'
-         + '<rect width="' + size + '" height="' + size + '" fill="#fff"/><path d="' + d + '" fill="#000"/></svg>';
-  }
-  function pngFor(text, cb) {
-    var q = matrix(text), n = q.getModuleCount(), m = 4, size = n + m * 2;
-    var scale = Math.max(1, Math.floor(2400 / size)), cv = document.createElement('canvas');
-    cv.width = cv.height = size * scale;
-    var x = cv.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, cv.width, cv.height); x.fillStyle = '#000';
-    for (var r = 0; r < n; r++) for (var c = 0; c < n; c++)
-      if (q.isDark(r, c)) x.fillRect((c + m) * scale, (r + m) * scale, scale, scale);
-    cv.toBlob(cb, 'image/png');
+  // ── QR drawing: assets/js/mh-qr.js, checked by tests/qr_marks.html ──────
+  // Without a mark: error correction Q, exactly the pattern this page drew
+  // before marks existed. With one: H, and the mark in the centre. The mark is
+  // chosen here, per browser (localStorage), and is not stored with the code:
+  // the encoded address is the same either way.
+  var ready = !!(window.qrcode && window.MHQR), MARK_KEY = 'mh_qr_mark', mark = 'triangle';
+  try {
+    var saved = localStorage.getItem(MARK_KEY);
+    if (saved === '' || (saved && window.MHQR && MHQR.MARKS[saved])) mark = saved;
+  } catch (e) {}
+  function markFor(text) { return mark && MHQR.canMark(text) ? mark : ''; }
+  function draw() {
+    document.querySelectorAll('[data-mark]').forEach(function (b) { b.classList.toggle('on', b.dataset.mark === mark); });
+    if (!ready) return;
+    document.querySelectorAll('[data-qr]').forEach(function (el) {
+      var t = el.dataset.qr, m = markFor(t);
+      el.innerHTML = MHQR.svg(t, m);
+      el.title = t + (mark && !m ? ' (too long for a centre mark: drawn without one)' : '');
+    });
   }
   function save(blob, name) {
     var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
   }
 
-  if (window.qrcode) {
-    document.querySelectorAll('[data-qr]').forEach(function (el) { el.innerHTML = svgFor(el.dataset.qr); });
-  } else {
-    document.querySelectorAll('[data-qr]').forEach(function (el) { el.innerHTML = '<span class="hint" style="padding:6px;display:block;">QR library did not load</span>'; });
-  }
+  if (ready) draw();
+  else document.querySelectorAll('[data-qr]').forEach(function (el) { el.innerHTML = '<span class="hint" style="padding:6px;display:block;">QR library did not load</span>'; });
 
   document.addEventListener('click', function (e) {
+    var mk = e.target.closest('[data-mark]');
+    if (mk) {
+      mark = mk.dataset.mark;
+      try { localStorage.setItem(MARK_KEY, mark); } catch (err) {}
+      draw();
+      return;
+    }
     var b = e.target.closest('[data-dl]');
     if (b) {
-      if (!window.qrcode) { alert('The QR library did not load. Check the connection and reload.'); return; }
-      var name = 'monthaus-qr-' + b.dataset.code;
-      if (b.dataset.dl === 'svg') save(new Blob([svgFor(b.dataset.url)], { type: 'image/svg+xml' }), name + '.svg');
-      else pngFor(b.dataset.url, function (blob) { save(blob, name + '.png'); });
+      if (!ready) { alert('The QR library did not load. Check the connection and reload.'); return; }
+      var t = b.dataset.url, m = markFor(t);
+      if (mark && !m && !confirm('This code is too long for a centre mark (over 34 characters). Download it without one?')) return;
+      // Scan our own drawing before handing it over. A code with a mark is
+      // never saved unchecked; a plain one may be if the checker is missing,
+      // since that is the drawing this page has always produced.
+      var ok = MHQR.verify(t, m);
+      if (ok === false) { alert('This code did not scan back correctly, so it was not downloaded. Try another centre mark or None, and tell Nikki.'); return; }
+      if (ok === null && m) { alert('The scan check did not load, so a code with a mark cannot be checked. Reload the page, or choose None.'); return; }
+      var name = 'monthaus-qr-' + b.dataset.code + (m ? '-' + m : '');
+      if (b.dataset.dl === 'svg') save(new Blob([MHQR.svg(t, m)], { type: 'image/svg+xml' }), name + '.svg');
+      else MHQR.canvas(t, m, Math.max(1, Math.floor(2400 / MHQR.layout(t, m).size))).toBlob(function (blob) { save(blob, name + '.png'); }, 'image/png');
       return;
     }
     var cp = e.target.closest('[data-copy]');

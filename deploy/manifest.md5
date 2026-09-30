@@ -1,6 +1,7 @@
 # marketing.monthaus.com deploy manifest
 # Generated 2026-09-29 03:08 from the Mont Haus Master folder.
-# Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css.
+# Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
+# and assets/js/mh-qr.js.
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
@@ -56,7 +57,7 @@ f3327ec6854ed5362ede027a9b198064  oauth_start.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 e476b97fd392340003bddd09f7ce308d  pipeline_review.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
-5babc579a1fe57ad813ee6ea21228681  qr_codes.php
+f925344b456762aed47587c9c8d8c1df  qr_codes.php
 70fce00dc60a09f6be11d7e5e7062afe  receipt.php
 433c74fae7846a5d72927080970946b5  reset-password.php
 ca68a15b0b84050ceb029fd6d34fc829  roster.php
@@ -65,3 +66,4 @@ a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 3c667cd1dbcd6b9130700cdb30bdd6f5  users.php
 47eec501f46bbbc84030b9744a3d781b  website_order.php
+a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
