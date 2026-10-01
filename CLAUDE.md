@@ -1365,11 +1365,13 @@ wrapped.
   early Oct 2026); then its Mont Haus office should be found by the search.
   tridemls (Telluride, approved 2026-10-01) maps to `telluride` in
   `mk_market_slug()`, matching the site.
-- **New brokers arrive before their MLS identity.** Nikki adds a new agent
-  for marketing onboarding as soon as they join; moving their license to
-  Mont Haus on each board can take days or weeks (e.g. Sierrah Smith, CREN,
-  Oct 2026), and until then the board still shows their old brokerage. That
-  is expected, not an error: the sync matches them by email or name once a
+- **Boards the feed will carry** (Nikki, 2026-10-01): Aspen, elevateMLS
+  (PPMLS) and Telluride approved; CREN, Vail, Altitude and REColorado to come.
+- **New brokers arrive before their MLS identity, on every board, always.**
+  Nikki adds a new agent for marketing onboarding as soon as they join, often
+  before their license moves to Mont Haus in that MLS (any board, also after
+  the full feed is live). Until then the board shows their old brokerage
+  (e.g. Sierrah Smith, CREN, Oct 2026). That is expected, not an error: the sync matches them by email or name once a
   board lists them under Mont Haus, and an identity typed in by hand that
   Anyprop has never returned (last_seen_at NULL) is never used to mark them
   departed.
