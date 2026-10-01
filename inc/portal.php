@@ -178,7 +178,11 @@ function portal_header(array $ctx, string $title, string $active): void {
 function portal_footer(): void {
     ?>
 </main>
-<footer class="pt-foot">Questions? Email <a href="mailto:nikki.boxer@monthaus.com">nikki.boxer@monthaus.com</a></footer>
+<footer class="pt-foot">
+  <div class="pt-foot-q">Questions?</div>
+  <div>Email <a href="mailto:nikki.boxer@monthaus.com">nikki.boxer@monthaus.com</a></div>
+  <div>Text <a href="sms:+19709484300">970.948.4300</a></div>
+</footer>
 </body>
 </html>
     <?php

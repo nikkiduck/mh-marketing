@@ -57,7 +57,7 @@ f3327ec6854ed5362ede027a9b198064  oauth_start.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 e476b97fd392340003bddd09f7ce308d  pipeline_review.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
-cde35f48b7d3404a5dc0c98d5bb4adac  qr_codes.php
+424cd370d932c99faf65d34d627dbe25  qr_codes.php
 70fce00dc60a09f6be11d7e5e7062afe  receipt.php
 433c74fae7846a5d72927080970946b5  reset-password.php
 cc53d974b2ea12ac47bb365dc8eb73cc  roster.php
@@ -67,7 +67,7 @@ e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 9bf1eb8b77a42637743d0d974eba5205  users.php
 47eec501f46bbbc84030b9744a3d781b  website_order.php
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
-e102c935c293a6cc75a8628b13ff22fe  inc/portal.php
+c8b4123011f510e2dc3eed0d184a65c5  inc/portal.php
 62484d4d694c5b5dc69757d4d4099383  portal/index.php
-12f9da4cf1961b8b06a6e37826e2cb8c  portal/qr.php
-084e2ec844df2a92a9bc58cdf7c6b1d8  assets/css/portal.css
+7e3bcfdfaee9036faa315d6b2078ae10  portal/qr.php
+72f1da61f2c5e7322d8bb50fb21c2dca  assets/css/portal.css

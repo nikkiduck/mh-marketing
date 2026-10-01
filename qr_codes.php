@@ -277,10 +277,6 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
     .hdr-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
-    .seg { display:inline-flex; align-items:stretch; border:1px solid #e5e7eb; border-radius:6px; overflow:hidden; background:#fff; }
-    .seg-label { font-size:12px; color:#6b7280; padding:0 8px; display:flex; align-items:center; }
-    .seg button { border:0; border-left:1px solid #e5e7eb; background:#fff; padding:6px 11px; font-size:12px; font-weight:600; color:#374151; cursor:pointer; }
-    .seg button.on { background:#1f2937; color:#fff; }
     .wrap { max-width:1100px; margin:32px auto 60px; padding:0 20px; }
     .mk-page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
     .card { background:#fff; border-radius:6px; padding:22px 26px; margin-bottom:18px; }
@@ -356,14 +352,6 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
         </p>
       </div>
       <div class="hdr-actions">
-        <?php if ($ready): ?>
-          <div class="seg" role="group" aria-label="Centre mark" title="The mark drawn in the middle of the previews and downloads. Every code opens the same address either way.">
-            <span class="seg-label">Centre mark</span>
-            <button type="button" data-mark="triangle">Triangle</button>
-            <button type="button" data-mark="m">M</button>
-            <button type="button" data-mark="">None</button>
-          </div>
-        <?php endif; ?>
         <form method="GET" style="margin:0;">
           <select name="intake" class="form-input" style="width:auto;min-width:200px;" onchange="this.form.submit()">
             <option value="0">Every broker</option>
@@ -591,8 +579,8 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
       A code that has been scanned is never deleted, because it is printed somewhere. To retire one, pause it; to reuse one, repoint it and resume.
       A code with no scans yet can be deleted. The Test link counts as a scan.
       Every scan is sent on with <code>utm_source=qr</code> and the code as <code>utm_campaign</code>, so visits show up in the website's analytics.
-      The centre mark is only artwork: a code opens the same address with the triangle, the M or no mark, so a sign can be reprinted either way.
-      Each download is scanned on this page before it is saved, and codes longer than 34 characters are drawn without a mark.
+      Every code is drawn with the Mont Haus triangle in the centre (codes longer than 34 characters are too dense for it and are drawn plain).
+      Each download is scanned on this page before it is saved.
     </p>
 
     <?php endif; ?>
@@ -609,17 +597,12 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
   var TAKEN = <?= json_encode(array_values($taken)) ?>;
 
   // ── QR drawing: assets/js/mh-qr.js, checked by tests/qr_marks.html ──────
-  // Without a mark: error correction Q, exactly the pattern this page drew
-  // before marks existed. With one: H, and the mark in the centre. The mark is
-  // chosen here, per browser (localStorage), and is not stored with the code:
-  // the encoded address is the same either way. Default None (2026-09-30):
-  // most codes print about 2.5in wide, where a plain code is usually one size
-  // step less dense and keeps its full damage margin. See CLAUDE.md.
-  var ready = !!(window.qrcode && window.MHQR), MARK_KEY = 'mh_qr_mark', mark = '';
-  try {
-    var saved = localStorage.getItem(MARK_KEY);
-    if (saved === '' || (saved && window.MHQR && MHQR.MARKS[saved])) mark = saved;
-  } catch (e) {}
+  // Every code is drawn with the triangle (Nikki, 2026-10-01: the printed
+  // signs use it, so the portal and this page must show the same picture).
+  // Error correction H with the mark; a code too long for it (over 34
+  // characters, QR version 7+) is drawn plain. The encoded address is the same
+  // either way, so the choice is artwork only. mh-qr.js still supports the M.
+  var ready = !!(window.qrcode && window.MHQR), mark = 'triangle';
   function markFor(text) { return mark && MHQR.canMark(text) ? mark : ''; }
   // "33 squares across": the module count, quiet zone excluded. What decides
   // how far away a printed code still scans; fewer is better.
@@ -628,17 +611,15 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     return { plain: plain, marked: marked };
   }
   function draw() {
-    document.querySelectorAll('[data-mark]').forEach(function (b) { b.classList.toggle('on', b.dataset.mark === mark); });
     if (!ready) return;
     document.querySelectorAll('[data-qr]').forEach(function (el) {
       var t = el.dataset.qr, m = markFor(t);
       el.innerHTML = MHQR.svg(t, m);
-      el.title = t + (mark && !m ? ' (too long for a centre mark: drawn without one)' : '');
+      el.title = t + (!m ? ' (too long for the triangle: drawn plain)' : '');
       var dn = el.closest('.qr-row') && el.closest('.qr-row').querySelector('[data-density]');
       if (dn) {
         var d = density(t);
-        dn.textContent = (m ? d.marked + ' squares across with the ' + MHQR.MARKS[m].label + ' (' + d.plain + ' without)'
-                            : d.plain + ' squares across' + (d.marked ? ' (' + d.marked + ' with a centre mark)' : ' (too long for a centre mark)'));
+        dn.textContent = m ? d.marked + ' squares across' : d.plain + ' squares across (too long for the triangle, drawn plain)';
       }
     });
   }
@@ -651,23 +632,16 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
   else document.querySelectorAll('[data-qr]').forEach(function (el) { el.innerHTML = '<span class="hint" style="padding:6px;display:block;">QR library did not load</span>'; });
 
   document.addEventListener('click', function (e) {
-    var mk = e.target.closest('[data-mark]');
-    if (mk) {
-      mark = mk.dataset.mark;
-      try { localStorage.setItem(MARK_KEY, mark); } catch (err) {}
-      draw();
-      return;
-    }
     var b = e.target.closest('[data-dl]');
     if (b) {
       if (!ready) { alert('The QR library did not load. Check the connection and reload.'); return; }
       var t = b.dataset.url, m = markFor(t);
-      if (mark && !m && !confirm('This code is too long for a centre mark (over 34 characters). Download it without one?')) return;
+      if (!m && !confirm('This code is too long for the triangle (over 34 characters). Download it plain?')) return;
       // Scan our own drawing before handing it over. A code with a mark is
       // never saved unchecked; a plain one may be if the checker is missing,
       // since that is the drawing this page has always produced.
       var ok = MHQR.verify(t, m);
-      if (ok === false) { alert('This code did not scan back correctly, so it was not downloaded. Try another centre mark or None, and tell Nikki.'); return; }
+      if (ok === false) { alert('This code did not scan back correctly, so it was not downloaded. Please tell Nikki.'); return; }
       if (ok === null && m) { alert('The scan check did not load, so a code with a mark cannot be checked. Reload the page, or choose None.'); return; }
       var name = 'monthaus-qr-' + b.dataset.code + (m ? '-' + m : '');
       if (b.dataset.dl === 'svg') save(new Blob([MHQR.svg(t, m)], { type: 'image/svg+xml' }), name + '.svg');
@@ -722,8 +696,8 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     var v = nc.value;
     if (!v) { cs.textContent = csDefault; return; }
     var d = density(<?= json_encode(rtrim(QR_BASE_URL, '/') . '/') ?> + v);
-    cs.textContent = v.length + ' character' + (v.length === 1 ? '' : 's') + ': ' + d.plain + ' squares across'
-      + (d.marked ? ', ' + d.marked + ' with a centre mark' : ', too long for a centre mark')
+    cs.textContent = v.length + ' character' + (v.length === 1 ? '' : 's') + ': '
+      + (d.marked ? d.marked + ' squares across' : d.plain + ' squares across, too long for the triangle')
       + (v.length > 10 ? '. 10 or fewer is best for signs.' : '.');
   }
   function suggest() {

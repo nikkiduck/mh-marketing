@@ -1485,11 +1485,11 @@ same database as this site.
   unless the destination has its own `utm_source` (`QR_ADD_UTM`).
 - QR images are drawn in the browser (qrcode-generator 1.4.4 from cdnjs),
   error correction Q, 4-module quiet zone. SVG for print, 2400px PNG.
-- **Centre marks (2026-09-30).** `assets/js/mh-qr.js` draws every code (the
-  page no longer has its own drawing code). The header's "Centre mark"
-  chooser (Triangle / M / None, per browser in localStorage, default
-  None: most codes print about 2.5in wide on 18x24 signs, where a plain code
-  is usually one size step less dense and keeps its full damage margin) applies to previews and downloads; nothing is stored with the
+- **Centre marks.** `assets/js/mh-qr.js` draws every code (the page no
+  longer has its own drawing code). **Triangle only since 2026-10-01**
+  (Nikki: the printed signs use it, so the admin page and the agent portal
+  show and download the triangle; the Triangle/M/None chooser was removed; a
+  code over 34 characters is drawn plain). The mark applies to previews and downloads; nothing is stored with the
   code, because the encoded address is identical either way. With a mark:
   error correction H instead of Q, modules under the mark and a 0.6-module
   white outline are left out, mark at 34% (triangle) / 25% (M) of the code's

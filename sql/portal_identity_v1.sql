@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- portal_identity_v1.sql — which marketing account a login sees in the agent
 -- portal (docs/AGENT_PORTAL_PLAN.md, section 2). 2026-10-01.

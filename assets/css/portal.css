@@ -28,7 +28,8 @@ img { max-width: 100%; }
 .pt-preview a { margin-left: 8px; }
 .pt-top { background: var(--ink); }
 .pt-top-in { max-width: 960px; margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
-.pt-logo img { height: 34px; display: block; }
+.pt-logo img { height: 56px; display: block; }
+@media (min-width: 640px) { .pt-logo img { height: 64px; } }
 .pt-signout { color: #cfc6b3; font-size: 14px; text-decoration: none; }
 .pt-signout:hover { color: #fff; }
 .pt-nav { max-width: 960px; margin: 0 auto; padding: 0 8px; display: flex; gap: 2px; overflow-x: auto; }
@@ -41,7 +42,8 @@ img { max-width: 100%; }
 .pt-main { max-width: 960px; margin: 0 auto; padding: 26px 16px 48px; }
 .pt-h1 { font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.15; margin: 0 0 6px; }
 .pt-lead { color: var(--muted); margin: 0 0 24px; max-width: 60ch; }
-.pt-foot { text-align: center; color: var(--muted); font-size: 14px; padding: 24px 16px 40px; }
+.pt-foot { text-align: center; color: var(--muted); font-size: 15px; line-height: 1.7; padding: 24px 16px 40px; }
+.pt-foot-q { color: var(--text); font-weight: 500; }
 
 .pt-flash { border-radius: 10px; padding: 14px 16px; margin: 0 0 20px; font-size: 16px; }
 .pt-flash.ok { background: #e8f3ec; color: var(--ok); }

@@ -192,7 +192,11 @@ if ($edit):
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script src="/assets/js/mh-qr.js?v=<?= (int)@filemtime(__DIR__ . '/../assets/js/mh-qr.js') ?>"></script>
   <script>
-    if (window.qrcode && window.MHQR) document.querySelectorAll('[data-qr]').forEach(function (el) { el.innerHTML = MHQR.svg(el.dataset.qr, ''); });
+    // The triangle, as printed (same rule as qr_codes.php); plain only when a
+    // code is too long for it.
+    if (window.qrcode && window.MHQR) document.querySelectorAll('[data-qr]').forEach(function (el) {
+      var t = el.dataset.qr; el.innerHTML = MHQR.svg(t, MHQR.canMark(t) ? 'triangle' : '');
+    });
   </script>
   <?php endif; ?>
 <?php endif;
