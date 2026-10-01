@@ -38,6 +38,9 @@ ask for, and their Hot Sheet choices. Questions and orders reach Nikki by email.
    none is on the three personal rows.) Hot Sheet choices stay per person.
 6. **Not now:** assistants seeing an agent's portal; marketing allowances (some
    agents have one; to be worked in later).
+7. **QR destinations** (2026-10-01): agents can change where their own QR codes
+   go. SUPER simple, far less than the admin QR page: no creating, pausing,
+   deleting or renaming codes; just "where does this code go". See section 4.
 
 ---
 
@@ -73,9 +76,12 @@ ask for, and their Hot Sheet choices. Questions and orders reach Nikki by email.
 
 ## 2. Identity: which marketing account a login sees
 
-**`users.intake_id`**, set by hand in `users.php`, copied into the session at
-sign-in (the ninth session key, in BOTH `login.php` and
-`sso_establish_session()`), and re-checked against the database on every page.
+**`users.intake_id`**, set by hand in `users.php`, and **read from the database
+on every portal request** (by `$_SESSION['user_id']`), not copied into the
+session. (Revised 2026-10-01: the original plan added a ninth session key and
+then re-verified it on every page anyway; reading it each time is simpler, takes
+effect the moment `users.php` changes it, and leaves both sign-in paths
+untouched.)
 
 It points at the **marketing account** the person sees, which is usually their own
 roster row and, for Weber Boxer Group, **the team row** (#8) for all three of
@@ -135,6 +141,7 @@ portal/order.php       One order: proof large, quantity, status, tracking link
 portal/menu.php        Marketing menu: collateral to order + digital ad opportunities
 portal/ask.php         Ask a question / place an order (emails Nikki)
 portal/hotsheet.php    Their Hot Sheet: on/off, listings/rentals, how often, which areas
+portal/qr.php          Their QR codes: where each one goes, and change it
 portal/asset.php       Streams an image or file after an ownership check (by id only)
 inc/portal.php         Shared helpers and renderers
 ```
@@ -150,6 +157,20 @@ Open question: lines whose "who pays" is still undecided (see section 8).
 
 **Orders.** From `marketing_collateral_orders`: what, how many, status in plain
 words, tracking link. Never the receipt, never internal notes.
+
+**QR codes (decision 7).** One card per code that belongs to them: a
+picture of the code (drawn with `assets/js/mh-qr.js`, no download needed but
+offered), its label ("Yard sign"), and in plain words where it goes now. One
+button, "Change where it goes", opens two choices: **My profile page** (only if
+they have one) or **A page on monthaus.com** (paste a link; checked with the
+same `qr_dest_error()` the admin page uses: https, monthaus.com or a
+subdomain). Save writes `dest_type` / `dest_url` and logs the change in
+`qr_code_changes` with their user id, exactly as the admin page does. Nothing
+else: no create, pause, resume, delete, rename, no scan statistics beyond
+"scanned N times". Codes shown: `qr_codes.intake_id` = their account; for a
+team account (Weber Boxer Group) also the members' personal codes, since a code
+belongs to a sign, not to billing (assumed; confirm with Nikki). A paused code
+is shown as paused with "ask Nikki to turn it back on", not editable.
 
 **Hot Sheet areas.** Edits only their own `hs_subscribers` row (found by the
 session's person, not by an id in the form): Listings and/or Rentals, daily or
@@ -210,10 +231,14 @@ money herself. **Nothing an agent submits reaches `cost`, `budget`, `unit_rate` 
 ## 7. Phases
 
 0. **Close the gap** (small, no migration): `require_role('admin')` on
-   `roster.php`; re-run the guard audit (`grep -n "require_role\|require_login" *.php`).
+   `roster.php` (checked 2026-10-01: it already refuses role `agent` from the
+   database, but a BLANK role passes); re-run the guard audit
+   (`grep -n "require_role\|require_login" *.php`). Agents who sign in land on
+   `/portal/` instead of the admin roster's 403.
 1. **Identity** (small, one migration): `users.intake_id`, picker in `users.php`,
-   the ninth session key in both sign-in paths, `require_agent_scope()`, a "Hello,
-   <name>" portal page proving the link. Pilot accounts set up.
+   `require_agent_scope()` (database read per request), the portal shell
+   (header, nav, home) and the QR page, which needs no other migration. Pilot
+   accounts: allowlist + role `agent` + `intake_id`.
 2. **Creative uploads** (medium, one migration): section 5. Done before the portal
    pages so the cards have pictures from day one.
 3. **The read-only portal** (largest): Home, Spend, Campaigns, Orders, with the
