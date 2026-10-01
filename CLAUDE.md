@@ -435,6 +435,20 @@ follow describe the old card layout; the optional card view keeps its spirit.
   links to marketing. Editing there used to be silently overwritten by the feed.
 - PUBLIC_SITE_URL (inc/config.php) is where "view public profile" points.
 
+### Current Listings on the agent page (2026-10-01)
+- Read from `hs_listing_state` (Mont Haus listings in the site's Anyprop feed,
+  refreshed by `cron/sync_hot_sheet_listings.php`), matched on the agent's
+  `agent_mls_ids` (market + MLS id, alias/team ids included) as list or co-list
+  agent; a team's page uses its members' identities. Statuses Coming Soon /
+  Active / Under Contract / Pending, `in_feed = 1`; rentals labelled For Rent.
+- Replaced the Spark-era sources: the `listings` / `listing_brokers` snapshot
+  (frozen 2026-08-21, nothing refreshes it) and a live Spark v1 call that
+  failed with HTTP 400 on every view and showed nothing. Those tables are no
+  longer read by any page. A board not yet in the feed (Vail) shows nothing.
+- The ad URL builder's listing choices are the listings' pages on the new site
+  (feed URLs follow the site's address, so they become monthaus.com at
+  go-live); its old Lofty `listing-detail/` links are gone.
+
 ### Website order and title line breaks (2026-09-29)
 - `website_order.php` (admin only, "Website Order" button on the roster) sets
   the public broker grid's order by dragging. It shows approved, active,

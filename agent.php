@@ -926,48 +926,6 @@ $coll_rows      = $fin['coll_rows'];
 $camp_overrides = $fin['camp_overrides'];
 
 
-// ── MLS IDs ───────────────────────────────────────────────────────────────────
-$mls_ids = [];
-$r = $conn->query("SELECT * FROM marketing_agent_mls_ids WHERE intake_id={$id} ORDER BY board ASC");
-if ($r) $mls_ids = $r->fetch_all(MYSQLI_ASSOC);
-
-// Fall back to office_roster when marketing_agent_mls_ids has no rows.
-// office_roster is the canonical source for Spark keys (populated by sync).
-if (empty($mls_ids)) {
-    $roster_id = (int)($agent['roster_id'] ?? 0);
-    if ($roster_id) {
-        $rr = $conn->query(
-            "SELECT agent_key, vail_agent_key, mls_id_aspen, mls_id_vail
-             FROM office_roster WHERE id = {$roster_id} LIMIT 1"
-        );
-    } else {
-        // roster_id not yet linked — match by email
-        $email_esc = $conn->real_escape_string($agent['mh_email'] ?? '');
-        $rr = $conn->query(
-            "SELECT agent_key, vail_agent_key, mls_id_aspen, mls_id_vail
-             FROM office_roster
-             WHERE LOWER(email COLLATE utf8mb4_unicode_ci) = LOWER('{$email_esc}')
-             LIMIT 1"
-        );
-    }
-    if ($rr && $ro = $rr->fetch_assoc()) {
-        if (!empty($ro['agent_key']) || !empty($ro['mls_id_aspen'])) {
-            $mls_ids[] = [
-                'board'     => 'Aspen',
-                'mls_id'    => $ro['mls_id_aspen']  ?: null,
-                'spark_key' => $ro['agent_key']      ?: null,
-            ];
-        }
-        if (!empty($ro['vail_agent_key']) || !empty($ro['mls_id_vail'])) {
-            $mls_ids[] = [
-                'board'     => 'Vail',
-                'mls_id'    => $ro['mls_id_vail']    ?: null,
-                'spark_key' => $ro['vail_agent_key'] ?: null,
-            ];
-        }
-    }
-}
-
 // ── Assets: extra one-off links ───────────────────────────────────────────────
 // Guarded: on PHP 8.1+ mysqli throws, so this would fatal the whole page if
 // assets_tab_v2.sql hasn't been run yet. Degrade to an empty list instead.
@@ -1013,173 +971,42 @@ $notes = [];
 $r = $conn->query("SELECT mn.*, CONCAT(u.first_name,' ',u.last_name) AS author FROM marketing_notes mn LEFT JOIN users u ON u.id=mn.created_by WHERE mn.intake_id={$id} ORDER BY mn.created_at DESC");
 if ($r) $notes = $r->fetch_all(MYSQLI_ASSOC);
 
-// ── Spark lookup by agent key ─────────────────────────────────────────────────
-/**
- * Listings where this Spark key is the list or co-list agent, straight from the
- * MLS. Neither `listings` nor `listing_brokers` stores an agent key, so a key
- * entered on the roster cannot be matched locally — this is the only way to
- * honour it. Returns [] on any failure so the caller can fall back to names.
- *
- * Uses the Spark **v1** API, not RESO OData. The keys sync_roster stores are v1
- * account UUIDs, and OData's ListAgentKey is a different value — see the note
- * in b2b/create_b2b.php line 116. Querying OData with a v1 key silently returns
- * nothing, which is exactly what happened here.
- */
-function mk_spark_listings_by_key(string $agent_key, string $board, string $mls_id = ''): array {
-    $agent_key = trim($agent_key);
-    $mls_id    = trim($mls_id);
-    if ($agent_key === '' && $mls_id === '') return [];
-
-    $token = (strcasecmp($board, 'Vail') === 0) ? VAIL_SPARK_ACCESS_TOKEN : SPARK_ACCESS_TOKEN;
-
-    // Match on every identifier we hold. An agent can have more than one Spark
-    // account — Emma K Casson's roster key (a 2009 account attached to the Mont
-    // Haus office) is not the key the MLS writes onto her listings. The MLS
-    // member id (e.g. "1126A") is the stable one, so prefer having both.
-    $terms = [];
-    if ($agent_key !== '') {
-        $k = str_replace("'", "''", $agent_key);
-        $terms[] = "ListAgentKey Eq '{$k}'";
-        $terms[] = "CoListAgentKey Eq '{$k}'";
-    }
-    if ($mls_id !== '') {
-        $m = str_replace("'", "''", $mls_id);
-        $terms[] = "ListAgentMlsId Eq '{$m}'";
-        $terms[] = "CoListAgentMlsId Eq '{$m}'";
-    }
-
-    // v1 filter syntax: capitalised operators, single-quoted values.
-    $filter = '(' . implode(' Or ', $terms) . ')'
-            . " And (MlsStatus Eq 'Active' Or MlsStatus Eq 'Pending')";
-
-    $url = 'https://replication.sparkapi.com/v1/listings?' . http_build_query([
-        '_filter' => $filter,
-        '_expand' => 'Photos',
-        '_limit'  => 100,
-    ]);
-
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_HTTPHEADER     => ['Authorization: Bearer ' . $token, 'Accept: application/json'],
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 12,
-    ]);
-    $raw  = curl_exec($ch);
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    if ($code !== 200 || !$raw) {
-        error_log("mk_spark_listings_by_key: {$board} HTTP {$code} for key {$agent_key}");
-        return [];
-    }
-
-    $data = json_decode($raw, true);
-    $out  = [];
-    foreach (($data['D']['Results'] ?? []) as $l) {
-        $sf = $l['StandardFields'] ?? [];
-
-        $photo  = null;
-        $photos = $sf['Photos'] ?? ($l['Photos'] ?? []);
-        if (!empty($photos)) {
-            $p0 = $photos[0];
-            foreach (['Uri640','Uri800','Uri300','UriLarge','UriThumb'] as $k) {
-                if (!empty($p0[$k])) { $photo = $p0[$k]; break; }
-            }
-        }
-
-        $out[] = [
-            'mls_number'        => trim((string)($sf['ListingId'] ?? '')),
-            'address'           => trim((string)($sf['UnparsedFirstLineAddress'] ?? $sf['UnparsedAddress'] ?? '')),
-            'city'              => trim((string)($sf['City'] ?? '')),
-            'state_abbr'        => trim((string)($sf['StateOrProvince'] ?? 'CO')),
-            'price'             => isset($sf['ListPrice']) ? (float)$sf['ListPrice'] : null,
-            'status'            => trim((string)($sf['MlsStatus'] ?? '')),
-            'primary_photo_url' => $photo,
-            'lofty_id'          => null,   // filled from the local table below when known
-            'id'                => null,
-        ];
-    }
-    return $out;
-}
-
-// ── Current listings ──────────────────────────────────────────────────────────
-// listing_brokers stores the name exactly as the MLS carries it, which is often
-// the agent's professional name — "Emma K Casson" where the marketing record
-// says "Emma Casson". An exact string match misses those, so fall back to
-// comparing first and last name tokens, which is unaffected by a middle name
-// or initial. listing_brokers has no MLS/Spark key column, so name is the only
-// join available.
+// ── Current listings (Anyprop, 2026-10-01) ──────────────────────────────────
+// From hs_listing_state: every Mont Haus listing in the public site's Anyprop
+// feed, kept current by cron/sync_hot_sheet_listings.php. Matched on this
+// agent's board identities (agent_mls_ids: market + MLS id, team ids included
+// as alias rows) as list or co-list agent; a team's page uses its members'
+// identities too. This replaced the Spark-era sources, the `listings` /
+// `listing_brokers` snapshot (frozen 2026-08-21) and a live Spark v1 call that
+// returned HTTP 400 on every view and showed nothing, which is why new
+// listings never appeared (Jackson Horn, 633 W Main Street, 2026-10-01).
 $listings = [];
-$ane = $conn->real_escape_string($agent['agent_name']);
-
-// First and last tokens, ignoring middle names and a trailing generational
-// suffix ("Jr.", "III") that would otherwise become the "last" token.
-$name_parts = preg_split('/\s+/', trim((string)$agent['agent_name']), -1, PREG_SPLIT_NO_EMPTY);
-$suffixes   = ['jr', 'jr.', 'sr', 'sr.', 'ii', 'iii', 'iv'];
-while (count($name_parts) > 1 && in_array(strtolower(end($name_parts)), $suffixes, true)) {
-    array_pop($name_parts);
-}
-$first_esc = $name_parts ? $conn->real_escape_string($name_parts[0])              : '';
-$last_esc  = $name_parts ? $conn->real_escape_string($name_parts[count($name_parts)-1]) : '';
-
-// Only widen the match when we actually have two distinct tokens to compare —
-// a single-word name would otherwise match far too much.
-$name_clause = ($first_esc !== '' && $last_esc !== '' && $first_esc !== $last_esc)
-    ? "(lb.full_name = '{$ane}'
-        OR (SUBSTRING_INDEX(lb.full_name, ' ', 1)  = '{$first_esc}'
-        AND SUBSTRING_INDEX(lb.full_name, ' ', -1) = '{$last_esc}'))"
-    : "lb.full_name = '{$ane}'";
-
-$r = $conn->query("
-    SELECT l.id, l.mls_number, l.address, l.city, l.state_abbr, l.price, l.status, l.primary_photo_url, l.lofty_id
-    FROM listings l JOIN listing_brokers lb ON lb.listing_id = l.id
-    WHERE {$name_clause} AND l.status IN ('Active','Pending')
-    GROUP BY l.id ORDER BY l.status ASC, l.price DESC
-");
-if ($r) $listings = $r->fetch_all(MYSQLI_ASSOC);
-
-// ── Merge in anything the agent's Spark key finds ────────────────────────────
-// The key is authoritative: whatever the MLS says this agent is on should show,
-// regardless of how their name is spelled in listing_brokers. Local rows win on
-// a duplicate because they carry the lofty_id needed for the View Listing link.
-$seen_mls = [];
-foreach ($listings as $L) {
-    $k = trim((string)($L['mls_number'] ?? ''));
-    if ($k !== '') $seen_mls[$k] = true;
-}
-
-foreach ($mls_ids as $board_row) {
-    $key    = trim((string)($board_row['spark_key'] ?? ''));
-    $mls_no = trim((string)($board_row['mls_id']    ?? ''));
-    if ($key === '' && $mls_no === '') continue;
-
-    foreach (mk_spark_listings_by_key($key, (string)$board_row['board'], $mls_no) as $sl) {
-        $mls = $sl['mls_number'];
-        if ($mls !== '' && isset($seen_mls[$mls])) continue;   // already have it locally
-
-        // Borrow lofty_id / id from the local table when this listing is synced
-        if ($mls !== '') {
-            $mls_esc = $conn->real_escape_string($mls);
-            $lr = $conn->query(
-                "SELECT id, lofty_id, primary_photo_url FROM listings
-                  WHERE mls_number = '{$mls_esc}' LIMIT 1"
-            );
-            if ($lr && $lrow = $lr->fetch_assoc()) {
-                $sl['id']       = $lrow['id'];
-                $sl['lofty_id'] = $lrow['lofty_id'];
-                if (empty($sl['primary_photo_url'])) $sl['primary_photo_url'] = $lrow['primary_photo_url'];
-            }
-            $seen_mls[$mls] = true;
-        }
-        $listings[] = $sl;
+if (mk_table_exists($conn, 'hs_listing_state') && mk_table_exists($conn, 'agent_mls_ids')) {
+    $owner_ids = [$id];
+    if (($agent['entity_type'] ?? 'agent') === 'team' && mk_table_exists($conn, 'team_members')) {
+        $tm = $conn->query("SELECT member_id FROM team_members WHERE team_id = {$id}");
+        foreach ($tm ? $tm->fetch_all(MYSQLI_NUM) : [] as $tmr) $owner_ids[] = (int)$tmr[0];
+    }
+    $or = [];
+    $ri = $conn->query("SELECT DISTINCT market, mls_agent_id FROM agent_mls_ids
+                         WHERE intake_id IN (" . implode(',', $owner_ids) . ") AND mls_agent_id <> ''");
+    foreach ($ri ? $ri->fetch_all(MYSQLI_ASSOC) : [] as $ident) {
+        $mk_e = $conn->real_escape_string($ident['market']);
+        $id_e = $conn->real_escape_string($ident['mls_agent_id']);
+        $or[] = "(market = '{$mk_e}' AND (list_agent_mls_id = '{$id_e}' OR colist_agent_mls_id = '{$id_e}'))";
+    }
+    if ($or) {
+        $r = $conn->query("
+            SELECT market, mls_id, address, city, status, is_rental, list_price, primary_photo, url
+              FROM hs_listing_state
+             WHERE in_feed = 1
+               AND status IN ('Coming Soon', 'Active', 'Active Under Contract', 'Pending')
+               AND (" . implode(' OR ', $or) . ")
+             ORDER BY FIELD(status, 'Coming Soon', 'Active', 'Active Under Contract', 'Pending'),
+                      is_rental, list_price DESC");
+        if ($r) $listings = $r->fetch_all(MYSQLI_ASSOC);
     }
 }
-
-// Re-apply the display order across the merged set
-usort($listings, function ($a, $b) {
-    $sa = strcasecmp((string)($a['status'] ?? ''), (string)($b['status'] ?? ''));
-    if ($sa !== 0) return $sa;
-    return ((float)($b['price'] ?? 0)) <=> ((float)($a['price'] ?? 0));
-});
 
 // ── Profile tab data ────────────────────────────────────────────────────────
 const MK_BOARD_LABEL = ['aspen' => 'Aspen', 'vail' => 'Vail', 'cren' => 'CREN', 'recolorado' => 'REColorado',
@@ -1326,11 +1153,13 @@ $campaign_status_colors = ['planned' => '#6b7280', 'active' => '#10b981', 'ended
 // Parent-level tasks that need a date picker on the checklist row
 $due_date_parent_tasks = ['Marketing Overview Meeting', 'Instagram Announcement', 'B2B Announcement'];
 
-// Build listings JSON for URL builder (JS)
-$listings_json = json_encode(array_map(fn($l) => [
-    'label'    => $l['address'] . ($l['city'] ? ', '.$l['city'] : '') . ' ('.ucfirst(strtolower($l['status'])).')',
-    'lofty_id' => $l['lofty_id'] ?? '',
-], $listings));
+// Listings for the URL builder (JS): each one's page on the new website, as
+// the site's feed gives it. These follow the site's own address, so they become
+// monthaus.com links at go-live; until then they open the preview site.
+$listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
+    'label' => $l['address'] . ($l['city'] ? ', '.$l['city'] : '') . ' ('.($l['status'] === 'Active Under Contract' ? 'Under Contract' : $l['status']).')',
+    'url'   => (string)($l['url'] ?? ''),
+], $listings), fn($x) => $x['url'] !== '')));
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -3647,6 +3476,7 @@ $listings_json = json_encode(array_map(fn($l) => [
               </label>
               <label class="grow" id="listingSelectWrap" style="display:none;">Listing
                 <select id="urlListingSelect" class="form-input"></select>
+                <span class="hint" style="display:block;margin-top:4px;">Links to the listing on the new website. Until it goes live that is the password-protected preview, so for an ad running now paste the listing's current monthaus.com link instead.</span>
               </label>
               <label class="grow" id="customPathWrap" style="display:none;">Path after monthaus.com/
                 <input type="text" id="urlCustomPath" class="form-input" placeholder="e.g. our-agents">
@@ -4534,21 +4364,22 @@ $listings_json = json_encode(array_map(fn($l) => [
   <?php else: ?>
     <div class="listings-grid">
       <?php foreach ($listings as $l):
-        $lstat = strtolower($l['status']);
-        $lurl  = $l['lofty_id'] ? 'https://monthaus.com/listing-detail/' . rawurlencode($l['lofty_id']) : null;
+        $lst   = (string)$l['status'];
+        $lstat = $lst === 'Pending' || $lst === 'Active Under Contract' ? 'pending' : 'active';
+        $llab  = ($lst === 'Active Under Contract' ? 'Under Contract' : $lst) . ((int)$l['is_rental'] ? ' · For Rent' : '');
       ?>
       <div class="listing-card">
-        <?php if ($l['primary_photo_url']): ?>
-          <img class="listing-photo" src="<?= htmlspecialchars($l['primary_photo_url']) ?>" alt="">
+        <?php if ($l['primary_photo']): ?>
+          <img class="listing-photo" src="<?= htmlspecialchars($l['primary_photo']) ?>" alt="">
         <?php else: ?>
           <div class="listing-photo" style="display:flex;align-items:center;justify-content:center;color:#d1d5db;"><i class="ti ti-photo" style="font-size:28px;"></i></div>
         <?php endif; ?>
         <div class="listing-body">
-          <div class="listing-status <?= $lstat ?>"><?= htmlspecialchars($l['status']) ?></div>
+          <div class="listing-status <?= $lstat ?>"><?= htmlspecialchars($llab) ?></div>
           <div class="listing-addr"><?= htmlspecialchars($l['address']) ?></div>
-          <?php if ($l['city']): ?><div class="listing-city"><?= htmlspecialchars($l['city']) ?><?= $l['state_abbr']?', '.$l['state_abbr']:'' ?></div><?php endif; ?>
-          <?php if ($l['price']): ?><div class="listing-price"><?= money((float)$l['price']) ?></div><?php endif; ?>
-          <?php if ($lurl): ?><a class="listing-link" href="<?= htmlspecialchars($lurl) ?>" target="_blank">View on MontHaus.com ↗</a><?php endif; ?>
+          <?php if ($l['city']): ?><div class="listing-city"><?= htmlspecialchars($l['city']) ?>, CO</div><?php endif; ?>
+          <?php if ($l['list_price']): ?><div class="listing-price"><?= money((float)$l['list_price']) ?></div><?php endif; ?>
+          <?php if ($l['url']): ?><a class="listing-link" href="<?= htmlspecialchars($l['url']) ?>" target="_blank" rel="noopener">View on the website ↗</a><?php endif; ?>
         </div>
       </div>
       <?php endforeach; ?>
@@ -5117,7 +4948,7 @@ mkCropTool({ input: 'faceInput', wrap: 'faceCropWrap', img: 'faceCropImg', butto
   // Populate listing options
   listings.forEach(l => {
     const o = document.createElement('option');
-    o.value = l.lofty_id;
+    o.value = l.url;
     o.textContent = l.label;
     listSel.appendChild(o);
   });
@@ -5126,7 +4957,7 @@ mkCropTool({ input: 'faceInput', wrap: 'faceCropWrap', img: 'faceCropImg', butto
     let base = 'https://monthaus.com/';
     const type = pathType.value;
     if (type === 'listing' && listSel.value) {
-      base += 'listing-detail/' + encodeURIComponent(listSel.value);
+      base = listSel.value;   // the listing's full page address
     } else if (type === 'custom' && custPath.value.trim()) {
       base += custPath.value.trim().replace(/^\/+/, '');
     }
@@ -5139,7 +4970,7 @@ mkCropTool({ input: 'faceInput', wrap: 'faceCropWrap', img: 'faceCropImg', butto
     if (med) params.push('utm_medium='   + encodeURIComponent(med));
     if (cam) params.push('utm_campaign=' + encodeURIComponent(cam));
     if (con) params.push('utm_content='  + encodeURIComponent(con));
-    const url = base + (params.length ? '?' + params.join('&') : '');
+    const url = base + (params.length ? (base.includes('?') ? '&' : '?') + params.join('&') : '');
     if (preview) preview.textContent = url;   // preview only — see useBtn above
   }
 

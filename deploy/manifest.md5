@@ -5,7 +5,7 @@
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-2066c8463072415ce1889980975b118a  agent.php
+225eec4950c28ba5cd847b2aef1da25f  agent.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 3aeaee6cf30ce75902ca4306deeaf552  api/roster.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
