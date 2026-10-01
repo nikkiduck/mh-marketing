@@ -36,8 +36,8 @@ function mk_market_slug(string $osn): string {
     // Must agree with the public site's slug_osn() / apx_slug() /
     // ap_history_market_slug(): ppmls is Pikes Peak REALTOR Services, which the
     // site calls elevate (live in Anyprop 2026-09-30); tridemls is Telluride
-    // (live 2026-10-01).
-    static $alias = ['agsmls' => 'aspen', 'ppmls' => 'elevate', 'tridemls' => 'telluride'];
+    // (live 2026-10-01); vbor is the Vail Board of REALTORS (live 2026-10-01).
+    static $alias = ['agsmls' => 'aspen', 'ppmls' => 'elevate', 'tridemls' => 'telluride', 'vbor' => 'vail'];
     $s = substr(preg_replace('/[^a-z0-9]+/', '', strtolower($osn)), 0, 20);
     return $alias[$s] ?? $s;
 }
