@@ -19,11 +19,17 @@
  * Usage:
  *   php /var/www/marketing.monthaus.com/cron/parse_pipeline_events.php
  *   php /var/www/marketing.monthaus.com/cron/parse_pipeline_events.php --reparse
- * Cron, once Zapier points here (written in words, never inside a block
- * comment): minute 49 of every hour.
+ * Cron: see CLAUDE.md > Cron (written out there, never inside a block
+ * comment). A run that finds the previous one still going exits at once.
  */
 
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
+
+$lock = fopen(sys_get_temp_dir() . '/mh_parse_pipeline_events.lock', 'c');
+if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
+    echo '[' . date('Y-m-d H:i:s') . '] Previous run still going; skipped.' . "\n";
+    exit(0);
+}
 
 require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/db.php';

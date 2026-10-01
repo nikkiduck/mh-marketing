@@ -46,12 +46,18 @@
  *                         pull everyone else in that office. That is how CREN is found:
  *                         its office never matched a name search (probe, 2026-09-21).
  *
- * Cron (once production credentials are in; replaces both Spark lines). Note
- * the schedule is written out here in words, never inside a block comment:
- *   minute 0, hour 3, every day → php .../cron/sync_anyprop_roster.php
+ * Cron: see CLAUDE.md > Cron for the live schedule (written out there, never
+ * inside a block comment). A run that finds the previous one still going
+ * exits at once (flock on the system temp dir), so a slow API cannot stack runs.
  */
 
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
+
+$lock = fopen(sys_get_temp_dir() . '/mh_sync_anyprop_roster.lock', 'c');
+if (!$lock || !flock($lock, LOCK_EX | LOCK_NB)) {
+    echo '[' . gmdate('Y-m-d H:i:s') . '] Previous run still going; skipped.' . PHP_EOL;
+    exit(0);
+}
 
 require_once __DIR__ . '/../inc/db.php';
 require_once __DIR__ . '/../inc/agent_roster.php';
@@ -140,26 +146,29 @@ try {
         $members = $d['value'] ?? $d;
         out('Fixture: ' . count($members) . ' member record(s).');
     } else {
-        // Office discovery. OData contains() is case-sensitive and boards differ
-        // in casing (CREN tends to ALL CAPS), so ask for all three spellings and
-        // keep only real Mont Haus names.
+        // Offices: the configured ids PLUS a name search on every board. The
+        // search used to run only when nothing was configured, so with Aspen
+        // configured a newly live board (Elevate, 2026-09-30) was never looked
+        // at. Now each run finds Mont Haus offices on whatever boards Anyprop
+        // carries, as the public site's syncs do. OData contains() is
+        // case-sensitive and boards differ in casing (CREN tends to ALL CAPS),
+        // so ask for all three spellings and keep only real Mont Haus names.
         $offices = [];   // "osn|OfficeMlsId" → label
         if (defined('ANYPROP_MH_OFFICE_IDS') && ANYPROP_MH_OFFICE_IDS) {
             foreach (ANYPROP_MH_OFFICE_IDS as $pair) {
                 [$osn, $oid] = array_pad(explode(':', $pair, 2), 2, '');
                 if ($oid !== '') $offices[$osn . '|' . $oid] = 'configured';
             }
-        } else {
-            $f = "contains(OfficeName,'Mont') or contains(OfficeName,'MONT') or contains(OfficeName,'mont')";
-            foreach (ap_get_all(AP_BASE . '/Office?$filter=' . rawurlencode($f) . '&$top=200') as $o) {
-                $name = (string)($o['OfficeName'] ?? '');
-                $oid  = (string)($o['OfficeMlsId'] ?? '');
-                // Keep the board's own casing: OData eq is case-sensitive, and
-                // this value goes back into the Member filter below.
-                $osn  = (string)($o['OriginatingSystemName'] ?? '');
-                if ($oid === '' || !preg_match('/mont\s*haus/i', $name)) continue;
-                $offices["{$osn}|{$oid}"] = $name;
-            }
+        }
+        $f = "contains(OfficeName,'Mont') or contains(OfficeName,'MONT') or contains(OfficeName,'mont')";
+        foreach (ap_get_all(AP_BASE . '/Office?$filter=' . rawurlencode($f) . '&$top=200') as $o) {
+            $name = (string)($o['OfficeName'] ?? '');
+            $oid  = (string)($o['OfficeMlsId'] ?? '');
+            // Keep the board's own casing: OData eq is case-sensitive, and
+            // this value goes back into the Member filter below.
+            $osn  = (string)($o['OriginatingSystemName'] ?? '');
+            if ($oid === '' || !preg_match('/mont\s*haus/i', $name)) continue;
+            $offices["{$osn}|{$oid}"] ??= $name;
         }
         // Known Mont Haus members, fetched by id. Each one's office is learned
         // from its own record, so a board whose office id we have never seen
