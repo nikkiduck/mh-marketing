@@ -40,16 +40,17 @@ portal_header($ctx, 'Home', 'home');
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/spend.php')) ?>">
       <h2 class="pt-card-h">Spend</h2>
       <p class="pt-card-sub"><?= $fin['months']
-          ? 'This year you paid ' . ph(portal_money($yr['broker'])) . ' and Mont Haus paid ' . ph(portal_money($yr['mh'])) . '.'
+          ? 'This year you\'ve spent ' . ph(portal_money($yr['broker'])) . ' and Mont Haus ' . ph(portal_money($yr['mh']))
+            . ', for a total of ' . ph(portal_money($yr['broker'] + $yr['mh'])) . ' on marketing and advertising.'
           : 'No marketing spend yet.' ?></p>
-      <span class="pt-card-go">See month by month →</span>
+      <span class="pt-card-go">See details ›</span>
     </a>
-    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/qr.php')) ?>">
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/qr.php', $qr_n === 0 ? ['request' => 1] : [])) ?>">
       <h2 class="pt-card-h">QR codes</h2>
-      <p class="pt-card-sub"><?= $qr_n === 0 ? 'You do not have any QR codes yet.'
+      <p class="pt-card-sub"><?= $qr_n === 0 ? 'You do not have any QR codes yet. Request one for a marketing project.'
           : ($qr_n === 1 ? 'You have 1 QR code. See where it goes, or change it.'
                          : "You have {$qr_n} QR codes. See where each one goes, or change it.") ?></p>
-      <span class="pt-card-go">Open →</span>
+      <span class="pt-card-go"><?= $qr_n === 0 ? 'Request ›' : 'Review + Edit ›' ?></span>
     </a>
   </div>
 <?php portal_footer();

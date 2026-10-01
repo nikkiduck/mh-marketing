@@ -22,6 +22,38 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/schema.php';
 
+/** Where agents' questions and requests go (Nikki, 2026-10-01: the team inbox, not a person). */
+if (!defined('PORTAL_MARKETING_EMAIL')) define('PORTAL_MARKETING_EMAIL', 'marketing@monthaus.com');
+
+/**
+ * Email the marketing inbox from the portal: SendGrid's API from a monthaus.com
+ * address, with Reply-To set to the agent so marketing can simply reply.
+ * Deliberately NOT hs_send_email(): that one only mails
+ * HOT_SHEET_ALLOWED_RECIPIENTS until Hot Sheets go live, and would silently
+ * block marketing@. Returns ['sent'|'failed', detail].
+ */
+function portal_send_mail(string $subject, string $html, string $reply_email, string $reply_name): array {
+    if (!defined('SENDGRID_API_KEY') || SENDGRID_API_KEY === '') return ['failed', 'SENDGRID_API_KEY not set'];
+    $text = trim(html_entity_decode(strip_tags(preg_replace(['#<br\s*/?>#i', '#</(tr|div|p)>#i'], ["\n", "\n"], $html)), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    $payload = [
+        'personalizations' => [['to' => [['email' => PORTAL_MARKETING_EMAIL]]]],
+        'from'     => ['email' => 'portal@monthaus.com', 'name' => 'Mont Haus Agent Portal'],
+        'subject'  => $subject,
+        'content'  => [['type' => 'text/plain', 'value' => $text], ['type' => 'text/html', 'value' => $html]],
+    ];
+    if (filter_var($reply_email, FILTER_VALIDATE_EMAIL)) $payload['reply_to'] = ['email' => $reply_email, 'name' => $reply_name];
+    $ch = curl_init(getenv('MH_SENDGRID_URL') ?: 'https://api.sendgrid.com/v3/mail/send');   // env: test harness only
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true, CURLOPT_POSTFIELDS => json_encode($payload),
+        CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . SENDGRID_API_KEY, 'Content-Type: application/json'],
+        CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 20,
+    ]);
+    $body = (string)curl_exec($ch); $code = curl_getinfo($ch, CURLINFO_HTTP_CODE); $err = curl_error($ch);
+    if ($code >= 200 && $code < 300) return ['sent', "HTTP {$code}"];
+    error_log("portal_send_mail: HTTP {$code} {$err} " . substr($body, 0, 300));
+    return ['failed', "HTTP {$code}" . ($err ? " {$err}" : '')];
+}
+
 /** A plain, branded 403 that names the reason. */
 function portal_stop(string $title, string $why): never {
     http_response_code(403);
@@ -65,7 +97,7 @@ function portal_context(mysqli $conn): array {
     $user = $st->get_result()->fetch_assoc();
     $st->close();
     if (!$user || !(int)$user['is_active']) {
-        portal_stop('No access', 'This account is not active. Please contact Nikki.');
+        portal_stop('No access', 'This account is not active. Please email ' . PORTAL_MARKETING_EMAIL . '.');
     }
 
     $preview = false;
@@ -81,7 +113,7 @@ function portal_context(mysqli $conn): array {
                 . 'or link your own login to an account on the <a href="/users.php">Users</a> page.');
         }
         portal_stop('Almost there', 'Your sign-in works, but it is not connected to your marketing '
-            . 'account yet. Nikki will set that up; there is nothing you need to do.');
+            . 'account yet. The marketing team will set that up; there is nothing you need to do.');
     }
 
     $cols = 'id, agent_name, slug, is_active, status, headshot_url, headshot_face_url'
@@ -92,7 +124,7 @@ function portal_context(mysqli $conn): array {
     $acct = $st->get_result()->fetch_assoc();
     $st->close();
     if (!$acct || !(int)$acct['is_active'] || ($acct['status'] ?? '') === 'archived') {
-        portal_stop('No access', 'This marketing account is no longer active. Please contact Nikki.');
+        portal_stop('No access', 'This marketing account is no longer active. Please email ' . PORTAL_MARKETING_EMAIL . '.');
     }
     if (($acct['entity_type'] ?? 'agent') === 'staff') {
         portal_stop('No access', 'The agent portal is for agents.');
@@ -196,8 +228,7 @@ function portal_footer(): void {
 </main>
 <footer class="pt-foot">
   <div class="pt-foot-q">Questions?</div>
-  <div>Email <a href="mailto:nikki.boxer@monthaus.com">nikki.boxer@monthaus.com</a></div>
-  <div>Text <a href="sms:+19709484300">970.948.4300</a></div>
+  <div>Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a></div>
 </footer>
 </body>
 </html>

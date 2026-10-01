@@ -65,6 +65,7 @@ PHP);
 file_put_contents($SB . '/inc/db.php', <<<'PHP'
 <?php
 const MYSQLI_ASSOC = 1; const MYSQLI_NUM = 2;
+define('SENDGRID_API_KEY', 'test-key');
 class mh_result {
     private int $i = 0;
     public function __construct(private array $rows) {}
@@ -146,6 +147,8 @@ class mysqli {
         if (preg_match('/FROM marketing_campaigns\s+WHERE intake_id = (\d+)/', $sql, $m)) {
             return self::s(array_values(array_filter($D['campaigns'], fn($c) => (int)$c['intake_id'] === (int)$m[1])));
         }
+        if (preg_match('/INSERT INTO marketing_requests/', $sql)) { $this->insert_id = 501; $this->write('request', $p); return []; }
+        if (preg_match('/UPDATE marketing_requests SET email_status/', $sql)) { $this->write('request_email', $p); return []; }
         if (preg_match('/^\s*UPDATE qr_codes SET dest_type/', $sql)) { $this->write('update_qr', $p); return []; }
         if (preg_match('/INSERT INTO qr_code_changes/', $sql))       { $this->write('log_change', $p); return []; }
         throw new RuntimeException("stub mysqli: no fixture for SQL:\n" . trim($sql));
@@ -166,6 +169,7 @@ function scenario(array $over = []): array {
             'jon'     => ['id' => 102, 'email' => 'jonathan.boxer@monthaus.com', 'role' => 'agent'],
             'nolink'  => ['id' => 103, 'email' => 'new.agent@monthaus.com', 'role' => 'agent'],
             'nikki'   => ['id' => 1,   'email' => 'nikki.boxer@monthaus.com', 'role' => 'super_admin'],
+            'sierrah' => ['id' => 105, 'email' => 'sierrah.smith@monthaus.com', 'role' => 'agent'],
         ],
         'db' => [
             'migrated' => true,
@@ -173,12 +177,14 @@ function scenario(array $over = []): array {
                 ['id' => 101, 'first_name' => 'Jackson', 'last_name' => 'Horn', 'email' => 'jackson.horn@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => 6],
                 ['id' => 102, 'first_name' => 'Jonathan', 'last_name' => 'Boxer', 'email' => 'jonathan.boxer@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => 8],
                 ['id' => 103, 'first_name' => 'New', 'last_name' => 'Agent', 'email' => 'new.agent@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => null],
+                ['id' => 105, 'first_name' => 'Sierrah', 'last_name' => 'Smith', 'email' => 'sierrah.smith@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => 40],
                 ['id' => 1,   'first_name' => 'Nikki', 'last_name' => 'Boxer', 'email' => 'nikki.boxer@monthaus.com', 'role' => 'super_admin', 'is_active' => 1, 'intake_id' => null],
             ],
             'intakes' => [
                 ['id' => 6,  'agent_name' => 'Jackson Horn', 'slug' => 'jackson-horn', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
                 ['id' => 7,  'agent_name' => 'Kimberlee Coates', 'slug' => 'kim-coates', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
                 ['id' => 8,  'agent_name' => 'Weber Boxer Group', 'slug' => '', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'team'],
+                ['id' => 40, 'agent_name' => 'Sierrah Smith', 'slug' => 'sierrah-smith', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
                 ['id' => 30, 'agent_name' => 'Jonathan Boxer', 'slug' => 'jonathan-boxer', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
             ],
             'teams' => ['8' => [21, 23, 30]],
@@ -205,10 +211,17 @@ function scenario(array $over = []): array {
 
 // ── Server ───────────────────────────────────────────────────────────────────
 $PORT = 8931 + (getmypid() % 200);
+// A stand-in for SendGrid: records each payload, answers as the scenario says.
+file_put_contents($SB . '/fake_sendgrid.php', <<<'PHP'
+<?php
+file_put_contents(__DIR__ . '/mail.log', file_get_contents('php://input') . "\n", FILE_APPEND);
+$scen = json_decode(file_get_contents(__DIR__ . '/scenario.json'), true);
+http_response_code(!empty($scen['mail_fails']) ? 500 : 202);
+PHP);
 $log  = $SB . '/server.log';
 file_put_contents($SB . '/scenario.json', json_encode(scenario()));
-$pid = (int)trim(shell_exec(sprintf('php -n -d session.save_path=%s -S 127.0.0.1:%d -t %s > %s 2>&1 & echo $!',
-    escapeshellarg($SB), $PORT, escapeshellarg($SB), escapeshellarg($log))));
+$pid = (int)trim(shell_exec(sprintf('PHP_CLI_SERVER_WORKERS=4 MH_SENDGRID_URL=%s php -n -d extension=curl -d extension=mbstring -d session.save_path=%s -S 127.0.0.1:%d -t %s > %s 2>&1 & echo $!',
+    escapeshellarg("http://127.0.0.1:{$PORT}/fake_sendgrid.php"), escapeshellarg($SB), $PORT, escapeshellarg($SB), escapeshellarg($log))));
 register_shutdown_function(function () use ($pid, $SB) { if ($pid > 0) @exec("kill {$pid} 2>/dev/null"); @exec('rm -rf ' . escapeshellarg($SB)); });
 for ($i = 0, $up = false; $i < 60 && !$up; $i++) { $fp = @fsockopen('127.0.0.1', $PORT, $e, $s, 0.2); if ($fp) { fclose($fp); $up = true; } else usleep(120000); }
 if (!$up) { fwrite(STDERR, "FATAL: server did not start\n" . @file_get_contents($log)); exit(1); }
@@ -218,6 +231,7 @@ function req(string $who, string $path, ?array $post = null, array $over = []): 
     global $PORT, $SB;
     file_put_contents($SB . '/scenario.json', json_encode(scenario(['as' => $who] + $over)));
     @unlink($SB . '/writes.log');
+    @unlink($SB . '/mail.log');
     usleep(30000);   // let the file settle before the server reads it
     $ch = curl_init("http://127.0.0.1:{$PORT}{$path}");
     curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_HEADER => true, CURLOPT_TIMEOUT => 10]);
@@ -232,6 +246,10 @@ function req(string $who, string $path, ?array $post = null, array $over = []): 
 function writes(): array {
     global $SB;
     return is_file($SB . '/writes.log') ? array_map(fn($l) => json_decode($l, true), file($SB . '/writes.log', FILE_IGNORE_NEW_LINES)) : [];
+}
+function mails(): array {
+    global $SB;
+    return is_file($SB . '/mail.log') ? array_map(fn($l) => json_decode($l, true), file($SB . '/mail.log', FILE_IGNORE_NEW_LINES)) : [];
 }
 function no_fatal(string $body): bool { return !has($body, 'Fatal error') && !has($body, 'Uncaught') && !has($body, 'Warning:'); }
 
@@ -305,7 +323,36 @@ ok('a nonsense month falls back to the overview', $c === 200 && has($b, 'By mont
 [, , $b] = req('jon', '/portal/spend.php');
 ok('Weber Boxer sees the team\'s split: $3,000 and $1,321', has($b, '$3,000') && has($b, '$1,321') && !has($b, '$250') && !has($b, '7,777'), $b);
 [, , $b] = req('jackson', '/portal/');
-ok('home shows this year\'s spend', has($b, 'This year you paid $250') && has($b, 'Mont Haus paid $1,234'), $b);
+ok('home shows this year\'s spend in the new words', has($b, 'This year you&#039;ve spent $250 and Mont Haus $1,234, for a total of $1,484 on marketing and advertising.') || has($b, "This year you've spent \$250 and Mont Haus \$1,234, for a total of \$1,484 on marketing and advertising."), $b);
+ok('…linked as See details', has($b, 'See details ›'));
+ok('with codes, the QR card says Review + Edit', has($b, 'Review + Edit ›'));
+ok('the footer sends questions to marketing@, with no phone and no personal email', has($b, 'marketing@monthaus.com') && !has($b, '948.4300') && !has($b, 'nikki.boxer@'));
+
+echo "\nQR REQUESTS\n";
+[, , $b] = req('sierrah', '/portal/');
+ok('no codes: the card says Request and opens the form', has($b, 'Request ›') && has($b, 'qr.php?request=1'), $b);
+[$c, , $b] = req('sierrah', '/portal/qr.php?request=1');
+ok('the request form renders', $c === 200 && no_fatal($b) && has($b, 'QR Code Request') && has($b, 'Request a dynamic QR code for a marketing project.')
+   && has($b, 'You can come back here to change the destination at any time'), $b);
+[$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => 'Yard sign', 'details' => '', 'destination' => '']);
+ok('no destination: refused, nothing saved or sent', writes() === [] && mails() === [] && has($loc, 'request=1'), json_encode(writes()) . $loc);
+[$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => '45 Elm yard sign',
+    'details' => 'Front lawn', 'destination' => 'My profile page', 'intake_id' => 6]);
+$w = writes(); $m = mails();
+ok('a request is saved for HER account, whatever the form says', ($w[0][0] ?? '') === 'request' && (int)($w[0][1][0] ?? 0) === 40 && (int)($w[0][1][1] ?? 0) === 105, json_encode($w));
+ok('…emailed to marketing@monthaus.com', ($m[0]['personalizations'][0]['to'][0]['email'] ?? '') === 'marketing@monthaus.com', json_encode($m));
+ok('…with Reply-To the agent and the project in the subject', ($m[0]['reply_to']['email'] ?? '') === 'sierrah.smith@monthaus.com' && has($m[0]['subject'] ?? '', '45 Elm yard sign'), json_encode($m));
+ok('…the email outcome is recorded', ($w[1][0] ?? '') === 'request_email' && ($w[1][1][0] ?? '') === 'sent', json_encode($w));
+ok('…and she sees the confirmation', $c === 302 && has($loc, 'sent=1'), "{$c} {$loc}");
+[, , $b] = req('sierrah', '/portal/qr.php?sent=1');
+ok('confirmation: your request has been sent', has($b, 'Your request has been sent!'), $b);
+[$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => 'Y'], ['mail_fails' => true]);
+ok('email fails: saved, recorded as failed, and she is told to email marketing@', (writes()[1][1][0] ?? '') === 'failed' && has($loc, 'request=1'), json_encode(writes()) . " {$loc}");
+[, , $b] = req('sierrah', '/portal/qr.php?request=1');
+[$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'nope', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => 'Y']);
+ok('a bad form token sends nothing', writes() === [] && mails() === [], json_encode(writes()));
+[, , $b] = req('jackson', '/portal/qr.php');
+ok('with codes: a small Request one link under the list', has($b, 'Need another QR code?') && has($b, 'request=1'), $b);
 
 echo "\nRECEIPTS\n";
 $rdir = dirname($SB) . '/receipts/';
@@ -343,7 +390,9 @@ if ($snap = getenv('PORTAL_SNAPSHOTS')) {
               'qr-edit-jackson' => ['jackson', '/portal/qr.php?edit=1'], 'home-wb' => ['jon', '/portal/'],
               'qr-wb' => ['jon', '/portal/qr.php'], 'qr-preview' => ['nikki', '/portal/qr.php?preview=6'],
               'refused-nolink' => ['nolink', '/portal/'], 'spend-jackson' => ['jackson', '/portal/spend.php'],
-              'spend-month-jackson' => ['jackson', '/portal/spend.php?m=2026-09'], 'spend-wb' => ['jon', '/portal/spend.php']] as $name => [$who, $path]) {
+              'spend-month-jackson' => ['jackson', '/portal/spend.php?m=2026-09'], 'spend-wb' => ['jon', '/portal/spend.php'],
+              'home-sierrah' => ['sierrah', '/portal/'], 'qr-request' => ['sierrah', '/portal/qr.php?request=1'],
+              'qr-sent' => ['sierrah', '/portal/qr.php?sent=1']] as $name => [$who, $path]) {
         file_put_contents("{$snap}/{$name}.html", req($who, $path)[2]);
     }
     echo "  (snapshots saved to {$snap})\n";

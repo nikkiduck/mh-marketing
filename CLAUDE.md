@@ -1558,8 +1558,17 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phase 0 + 1.
   NEVER invoiced/billed/paid status or `marketing_billing_months`; the test
   asserts those words never appear. `portal/receipt.php` streams a collateral
   receipt by order id after checking the order's intake_id is the account.
+- Questions and requests go to `PORTAL_MARKETING_EMAIL` (marketing@monthaus.com,
+  Nikki 2026-10-01: the team inbox, not a person, and no phone number). Sent by
+  `portal_send_mail()` (SendGrid API, from portal@monthaus.com, Reply-To the
+  agent), NOT `hs_send_email()`, whose Hot Sheet allowlist would block it.
+- QR Code Request (`portal/qr.php?request=1`): saved FIRST in
+  `marketing_requests` (sql/marketing_requests_v1.sql), then emailed; the email
+  outcome is stored on the row, and a failed send tells the agent to email
+  marketing@ directly. Shown as "Request ›" on home when they have no codes,
+  "Review + Edit ›" when they do, plus "Need another QR code?" on the list.
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
-- Tests: `tests/render_portal.php` (49 assertions: isolation between
+- Tests: `tests/render_portal.php` (64 assertions: isolation between
   accounts, someone else's code refused on GET and POST, preview rules,
   refusals). Proven to catch a leak by breaking the ownership check.
 
