@@ -69,7 +69,7 @@ function pl_roster(mysqli $conn): array {
     $r = $conn->query("SELECT COALESCE(NULLIF(TRIM(agent_name),''), mls_full_name) AS name,
                               mh_email, alt_email, mls_email, agent_name, mls_full_name
                          FROM marketing_intakes
-                        WHERE is_active = 1 AND status <> 'archived'" . mk_team_sql($conn));
+                        WHERE is_active = 1 AND status <> 'archived'" . mk_agents_only_sql($conn));
     foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $x) {
         $name = trim((string)$x['name']);
         if ($name === '') continue;

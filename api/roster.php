@@ -57,10 +57,31 @@ $res = $conn->query("
            social_instagram, social_facebook, social_linkedin, social_tiktok, website_url,
            headshot_url, headshot_face_url, updated_at
       FROM marketing_intakes
-     WHERE slug IS NOT NULL AND slug <> ''" . mk_team_sql($conn) . "   -- teams are marketing-only, never on the website
+     WHERE slug IS NOT NULL AND slug <> ''" . mk_agents_only_sql($conn) . "   -- teams are marketing-only, never on the website
      ORDER BY sort_order, COALESCE(NULLIF(agent_name,''), mls_full_name)");
 if (!$res) feed_fail(500, 'query failed');
 $rows = $res->fetch_all(MYSQLI_ASSOC);
+
+// ── Leadership (leadership_v1.sql) ───────────────────────────────────────────
+// docs/HANDOFF-leadership-and-staff.md, Phase 3. Agents and staff marked for
+// the Leadership page, in its order. Agents only while they are on the website;
+// teams never. `agents` above is unchanged and contains no staff
+// (mk_agents_only_sql). Before the migration there is no `leadership` key at
+// all, which the site reads as "old feed, keep what you have".
+$leaders = null;
+$chk2 = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'leadership_show'");
+if ($chk2 && $chk2->fetch_row()) {
+    $lr = $conn->query("
+        SELECT slug, entity_type, agent_name, mls_full_name, agent_title, mh_email, mls_email, cell_phone, mls_phone,
+               headshot_url, headshot_face_url, leadership_sort
+          FROM marketing_intakes
+         WHERE leadership_show = 1 AND is_active = 1 AND status <> 'archived'
+           AND (entity_type = 'staff' OR (entity_type = 'agent' AND web_status = 'approved'))
+           AND slug IS NOT NULL AND slug <> ''
+         ORDER BY leadership_sort, COALESCE(NULLIF(agent_name,''), mls_full_name)");
+    if (!$lr) feed_fail(500, 'leadership query failed');
+    $leaders = $lr->fetch_all(MYSQLI_ASSOC);
+}
 
 $idents = [];
 $r = $conn->query("SELECT intake_id, market, mls_agent_id, is_alias, member_status
@@ -127,5 +148,25 @@ foreach ($rows as $a) {
     ];
 }
 
-echo json_encode(['generated_at' => gmdate('Y-m-d\TH:i:s\Z'), 'count' => count($agents), 'agents' => $agents],
-                 JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+$out = ['generated_at' => gmdate('Y-m-d\TH:i:s\Z'), 'count' => count($agents), 'agents' => $agents];
+if ($leaders !== null) {
+    $out['leadership'] = [];
+    foreach ($leaders as $l) {
+        $name = trim((string)$l['agent_name']) ?: trim((string)$l['mls_full_name']);
+        if ($name === '') continue;
+        $is_staff = $l['entity_type'] === 'staff';
+        $out['leadership'][] = [
+            'key'                => $l['slug'],
+            'type'               => $is_staff ? 'staff' : 'agent',
+            'agent_key'          => $is_staff ? null : $l['slug'],   // links to the broker page; null for staff
+            'name'               => $name,
+            'title'              => (string)$l['agent_title'],
+            'email'              => strtolower(trim((string)($l['mh_email'] ?: $l['mls_email']))),
+            'phone'              => mk_e164($l['cell_phone'] ?: $l['mls_phone']),
+            'headshot_url'       => feed_photo($l['headshot_url']),
+            'headshot_thumb_url' => feed_photo($l['headshot_face_url']),
+            'sort'               => (int)$l['leadership_sort'],
+        ];
+    }
+}
+echo json_encode($out, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);

@@ -28,7 +28,7 @@ require_once __DIR__ . '/inc/_onboarding.php';
 require_once __DIR__ . '/inc/schema.php';
 require_once __DIR__ . '/inc/financials.php';
 require_once __DIR__ . '/inc/agent_lifecycle.php';
-require_once __DIR__ . '/inc/agent_roster.php';   // mk_team_sql()
+require_once __DIR__ . '/inc/agent_roster.php';   // mk_agents_only_sql()
 require_once __DIR__ . '/inc/site_sync.php';      // "Sync to Website"
 require_login();
 // Agents land in their portal instead of this admin page's 403 (2026-10-01).
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!$chk && ($ro = $conn->query("SELECT name, email FROM office_roster WHERE id = {$roster_id}")->fetch_assoc())) {
                 $em = strtolower(trim((string)$ro['email'])); $nm = strtolower(trim((string)$ro['name']));
                 $s = $conn->prepare("SELECT id FROM marketing_intakes
-                                      WHERE is_active = 1 AND status <> 'archived' AND roster_id IS NULL" . mk_team_sql($conn) . "
+                                      WHERE is_active = 1 AND status <> 'archived' AND roster_id IS NULL" . mk_agents_only_sql($conn) . "
                                         AND ((? <> '' AND (LOWER(mh_email) = ? OR LOWER(mls_email) = ? OR LOWER(alt_email) = ?))
                                              OR LOWER(TRIM(agent_name)) = ?)");
                 $s->bind_param('sssss', $em, $em, $em, $em, $nm); $s->execute();
@@ -169,6 +169,9 @@ $has_bio = "(mi.bio_text IS NOT NULL AND TRIM(mi.bio_text) NOT IN ('', '<p><br><
 // agent_roster_v2_teams.sql: a team (Weber Boxer Group) is a marketing entity.
 $has_team = mk_column_exists($conn, 'marketing_intakes', 'entity_type');
 $col_web .= $has_team ? ", mi.entity_type" : ", 'agent' AS entity_type";
+// Staff (leadership_v1.sql) are not agents and are not on this roster: they are
+// managed on leadership.php. Teams stay (they are marketed and billed).
+$no_staff = $has_team ? " AND mi.entity_type <> 'staff'" : '';
 
 $agents = [];
 $res = $conn->query("
@@ -197,7 +200,7 @@ $res = $conn->query("
         {$col_web}
     FROM office_roster r
     LEFT JOIN marketing_intakes mi
-           ON mi.roster_id = r.id AND mi.is_active = 1
+           ON mi.roster_id = r.id AND mi.is_active = 1{$no_staff}
     LEFT JOIN marketing_tasks mt
            ON mt.intake_id = mi.id AND mt.status = 'open'
     -- A Spark roster line nobody is linked to, for someone who already has a
@@ -236,7 +239,7 @@ $res = $conn->query("
     FROM marketing_intakes mi
     LEFT JOIN marketing_tasks mt
            ON mt.intake_id = mi.id AND mt.status = 'open'
-    WHERE mi.is_active = 1 AND mi.roster_id IS NULL
+    WHERE mi.is_active = 1 AND mi.roster_id IS NULL{$no_staff}
     GROUP BY mi.id
 
     ORDER BY agent_name ASC
@@ -250,7 +253,7 @@ $r = $conn->query("SELECT mi.id AS intake_id, mi.roster_id, mi.agent_name, {$col
                           mi.agent_title AS intake_title, 'archived' AS intake_status, mi.headshot_url, mi.start_date,
                           mi.intake_date, mi.updated_at, 0 AS open_tasks, mi.mh_email, mi.cell_phone AS phone,
                           {$has_bio} AS has_bio, {$col_web}, NULL AS markets, NULL AS agent_key, NULL AS vail_agent_key
-                     FROM marketing_intakes mi WHERE mi.is_active = 0 ORDER BY mi.archived_at DESC");
+                     FROM marketing_intakes mi WHERE mi.is_active = 0{$no_staff} ORDER BY mi.archived_at DESC");
 if ($r) $archived = $r->fetch_all(MYSQLI_ASSOC);
 
 // Board identities (agent_roster_v1.sql): how a CREN-only agent gets a badge.
@@ -640,6 +643,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
         <a class="btn btn-outline btn-sm" href="subscribers.php"><i class="ti ti-users"></i> Subscribers</a>
         <a class="btn btn-outline btn-sm" href="qr_codes.php"><i class="ti ti-qrcode"></i> QR Codes</a>
         <a class="btn btn-outline btn-sm" href="website_order.php"><i class="ti ti-arrows-sort"></i> Website Order</a>
+        <a class="btn btn-outline btn-sm" href="leadership.php"><i class="ti ti-crown"></i> Leadership &amp; Staff</a>
         <?php if (defined('SITE_AGENT_SYNC_URL') && SITE_AGENT_SYNC_URL !== ''): ?>
         <!-- Pushes every profile to the public site now. Safe to press twice:
              the website only writes what actually differs. -->

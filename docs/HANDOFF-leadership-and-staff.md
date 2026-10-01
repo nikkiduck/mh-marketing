@@ -1,5 +1,10 @@
 # HANDOFF — Leadership page + non-agent staff in the roster feed
 
+**Status 2026-10-01:** Phases 1 to 3 built in marketing (leadership_v1.sql,
+mk_agents_only_sql audit, leadership.php, agent.php staff view, feed
+`leadership` array); Phase 4 built on the site (leaders_schema.sql, sync,
+leadership.php). See CLAUDE.md > Leadership and staff.
+
 Written 2026-09-29 from the site.monthaus.com session (Claude Code), after
 reading this project's `api/roster.php`, `inc/agent_roster.php`,
 `sql/agent_roster_v2_teams.sql`, and the site's `sync_agents_from_marketing.php`.

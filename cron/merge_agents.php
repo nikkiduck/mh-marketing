@@ -29,7 +29,7 @@ foreach (array_slice($argv, 1) as $a) {
     if (in_array($a, ['--dry-run', '--find', '--force'], true)) $o[substr($a, 2)] = true;
 }
 $dry = !empty($o['dry-run']);
-$not_team = mk_team_sql($conn, 'a');
+$not_team = mk_agents_only_sql($conn, 'a');
 
 if (!empty($o['find']) || empty($o['keep']) || empty($o['drop'])) {
     // Active rows sharing an email or a name.
@@ -39,7 +39,7 @@ if (!empty($o['find']) || empty($o['keep']) || empty($o['drop'])) {
                         WHERE a.is_active = 1 AND a.status <> 'archived'{$not_team}
                           AND EXISTS (SELECT 1 FROM marketing_intakes b
                                        WHERE b.id <> a.id AND b.is_active = 1 AND b.status <> 'archived'"
-                        . mk_team_sql($conn, 'b') . "
+                        . mk_agents_only_sql($conn, 'b') . "
                                          AND ((a.mh_email <> '' AND LOWER(b.mh_email) = LOWER(a.mh_email))
                                               OR LOWER(TRIM(b.agent_name)) = LOWER(TRIM(a.agent_name))))
                         ORDER BY a.agent_name, a.id");

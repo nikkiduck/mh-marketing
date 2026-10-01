@@ -23,7 +23,7 @@
  */
 
 require_once __DIR__ . '/hs_helpers.php';
-require_once __DIR__ . '/agent_roster.php';   // mk_team_sql(): teams are not people
+require_once __DIR__ . '/agent_roster.php';   // mk_agents_only_sql(): teams are not people
 
 const HS_SOLD_WINDOW_DAYS = 14;
 const HS_ACTIVE_STATUSES  = ['Active', 'Active Under Contract', 'Pending', 'Coming Soon'];
@@ -113,14 +113,14 @@ function hs_roster(mysqli $conn): array {
                               COALESCE(NULLIF(TRIM(mi.agent_name),''), mi.mls_full_name) AS name,
                               COALESCE(NULLIF(TRIM(mi.mh_email),''), mi.mls_email) AS email
                          FROM agent_mls_ids a JOIN marketing_intakes mi ON mi.id = a.intake_id
-                        WHERE a.member_status = 'Active' AND mi.is_active = 1" . mk_team_sql($conn, 'mi') . "
+                        WHERE a.member_status = 'Active' AND mi.is_active = 1" . mk_agents_only_sql($conn, 'mi') . "
                         ORDER BY a.is_alias, name");
     if ($r) foreach ($r->fetch_all(MYSQLI_ASSOC) as $x) {
         if (trim((string)$x['name']) === '') continue;
         $cache['by_id'][$x['market'] . '|' . $x['mls_agent_id']][] = [trim($x['name']), strtolower(trim((string)$x['email']))];
     }
     $r = $conn->query("SELECT agent_name, mls_full_name, COALESCE(NULLIF(TRIM(mh_email),''), mls_email) AS email
-                         FROM marketing_intakes WHERE is_active = 1" . mk_team_sql($conn));
+                         FROM marketing_intakes WHERE is_active = 1" . mk_agents_only_sql($conn));
     if ($r) foreach ($r->fetch_all(MYSQLI_ASSOC) as $x) {
         $em = strtolower(trim((string)$x['email']));
         if ($em === '') continue;

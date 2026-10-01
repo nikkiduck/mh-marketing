@@ -50,6 +50,7 @@ function qr_read_dest(array $p, ?array $broker): array {
     if ($type === 'profile') {
         if (!$broker)                                         return [$type, null, 'Pick a broker to point at their profile page, or choose a specific page.'];
         if (($broker['entity_type'] ?? 'agent') === 'team')   return [$type, null, $broker['agent_name'] . ' is a team and has no profile page. Choose a specific page.'];
+        if (($broker['entity_type'] ?? 'agent') === 'staff')  return [$type, null, $broker['agent_name'] . ' is staff, not an agent, and has no profile page. Choose a specific page.'];
         if (trim((string) $broker['slug']) === '')            return [$type, null, $broker['agent_name'] . ' has no web address yet (set it under Website on their page), so there is no profile page to point at.'];
         return [$type, null, ''];
     }
@@ -388,9 +389,9 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
             <span class="fld-label">Broker</span>
             <select name="intake_id" id="newBroker" class="form-input">
               <option value="0" data-slug="" data-team="0">Office (no broker)</option>
-              <?php foreach ($brokers as $b): $team = ($b['entity_type'] ?? '') === 'team'; ?>
+              <?php foreach ($brokers as $b): $team = in_array($b['entity_type'] ?? '', ['team', 'staff'], true); /* no profile page */ ?>
                 <option value="<?= (int) $b['id'] ?>" data-slug="<?= e($b['slug']) ?>" data-team="<?= $team ? 1 : 0 ?>"
-                        <?= (int) $b['id'] === $d_iid ? 'selected' : '' ?>><?= e($b['agent_name']) ?><?= $team ? ' (team)' : '' ?></option>
+                        <?= (int) $b['id'] === $d_iid ? 'selected' : '' ?>><?= e($b['agent_name']) ?><?= ($b['entity_type'] ?? '') === 'staff' ? ' (staff)' : ($team ? ' (team)' : '') ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -498,10 +499,10 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
                       <span class="fld-label">Broker</span>
                       <select name="intake_id" class="form-input" data-broker>
                         <option value="0" data-slug="" data-team="0">Office (no broker)</option>
-                        <?php $listed = false; foreach ($brokers as $b): $bt = ($b['entity_type'] ?? '') === 'team';
+                        <?php $listed = false; foreach ($brokers as $b): $bt = in_array($b['entity_type'] ?? '', ['team', 'staff'], true);
                           if ((int) $b['id'] === (int) $c['intake_id']) $listed = true; ?>
                           <option value="<?= (int) $b['id'] ?>" data-slug="<?= e($b['slug']) ?>" data-team="<?= $bt ? 1 : 0 ?>"
-                                  <?= (int) $b['id'] === (int) $c['intake_id'] ? 'selected' : '' ?>><?= e($b['agent_name']) ?><?= $bt ? ' (team)' : '' ?></option>
+                                  <?= (int) $b['id'] === (int) $c['intake_id'] ? 'selected' : '' ?>><?= e($b['agent_name']) ?><?= ($b['entity_type'] ?? '') === 'staff' ? ' (staff)' : ($bt ? ' (team)' : '') ?></option>
                         <?php endforeach; ?>
                         <?php if ($c['intake_id'] && !$listed): // archived broker: keep them selectable so saving does not unassign ?>
                           <option value="<?= (int) $c['intake_id'] ?>" data-slug="<?= e($c['slug']) ?>" data-team="<?= $team ? 1 : 0 ?>" selected>

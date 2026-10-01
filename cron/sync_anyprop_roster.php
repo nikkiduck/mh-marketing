@@ -259,7 +259,7 @@ function prep(mysqli $conn, string $sql): mysqli_stmt {
 $q_ident   = prep($conn, "SELECT a.intake_id, a.is_alias, mi.agent_name
                             FROM agent_mls_ids a JOIN marketing_intakes mi ON mi.id = a.intake_id
                            WHERE a.market = ? AND a.mls_agent_id = ?");
-$not_team  = mk_team_sql($conn);   // a team row is never an MLS person
+$not_team  = mk_agents_only_sql($conn);   // a team row is never an MLS person
 $q_email   = prep($conn, "SELECT id, agent_name, is_active, status FROM marketing_intakes
                            WHERE (LOWER(mh_email) = ? OR LOWER(alt_email) = ? OR LOWER(mls_email) = ?){$not_team}");
 $q_name    = prep($conn, "SELECT id, agent_name, is_active, status FROM marketing_intakes

@@ -1536,6 +1536,29 @@ site's hostname.
    https://monthaus.com, and `curl -s -o /dev/null -w "%{http_code}\n"
    https://qr.monthaus.com/inc/db.php` must also be a 302 (never the file).
 
+## Leadership and staff (2026-10-01)
+
+Spec: `docs/HANDOFF-leadership-and-staff.md` (Phases 1 to 3 here; Phase 4 on
+the site). Migration `sql/leadership_v1.sql`.
+- `entity_type` 'staff' = a person on the Leadership page who is NOT an agent
+  (Nikki Boxer, Kellee Anderson). **`mk_agents_only_sql()`** (renamed from
+  mk_team_sql, which is now an alias) appends `entity_type = 'agent'` to every
+  agent query, so staff (and teams) never reach the roster feed's `agents`,
+  MLS matching, Hot Sheets, Pipeline crediting, the agent stepper or Website
+  Order. Separately excluded: the roster (`index.php`, `$no_staff`), Billing,
+  the invoice-split picker; QR codes treat staff like teams (no profile page);
+  `users.php` never offers staff as a portal account; the portal refuses them.
+- `agent.php` for staff: Profile tab only (Contact, Headshots, QR codes,
+  Leadership); no onboarding checklist is seeded; `add_identity` is refused.
+- `leadership.php` (admin, "Leadership & Staff" on the roster): drag-order the
+  Leadership page (leadership_sort 10, 20, ...), add/remove people, add a
+  staff member (goes straight to their page for a headshot), staff list.
+  Agents show on the site's Leadership only while web_status is approved.
+- Feed: `api/roster.php` adds a top-level `leadership` array (key, type,
+  agent_key = slug for agents / null for staff, name, title, email, phone
+  E.164, portal-hosted headshots, sort). `agents` is unchanged and staff-free.
+  No `leadership` key before the migration = "old feed" to the site.
+
 ## Agent portal (portal/, 2026-10-01)
 
 Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phase 0 + 1.

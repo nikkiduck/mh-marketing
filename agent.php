@@ -750,6 +750,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
              . ($photo_note !== '' ? '&note=' . urlencode($photo_note) : '')); exit;
     }
 
+    // Leadership page settings (leadership_v1.sql): agents and staff alike.
+    if ($action === 'save_leadership' && mk_column_exists($conn, 'marketing_intakes', 'leadership_show')) {
+        $show = isset($_POST['leadership_show']) ? 1 : 0;
+        $sort = (int)($_POST['leadership_sort'] ?? 0);
+        $st = $conn->prepare("UPDATE marketing_intakes SET leadership_show = ?, leadership_sort = ? WHERE id = ?");
+        $st->bind_param('iii', $show, $sort, $id);
+        $st->execute(); $st->close();
+        header("Location: agent.php?id={$id}&tab=profile&saved=1#leadership"); exit;
+    }
+
+    // Staff are not agents: no board identities (leadership_v1.sql).
+    if ($action === 'add_identity') {
+        $et = $conn->query("SELECT entity_type FROM marketing_intakes WHERE id = {$id}");
+        if ($et && ($et->fetch_row()[0] ?? '') === 'staff') { header("Location: agent.php?id={$id}&tab=profile"); exit; }
+    }
     if ($action === 'add_identity' && mk_table_exists($conn, 'agent_mls_ids')) {
         $market = strtolower(trim((string)($_POST['market'] ?? '')));
         $mls_id = trim((string)($_POST['mls_agent_id'] ?? ''));
@@ -874,8 +889,14 @@ $r     = $conn->query("SELECT * FROM marketing_intakes WHERE id={$id} LIMIT 1");
 $agent = $r ? $r->fetch_assoc() : null;
 if (!$agent) { header('Location: index.php'); exit; }
 
+// Staff (leadership_v1.sql): a person on the Leadership page who is not an
+// agent. The page shows only what applies to them: contact, headshots, QR
+// codes and the Leadership settings. No tasks, billing, MLS or website tabs.
+$is_staff = ($agent['entity_type'] ?? 'agent') === 'staff';
+
 // ── Auto-seed onboarding tasks if none exist yet ──────────────────────────────
-mkt_seed_onboarding_tasks($conn, $id);
+// Not for staff: the checklist is agent onboarding.
+if (!$is_staff) mkt_seed_onboarding_tasks($conn, $id);
 
 // ── Load tasks — build parent/child tree ─────────────────────────────────────
 $all_tasks    = [];
@@ -1061,7 +1082,7 @@ $r_nav = $conn->query("
     SELECT mi.id, {$nav_name} AS name
       FROM marketing_intakes mi
      WHERE mi.is_active = 1 AND mi.status <> 'archived'"
-     . mk_team_sql($conn, 'mi') . "
+     . mk_agents_only_sql($conn, 'mi') . "
        AND TRIM(COALESCE({$nav_name}, '')) <> ''
      ORDER BY SUBSTRING_INDEX(TRIM({$nav_name}), ' ', -1), {$nav_name}, mi.id");
 if ($r_nav) $nav_agents = $r_nav->fetch_all(MYSQLI_ASSOC);
@@ -1083,6 +1104,7 @@ foreach ($nav_agents as $i => $n) {
     }
 }
 if ($active_tab === 'overview') $active_tab = 'profile';
+if ($is_staff) $active_tab = 'profile';
 
 
 
@@ -2028,6 +2050,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
   <!-- Tab bar -->
   <div class="tab-bar">
     <button class="tab-btn <?= $active_tab==='profile'?'active':'' ?>"   data-tab="profile"><i class="ti ti-user"></i> Profile</button>
+    <?php if (!$is_staff): ?>
     <button class="tab-btn <?= $active_tab==='assets'?'active':'' ?>"    data-tab="assets"><i class="ti ti-folder"></i> Assets</button>
     <button class="tab-btn <?= $active_tab==='financials'?'active':'' ?>" data-tab="financials">
       <i class="ti ti-receipt-2"></i> Financials
@@ -2046,6 +2069,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       <i class="ti ti-notes"></i> Notes
       <?php if ($notes): ?><span class="badge" style="background:#6b7280;"><?= count($notes) ?></span><?php endif; ?>
     </button>
+    <?php else: ?>
+    <span class="hint" style="align-self:center;margin-left:10px;">Staff: not an agent. Shown on the Leadership page only.</span>
+    <?php endif; ?>
   </div>
 
   <?php // Mobile tab menu. Empty on purpose — the list is cloned from the
@@ -2170,6 +2196,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </div>
         </div>
 
+        <?php if (!$is_staff): ?>
         <div class="card">
           <div class="card-title" style="display:flex;align-items:center;">
             Social / Digital
@@ -2288,6 +2315,8 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </form>
         </div>
 
+        <?php endif; /* staff: no social or website */ ?>
+
         <!-- ── Photos ───────────────────────────────────────────────────── -->
         <div class="card">
           <div class="card-title"><i class="ti ti-camera" style="margin-right:6px;"></i> Headshots</div>
@@ -2339,6 +2368,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </form>
         </div>
 
+    <?php if (!$is_staff): ?>
     <!-- ── Bio ──────────────────────────────────────────────────────────── -->
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;">
@@ -2401,9 +2431,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         </form>
       </div>
     </div>
+    <?php endif; /* staff: no bio */ ?>
       </div>
 
       <div>
+        <?php if (!$is_staff): ?>
         <!-- ── Board identities ─────────────────────────────────────────── -->
         <div class="card">
           <div class="card-title"><i class="ti ti-license" style="margin-right:6px;"></i> Board identities</div>
@@ -2475,6 +2507,27 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </div>
         </div>
 
+        <?php endif; /* staff: no board identities or subscriptions */ ?>
+
+        <?php if (mk_column_exists($conn, 'marketing_intakes', 'leadership_show') && ($agent['entity_type'] ?? 'agent') !== 'team'): ?>
+        <!-- ── Leadership (leadership_v1.sql) ───────────────────────────────── -->
+        <div class="card" id="leadership">
+          <div class="card-title"><i class="ti ti-crown" style="margin-right:6px;"></i> Leadership page</div>
+          <form method="POST">
+            <input type="hidden" name="_action" value="save_leadership">
+            <label class="fld" style="gap:8px;"><input type="checkbox" name="leadership_show" value="1" <?= (int)($agent['leadership_show'] ?? 0) ? 'checked' : '' ?>>
+              Show on the website's Leadership page</label>
+            <div class="fld"><span class="fld-label">Order</span>
+              <input type="number" name="leadership_sort" class="form-input" style="width:100px;" value="<?= (int)($agent['leadership_sort'] ?? 0) ?>">
+              <span class="hint" style="margin-left:8px;">Lower comes first. Or arrange everyone on <a href="leadership.php">Leadership &amp; Staff</a>.</span></div>
+            <?php if (!$is_staff && ($agent['web_status'] ?? '') !== 'approved'): ?>
+              <p class="hint" style="margin:6px 0 0;color:#b45309;">Only agents who are on the website appear on Leadership.</p>
+            <?php endif; ?>
+            <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save</button></div>
+          </form>
+        </div>
+        <?php endif; ?>
+
         <!-- ── QR codes (qr_codes.php) ──────────────────────────────────── -->
         <div class="card">
           <div class="card-title"><i class="ti ti-qrcode" style="margin-right:6px;"></i> QR codes</div>
@@ -2493,6 +2546,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </div>
         </div>
 
+        <?php if (!$is_staff): ?>
         <div class="card">
           <div class="card-title">Tasks</div>
           <div class="ob-list">
@@ -2559,6 +2613,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </table>
           <p class="hint" style="margin:8px 0 0;">The MLS record is never edited here. What the website shows comes from the fields above.</p>
         </div>
+        <?php endif; /* staff: no tasks or MLS */ ?>
       </div>
     </div>
   </div>

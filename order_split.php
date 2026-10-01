@@ -546,7 +546,10 @@ $invoice_list  = [];
 $orphan_note   = '';
 
 if ($schema_ready) {
-    $r = $conn->query("SELECT id, agent_name, is_active FROM marketing_intakes ORDER BY agent_name ASC");
+    // Staff (leadership_v1.sql) are never billed, so never offered here.
+    $no_staff = (($c = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'entity_type'")) && $c->fetch_row())
+              ? "WHERE entity_type <> 'staff'" : '';
+    $r = $conn->query("SELECT id, agent_name, is_active FROM marketing_intakes {$no_staff} ORDER BY agent_name ASC");
     if ($r) while ($a = $r->fetch_assoc()) $agents[(int)$a['id']] = $a;
 
     $r = $conn->query("

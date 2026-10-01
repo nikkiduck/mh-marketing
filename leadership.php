@@ -1,125 +1,142 @@
 <?php
 /**
- * website_order.php — the order the brokers appear in on the public site.
+ * leadership.php — the public site's Leadership page, managed here, and the
+ * non-agent staff who appear on it (docs/HANDOFF-leadership-and-staff.md;
+ * built 2026-10-01).
  *
- * sort_order used to be a number box on each agent's page, so putting one
- * person above another meant opening two agents and doing arithmetic (Nikki,
- * 2026-09-28). This lays the brokers out the way monthaus.com lays them out,
- * four across, and lets her drag them into place.
+ *   · Leadership: who is on the page and in what order. Drag the cards (or use
+ *     the arrows), Save, then Sync to Website. Saving writes leadership_sort
+ *     10, 20, 30 ... in one transaction. An agent appears on the site only while
+ *     they are on the website themselves (web_status approved); the card warns.
+ *   · Staff: people who are not agents (entity_type 'staff': Nikki Boxer,
+ *     Kellee Anderson). Added here; edited on agent.php, which shows a staff
+ *     member only their contact details, headshots and Leadership settings.
+ *     Staff are kept out of every agent query by mk_agents_only_sql().
  *
- * Only agents whose web_status is 'approved' appear, because sort_order only
- * decides anything for people who are actually on the website. Teams are left
- * out: the site shows individuals.
- *
- * Saving writes sort_order 1..n in one transaction. It does NOT push anything
- * live — the website reads this portal's feed — so the page offers "Sync to
- * Website" straight afterwards (inc/site_sync.php), which is the same button
- * the roster has.
- *
- * The drag is written by hand against the HTML5 drag events. No library, and
- * deliberately so: the agent page lost its crop tool for a day when a CDN
- * stopped answering. The arrows on each card do the same job for touch
- * screens, where HTML5 dragging does not fire at all.
+ * Published as the roster feed's top-level `leadership` array (api/roster.php);
+ * the site rebuilds its Leadership page from it on its hourly sync.
+ * Same hand-written drag as website_order.php (no library, on purpose).
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
 require_once __DIR__ . '/inc/config.php';
 require_once __DIR__ . '/inc/schema.php';
-require_once __DIR__ . '/inc/agent_roster.php';   // mk_agents_only_sql()
+require_once __DIR__ . '/inc/agent_roster.php';   // mk_make_slug()
 require_once __DIR__ . '/inc/site_sync.php';      // mk_site_sync()
 require_login();
 require_role('admin');
 
-$has_web = mk_column_exists($conn, 'marketing_intakes', 'web_status');
+$ready = mk_column_exists($conn, 'marketing_intakes', 'leadership_show');
+$ld_back = function (string $title, bool $ok, array $lines, bool $offer_sync = false) {
+    $_SESSION['mk_flash'] = ['title' => $title, 'ok' => $ok, 'lines' => $lines, 'offer_sync' => $offer_sync];
+    header('Location: leadership.php'); exit;
+};
+/** Who may be on Leadership: an active agent or staff member (never a team). */
+$eligible_sql = "is_active = 1 AND status <> 'archived' AND entity_type IN ('agent','staff')";
 
 // ── POST ─────────────────────────────────────────────────────────────────────
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $ready) {
     $action = $_POST['_action'] ?? '';
+    $next_sort = fn() => (int)$conn->query("SELECT COALESCE(MAX(leadership_sort), 0) FROM marketing_intakes WHERE leadership_show = 1")->fetch_row()[0] + 10;
 
-    if ($action === 'save_order' && $has_web) {
-        // The form sends the ids in the order they now sit on screen. Anything
-        // that is not currently on the website is ignored rather than trusted,
-        // so a stale tab cannot promote someone who was taken off the site.
-        $ids = array_values(array_filter(array_map('intval', explode(',', (string)($_POST['order'] ?? '')))));
-        $live = [];
-        $r = $conn->query("SELECT id FROM marketing_intakes
-                            WHERE is_active = 1 AND status <> 'archived' AND web_status = 'approved'"
-                          . mk_agents_only_sql($conn));
-        while ($row = $r->fetch_row()) $live[(int)$row[0]] = true;
-        $ids = array_values(array_unique(array_filter($ids, fn($i) => isset($live[$i]))));
-
-        if (!$ids) {
-            $_SESSION['mk_flash'] = ['title' => 'Nothing to save', 'ok' => false,
-                                     'lines' => ['The order came through empty, so nothing was changed.']];
-            header('Location: website_order.php'); exit;
-        }
-
+    if ($action === 'save_order') {
+        // Only ids currently on Leadership are honoured, so a stale tab cannot
+        // add someone who was removed meanwhile.
+        $ids = array_values(array_unique(array_filter(array_map('intval', explode(',', (string)($_POST['order'] ?? ''))))));
+        $on = [];
+        $r = $conn->query("SELECT id FROM marketing_intakes WHERE leadership_show = 1 AND {$eligible_sql}");
+        while ($row = $r->fetch_row()) $on[(int)$row[0]] = true;
+        $ids = array_values(array_filter($ids, fn($i) => isset($on[$i])));
+        if (!$ids) $ld_back('Nothing to save', false, ['The order came through empty, so nothing was changed.']);
         $conn->begin_transaction();
         try {
-            $st = $conn->prepare("UPDATE marketing_intakes SET sort_order = ? WHERE id = ?");
-            foreach ($ids as $pos => $iid) { $n = $pos + 1; $st->bind_param('ii', $n, $iid); $st->execute(); }
+            $st = $conn->prepare("UPDATE marketing_intakes SET leadership_sort = ? WHERE id = ?");
+            foreach ($ids as $pos => $iid) { $n = ($pos + 1) * 10; $st->bind_param('ii', $n, $iid); $st->execute(); }
             $st->close();
             $conn->commit();
         } catch (Throwable $e) {
             $conn->rollback();
-            $_SESSION['mk_flash'] = ['title' => 'The order was not saved', 'ok' => false,
-                                     'lines' => [$e->getMessage(), 'Nothing was changed.']];
-            header('Location: website_order.php'); exit;
+            $ld_back('The order was not saved', false, [$e->getMessage(), 'Nothing was changed.']);
         }
-
-        $_SESSION['mk_flash'] = ['title' => 'Order saved', 'ok' => true, 'offer_sync' => true,
-                                 'lines' => [count($ids) . ' broker' . (count($ids) === 1 ? '' : 's') . ' numbered 1 to ' . count($ids) . '.',
-                                             'The website still shows the old order until it syncs.']];
-        header('Location: website_order.php'); exit;
+        $ld_back('Order saved', true, ['The website shows the new order after its next sync (hourly, or Sync now).'], true);
     }
 
-    // Same push the roster's button does, offered here so saving and publishing
-    // are one sitting rather than two pages.
+    if ($action === 'add_leader') {
+        $iid = (int)($_POST['id'] ?? 0);
+        $row = $conn->query("SELECT agent_name FROM marketing_intakes WHERE id = {$iid} AND {$eligible_sql} LIMIT 1")->fetch_row();
+        if (!$row) $ld_back('Not added', false, ['That person could not be found, or is not an active agent or staff member.']);
+        $sort = $next_sort();
+        $conn->query("UPDATE marketing_intakes SET leadership_show = 1, leadership_sort = {$sort} WHERE id = {$iid}");
+        $ld_back('Added to Leadership', true, [$row[0] . ' is now last on the page. Drag them into place, then Save.'], true);
+    }
+
+    if ($action === 'remove_leader') {
+        $iid = (int)($_POST['id'] ?? 0);
+        $conn->query("UPDATE marketing_intakes SET leadership_show = 0 WHERE id = {$iid}");
+        $ld_back('Removed from Leadership', true, ['They are no longer on the Leadership page (after the next sync). Nothing else about them changed.'], true);
+    }
+
+    if ($action === 'add_staff') {
+        $name  = trim((string)($_POST['agent_name'] ?? ''));
+        $title = trim(str_replace(["\r\n", "\r"], "\n", (string)($_POST['agent_title'] ?? '')));
+        $email = strtolower(trim((string)($_POST['mh_email'] ?? '')));
+        $phone = trim((string)($_POST['cell_phone'] ?? ''));
+        $show  = isset($_POST['leadership_show']) ? 1 : 0;
+        if ($name === '') $ld_back('Not added', false, ['A staff member needs a name.']);
+        if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) $ld_back('Not added', false, ['That email address does not look right.']);
+        $sort = $show ? $next_sort() : 0;
+        $st = $conn->prepare("INSERT INTO marketing_intakes
+                                (agent_name, agent_title, mh_email, cell_phone, entity_type, status, is_active, intake_date,
+                                 leadership_show, leadership_sort)
+                              VALUES (?, ?, ?, ?, 'staff', 'active', 1, CURDATE(), ?, ?)");
+        $st->bind_param('ssssii', $name, $title, $email, $phone, $show, $sort);
+        $st->execute();
+        $new_id = (int)$conn->insert_id;
+        $st->close();
+        if ($new_id && mk_column_exists($conn, 'marketing_intakes', 'slug')) {
+            $slug = mk_make_slug($conn, $name, $new_id);   // the feed's key for their Leadership entry
+            $s2 = $conn->prepare("UPDATE marketing_intakes SET slug = ? WHERE id = ?");
+            $s2->bind_param('si', $slug, $new_id); $s2->execute(); $s2->close();
+        }
+        // Straight to their page: the headshot is the next thing they need.
+        header('Location: agent.php?id=' . $new_id . '&tab=profile'); exit;
+    }
+
     if ($action === 'sync_site') {
         $r = mk_site_sync(false);
         $_SESSION['mk_flash'] = ['title' => $r['ok'] ? 'Website synced' : 'Website sync did not run',
                                  'lines' => $r['lines'], 'ok' => $r['ok'], 'log' => $r['log']];
-        header('Location: website_order.php'); exit;
+        header('Location: leadership.php'); exit;
     }
-
-    header('Location: website_order.php'); exit;
+    header('Location: leadership.php'); exit;
 }
 
 $flash = $_SESSION['mk_flash'] ?? null;
 unset($_SESSION['mk_flash']);
 
 // ── Load ─────────────────────────────────────────────────────────────────────
-// Same order the public grid uses (site webroot/brokers.php): sort_order first,
-// then last name, so brokers that share a number do not jump about.
-$agents = [];
-if ($has_web) {
-    $name_expr = "COALESCE(NULLIF(TRIM(mi.agent_name), ''), mi.mls_full_name)";
-    $res = $conn->query("
-        SELECT mi.id, {$name_expr} AS name, mi.agent_title, mi.headshot_url,
-               mi.headshot_face_url, mi.sort_order, mi.slug, mi.office
-          FROM marketing_intakes mi
-         WHERE mi.is_active = 1 AND mi.status <> 'archived' AND mi.web_status = 'approved'"
-         . mk_agents_only_sql($conn, 'mi') . "
-         ORDER BY mi.sort_order,
-                  SUBSTRING_INDEX(TRIM({$name_expr}), ' ', -1),
-                  {$name_expr}");
-    if ($res) $agents = $res->fetch_all(MYSQLI_ASSOC);
+$leaders = $candidates = $staff = [];
+if ($ready) {
+    $name_expr = "COALESCE(NULLIF(TRIM(agent_name), ''), mls_full_name)";
+    $cols = "id, {$name_expr} AS name, agent_title, headshot_url, headshot_face_url, entity_type, web_status, mh_email, cell_phone, leadership_show";
+    $leaders = $conn->query("SELECT {$cols} FROM marketing_intakes WHERE leadership_show = 1 AND {$eligible_sql}
+                              ORDER BY leadership_sort, {$name_expr}")->fetch_all(MYSQLI_ASSOC);
+    $candidates = $conn->query("SELECT {$cols} FROM marketing_intakes WHERE leadership_show = 0 AND {$eligible_sql}
+                                 ORDER BY entity_type = 'staff' DESC, {$name_expr}")->fetch_all(MYSQLI_ASSOC);
+    $staff = $conn->query("SELECT {$cols} FROM marketing_intakes WHERE entity_type = 'staff' AND is_active = 1
+                            ORDER BY {$name_expr}")->fetch_all(MYSQLI_ASSOC);
 }
-$public_url = defined('PUBLIC_SITE_URL') ? rtrim(PUBLIC_SITE_URL, '/') . '/brokers.php' : '';
+$public_url = defined('PUBLIC_SITE_URL') ? rtrim(PUBLIC_SITE_URL, '/') . '/leadership.php' : '';
 $can_sync   = defined('SITE_AGENT_SYNC_URL') && SITE_AGENT_SYNC_URL !== '';
 
 $conn->close();
 // ── Nothing below this line may touch the database. ─────────────────────────
 
 function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
-
-/** Initials for the card when someone has no photo yet. */
 function wo_initials(string $name): string {
     $words = array_slice(preg_split('/\s+/', trim($name)) ?: [], 0, 2);
     return strtoupper(implode('', array_map(fn($w) => mb_substr($w, 0, 1), $words)));
 }
-
-/** The title, showing the line break the Title field was given. */
 function wo_title(string $t): string {
     $t = preg_replace('/[ \t]*\R[ \t]*/', "\n", trim($t));
     return nl2br(e($t), false);
@@ -130,7 +147,7 @@ function wo_title(string $t): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Website Order | Mont Haus Marketing</title>
+  <title>Leadership &amp; Staff | Mont Haus Marketing</title>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/fonts/tabler-icons.min.css">
   <link rel="stylesheet" href="/assets/css/style.css" id="main-style-link">
@@ -203,6 +220,22 @@ function wo_title(string $t): string {
     .wo-nudge button[disabled] { opacity:.35; cursor:default; }
     .empty-state { background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:34px; text-align:center; color:#6b7280; font-size:14px; }
     .hint { font-size:12px; color:#9ca3af; }
+    .ld-type { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; padding:2px 6px; border-radius:3px; }
+    .ld-type.agent { background:#eef2ff; color:#3730a3; } .ld-type.staff { background:#fdf3e2; color:#8a5a12; }
+    .ld-warn { font-size:11px; color:#b45309; margin:0 0 6px; }
+    .ld-links { display:flex; gap:6px; margin:0 0 8px; }
+    .ld-links a, .ld-links button { font-size:11px; padding:2px 8px; border:1px solid #d1d5db; background:#fff; border-radius:3px; color:#374151; text-decoration:none; cursor:pointer; font-family:inherit; }
+    .ld-links button:hover, .ld-links a:hover { background:#f3f4f6; }
+    .ld-panel { background:#fff; border:1px solid #e5e7eb; border-radius:6px; padding:16px 18px; margin-top:22px; }
+    .ld-panel h2 { font-size:15px; font-weight:700; margin:0 0 4px; }
+    .ld-row { display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end; margin-top:10px; }
+    .ld-row label { display:flex; flex-direction:column; font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; gap:4px; }
+    .ld-row input[type=text], .ld-row input[type=email], .ld-row select, .ld-row textarea { font:14px 'Public Sans', sans-serif; padding:7px 9px; border:1px solid #d1d5db; border-radius:4px; min-width:200px; text-transform:none; letter-spacing:0; color:#111; }
+    .ld-row textarea { min-height:38px; }
+    .ld-row .chk { flex-direction:row; align-items:center; gap:6px; text-transform:none; font-size:13px; color:#374151; letter-spacing:0; }
+    table.ld-staff { width:100%; border-collapse:collapse; margin-top:10px; font-size:13px; }
+    table.ld-staff th { text-align:left; font-size:11px; color:#6b7280; text-transform:uppercase; letter-spacing:.04em; padding:6px 8px; border-bottom:1px solid #e5e7eb; }
+    table.ld-staff td { padding:8px; border-bottom:1px solid #f3f4f6; vertical-align:top; }
   </style>
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
@@ -219,8 +252,7 @@ function wo_title(string $t): string {
         <?php if (!empty($flash['offer_sync']) && $can_sync): ?>
           <form method="POST" style="margin:8px 0 0;" id="syncNowForm">
             <input type="hidden" name="_action" value="sync_site">
-            <button type="submit" class="btn btn-outline btn-sm" id="syncNowBtn">
-              <i class="ti ti-refresh"></i> Sync to Website now</button>
+            <button type="submit" class="btn btn-outline btn-sm" id="syncNowBtn"><i class="ti ti-refresh"></i> Sync to Website now</button>
           </form>
         <?php endif; ?>
         <?php if (!empty($flash['log'])): ?>
@@ -230,74 +262,117 @@ function wo_title(string $t): string {
     <?php endif; ?>
 
     <div class="mk-page-header">
-      <h1>Website Order</h1>
+      <h1>Leadership &amp; Staff</h1>
       <div class="hdr-actions">
         <?php if ($public_url): ?>
-          <a class="btn btn-outline btn-sm" href="<?= e($public_url) ?>" target="_blank" rel="noopener">
-            <i class="ti ti-external-link"></i> See the live page</a>
+          <a class="btn btn-outline btn-sm" href="<?= e($public_url) ?>" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> See the live page</a>
         <?php endif; ?>
         <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-arrow-left"></i> Agent Roster</a>
       </div>
     </div>
 
     <p class="lede">
-      This is the order brokers appear in on the public site, laid out four across the way that page lays them out.
-      Drag a card where you want it, or use the arrows. Only brokers who are on the website show here, and saving
-      does not publish on its own: the website picks the new order up on its next sync.
+      The website's Leadership page, in order. Drag a card where you want it, or use the arrows, then Save.
+      The website picks changes up on its hourly sync, or straight away with Sync to Website.
+      Staff are people who are not agents: they appear on Leadership only, never as agents anywhere.
     </p>
 
-    <?php if (!$has_web): ?>
-      <div class="empty-state">The website columns are not in this database yet. Run <code>sql/agent_roster_v1.sql</code>.</div>
-    <?php elseif (!$agents): ?>
-      <div class="empty-state">
-        Nobody is on the website yet. Put a broker on the site from their agent page, under Website, and they will appear here.
-      </div>
+    <?php if (!$ready): ?>
+      <div class="empty-state">Leadership is not set up in this database yet. Run <code>sql/leadership_v1.sql</code>, then reload.</div>
     <?php else: ?>
 
+      <?php if (!$leaders): ?>
+        <div class="empty-state">Nobody is on the Leadership page yet. Add people below.</div>
+      <?php else: ?>
       <form method="POST" id="orderForm">
         <input type="hidden" name="_action" value="save_order">
         <input type="hidden" name="order" id="orderField" value="">
-
         <div class="order-bar">
-          <button type="submit" class="btn btn-primary btn-sm" id="saveBtn" disabled>
-            <i class="ti ti-device-floppy"></i> Save order</button>
+          <button type="submit" class="btn btn-primary btn-sm" id="saveBtn" disabled><i class="ti ti-device-floppy"></i> Save order</button>
           <span class="state" id="orderState">Nothing moved yet.</span>
-          <span class="hint" style="margin-left:auto;"><?= count($agents) ?> on the website</span>
-        </div>
-
-        <div class="grid" id="grid">
-          <?php foreach ($agents as $i => $a):
-                $name  = (string)$a['name'];
-                $photo = (string)($a['headshot_url'] ?: $a['headshot_face_url']); ?>
-            <article class="wo-card" draggable="true" data-id="<?= (int)$a['id'] ?>" tabindex="0"
-                     aria-label="<?= e($name) ?>, position <?= $i + 1 ?>">
-              <div class="wo-photo">
-                <?php if ($photo): ?>
-                  <img src="<?= e($photo) ?>" alt="" draggable="false">
-                <?php else: ?>
-                  <span><?= e(wo_initials($name)) ?></span>
-                <?php endif; ?>
-              </div>
-              <div class="wo-body">
-                <p class="wo-name"><?= e($name) ?></p>
-                <?php if (trim((string)$a['agent_title']) !== ''): ?>
-                  <p class="wo-title"><?= wo_title((string)$a['agent_title']) ?></p>
-                <?php endif; ?>
-                <div class="wo-foot">
-                  <span class="wo-pos"><?= $i + 1 ?></span>
-                  <span class="wo-nudge">
-                    <button type="button" class="js-back" title="Move earlier" aria-label="Move earlier">&#9664;</button>
-                    <button type="button" class="js-fwd"  title="Move later"   aria-label="Move later">&#9654;</button>
-                  </span>
-                </div>
-              </div>
-            </article>
-          <?php endforeach; ?>
+          <span class="hint" style="margin-left:auto;"><?= count($leaders) ?> on Leadership</span>
         </div>
       </form>
 
-    <?php endif; ?>
+      <div class="grid" id="grid">
+        <?php foreach ($leaders as $i => $a):
+              $name  = (string)$a['name'];
+              $photo = (string)($a['headshot_url'] ?: $a['headshot_face_url']);
+              $is_staff = $a['entity_type'] === 'staff'; ?>
+          <article class="wo-card" draggable="true" data-id="<?= (int)$a['id'] ?>" tabindex="0" aria-label="<?= e($name) ?>, position <?= $i + 1 ?>">
+            <div class="wo-photo">
+              <?php if ($photo): ?><img src="<?= e($photo) ?>" alt="" draggable="false"><?php else: ?><span><?= e(wo_initials($name)) ?></span><?php endif; ?>
+            </div>
+            <div class="wo-body">
+              <p class="wo-name"><?= e($name) ?> <span class="ld-type <?= $is_staff ? 'staff' : 'agent' ?>"><?= $is_staff ? 'Staff' : 'Agent' ?></span></p>
+              <?php if (trim((string)$a['agent_title']) !== ''): ?><p class="wo-title"><?= wo_title((string)$a['agent_title']) ?></p><?php endif; ?>
+              <?php if (!$is_staff && $a['web_status'] !== 'approved'): ?><p class="ld-warn">Not on the website, so not shown on Leadership.</p><?php endif; ?>
+              <?php if (!$photo): ?><p class="ld-warn">No headshot yet.</p><?php endif; ?>
+              <div class="ld-links">
+                <a href="agent.php?id=<?= (int)$a['id'] ?>&amp;tab=profile">Edit</a>
+                <form method="POST" style="margin:0;" onsubmit="return confirm('Take <?= e($name) ?> off the Leadership page?');">
+                  <input type="hidden" name="_action" value="remove_leader"><input type="hidden" name="id" value="<?= (int)$a['id'] ?>">
+                  <button type="submit">Remove</button>
+                </form>
+              </div>
+              <div class="wo-foot">
+                <span class="wo-pos"><?= $i + 1 ?></span>
+                <span class="wo-nudge">
+                  <button type="button" class="js-back" title="Move earlier" aria-label="Move earlier">&#9664;</button>
+                  <button type="button" class="js-fwd"  title="Move later"   aria-label="Move later">&#9654;</button>
+                </span>
+              </div>
+            </div>
+          </article>
+        <?php endforeach; ?>
+      </div>
+      <?php endif; ?>
 
+      <div class="ld-panel">
+        <h2>Add to Leadership</h2>
+        <span class="hint">An agent or staff member not on the page yet. They go last; drag them into place.</span>
+        <form method="POST" class="ld-row">
+          <input type="hidden" name="_action" value="add_leader">
+          <label>Person
+            <select name="id" required>
+              <option value="">Choose…</option>
+              <?php foreach ($candidates as $c): ?>
+                <option value="<?= (int)$c['id'] ?>"><?= e($c['name']) ?><?= $c['entity_type'] === 'staff' ? ' (staff)' : ($c['web_status'] !== 'approved' ? ' (not on the website)' : '') ?></option>
+              <?php endforeach; ?>
+            </select></label>
+          <button type="submit" class="btn btn-primary btn-sm">Add</button>
+        </form>
+      </div>
+
+      <div class="ld-panel">
+        <h2>Add a staff member</h2>
+        <span class="hint">Someone who is not an agent. You will go to their page next to add a headshot.</span>
+        <form method="POST" class="ld-row">
+          <input type="hidden" name="_action" value="add_staff">
+          <label>Name <input type="text" name="agent_name" required maxlength="150"></label>
+          <label>Title <textarea name="agent_title" rows="1" maxlength="255" placeholder="e.g. Accounting Manager"></textarea></label>
+          <label>Email <input type="email" name="mh_email" maxlength="255" placeholder="first.last@monthaus.com"></label>
+          <label>Phone <input type="text" name="cell_phone" maxlength="50"></label>
+          <label class="chk"><input type="checkbox" name="leadership_show" value="1" checked> Show on Leadership</label>
+          <button type="submit" class="btn btn-primary btn-sm">Add staff member</button>
+        </form>
+      </div>
+
+      <div class="ld-panel">
+        <h2>Staff</h2>
+        <?php if (!$staff): ?><span class="hint">No staff yet.</span><?php else: ?>
+        <table class="ld-staff">
+          <tr><th>Name</th><th>Title</th><th>Email</th><th>Phone</th><th>On Leadership</th><th></th></tr>
+          <?php foreach ($staff as $s): ?>
+            <tr><td><?= e($s['name']) ?></td><td><?= wo_title((string)$s['agent_title']) ?></td><td><?= e($s['mh_email']) ?></td>
+                <td><?= e($s['cell_phone']) ?></td><td><?= (int)$s['leadership_show'] ? 'Yes' : 'No' ?></td>
+                <td><a href="agent.php?id=<?= (int)$s['id'] ?>&amp;tab=profile">Edit</a></td></tr>
+          <?php endforeach; ?>
+        </table>
+        <?php endif; ?>
+      </div>
+
+    <?php endif; ?>
   </div>
 </div>
 
@@ -305,7 +380,7 @@ function wo_title(string $t): string {
 (function () {
   var grid = document.getElementById('grid');
   if (!grid) return;
-  var form  = document.getElementById('orderForm');
+  var form  = document.getElementById('orderForm');   // holds only the Save button: the cards carry their own Remove forms
   var field = document.getElementById('orderField');
   var save  = document.getElementById('saveBtn');
   var state = document.getElementById('orderState');

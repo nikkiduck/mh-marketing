@@ -16,20 +16,29 @@ const MK_RESERVED_SLUGS = ['www','mail','smtp','ftp','admin','api','site','app',
 const MK_MARKET_OFFICE = ['aspen' => 'aspen', 'vail' => 'vail', 'cren' => 'aspen', 'recolorado' => 'aspen'];
 
 /**
- * " AND [alias.]entity_type <> 'team'" once agent_roster_v2_teams.sql has run,
- * '' before. A team row (Weber Boxer Group) is a MARKETING entity: it
- * advertises and is billed. It is never an MLS agent, never on the website and
- * never matched to a person by email or name; its members have their own rows.
- * Every query that looks for a PERSON appends this.
+ * " AND [alias.]entity_type = 'agent'" once agent_roster_v2_teams.sql has run,
+ * '' before. Every query that looks for an AGENT (a person who is an MLS
+ * agent) appends this. It keeps out:
+ *   · teams (Weber Boxer Group): a MARKETING entity that advertises and is
+ *     billed, never an MLS agent, never on the website, never matched to a
+ *     person by email or name; its members have their own rows;
+ *   · staff (leadership_v1.sql, 2026-10-01: Nikki Boxer, Kellee Anderson):
+ *     people on the Leadership page who are not agents, so never on Our
+ *     Agents, listings, FUB rotation, Hot Sheets, Pipeline, billing or MLS
+ *     matching.
+ * Was mk_team_sql() ("<> 'team'"); renamed when staff arrived, so every caller
+ * now means "agents only". mk_team_sql() remains as an alias.
  */
-function mk_team_sql(mysqli $conn, string $alias = ''): string {
+function mk_agents_only_sql(mysqli $conn, string $alias = ''): string {
     static $has = null;
     if ($has === null) {
         $r = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'entity_type'");
         $has = $r && $r->fetch_row();
     }
-    return $has ? ' AND ' . ($alias !== '' ? $alias . '.' : '') . "entity_type <> 'team'" : '';
+    return $has ? ' AND ' . ($alias !== '' ? $alias . '.' : '') . "entity_type = 'agent'" : '';
 }
+/** Old name of mk_agents_only_sql(); kept so nothing breaks. */
+function mk_team_sql(mysqli $conn, string $alias = ''): string { return mk_agents_only_sql($conn, $alias); }
 
 /** Anyprop OriginatingSystemName → our market slug. agsmls is the Aspen board. */
 function mk_market_slug(string $osn): string {
@@ -84,7 +93,7 @@ function mk_assign_missing_slugs(mysqli $conn, bool $dry = false): array {
                           WHERE (slug IS NULL OR slug = '')
                             AND is_active = 1 AND status <> 'archived'
                             AND COALESCE(NULLIF(TRIM(agent_name),''), mls_full_name) IS NOT NULL"
-                        . mk_team_sql($conn) . "   -- a team has no website profile
+                        . mk_agents_only_sql($conn) . "   -- teams and staff have no agent profile
                           ORDER BY id");
     if (!$res) throw new RuntimeException('slug backfill query failed: ' . $conn->error);
     $up = $conn->prepare("UPDATE marketing_intakes SET slug = ? WHERE id = ?");

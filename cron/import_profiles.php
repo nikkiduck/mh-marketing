@@ -69,7 +69,7 @@ $key = fn(string $s) => strtolower(preg_replace('/[^a-z0-9]/i', '', $s));
 // Every column: $stage() compares against what is already there, so a second
 // run has to see the fields the spreadsheet can fill (socials, website, ...).
 $people = $conn->query("SELECT * FROM marketing_intakes
-                         WHERE is_active = 1 AND status <> 'archived'" . mk_team_sql($conn))->fetch_all(MYSQLI_ASSOC);
+                         WHERE is_active = 1 AND status <> 'archived'" . mk_agents_only_sql($conn))->fetch_all(MYSQLI_ASSOC);
 $by_key = [];
 foreach ($people as $p) {
     foreach ([$p['mh_email'], $p['mls_email'], $p['slug'], $p['agent_name'], $p['mls_full_name']] as $v) {

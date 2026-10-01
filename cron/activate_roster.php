@@ -39,7 +39,7 @@ foreach ($argv as $a) if (preg_match('/^--skip=([\d,#\s]+)$/', $a, $m)) $skip = 
 
 echo "Activate roster" . ($dry ? ' (DRY RUN: nothing will be written)' : '') . "\n\n";
 $new_ids = [];
-$not_team = mk_team_sql($conn);
+$not_team = mk_agents_only_sql($conn);
 
 // 1. 'roster' / 'pending' rows → Active.
 $rows = $conn->query("SELECT id, agent_name, status FROM marketing_intakes

@@ -130,9 +130,13 @@ if ($r) while ($row = $r->fetch_assoc()) $states[(int)$row['intake_id']][$row['y
 // everyone offboarded would be wrong, with nothing on screen to explain the
 // gap. So the query no longer filters, and each tab decides for itself.
 $intakes = [];
+// Staff (leadership_v1.sql) are not agents and are never billed.
+$no_staff = (($c = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'entity_type'")) && $c->fetch_row())
+          ? "WHERE entity_type <> 'staff'" : '';
 $r = $conn->query("
     SELECT id, agent_name, roster_id, is_active
       FROM marketing_intakes
+     {$no_staff}
      ORDER BY agent_name ASC
 ");
 if ($r) $intakes = $r->fetch_all(MYSQLI_ASSOC);

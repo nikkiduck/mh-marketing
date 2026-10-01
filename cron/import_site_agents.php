@@ -76,7 +76,7 @@ foreach ($data['agents'] as $a) {
     }
     if (!$iid) {
         foreach (array_unique(array_filter([strtolower(trim((string)($a['email'] ?? ''))), strtolower(trim((string)($a['mls_email'] ?? '')))])) as $em) {
-            $hit = narrow(one($conn, "SELECT id, is_active, status FROM marketing_intakes WHERE (LOWER(mh_email) = ? OR LOWER(alt_email) = ? OR LOWER(mls_email) = ?)" . mk_team_sql($conn),
+            $hit = narrow(one($conn, "SELECT id, is_active, status FROM marketing_intakes WHERE (LOWER(mh_email) = ? OR LOWER(alt_email) = ? OR LOWER(mls_email) = ?)" . mk_agents_only_sql($conn),
                        'sss', [$em, $em, $em]));
             if (count($hit) === 1) { $iid = (int)$hit[0]['id']; $how = "email {$em}"; break; }
             if (count($hit) > 1) { $iid = -1; $how = "email {$em} → #" . implode(', #', array_column($hit, 'id')); break; }
@@ -84,7 +84,7 @@ foreach ($data['agents'] as $a) {
     }
     if (!$iid) {
         foreach (array_unique(array_filter([strtolower($name), strtolower(trim((string)($a['mls_full_name'] ?? '')))])) as $nm) {
-            $hit = narrow(one($conn, "SELECT id, is_active, status FROM marketing_intakes WHERE (LOWER(TRIM(agent_name)) = ? OR LOWER(TRIM(mls_full_name)) = ?)" . mk_team_sql($conn),
+            $hit = narrow(one($conn, "SELECT id, is_active, status FROM marketing_intakes WHERE (LOWER(TRIM(agent_name)) = ? OR LOWER(TRIM(mls_full_name)) = ?)" . mk_agents_only_sql($conn),
                        'ss', [$nm, $nm]));
             if (count($hit) === 1) { $iid = (int)$hit[0]['id']; $how = "name"; break; }
             if (count($hit) > 1) { $iid = -1; $how = "name → #" . implode(', #', array_column($hit, 'id')); break; }

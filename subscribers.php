@@ -101,7 +101,7 @@ $rows = $conn->query("SELECT s.*, mi.agent_name, mi.slug, mi.status AS agent_sta
 // Agents with no subscription, for the add form.
 $not_on = $conn->query("SELECT mi.id, mi.agent_name, mi.mh_email, mi.mls_email
                           FROM marketing_intakes mi
-                         WHERE mi.is_active = 1 AND mi.status NOT IN ('archived')" . mk_team_sql($conn, 'mi') . "
+                         WHERE mi.is_active = 1 AND mi.status NOT IN ('archived')" . mk_agents_only_sql($conn, 'mi') . "
                            AND NOT EXISTS (SELECT 1 FROM hs_subscribers s
                                             WHERE s.is_active = 1 AND s.unsubscribed_at IS NULL
                                               AND (s.intake_id = mi.id
