@@ -84,6 +84,36 @@ function mk_role_enum_has_super_admin(mysqli $conn): bool {
 
 $has_sa_enum = mk_role_enum_has_super_admin($conn);
 $has_entra   = mk_column_exists($conn, 'users', 'entra_object_id');
+
+// Agent portal (docs/AGENT_PORTAL_PLAN.md): which marketing account each login
+// sees. Guarded for the deploy window before sql/portal_identity_v1.sql runs.
+// Several logins may share one account (Weber Boxer Group's three people), so
+// this is a plain choice, never derived from the email.
+$has_portal = mk_column_exists($conn, 'users', 'intake_id');
+$accounts   = [];   // id => label
+if ($has_portal) {
+    $has_et = mk_column_exists($conn, 'marketing_intakes', 'entity_type');
+    $res = $conn->query("SELECT id, agent_name" . ($has_et ? ', entity_type' : '') . "
+                           FROM marketing_intakes
+                          WHERE is_active = 1 AND status <> 'archived'"
+                        . ($has_et ? " AND entity_type <> 'staff'" : '') . "
+                          ORDER BY agent_name");
+    if ($res) {
+        while ($a = $res->fetch_assoc()) {
+            $accounts[(int)$a['id']] = $a['agent_name'] . (($a['entity_type'] ?? '') === 'team' ? ' (team)' : '');
+        }
+    }
+}
+/** The posted portal account: 0 for none, -1 when it is not a real choice. */
+function mk_posted_account(array $accounts): int {
+    $iid = (int)($_POST['intake_id'] ?? 0);
+    return ($iid === 0 || isset($accounts[$iid])) ? $iid : -1;
+}
+function mk_save_account(mysqli $conn, int $user_id, int $iid): void {
+    $val = $iid > 0 ? $iid : null;
+    $s = $conn->prepare("UPDATE users SET intake_id = ? WHERE id = ?");
+    if ($s) { $s->bind_param('ii', $val, $user_id); $s->execute(); $s->close(); }
+}
 if (!$has_sa_enum) {
     // Offering a value the column cannot hold is how somebody gets locked out.
     $ROLES = ['agent', 'admin'];
@@ -158,6 +188,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mk_email_taken($conn, $email)) {
             $redirect('err', 'There is already an account for ' . $email . '.');
         }
+        $iid = $has_portal ? mk_posted_account($accounts) : 0;
+        if ($iid < 0) {
+            $redirect('err', 'That marketing account is not available — nothing was created.');
+        }
 
         // password stays NULL: this account signs in with Microsoft.
         $null = null;
@@ -178,6 +212,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // check above.
             $redirect('err', 'Could not create the account. It may already exist.');
         }
+        if ($has_portal && $iid > 0) mk_save_account($conn, $new_id, $iid);
         $redirect('ok', $first . ' ' . $last . ' added as ' . ($ROLE_LBL[$role] ?? $role)
             . '. They sign in with Microsoft — no password to send.', $new_id);
     }
@@ -204,6 +239,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (mk_email_taken($conn, $email, $id)) {
             $redirect('err', 'Another account already uses ' . $email . '.', $id);
+        }
+        $iid = $has_portal ? mk_posted_account($accounts) : 0;
+        if ($iid < 0) {
+            $redirect('err', 'That marketing account is not available — nothing changed.', $id);
         }
 
         // Read the current row: the two guards below both need to know what it
@@ -240,6 +279,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $s->bind_param('ssssi', $first, $last, $email, $role, $id);
         $s->execute();
         $s->close();
+        if ($has_portal) mk_save_account($conn, $id, $iid);
 
         $note = '';
         if (strtolower((string)$cur['email']) !== $email && $has_entra) {
@@ -293,7 +333,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 //
 // entra_object_id is guarded: this page's whole content is the user list, and a
 // failed query would render it as "no users" with nothing on screen saying why.
-$sso_cols = $has_entra ? ', entra_object_id, sso_linked_at' : '';
+$sso_cols = ($has_entra ? ', entra_object_id, sso_linked_at' : '') . ($has_portal ? ', intake_id' : '');
 $sql = "SELECT id, first_name, last_name, email, role, is_active, last_login, created_at,
                (password IS NOT NULL AND password <> '') AS has_password
                $sso_cols
@@ -337,6 +377,13 @@ foreach ($users as $u) {
             $breakglass++;
         }
     }
+}
+
+// How many logins point at each portal account (a shared one gets a note).
+$acct_use = [];
+foreach ($users as $u) {
+    $a = (int)($u['intake_id'] ?? 0);
+    if ($a > 0) $acct_use[$a] = ($acct_use[$a] ?? 0) + 1;
 }
 
 $msg      = (string)($_GET['msg'] ?? '');
@@ -569,6 +616,17 @@ function ago(?string $dt): string {
               <?php endforeach; ?>
             </select>
           </div>
+          <?php if ($has_portal): ?>
+          <div class="us-f">
+            <label for="na">Portal account</label>
+            <select id="na" name="intake_id">
+              <option value="0">None</option>
+              <?php foreach ($accounts as $aid => $alabel): ?>
+                <option value="<?= $aid ?>"><?= h($alabel) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <?php endif; ?>
           <div class="us-f">
             <button type="submit" class="btn-mh primary"><i class="ti ti-plus"></i> Add user</button>
           </div>
@@ -620,6 +678,16 @@ function ago(?string $dt): string {
           <td>
             <span class="chip role-<?= h($role ?: 'agent') ?>"><?= h($ROLE_LBL[$role] ?? ($role === '' ? 'none' : $role)) ?></span>
             <?php if (!$active): ?><br><span class="chip off" style="margin-top:4px">Inactive</span><?php endif; ?>
+            <?php if ($has_portal):
+              $ua = (int)($u['intake_id'] ?? 0); ?>
+              <?php if ($ua > 0): ?>
+                <div class="us-meta" style="margin-top:4px" title="What they see in the agent portal">
+                  Portal: <?= h($accounts[$ua] ?? ('account #' . $ua . ', not active')) ?><?= ($acct_use[$ua] ?? 0) > 1 ? ' · shared' : '' ?>
+                </div>
+              <?php elseif ($role === 'agent'): ?>
+                <br><span class="chip pending" style="margin-top:4px" title="Signs in, but sees an 'almost there' page until linked">No portal account</span>
+              <?php endif; ?>
+            <?php endif; ?>
           </td>
           <td>
             <?php if ($linked): ?>
@@ -702,6 +770,18 @@ function ago(?string $dt): string {
                     <input type="hidden" name="role" value="<?= h($role) ?>">
                   <?php endif; ?>
                 </div>
+                <?php if ($has_portal):
+                  $ua = (int)($u['intake_id'] ?? 0); ?>
+                <div class="us-f">
+                  <label for="a<?= $uid ?>">Portal account</label>
+                  <select id="a<?= $uid ?>" name="intake_id">
+                    <option value="0">None</option>
+                    <?php foreach ($accounts as $aid => $alabel): ?>
+                      <option value="<?= $aid ?>"<?= $aid === $ua ? ' selected' : '' ?>><?= h($alabel) ?><?= ($acct_use[$aid] ?? 0) > 0 && $aid !== $ua ? ' · already linked' : '' ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <?php endif; ?>
               </div>
               <div class="us-edit-actions">
                 <button type="submit" class="btn-mh primary us-mini"><i class="ti ti-device-floppy"></i> Save</button>
@@ -714,7 +794,7 @@ function ago(?string $dt): string {
                   <?php elseif ($is_last_sa && $active_super_admins === 1): ?>
                     The only active super admin. Promote somebody else before changing this.
                   <?php else: ?>
-                    A role change takes effect at their next sign-in.
+                    A role change takes effect at their next sign-in<?= $has_portal ? '; a portal account change, straight away. Several people can share one account (Weber Boxer Group).' : '.' ?>
                   <?php endif; ?>
                 </span>
               </div>

@@ -6,6 +6,9 @@
  */
 require_once __DIR__ . '/inc/auth.php';
 require_login();
+// Admins only (2026-10-01). The role check below reads the database and refuses
+// 'agent', but a BLANK role slipped past it; require_role() refuses that too.
+require_role('admin');
 require_once __DIR__ . '/inc/db.php';
 
 // ── Access control ───────────────────────────────────────────

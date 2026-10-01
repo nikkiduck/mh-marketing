@@ -1536,6 +1536,36 @@ site's hostname.
    https://monthaus.com, and `curl -s -o /dev/null -w "%{http_code}\n"
    https://qr.monthaus.com/inc/db.php` must also be a 302 (never the file).
 
+## Agent portal (portal/, 2026-10-01)
+
+Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phase 0 + 1.
+- `inc/portal.php` `portal_context()` is the ONLY way a portal page learns
+  whose data to show: `users.intake_id` read from the database on every
+  request (not the session), refused with a 403 that names the gate (no link,
+  inactive, archived, staff, migration missing). Never take an account id from
+  the request; an item id from the request (a QR code) is used only after
+  checking it belongs to `ctx['ids']` (account + a team's members).
+- Admins preview any account with `?preview=<intake id>` (banner shown;
+  `portal_url()` keeps it on links). An agent's `?preview=` is ignored.
+- `users.php` sets the account (several logins may share one: Weber Boxer
+  Group). `index.php` sends role `agent` to `/portal/`. `roster.php` now calls
+  `require_role('admin')` (a blank role used to pass its own check).
+- `portal/qr.php`: agents change their codes' destination only (profile page
+  or a monthaus.com page via `qr_dest_error()`), logged in `qr_code_changes`.
+- Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
+- Tests: `tests/render_portal.php` (34 assertions: isolation between
+  accounts, someone else's code refused on GET and POST, preview rules,
+  refusals). Proven to catch a leak by breaking the ownership check.
+
+### Render harnesses: run them on a server
+The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`
+so the stub is the only `mysqli`. Homebrew's PHP 8.5 on Nikki's Mac compiles
+mysqli in, so they fail there with "Cannot redeclare class mysqli". Run them on
+the marketing server: copy the repo to /tmp, `php tests/render_users.php`,
+delete the copy. `render_users.php` is also intermittently flaky (a different
+single assertion fails now and then, before and after 2026-10-01): a race
+between rewriting scenario.json and the next request; rerun before chasing it.
+
 ## Upcoming projects (not started)
 
 - **Retire the frozen Spark-era roster views.** `office_roster` / `mh_brokers`

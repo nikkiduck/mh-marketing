@@ -134,6 +134,11 @@ mysqli::$fixtures = [
     // save_user / set_active read the current row
     'SELECT id, role, is_active, email FROM users' => $scen['target_row'] ? [$scen['target_row']] : [],
     'SELECT id, first_name, last_name, role FROM users' => $scen['target_row'] ? [$scen['target_row']] : [],
+    // portal accounts for the picker (users.php, agent portal phase 1)
+    'FROM marketing_intakes' => mh_str([
+        ['id'=>8, 'agent_name'=>'Weber Boxer Group', 'entity_type'=>'team'],
+        ['id'=>7, 'agent_name'=>'Kimberlee Coates', 'entity_type'=>'agent'],
+    ]),
     // writes
     'INSERT INTO users' => [],
     'UPDATE users'      => [],

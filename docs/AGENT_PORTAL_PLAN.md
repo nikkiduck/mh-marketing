@@ -1,6 +1,9 @@
 # Agent Portal: build plan
 
-**Status:** proposal, not yet started. Nothing here has been built.
+**Status:** Phases 0 and 1 BUILT 2026-10-01 (roster.php guard, agents land in
+/portal/, users.php account picker, inc/portal.php, portal home + QR page,
+tests/render_portal.php: 34 assertions). Needs sql/portal_identity_v1.sql run
+and pilot accounts set up. Phases 2+ not started.
 **Written:** 2026-09-08. **Revised:** 2026-10-01 with Nikki's decisions (below)
 and a fresh check of the code and live database.
 **Scope:** Mont Haus agents sign in with Microsoft to `marketing.monthaus.com` and

@@ -31,6 +31,9 @@ require_once __DIR__ . '/inc/agent_lifecycle.php';
 require_once __DIR__ . '/inc/agent_roster.php';   // mk_team_sql()
 require_once __DIR__ . '/inc/site_sync.php';      // "Sync to Website"
 require_login();
+// Agents land in their portal instead of this admin page's 403 (2026-10-01).
+// Not a guard loop: /portal/ never sends anyone back here.
+if (($_SESSION['user_role'] ?? '') === 'agent') { header('Location: /portal/'); exit; }
 require_role('admin');
 
 // ── POST ─────────────────────────────────────────────────────────────────────
