@@ -1026,7 +1026,7 @@ www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 
 ```
 40 * * * *  cron/sync_hot_sheet_listings.php  >> hot_sheet_sync.log      hourly (agent pages' listings)
-#0 13 * * * cron/send_hot_sheet.php           >> hot_sheet_send.log      PAUSED, see below
+0 13 * * *  cron/send_hot_sheet.php           >> hot_sheet_send.log      07:00 MDT
 20 * * * *  cron/sync_anyprop_roster.php      >> anyprop_roster.log      hourly
 */15 * * * * cron/parse_pipeline_events.php   >> pipeline_parse.log      every 15 min
 5,35 * * * * cron/check_health.php            >> check_health.log        alerts
@@ -1056,13 +1056,12 @@ with the log under `/var/log/mh-marketing/`; shortened here.)
   03:45; to be rescheduled when the roster is tidied up) and a leftover
   every-minute `/bin/date` test job. Its `cron_test.log` (1.6 MB) is still
   in `/var/log/mh-marketing/` and can be deleted.
-- `send_hot_sheet.php` is **paused** (commented out in the crontab,
-  2026-10-01, Nikki) until Vail is in the Anyprop feed: Vail listings are
-  missing from the hot sheet data, and a Paperless deal with a Vail MLS
-  number cannot be matched to its listing in the review queue (e.g. 134 N
-  Brett Trail, MLS 1014785). Re-enable by uncommenting the line (backup
-  `deploy-backups/20261001/crontab.before-hs-pause`). Even when running it
-  only mails `HOT_SHEET_ALLOWED_RECIPIENTS`. The listings sync and the
+- `send_hot_sheet.php` was paused 2026-10-01 until Vail was in the Anyprop
+  feed, and resumed the same day once Vail went live (OSN vbor → vail) and
+  its 8 Mont Haus listings reached `hs_listing_state` at 20:40 UTC. Those 8
+  were logged as `new_listing` because that was the first time this system
+  saw them, not because they were newly listed. It still mails only
+  `HOT_SHEET_ALLOWED_RECIPIENTS` (Nikki) until go-live. The listings sync and the
   pipeline parser keep running: they only record, so no history is lost.
 - The review alert's "Off-Market" means `suggested_entry_type =
   pocket_listing`, which the parser sets for EVERY listing-side deal; whether
