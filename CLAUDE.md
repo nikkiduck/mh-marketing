@@ -1504,6 +1504,17 @@ site's hostname.
    https://monthaus.com, and `curl -s -o /dev/null -w "%{http_code}\n"
    https://qr.monthaus.com/inc/db.php` must also be a 302 (never the file).
 
+## Upcoming projects (not started)
+
+- **Agent portal**: `docs/AGENT_PORTAL_PLAN.md` (revised 2026-10-01 with Nikki's
+  decisions: dummy-proof cards, creative shown on the portal, spend without
+  invoiced/paid, a marketing menu, Weber Boxer Group as one account).
+- **Custom Hot Sheets with filters**: agents' own Hot Sheets searching ALL
+  listings, not just Mont Haus's. Deliberately separate from the portal and
+  big: needs a market-wide listings source, saved searches, and each board's
+  rules on emailing other brokers' listings. See the end of the portal plan.
+- Leadership page + staff: `docs/HANDOFF-leadership-and-staff.md`.
+
 ## Marketing tool structure
 
 - `index.php` — agent roster. `office_roster` UNION ALL intake-only agents so newly
