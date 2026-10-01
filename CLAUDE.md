@@ -1020,7 +1020,7 @@ www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 (certbot, e2scrub, php session cleanup). Logs in `/var/log/mh-marketing/`.
 
 ```
-40 12 * * * cron/sync_hot_sheet_listings.php  >> hot_sheet_sync.log      06:40 MDT
+40 * * * *  cron/sync_hot_sheet_listings.php  >> hot_sheet_sync.log      hourly (agent pages' listings)
 #0 13 * * * cron/send_hot_sheet.php           >> hot_sheet_send.log      PAUSED, see below
 20 * * * *  cron/sync_anyprop_roster.php      >> anyprop_roster.log      hourly
 */15 * * * * cron/parse_pipeline_events.php   >> pipeline_parse.log      every 15 min
@@ -1051,6 +1051,9 @@ with the log under `/var/log/mh-marketing/`; shortened here.)
 - The review alert's "Off-Market" means `suggested_entry_type =
   pocket_listing`, which the parser sets for EVERY listing-side deal; whether
   it is really off-market is what the MLS match on the review page shows.
+- `sync_hot_sheet_listings.php` went from daily (12:40) to hourly on
+  2026-10-01 because it now also feeds the agent page's Current Listings; it
+  sends nothing (backup `crontab.before-listings-hourly`).
 - `sync_anyprop_roster.php` and `parse_pipeline_events.php` were added
   2026-09-30 (backup: `crontab.before-anyprop-pipeline` in the same folder).
   Both take a flock and skip a run while the previous one holds it. The
