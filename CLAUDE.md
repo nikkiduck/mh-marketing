@@ -101,6 +101,10 @@ Related: the authorize request uses `response_mode=query`. Do not switch it to
 `form_post` — that arrives as a cross-site POST, which even `Lax` strips the
 cookie from.
 
+**Client secret lifetime:** set for 24 months (Nikki, 2026-10-01; exact creation
+date not recorded). Note the expiry date here when it is next checked in the
+Azure portal, and put a reminder on the calendar a month before.
+
 ### Break-glass access
 
 `SSO_PASSWORD_LOGIN_ROLES` in `inc/sso_config.php` is `super_admin`. At least one
@@ -903,8 +907,9 @@ OData uses lowercase (`eq`, `and`) and returns `value[]` with flat fields.
 `https://replication.sparkapi.com/v1/accounts/<key>` confirms whether a value is
 a valid v1 account id, and returns the agent's name, MlsId and office.
 
-`mls_key_debug.php` tests a key against both APIs. It is denied in `.htaccess`
-by default — comment that block out when you need it, and put it back after.
+Spark is retired (2026-10-01): `mls_key_debug.php` was deleted, and nothing in
+the app calls Spark any more (agent.php's listings and intake.php's member
+lookup were the last). The notes above are kept for reading old code.
 
 ## Contacts
 
@@ -1024,7 +1029,18 @@ www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 #0 13 * * * cron/send_hot_sheet.php           >> hot_sheet_send.log      PAUSED, see below
 20 * * * *  cron/sync_anyprop_roster.php      >> anyprop_roster.log      hourly
 */15 * * * * cron/parse_pipeline_events.php   >> pipeline_parse.log      every 15 min
+5,35 * * * * cron/check_health.php            >> check_health.log        alerts
 ```
+- `cron/check_health.php` (2026-10-01) emails nikki.boxer@monthaus.com when the
+  roster sync or listing sync has not completed in 2.5 h or logged a ✗, the
+  parser has not run in 45 min or reported errors, a webhook event sits
+  unparsed > 30 min, or disk > 85 %. A quota error carries Nikki's note (call
+  Anyprop if it is a live board). Repeats at most every 12 h, "back to normal"
+  when cleared; state `/var/log/mh-marketing/check_health.state.json`.
+  `--dry-run` prints instead of sending. The site has the same
+  (`check_feeds.php`).
+- logrotate installed 2026-10-01: `/etc/logrotate.d/mh-marketing` (weekly, 8
+  kept, copytruncate) plus Debian's apache2 rule, which had never run.
 
 (Each line is really `/usr/bin/php /var/www/marketing.monthaus.com/cron/...`
 with the log under `/var/log/mh-marketing/`; shortened here.)
@@ -1522,6 +1538,14 @@ site's hostname.
    https://qr.monthaus.com/inc/db.php` must also be a 302 (never the file).
 
 ## Upcoming projects (not started)
+
+- **Retire the frozen Spark-era roster views.** `office_roster` / `mh_brokers`
+  stopped updating 2026-10-01 (Spark syncs retired). Still reading them:
+  `index.php`'s first UNION arm and Onboard action, `roster.php` (whole page,
+  incl. an UPDATE), and `sync_anyprop_roster.php` (read-only, to link a new
+  agent to an old row). Plan: roster rows from `marketing_intakes` only, then
+  drop `roster.php`, the dead crons and the tables. `intake.php` no longer
+  writes office_roster or calls Spark (2026-10-01).
 
 - **Agent portal**: `docs/AGENT_PORTAL_PLAN.md` (revised 2026-10-01 with Nikki's
   decisions: dummy-proof cards, creative shown on the portal, spend without

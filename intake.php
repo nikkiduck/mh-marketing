@@ -17,35 +17,6 @@ $intake_id = (int)($_GET['id'] ?? 0);
 $intake    = null;
 $flash_err = '';
 
-/* ── Spark: look up agent by name in the Members directory (no listings needed) ── */
-function mkt_spark_agent_key(string $token, string $office_filter, string $agent_name): string {
-    if (!$agent_name) return '';
-    $esc    = str_replace("'", "\\'", trim($agent_name));
-    $filter = "({$office_filter}) And MemberFullName Eq '{$esc}'";
-    $url    = 'https://replication.sparkapi.com/v1/members?' . http_build_query([
-        '_filter' => $filter,
-        '_select' => 'MemberKey,MemberFullName',
-        '_limit'  => 5,
-    ]);
-    $ch = curl_init($url);
-    curl_setopt_array($ch, [
-        CURLOPT_HTTPHEADER     => ["Authorization: Bearer {$token}", "Accept: application/json"],
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT        => 8,
-    ]);
-    $raw  = curl_exec($ch);
-    $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    curl_close($ch);
-    if ($code !== 200) return '';
-    $results = json_decode($raw, true)['D']['Results'] ?? [];
-    $lc = strtolower(trim($agent_name));
-    foreach ($results as $r) {
-        $sf = $r['StandardFields'] ?? [];
-        if (strtolower($sf['MemberFullName'] ?? '') === $lc) return $sf['MemberKey'] ?? '';
-    }
-    return '';
-}
-
 /* ── Dynamic SQL save helper ─────────────────────────────────────────────── */
 /**
  * Build and execute INSERT or UPDATE for marketing_intakes.
@@ -203,8 +174,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save
         }
         $intake = array_merge($intake ?? [], $_POST);
     } else {
-        // ── Spark MLS ID lookup (runs in background) ─────────────────────────
-        // Seed from existing record so IDs are preserved if Spark can't re-find them
+        // ── MLS IDs: keep what the record has ───────────────────────────────
+        // The Spark member lookup that used to run here was removed 2026-10-01:
+        // Spark is retired (every call failed with HTTP 400 and returned ''),
+        // and board identities now come from the Anyprop roster sync
+        // (agent_mls_ids, cron/sync_anyprop_roster.php).
         $mls_aspen = '';
         $mls_vail  = '';
         if ($id) {
@@ -214,20 +188,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save
                 $mls_vail  = (string)($erow['mls_id_vail']  ?? '');
             }
         }
-
-        $spark_aspen = mkt_spark_agent_key(
-            SPARK_ACCESS_TOKEN,
-            "MemberOfficeId Eq '" . ASPEN_OFFICE_ID . "'",
-            $agent_name
-        );
-        if ($spark_aspen) $mls_aspen = $spark_aspen;
-
-        $spark_vail = mkt_spark_agent_key(
-            VAIL_SPARK_ACCESS_TOKEN,
-            "MemberOfficeMlsId Eq '" . VAIL_OFFICE_MLS_ID . "'",
-            $agent_name
-        );
-        if ($spark_vail) $mls_vail = $spark_vail;
 
         // Normalize MLS keys before roster lookup/insert
         $mls_aspen = $mls_aspen ?: null;
@@ -261,17 +221,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save
                 $roster_id = (int)$rrow['id'];
                 if (!$mls_aspen && !empty($rrow['agent_key']))      $mls_aspen = $rrow['agent_key'];
                 if (!$mls_vail  && !empty($rrow['vail_agent_key'])) $mls_vail  = $rrow['vail_agent_key'];
-            } else {
-                // Not in roster yet — create a new entry
-                $ins = $conn->prepare(
-                    "INSERT INTO office_roster (name, title, agent_key, vail_agent_key, active)
-                     VALUES (?, ?, ?, ?, 1)"
-                );
-                $ins->bind_param('ssss', $agent_name, $agent_title, $mls_aspen, $mls_vail);
-                $ins->execute();
-                $roster_id = (int)$conn->insert_id;
-                $ins->close();
             }
+            // No match: no link. office_roster is the frozen Spark-era roster
+            // (its syncs were retired 2026-10-01), so nothing is added to it;
+            // an intake without roster_id is listed by index.php's intake-only
+            // arm, and the Anyprop sync attaches its board identities.
         }
 
         $uid = (int)($_SESSION['user_id'] ?? 0);

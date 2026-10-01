@@ -52,7 +52,6 @@ split tolerable.
 ├── intake.php       legacy intake form, largely superseded by agent.php
 ├── roster.php       office_roster admin — MLS key linking
 ├── receipt.php      streams a collateral receipt after an auth check
-├── mls_key_debug.php  tests an agent key against both Spark APIs (denied by default)
 │
 ├── login.php  logout.php  oauth_start.php  oauth_callback.php
 ├── change_password.php  forgot-password.php  reset-password.php  set_password.php

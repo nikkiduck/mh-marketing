@@ -23,6 +23,7 @@ a9191e8f282c3df451ef6868883597a5  cron/send_hot_sheet.php
 06e4674e8bf5204dde84021de30170e9  cron/sync_hot_sheet_listings.php
 dc625ba4ad1cfcb4c13d0067bc8fe4ce  cron/sync_mh_brokers.php
 d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php
+82bfbedfbc39a49cd080d4faa0c22c14  cron/check_health.php
 dfb28c4e16681b9f76c7e592fbaf96ed  forgot-password.php
 0c75ba0e3238df56dd8be21081c55a5c  hot_sheet_preview.php
 4ba218c544f473278a06edf382693d3e  inc/_footer.php
@@ -47,10 +48,9 @@ c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 97b63535dd40431bc58204fb75b26884  index.php
-a27caffa5876edf4d92ad8da0e4e1979  intake.php
+0ff3c46ff54aca4f47244aefcaa38287  intake.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php
 bb73a2b0b1ccb8ca4b160bb7a05ff140  logout.php
-12d8aae081d9584660d0d0aa64c3f431  mls_key_debug.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
 f3327ec6854ed5362ede027a9b198064  oauth_start.php
 7507ece6b8119b56e00d6d97257b2777  order_split.php
