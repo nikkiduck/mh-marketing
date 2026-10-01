@@ -1010,6 +1010,8 @@ www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 30 3 * * *  cron/sync_roster.php              >> sync_roster.log         Spark, legacy
 40 12 * * * cron/sync_hot_sheet_listings.php  >> hot_sheet_sync.log      06:40 MDT
 0 13 * * *  cron/send_hot_sheet.php           >> hot_sheet_send.log      07:00 MDT
+20 * * * *  cron/sync_anyprop_roster.php      >> anyprop_roster.log      hourly
+*/15 * * * * cron/parse_pipeline_events.php   >> pipeline_parse.log      every 15 min
 ```
 
 (Each line is really `/usr/bin/php /var/www/marketing.monthaus.com/cron/...`
@@ -1024,11 +1026,13 @@ with the log under `/var/log/mh-marketing/`; shortened here.)
   in `/var/log/mh-marketing/` and can be deleted.
 - `send_hot_sheet.php` still only mails `HOT_SHEET_ALLOWED_RECIPIENTS`;
   everyone else is logged as "blocked by the allowlist".
-- **Not scheduled:** `sync_anyprop_roster.php` (the real roster sync; the
-  roster's mls_* fields only refresh when it is run by hand) and
-  `parse_pipeline_events.php` (webhook bodies queue in `hs_pipeline_events`
-  until it is run). The rest of `cron/` is one-off tools
-  (`import_*`, `merge_agents`, `split_team`); see `docs/AGENT_ROSTER_PLAN.md`.
+- `sync_anyprop_roster.php` and `parse_pipeline_events.php` were added
+  2026-09-30 (backup: `crontab.before-anyprop-pipeline` in the same folder).
+  Both take a flock and skip a run while the previous one holds it. The
+  roster sync's first live run was 2026-10-01 00:27 UTC: 18 Aspen refreshed,
+  Noah and Megan Walz attached on elevate, nothing created or departed.
+- The rest of `cron/` is one-off tools (`import_*`, `merge_agents`,
+  `split_team`, `activate_roster`); see `docs/AGENT_ROSTER_PLAN.md`.
 - No log rotation covers `/var/log/mh-marketing/`.
 
 ## Stepping between agents (2026-09-29)
@@ -1344,6 +1348,17 @@ wrapped.
   `agent.php` until the Website card lands.
 - `mls_*` columns are written only by `cron/sync_anyprop_roster.php`; it never
   writes a curated field. The feed falls back to `mls_*` where curated is blank.
+- Boards in Anyprop (`/v1/account/resources`, 2026-09-30): agsmls (aspen),
+  cren, ppmls (elevate), tridemls (Telluride; no Mont Haus office yet).
+  The sync searches every board for a "Mont Haus" office each run and adds
+  `ANYPROP_MH_OFFICE_IDS` on top, so a newly live board needs no config.
+  CREN: Anyprop has no Mont Haus office there and neither configured member
+  id (13985 Jonathan Boxer, 13986 Jackson Horn, from the Constellation era)
+  exists; their records are on agsmls only. Sierrah Smith's stored cren id
+  13679 is an agent at Mountain Rose Realty in Anyprop: check before trusting
+  it. Nothing on CREN is refreshed or deactivated until that is sorted.
+  Anyprop's Member/Office `$filter` whitelist is in its docs; `$select` is
+  rejected, and MemberLastName is not filterable (use MemberEmail).
 - `last_seen_at IS NULL` on an identity means Anyprop has never returned it.
   The sync never deactivates anyone over such a row. Keep that guard.
 - `api/roster.php` is public (no `auth.php`), guarded by `ROSTER_FEED_TOKEN`
@@ -1372,7 +1387,8 @@ sales went missing. Emails: `cron/send_hot_sheet.php` + `inc/hs_*.php`.
 keeps the new system to Nikki until go-live; do not move that check out of
 the send function. Latest Updates is a computed Monday window, not a
 notified_at flag. Paperless Pipeline: `api/pipeline_webhook.php` (header
-token only) → `cron/parse_pipeline_events.php` → `pipeline_review.php`;
+token only; Zapier posts to BOTH the hub and here since 2026-09-30, hub step
+first) → `cron/parse_pipeline_events.php` → `pipeline_review.php`;
 `pl_map_status()` returning null means "never publish", keep it that way.
 Until go-live the hub's review queue is mirrored here by the import. Hot Sheets moves here from the hub. Listings come
 from site.monthaus.com's `api/listings.php` (the site is the only Anyprop
