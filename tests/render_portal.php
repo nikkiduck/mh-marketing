@@ -41,7 +41,8 @@ if (stripos((string)shell_exec('php -n -m 2>/dev/null'), 'mysqli') !== false) {
 $SB = sys_get_temp_dir() . '/pt_render_' . bin2hex(random_bytes(4));
 mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
-foreach (['portal/index.php', 'portal/qr.php', 'inc/portal.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php'] as $f) {
+foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'inc/portal.php', 'inc/qr.php',
+          'inc/schema.php', 'inc/config.php', 'inc/financials.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
 }
@@ -132,6 +133,19 @@ class mysqli {
             }
             return self::s($rows);
         }
+        if (preg_match('/FROM marketing_collateral_orders WHERE id = \? AND intake_id = \?/', $sql)) {
+            return self::s(array_values(array_filter($D['orders'], fn($o) => (int)$o['id'] === (int)$p[0] && (int)$o['intake_id'] === (int)$p[1])));
+        }
+        if (preg_match('/FROM marketing_collateral_orders\s+WHERE intake_id = (\d+)/', $sql, $m)) {
+            return self::s(array_values(array_filter($D['orders'], fn($o) => (int)$o['intake_id'] === (int)$m[1])));
+        }
+        if (preg_match('/FROM marketing_campaign_months m/', $sql)) {
+            if (!preg_match('/c\.intake_id = (\d+)/', $sql)) throw new RuntimeException("UNSCOPED campaign months:\n{$sql}");
+            return [];
+        }
+        if (preg_match('/FROM marketing_campaigns\s+WHERE intake_id = (\d+)/', $sql, $m)) {
+            return self::s(array_values(array_filter($D['campaigns'], fn($c) => (int)$c['intake_id'] === (int)$m[1])));
+        }
         if (preg_match('/^\s*UPDATE qr_codes SET dest_type/', $sql)) { $this->write('update_qr', $p); return []; }
         if (preg_match('/INSERT INTO qr_code_changes/', $sql))       { $this->write('log_change', $p); return []; }
         throw new RuntimeException("stub mysqli: no fixture for SQL:\n" . trim($sql));
@@ -168,6 +182,16 @@ function scenario(array $over = []): array {
                 ['id' => 30, 'agent_name' => 'Jonathan Boxer', 'slug' => 'jonathan-boxer', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
             ],
             'teams' => ['8' => [21, 23, 30]],
+            'orders' => [
+                ['id' => 11, 'intake_id' => 6, 'type' => 'business_cards', 'label' => 'JH cards', 'vendor' => 'Oakley', 'cost' => 250, 'ordered_at' => '2026-09-02', 'created_at' => '2026-09-02 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => 'JHRECEIPT.pdf', 'receipt_orig_name' => 'jh-cards.pdf', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
+                ['id' => 12, 'intake_id' => 6, 'type' => 'other', 'label' => 'JH flyers', 'vendor' => 'Local', 'cost' => 99.5, 'ordered_at' => '2026-09-10', 'created_at' => '2026-09-10 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => null, 'receipt_orig_name' => null, 'paid_by' => '', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
+                ['id' => 13, 'intake_id' => 7, 'type' => 'postcards', 'label' => 'KC postcards', 'vendor' => 'Oakley', 'cost' => 7777, 'ordered_at' => '2026-09-05', 'created_at' => '2026-09-05 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => 'KCRECEIPT.pdf', 'receipt_orig_name' => 'kc.pdf', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
+                ['id' => 14, 'intake_id' => 8, 'type' => 'yard_signs', 'label' => 'WB signs', 'vendor' => 'Oakley', 'cost' => 4321, 'ordered_at' => '2026-08-20', 'created_at' => '2026-08-20 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => null, 'receipt_orig_name' => null, 'paid_by' => 'split', 'paid_broker_amount' => 3000, 'paid_mh_amount' => 1321],
+            ],
+            'campaigns' => [
+                ['id' => 21, 'intake_id' => 6, 'platform' => 'aspen_times', 'name' => 'JH Ad', 'budget' => 1234, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => '2026-03-05', 'end_date' => null, 'created_at' => '2026-03-01 10:00:00', 'paid_by' => 'mont_haus', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
+                ['id' => 22, 'intake_id' => 7, 'platform' => 'vail_daily', 'name' => 'KC Ad', 'budget' => 8888, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => '2026-03-05', 'end_date' => null, 'created_at' => '2026-03-01 10:00:00', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
+            ],
             'qr' => [
                 ['id' => 1, 'code' => 'jhorn-yard', 'intake_id' => 6,  'label' => 'JH Yard Sign',     'dest_type' => 'profile', 'dest_url' => null, 'is_active' => 1, 'scan_count' => 4],
                 ['id' => 5, 'code' => 'jhorn-oh',   'intake_id' => 6,  'label' => 'JH Open House',    'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/oh', 'is_active' => 0, 'scan_count' => 0],
@@ -263,6 +287,39 @@ ok('the edit page offers My profile page and a monthaus.com page', has($b, 'My p
 [, , $b] = req('jon', '/portal/qr.php?edit=2');
 ok('a team code\'s edit page offers no profile choice', !has($b, 'profile page</b>') && has($b, 'A page on monthaus.com'), $b);
 
+echo "\nSPEND\n";
+[$c, , $b] = req('jackson', '/portal/spend.php');
+ok('Jackson: spend renders', $c === 200 && no_fatal($b), $b);
+ok('his figures: $250 he paid, $1,234 Mont Haus paid', has($b, '$250') && has($b, '$1,234'), $b);
+ok('his undecided $99.50 shows as Being finalised', has($b, 'Being finalised') && has($b, '$99.50'), $b);
+ok('NOTHING of Kim\'s or Weber Boxer\'s spend', !has($b, '7,777') && !has($b, '8,888') && !has($b, '4,321') && !has($b, '3,000'));
+ok('no billing words anywhere', !preg_match('/invoic|billed|overdue|balance|unpaid/i', strip_tags($b)), $b);
+[$c, , $b] = req('jackson', '/portal/spend.php?m=2026-09');
+ok('a month opens with its lines in plain words', has($b, 'Business Cards: JH cards') && has($b, 'You paid') && has($b, 'JH flyers'), $b);
+ok('…with a receipt link for his order only', has($b, 'receipt.php?order=11') && !has($b, 'order=13'), $b);
+ok('…and no billing words', !preg_match('/invoic|billed|overdue|balance|unpaid/i', strip_tags($b)));
+[$c, , $b] = req('jackson', '/portal/spend.php?m=2026-03');
+ok('advertising lines name the outlet', has($b, 'Aspen Times: JH Ad') && has($b, 'Mont Haus paid'), $b);
+[$c, , $b] = req('jackson', '/portal/spend.php?m=../../x');
+ok('a nonsense month falls back to the overview', $c === 200 && has($b, 'By month'), "{$c}");
+[, , $b] = req('jon', '/portal/spend.php');
+ok('Weber Boxer sees the team\'s split: $3,000 and $1,321', has($b, '$3,000') && has($b, '$1,321') && !has($b, '$250') && !has($b, '7,777'), $b);
+[, , $b] = req('jackson', '/portal/');
+ok('home shows this year\'s spend', has($b, 'This year you paid $250') && has($b, 'Mont Haus paid $1,234'), $b);
+
+echo "\nRECEIPTS\n";
+$rdir = dirname($SB) . '/receipts/';
+@mkdir($rdir, 0777, true);
+file_put_contents($rdir . 'JHRECEIPT.pdf', 'JACKSON-RECEIPT-BYTES');
+file_put_contents($rdir . 'KCRECEIPT.pdf', 'KIM-RECEIPT-BYTES');
+[$c, , $b] = req('jackson', '/portal/receipt.php?order=11');
+ok('Jackson opens his own receipt', $c === 200 && $b === 'JACKSON-RECEIPT-BYTES', "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/receipt.php?order=13');
+ok('Kim\'s receipt is not found for Jackson', $c === 404 && !has($b, 'KIM-RECEIPT'), "{$c} {$b}");
+[$c, , $b] = req('jon', '/portal/receipt.php?order=11');
+ok('…nor for Weber Boxer', $c === 404 && !has($b, 'JACKSON'), "{$c} {$b}");
+@unlink($rdir . 'JHRECEIPT.pdf'); @unlink($rdir . 'KCRECEIPT.pdf');
+
 echo "\nPREVIEW AND REFUSALS\n";
 [, , $b] = req('jackson', '/portal/qr.php?preview=8');
 ok('an agent\'s ?preview= is ignored', has($b, 'jhorn-yard') && !has($b, 'wb-office') && !has($b, 'Preview:'), $b);
@@ -285,7 +342,8 @@ if ($snap = getenv('PORTAL_SNAPSHOTS')) {
     foreach (['home-jackson' => ['jackson', '/portal/'], 'qr-jackson' => ['jackson', '/portal/qr.php'],
               'qr-edit-jackson' => ['jackson', '/portal/qr.php?edit=1'], 'home-wb' => ['jon', '/portal/'],
               'qr-wb' => ['jon', '/portal/qr.php'], 'qr-preview' => ['nikki', '/portal/qr.php?preview=6'],
-              'refused-nolink' => ['nolink', '/portal/']] as $name => [$who, $path]) {
+              'refused-nolink' => ['nolink', '/portal/'], 'spend-jackson' => ['jackson', '/portal/spend.php'],
+              'spend-month-jackson' => ['jackson', '/portal/spend.php?m=2026-09'], 'spend-wb' => ['jon', '/portal/spend.php']] as $name => [$who, $path]) {
         file_put_contents("{$snap}/{$name}.html", req($who, $path)[2]);
     }
     echo "  (snapshots saved to {$snap})\n";

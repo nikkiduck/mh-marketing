@@ -1552,8 +1552,14 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phase 0 + 1.
   `require_role('admin')` (a blank role used to pass its own check).
 - `portal/qr.php`: agents change their codes' destination only (profile page
   or a monthaus.com page via `qr_dest_error()`), logged in `qr_code_changes`.
+- `portal/spend.php`: month by month from `mh_agent_financials()` (same
+  function as Billing), account only (Weber Boxer Group = the team row).
+  "You paid" / "Mont Haus paid" / "Being finalised" (undecided who-pays).
+  NEVER invoiced/billed/paid status or `marketing_billing_months`; the test
+  asserts those words never appear. `portal/receipt.php` streams a collateral
+  receipt by order id after checking the order's intake_id is the account.
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
-- Tests: `tests/render_portal.php` (34 assertions: isolation between
+- Tests: `tests/render_portal.php` (49 assertions: isolation between
   accounts, someone else's code refused on GET and POST, preview rules,
   refusals). Proven to catch a leak by breaking the ownership check.
 

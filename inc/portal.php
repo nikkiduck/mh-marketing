@@ -124,6 +124,21 @@ function portal_csrf_ok(): bool {
 
 function ph($s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
+/** $1,234, or $1,234.50 when the cents matter. */
+function portal_money(float $v): string {
+    $v = round($v, 2);
+    return '$' . number_format($v, abs($v - round($v)) < 0.005 ? 0 : 2);
+}
+
+/** Outlet names, as agent.php's $platform_labels shows them. Keep in step. */
+function portal_platform_label(string $p): string {
+    return [
+        'vail_daily' => 'Vail Daily', 'aspen_daily' => 'Aspen Daily News',
+        'aspen_times' => 'Aspen Times', 'social_meta' => 'Meta (Facebook/Instagram)',
+        'social_instagram' => 'Instagram', 'google' => 'Google', 'other' => 'Advertising',
+    ][$p] ?? ucwords(str_replace('_', ' ', $p));
+}
+
 /** First name for the greeting; a team shows its own name. */
 function portal_greeting_name(array $ctx): string {
     if (($ctx['acct']['entity_type'] ?? 'agent') === 'team') return (string)$ctx['acct']['agent_name'];
@@ -138,8 +153,9 @@ function portal_greeting_name(array $ctx): string {
  */
 function portal_header(array $ctx, string $title, string $active): void {
     $nav = [
-        'home' => ['Home', '/portal/'],
-        'qr'   => ['QR codes', '/portal/qr.php'],
+        'home'  => ['Home', '/portal/'],
+        'spend' => ['Spend', '/portal/spend.php'],
+        'qr'    => ['QR codes', '/portal/qr.php'],
     ];
     ?>
 <!DOCTYPE html>

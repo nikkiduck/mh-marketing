@@ -1,9 +1,11 @@
 # Agent Portal: build plan
 
-**Status:** Phases 0 and 1 BUILT 2026-10-01 (roster.php guard, agents land in
-/portal/, users.php account picker, inc/portal.php, portal home + QR page,
-tests/render_portal.php: 34 assertions). Needs sql/portal_identity_v1.sql run
-and pilot accounts set up. Phases 2+ not started.
+**Status (2026-10-01):** LIVE on the server: Phases 0 and 1 (roster.php guard,
+agents land in /portal/, users.php account picker, inc/portal.php, home + QR
+page) and the Spend page with receipts (portal/spend.php, portal/receipt.php).
+sql/portal_identity_v1.sql run. tests/render_portal.php: 49 assertions.
+Still to build: creative uploads (Phase 2), Campaigns and Orders pages,
+Hot Sheet choices, the marketing menu and requests.
 **Written:** 2026-09-08. **Revised:** 2026-10-01 with Nikki's decisions (below)
 and a fresh check of the code and live database.
 **Scope:** Mont Haus agents sign in with Microsoft to `marketing.monthaus.com` and
@@ -41,6 +43,10 @@ ask for, and their Hot Sheet choices. Questions and orders reach Nikki by email.
    none is on the three personal rows.) Hot Sheet choices stay per person.
 6. **Not now:** assistants seeing an agent's portal; marketing allowances (some
    agents have one; to be worked in later).
+8. **Undecided spend** (2026-10-01): shown as its own "Being finalised" figure
+   and line, never folded into either column.
+9. **Receipts** (2026-10-01): agents may see their own receipts
+   (portal/receipt.php, ownership-checked; receipt.php stays admin-only).
 7. **QR destinations** (2026-10-01): agents can change where their own QR codes
    go. SUPER simple, far less than the admin QR page: no creating, pausing,
    deleting or renaming codes; just "where does this code go". See section 4.
@@ -280,12 +286,10 @@ identity, money and permissions on many pages.
 
 ## 9. Open questions
 
-1. **Undecided lines.** Some spend lines have no "who pays" yet. Show them as
-   their own "Being finalised" line (Claude's suggestion: honest, and it never
-   overstates what the agent owes or promises a subsidy), or hide them until
-   decided?
-2. **Pilot:** which two or three agents first?
-3. **Receipts:** should agents ever see them, or only the cost?
+1. ~~Undecided lines~~: "Being finalised" (decision 8).
+2. **Pilot:** which two or three agents first? (Jonathan / Weber Boxer Group
+   first, by preview and by sign-in.)
+3. ~~Receipts~~: yes (decision 9).
 4. Should archived or offboarded agents be refused at sign-in? (`is_active` on both
    `users` and `marketing_intakes` already answers it once decided.)
 

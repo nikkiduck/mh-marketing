@@ -67,7 +67,9 @@ e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 9bf1eb8b77a42637743d0d974eba5205  users.php
 47eec501f46bbbc84030b9744a3d781b  website_order.php
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
-c8b4123011f510e2dc3eed0d184a65c5  inc/portal.php
-62484d4d694c5b5dc69757d4d4099383  portal/index.php
+8049da108f55e30ec4a93df6df34babe  inc/portal.php
+8601e9c2ad365853cdc96f22db323f3d  portal/index.php
 7e3bcfdfaee9036faa315d6b2078ae10  portal/qr.php
-72f1da61f2c5e7322d8bb50fb21c2dca  assets/css/portal.css
+ccbc9a3535e5de2757ae8cb1a9e9cd05  assets/css/portal.css
+bdca909a6507918b34beb8a4ab7544b6  portal/spend.php
+e416e60cc675ccc3853652ef106913c9  portal/receipt.php
