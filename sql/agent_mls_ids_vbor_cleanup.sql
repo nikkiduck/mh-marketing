@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- agent_mls_ids_vbor_cleanup.sql — remove the duplicate Vail identities (2026-10-01)
 --
