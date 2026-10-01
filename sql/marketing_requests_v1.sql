@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- marketing_requests_v1.sql — requests agents send from the portal (2026-10-01).
 -- First use: "QR Code Request" on portal/qr.php. The marketing menu and other
