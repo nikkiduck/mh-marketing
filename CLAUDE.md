@@ -1006,8 +1006,6 @@ www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 (certbot, e2scrub, php session cleanup). Logs in `/var/log/mh-marketing/`.
 
 ```
-0  3 * * *  cron/sync_mh_brokers.php          >> sync_mh_brokers.log     Spark, legacy
-30 3 * * *  cron/sync_roster.php              >> sync_roster.log         Spark, legacy
 40 12 * * * cron/sync_hot_sheet_listings.php  >> hot_sheet_sync.log      06:40 MDT
 0 13 * * *  cron/send_hot_sheet.php           >> hot_sheet_send.log      07:00 MDT
 20 * * * *  cron/sync_anyprop_roster.php      >> anyprop_roster.log      hourly
@@ -1017,9 +1015,13 @@ www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 (Each line is really `/usr/bin/php /var/www/marketing.monthaus.com/cron/...`
 with the log under `/var/log/mh-marketing/`; shortened here.)
 
-- Brokers run before the roster on purpose: `sync_roster.php` re-links
-  `mh_brokers.roster_id` and `marketing_intakes.roster_id` at the end of its
-  run, so a broker appearing tonight is only linked if brokers ran first.
+- **Spark retired 2026-10-01** (Nikki: the roster must be shown to work on
+  Anyprop alone). `sync_mh_brokers.php` and `sync_roster.php` no longer run
+  (backup `deploy-backups/20261001/crontab.before-spark-retire`), so
+  `office_roster` and `mh_brokers` are frozen as of the 2026-09-30 03:00 run
+  and `marketing_intakes.roster_id` is no longer re-linked. Anything that
+  still reads those tables (index.php's UNION arm, roster.php) sees that
+  snapshot. The scripts stay in `cron/` until nothing reads their tables.
 - Removed 2026-09-30 at Nikki's request: `activate_roster.php` (nightly
   03:45; to be rescheduled when the roster is tidied up) and a leftover
   every-minute `/bin/date` test job. Its `cron_test.log` (1.6 MB) is still
@@ -1359,6 +1361,18 @@ wrapped.
   it. Nothing on CREN is refreshed or deactivated until that is sorted.
   Anyprop's Member/Office `$filter` whitelist is in its docs; `$select` is
   rejected, and MemberLastName is not filterable (use MemberEmail).
+  CREN in Anyprop is test data until the board's final approval (expected
+  early Oct 2026); then its Mont Haus office should be found by the search.
+  tridemls (Telluride, approved 2026-10-01) maps to `telluride` in
+  `mk_market_slug()`, matching the site.
+- **New brokers arrive before their MLS identity.** Nikki adds a new agent
+  for marketing onboarding as soon as they join; moving their license to
+  Mont Haus on each board can take days or weeks (e.g. Sierrah Smith, CREN,
+  Oct 2026), and until then the board still shows their old brokerage. That
+  is expected, not an error: the sync matches them by email or name once a
+  board lists them under Mont Haus, and an identity typed in by hand that
+  Anyprop has never returned (last_seen_at NULL) is never used to mark them
+  departed.
 - `last_seen_at IS NULL` on an identity means Anyprop has never returned it.
   The sync never deactivates anyone over such a row. Keep that guard.
 - `api/roster.php` is public (no `auth.php`), guarded by `ROSTER_FEED_TOKEN`

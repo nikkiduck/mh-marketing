@@ -35,8 +35,9 @@ function mk_team_sql(mysqli $conn, string $alias = ''): string {
 function mk_market_slug(string $osn): string {
     // Must agree with the public site's slug_osn() / apx_slug() /
     // ap_history_market_slug(): ppmls is Pikes Peak REALTOR Services, which the
-    // site calls elevate (live in Anyprop 2026-09-30).
-    static $alias = ['agsmls' => 'aspen', 'ppmls' => 'elevate'];
+    // site calls elevate (live in Anyprop 2026-09-30); tridemls is Telluride
+    // (live 2026-10-01).
+    static $alias = ['agsmls' => 'aspen', 'ppmls' => 'elevate', 'tridemls' => 'telluride'];
     $s = substr(preg_replace('/[^a-z0-9]+/', '', strtolower($osn)), 0, 20);
     return $alias[$s] ?? $s;
 }
