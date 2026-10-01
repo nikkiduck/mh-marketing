@@ -71,8 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reque
         $_SESSION['pt_qr_req'] = $f;
         header('Location: ' . portal_url($ctx, '/portal/qr.php', ['request' => 1])); exit;
     }
-    if ($f['title'] === '' || $f['destination'] === '') {
-        $_SESSION['pt_qr_flash'] = ['err', 'Please give the project a name and say where the code should take people.'];
+    // The destination is the exact page address, copied from the browser
+    // (Nikki, 2026-10-01), held to the same rule as any QR destination:
+    // https, on monthaus.com. A pasted address missing its https:// gets it.
+    if ($f['destination'] !== '' && !preg_match('~^https?://~i', $f['destination'])) $f['destination'] = 'https://' . $f['destination'];
+    $derr = $f['destination'] === '' ? 'Paste the web address the code should open.' : qr_dest_error($f['destination']);
+    if ($f['title'] === '' || $derr !== '') {
+        $_SESSION['pt_qr_flash'] = ['err', $f['title'] === '' ? 'Please give the project a name.' : $derr];
         $_SESSION['pt_qr_req'] = $f;
         header('Location: ' . portal_url($ctx, '/portal/qr.php', ['request' => 1])); exit;
     }
@@ -199,8 +204,9 @@ if ($sent_view): ?>
       <input type="text" name="title" maxlength="200" required value="<?= ph($req_draft['title']) ?>" placeholder="e.g. 123 Main Street yard sign"></label>
     <label>Description
       <textarea name="details" rows="4" maxlength="4000" placeholder="What is it for, and where will it be printed?"><?= ph($req_draft['details']) ?></textarea></label>
-    <label>Destination (where the QR code takes people)
-      <input type="text" name="destination" maxlength="1000" required value="<?= ph($req_draft['destination']) ?>" placeholder="e.g. my profile page, or a listing's web address"></label>
+    <label>Destination URL (where the QR code takes people)
+      <input type="url" name="destination" inputmode="url" maxlength="1000" required value="<?= ph($req_draft['destination']) ?>" placeholder="https://monthaus.com/..."></label>
+    <p class="pt-help" style="margin-top:-8px">Copy the exact web address from your browser's address bar and paste it here.</p>
     <p class="pt-help">*You can come back here to change the destination at any time.</p>
     <div class="pt-row">
       <button type="submit" class="pt-btn main">Send request</button>

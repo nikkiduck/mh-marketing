@@ -1567,8 +1567,10 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phase 0 + 1.
   outcome is stored on the row, and a failed send tells the agent to email
   marketing@ directly. Shown as "Request ›" on home when they have no codes,
   "Review + Edit ›" when they do, plus "Need another QR code?" on the list.
+  The destination is the exact URL pasted from the browser, held to
+  `qr_dest_error()` (https, monthaus.com) like any QR destination.
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
-- Tests: `tests/render_portal.php` (64 assertions: isolation between
+- Tests: `tests/render_portal.php` (70 assertions: isolation between
   accounts, someone else's code refused on GET and POST, preview rules,
   refusals). Proven to catch a leak by breaking the ownership check.
 

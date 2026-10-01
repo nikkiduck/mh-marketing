@@ -337,19 +337,28 @@ ok('the request form renders', $c === 200 && no_fatal($b) && has($b, 'QR Code Re
 [$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => 'Yard sign', 'details' => '', 'destination' => '']);
 ok('no destination: refused, nothing saved or sent', writes() === [] && mails() === [] && has($loc, 'request=1'), json_encode(writes()) . $loc);
 [$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => '45 Elm yard sign',
-    'details' => 'Front lawn', 'destination' => 'My profile page', 'intake_id' => 6]);
+    'details' => 'Front lawn', 'destination' => 'https://site.monthaus.com/broker.php?s=sierrah-smith', 'intake_id' => 6]);
 $w = writes(); $m = mails();
 ok('a request is saved for HER account, whatever the form says', ($w[0][0] ?? '') === 'request' && (int)($w[0][1][0] ?? 0) === 40 && (int)($w[0][1][1] ?? 0) === 105, json_encode($w));
+ok('…with the exact URL she pasted', ($w[0][1][5] ?? '') === 'https://site.monthaus.com/broker.php?s=sierrah-smith', json_encode($w));
 ok('…emailed to marketing@monthaus.com', ($m[0]['personalizations'][0]['to'][0]['email'] ?? '') === 'marketing@monthaus.com', json_encode($m));
 ok('…with Reply-To the agent and the project in the subject', ($m[0]['reply_to']['email'] ?? '') === 'sierrah.smith@monthaus.com' && has($m[0]['subject'] ?? '', '45 Elm yard sign'), json_encode($m));
 ok('…the email outcome is recorded', ($w[1][0] ?? '') === 'request_email' && ($w[1][1][0] ?? '') === 'sent', json_encode($w));
 ok('…and she sees the confirmation', $c === 302 && has($loc, 'sent=1'), "{$c} {$loc}");
 [, , $b] = req('sierrah', '/portal/qr.php?sent=1');
 ok('confirmation: your request has been sent', has($b, 'Your request has been sent!'), $b);
-[$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => 'Y'], ['mail_fails' => true]);
+foreach (['My profile page' => 'not a web address', 'https://zillow.com/x' => 'another site', 'http://evil.example.com' => 'off monthaus.com'] as $bad => $why) {
+    [$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => $bad]);
+    ok("destination refused: {$why}", writes() === [] && mails() === [] && has($loc, 'request=1'), json_encode(writes()) . $loc);
+}
+req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => 'monthaus.com/listing.php?k=9']);
+ok('a pasted address without https:// gets it', (writes()[0][1][5] ?? '') === 'https://monthaus.com/listing.php?k=9', json_encode(writes()));
+[$c, , $b] = req('sierrah', '/portal/qr.php?request=1');
+ok('the form asks for the exact URL from the browser', has($b, 'Destination URL') && has($b, 'type="url"') && has($b, 'Copy the exact web address from your browser'), $b);
+[$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => 'https://monthaus.com/y'], ['mail_fails' => true]);
 ok('email fails: saved, recorded as failed, and she is told to email marketing@', (writes()[1][1][0] ?? '') === 'failed' && has($loc, 'request=1'), json_encode(writes()) . " {$loc}");
 [, , $b] = req('sierrah', '/portal/qr.php?request=1');
-[$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'nope', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => 'Y']);
+[$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'nope', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => 'https://monthaus.com/y']);
 ok('a bad form token sends nothing', writes() === [] && mails() === [], json_encode(writes()));
 [, , $b] = req('jackson', '/portal/qr.php');
 ok('with codes: a small Request one link under the list', has($b, 'Need another QR code?') && has($b, 'request=1'), $b);
