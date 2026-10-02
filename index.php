@@ -330,7 +330,7 @@ function initials(string $name, ?string $override = null): string {
 }
 
 const MK_BOARD_LABELS = ['aspen' => 'Aspen', 'vail' => 'Vail', 'cren' => 'CREN', 'recolorado' => 'REColorado',
-                         'elevate' => 'Elevate', 'altitude' => 'Altitude'];
+                         'elevate' => 'Elevate', 'altitude' => 'Altitude', 'telluride' => 'Telluride'];
 
 /** Boards this agent is on: [slug => label]. Identities first, then Spark-era keys. */
 function mk_boards(array $a, array $id_markets): array {

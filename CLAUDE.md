@@ -1414,8 +1414,13 @@ wrapped.
   rejected, and MemberLastName is not filterable (use MemberEmail).
   CREN in Anyprop is test data until the board's final approval (expected
   early Oct 2026); then its Mont Haus office should be found by the search.
-  tridemls (Telluride, approved 2026-10-01) maps to `telluride` in
-  `mk_market_slug()`, matching the site.
+  `mk_market_slug()` aliases, matching the site's `mh_board_slug()`:
+  agsmls→aspen, ppmls→elevate, tridemls→telluride, vbor→vail (live
+  2026-10-01), summit→altitude (Altitude REALTORS, Summit County + Steamboat,
+  live 2026-10-02; its 2 identities first stored as 'summit' were renamed by
+  sql/agent_mls_ids_summit_cleanup.sql). Board labels (index.php, agent.php,
+  inc/roster_alerts.php), Hot Sheet towns (hs_city_market_map) and
+  import_profiles.php board names must follow every new board.
 - **Boards the feed will carry** (Nikki, 2026-10-01): Aspen, elevateMLS
   (PPMLS) and Telluride approved; CREN, Vail, Altitude and REColorado to come.
 - **New brokers arrive before their MLS identity, on every board, always.**

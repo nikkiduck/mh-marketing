@@ -1035,7 +1035,7 @@ if (mk_table_exists($conn, 'hs_listing_state') && mk_table_exists($conn, 'agent_
 
 // ── Profile tab data ────────────────────────────────────────────────────────
 const MK_BOARD_LABEL = ['aspen' => 'Aspen', 'vail' => 'Vail', 'cren' => 'CREN', 'recolorado' => 'REColorado',
-                        'elevate' => 'Elevate', 'altitude' => 'Altitude'];
+                        'elevate' => 'Elevate', 'altitude' => 'Altitude', 'telluride' => 'Telluride'];
 function e_attr($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
 
 $agent_slug = trim((string)($agent['slug'] ?? ''));

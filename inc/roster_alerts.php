@@ -40,7 +40,7 @@ function mk_roster_alert(mysqli $conn, array $changes, bool $dry = false): array
     $boards = [];
     $r = $conn->query("SELECT intake_id, GROUP_CONCAT(DISTINCT market ORDER BY market SEPARATOR ', ') AS m
                          FROM agent_mls_ids WHERE is_alias = 0 AND intake_id IN (" . implode(',', $all) . ") GROUP BY intake_id");
-    $lbl = ['aspen' => 'Aspen', 'vail' => 'Vail', 'cren' => 'CREN', 'recolorado' => 'REColorado', 'elevate' => 'Elevate', 'altitude' => 'Altitude'];
+    $lbl = ['aspen' => 'Aspen', 'vail' => 'Vail', 'cren' => 'CREN', 'recolorado' => 'REColorado', 'elevate' => 'Elevate', 'altitude' => 'Altitude', 'telluride' => 'Telluride'];
     if ($r) while ($x = $r->fetch_assoc()) {
         $boards[(int)$x['intake_id']] = implode(', ', array_map(fn($m) => $lbl[$m] ?? ucfirst($m), explode(', ', $x['m'])));
     }
