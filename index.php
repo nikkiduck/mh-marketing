@@ -329,17 +329,14 @@ function initials(string $name, ?string $override = null): string {
     return substr($i, 0, 2);
 }
 
-const MK_BOARD_LABELS = ['aspen' => 'Aspen', 'vail' => 'Vail', 'cren' => 'CREN', 'recolorado' => 'REColorado',
-                         'elevate' => 'Elevate', 'altitude' => 'Altitude', 'telluride' => 'Telluride'];
-
-/** Boards this agent is on: [slug => label]. Identities first, then Spark-era keys. */
+/** Boards this agent is on: [slug => label] (labels from the registry, inc/boards.php). Identities first, then Spark-era keys. */
 function mk_boards(array $a, array $id_markets): array {
     $b = [];
-    foreach (array_keys($id_markets[(int)($a['intake_id'] ?? 0)] ?? []) as $m) $b[$m] = MK_BOARD_LABELS[$m] ?? ucfirst($m);
-    if (!empty($a['agent_key']) || !empty($a['mls_id_aspen'])) $b['aspen'] = 'Aspen';
-    if (!empty($a['vail_agent_key']) || !empty($a['mls_id_vail'])) $b['vail'] = 'Vail';
+    foreach (array_keys($id_markets[(int)($a['intake_id'] ?? 0)] ?? []) as $m) $b[$m] = mk_board_label($m);
+    if (!empty($a['agent_key']) || !empty($a['mls_id_aspen'])) $b['aspen'] = mk_board_label('aspen');
+    if (!empty($a['vail_agent_key']) || !empty($a['mls_id_vail'])) $b['vail'] = mk_board_label('vail');
     foreach (array_filter(array_map('trim', explode(',', (string)($a['markets'] ?? '')))) as $m) {
-        $b[strtolower($m)] = MK_BOARD_LABELS[strtolower($m)] ?? $m;
+        $b[strtolower($m)] = mk_board_label(strtolower($m));
     }
     return $b;
 }

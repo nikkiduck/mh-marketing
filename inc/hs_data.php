@@ -41,19 +41,10 @@ function hs_update_window(?DateTimeImmutable $now = null): array {
 }
 
 // Same catchments as the hub: when one property is on two boards, keep the
-// copy from the board its town belongs to.
+// copy from the board its town belongs to. [town => slug], from each board's
+// `towns` in the site's registry (inc/boards.php) since 2026-10-02.
 function hs_city_market_map(): array {
-    $m = [];
-    foreach (['aspen','snowmass village','old snowmass','woody creek','basalt','carbondale','redstone','marble',
-              'glenwood springs','new castle','silt','rifle','parachute','battlement mesa'] as $c) $m[$c] = 'aspen';
-    foreach (['vail','avon','beaver creek','bachelor gulch','arrowhead','edwards','singletree','cordillera','eagle',
-              'eagle-vail','gypsum','minturn','red cliff','wolcott','mccoy','bond'] as $c) $m[$c] = 'vail';
-    foreach (['breckenridge','blue river','frisco','dillon','silverthorne','keystone','copper mountain','heeney',
-              'steamboat springs','oak creek','hayden','clark','yampa'] as $c) $m[$c] = 'altitude';
-    foreach (['telluride','mountain village','ophir','placerville','sawpit','norwood','rico'] as $c) $m[$c] = 'telluride';
-    foreach (['colorado springs','monument','manitou springs','woodland park','fountain','peyton','falcon',
-              'black forest','palmer lake'] as $c) $m[$c] = 'elevate';
-    return $m;
+    return mk_board_towns();
 }
 
 function hs_norm_address(string $a): string {

@@ -25,9 +25,11 @@ the server, the host, or the platform. A parse error produces no output when
 CLI `display_errors` is off, so "nothing happened" often means "the file is
 broken," not "the cron didn't fire."
 
-Server state and the live database are not visible from here. When the answer
-depends on one of those, say so plainly and supply the single command or query
-that resolves it, rather than presenting a guess as a likely cause.
+Server state and the live database are READ-ONLY from here (`ssh
+mh-marketing`, and the `claude_ro` MySQL user, see "Claude can read the live
+database"). Look before guessing; when the answer needs a write or a query
+you cannot run, say so plainly and supply the single command or query that
+resolves it, rather than presenting a guess as a likely cause.
 
 ## SQL — read this before writing any migration
 
@@ -953,8 +955,12 @@ cron logs  /var/log/mh-marketing/
 services   systemctl (apache2)
 ```
 
-Deploy is over SFTP from Nova. Full setup — SSH keys, Nova config, Apache,
-TLS, cron — is in `DEPLOY_LIGHTSAIL.md`.
+Nikki deploys over SFTP from Nova; Claude Code deploys with `scp` over `ssh
+mh-marketing` the way the parent-folder CLAUDE.md says (md5 drift check
+against git HEAD, backup to ~/deploy-backups/<YYYYMMDD>/, `php -l` on the
+server) and ONLY after Nikki's OK for that deploy, since every server write
+here needs it. Full setup — SSH keys, Nova config, Apache, TLS, cron — is in
+`DEPLOY_LIGHTSAIL.md`.
 
 The web root is owned `admin:www-data` with setgid directories (2775), so
 files uploaded by Nova stay group-readable by Apache. If a fresh upload 403s,
@@ -1050,7 +1056,8 @@ www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 - `cron/check_health.php` (2026-10-01) emails nikki.boxer@monthaus.com when the
   roster sync or listing sync has not completed in 2.5 h or logged a ✗, the
   parser has not run in 45 min or reported errors, a webhook event sits
-  unparsed > 30 min, or disk > 85 %. A quota error carries Nikki's note (call
+  unparsed > 30 min, the board registry needs attention (see "Boards come
+  from the site's registry"), or disk > 85 %. A quota error carries Nikki's note (call
   Anyprop if it is a live board). Repeats at most every 12 h, "back to normal"
   when cleared; state `/var/log/mh-marketing/check_health.state.json`.
   `--dry-run` prints instead of sending. The site has the same
@@ -1092,8 +1099,6 @@ with the log under `/var/log/mh-marketing/`; shortened here.)
   Noah and Megan Walz attached on elevate, nothing created or departed.
 - The rest of `cron/` is one-off tools (`import_*`, `merge_agents`,
   `split_team`, `activate_roster`); see `docs/AGENT_ROSTER_PLAN.md`.
-- No log rotation covers `/var/log/mh-marketing/`.
-
 ## Stepping between agents (2026-09-29)
 
 `agent.php` carries a chevron either side of a switcher in the breadcrumb row:
@@ -1132,7 +1137,7 @@ undefined, output stopped mid-`<script>`, and every line after it (both
 buttons rendered and did nothing. It reads exactly like a JavaScript problem
 and is not one. When a page's JS "stops working" for no visible reason, check
 where the HTML actually ends before touching the JavaScript, and check
-`/var/log/apache2/error.log` (this box is Ubuntu 24.04 with journald, there is
+`/var/log/apache2/error.log` (this box is Debian 12 with journald, there is
 no `/var/log/syslog`).
 
 **Uploading is per file and easy to get partly wrong.** `deploy/manifest.md5`
@@ -1407,9 +1412,26 @@ wrapped.
   `agent.php` until the Website card lands.
 - `mls_*` columns are written only by `cron/sync_anyprop_roster.php`; it never
   writes a curated field. The feed falls back to `mls_*` where curated is blank.
-- Boards in Anyprop (`/v1/account/resources`, 2026-09-30): agsmls (aspen),
-  cren, ppmls (elevate), tridemls (Telluride; no Mont Haus office yet).
-  The sync searches every board for a "Mont Haus" office each run and adds
+- **Boards come from the site's registry (2026-10-02): `inc/boards.php`.**
+  The site's `anyprop_boards.php` (`MH_BOARDS`) is the one list; the roster
+  sync fetches `api/boards.php` there (Bearer AGENT_SYNC_TOKEN; address =
+  boards.php beside SITE_AGENT_SYNC_URL unless SITE_BOARDS_URL is set) at the
+  start of every hourly run and caches it in `/var/log/mh-marketing/boards.json`
+  (written by the cron as admin, read by Apache). `mk_market_slug()`,
+  `mk_board_known()`, `mk_board_label()` / `mk_board_labels()`,
+  `mk_market_office()`, `mk_board_towns()` (= `hs_city_market_map()`) and
+  `mk_board_names()` (import spellings) all read that cache; there is no
+  board map to edit in this repo. `MK_BOARDS_FALLBACK` is the 2026-10-02
+  copy, used only until the cache is first written. A member on a board the
+  registry does not know is SKIPPED with a ⚠ (never stored under a raw OSN
+  again, which is what vbor and summit did), the agent page's identity form
+  accepts only registry slugs, and check_health.php emails when the roster
+  log carries a ⚠, the cache is > 3 h old, or agent_mls_ids holds a market
+  that is not a registry slug. A new board is therefore one entry on the
+  site; this portal follows within the hour.
+- Boards in Anyprop today: agsmls (aspen), ppmls (elevate), tridemls
+  (telluride), vbor (vail), summit (altitude), cren (test data). REColorado
+  pending. The sync searches every board for a "Mont Haus" office each run and adds
   `ANYPROP_MH_OFFICE_IDS` on top, so a newly live board needs no config.
   CREN: Anyprop has no Mont Haus office there and neither configured member
   id (13985 Jonathan Boxer, 13986 Jackson Horn, from the Constellation era)
@@ -1420,15 +1442,12 @@ wrapped.
   rejected, and MemberLastName is not filterable (use MemberEmail).
   CREN in Anyprop is test data until the board's final approval (expected
   early Oct 2026); then its Mont Haus office should be found by the search.
-  `mk_market_slug()` aliases, matching the site's `mh_board_slug()`:
-  agsmls→aspen, ppmls→elevate, tridemls→telluride, vbor→vail (live
-  2026-10-01), summit→altitude (Altitude REALTORS, Summit County + Steamboat,
-  live 2026-10-02; its 2 identities first stored as 'summit' were renamed by
-  sql/agent_mls_ids_summit_cleanup.sql). Board labels (index.php, agent.php,
-  inc/roster_alerts.php), Hot Sheet towns (hs_city_market_map) and
-  import_profiles.php board names must follow every new board.
+  Before the registry, Vail's and Altitude's identities were first stored
+  under the raw OSN (vbor, summit) and renamed by
+  sql/agent_mls_ids_vbor_cleanup.sql / agent_mls_ids_summit_cleanup.sql (both
+  run); that cannot happen any more.
 - **Boards the feed will carry** (Nikki, 2026-10-01): Aspen, elevateMLS
-  (PPMLS) and Telluride approved; CREN, Vail, Altitude and REColorado to come.
+  (PPMLS), Telluride, Vail and Altitude live; CREN and REColorado to come.
 - **New brokers arrive before their MLS identity, on every board, always.**
   Nikki adds a new agent for marketing onboarding as soon as they join, often
   before their license moves to Mont Haus in that MLS (any board, also after

@@ -9,6 +9,9 @@
  *   listings   listing sync (Hot Sheets + agent pages): no run in 2.5 h, or a ✗
  *   pipeline   parser: no run in 45 min, errors, or a webhook event still
  *              unparsed after 30 min
+ *   boards     a board Anyprop carries that the site's registry does not (⚠ in
+ *              the roster log), the registry cache older than 3 h, or an
+ *              agent_mls_ids market that is not a registry slug
  *   disk       root filesystem over 85 %
  *
  * Emailed once, then at most every 12 hours while it lasts, plus a "back to
@@ -26,6 +29,7 @@ if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/db.php';
 require_once __DIR__ . '/../inc/hs_mail.php';
+require_once __DIR__ . '/../inc/boards.php';
 
 const ALERT_EMAIL = 'nikki.boxer@monthaus.com';
 const LOG_DIR     = '/var/log/mh-marketing';
@@ -72,6 +76,26 @@ if ($b = bad_lines($s['text'])) {
     $issues['roster'] = trim(($issues['roster'] ?? '') . "\nThe last roster sync reported:\n  " . implode("\n  ", $b));
 }
 
+// Boards: the registry comes from the site (inc/boards.php). A ⚠ in the last
+// roster run is a board Anyprop carries that the registry does not; a stale
+// cache means the site's api/boards.php has stopped answering; a market in
+// agent_mls_ids that is not a registry slug never matches anything on the site
+// (that query would have caught 'vbor' and 'summit').
+$bw = [];
+foreach (preg_split('/\R/', $s['text']) as $l) if (str_contains($l, '⚠')) $bw[] = trim($l);
+$age = mk_boards_cache_age();
+if ($age === null) {
+    $bw[] = 'The board registry has never been fetched from ' . (mk_boards_url() ?: '(no SITE_BOARDS_URL / SITE_AGENT_SYNC_URL)') . '; the built-in copy is in use.';
+} elseif ($age > 3 * 3600) {
+    $bw[] = 'The board registry cache is ' . round($age / 3600, 1) . ' h old: ' . mk_boards_url() . ' is not answering the roster sync.';
+}
+$reg = mk_board_registry();
+$r = $conn->query("SELECT market, COUNT(*) AS n FROM agent_mls_ids GROUP BY market ORDER BY market");
+if ($r) while ($x = $r->fetch_assoc()) {
+    if (!isset($reg[$x['market']])) $bw[] = "{$x['n']} identit" . ($x['n'] == 1 ? 'y' : 'ies') . " stored under market '{$x['market']}', which is not a registry slug: rename them (pattern sql/agent_mls_ids_summit_cleanup.sql).";
+}
+if ($bw) $issues['boards'] = "The board registry check found:\n  " . implode("\n  ", array_unique($bw));
+
 $s = log_state(LOG_DIR . '/hot_sheet_sync.log', '/✓ Done:/u');
 if (!$s['done_at'] || $now - $s['done_at'] > 150 * 60) {
     $issues['listings'] = 'The listing sync (Hot Sheets and agent pages) has not completed since ' . $ago($s['done_at']) . '.';
@@ -99,7 +123,7 @@ if ($pct > 85) $issues['disk'] = "The marketing server's disk is {$pct}% full.";
 
 // The roster sync talks to Anyprop: a quota error there is Nikki's call to make.
 foreach ($issues as $k => $m) {
-    if (stripos($m, 'quota') !== false) $issues[$k] = $m . "\n\nThis is an Anyprop QUOTA error. If it is on a live board (Aspen, elevateMLS, Telluride), call Anyprop: those are meant to be unlimited.";
+    if (stripos($m, 'quota') !== false) $issues[$k] = $m . "\n\nThis is an Anyprop QUOTA error. If it is on a live board (" . implode(', ', mk_board_live_labels()) . "), call Anyprop: those are meant to be unlimited.";
 }
 
 // ── Email ────────────────────────────────────────────────────────────────────

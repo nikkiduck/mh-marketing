@@ -28,6 +28,9 @@
  *     from the Spark era) is reported, never used to deactivate anyone.
  * Curated fields (agent_name, mh_email, cell_phone, bio_text, social_*,
  * headshots, status) are never written, and nothing is ever deleted.
+ * Boards come from the site's registry (inc/boards.php, fetched at the start
+ * of every run); members on a board the registry does not know are skipped
+ * with a ⚠ until the board is added on the site (2026-10-02).
  *
  * Usage:
  *   php cron/sync_anyprop_roster.php --dry-run          # print every decision, write nothing
@@ -88,6 +91,14 @@ $chk = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'web_status'");
 if (!$chk || !$chk->fetch_row()) {
     out('✗ sql/agent_roster_v1.sql has not been run — marketing_intakes.web_status is missing. Nothing done.');
     exit(1);
+}
+
+// The board registry, from the site (inc/boards.php). A fetch that fails
+// leaves the last cache in place; check_health.php says so once it is 3 h old.
+// A fixture run makes no network calls at all.
+if (!$fixture) {
+    $bs = mk_boards_refresh(!$dry);
+    out(($bs['ok'] ? '  boards: ' : '  ! boards: ') . $bs['message'] . ($bs['ok'] ? '' : ' (using the ' . mk_boards_source() . ')'));
 }
 
 // ── Anyprop HTTP ─────────────────────────────────────────────────────────────
@@ -229,11 +240,16 @@ try {
 // ── 2. Normalise and group by market ─────────────────────────────────────────
 $by_market = [];
 $skipped   = 0;
+$unknown   = [];   // OSN => member records on a board the registry does not have
 foreach ($members as $m) {
     $osn = (string)($m['OriginatingSystemName'] ?? '');
     if ($board && strtolower($osn) !== $board) continue;
     $mls_id = trim((string)($m['MemberMlsId'] ?? ''));
     if ($mls_id === '' || $osn === '') { $skipped++; continue; }
+    // A board that is not in the registry has no slug yet. Storing its members
+    // under the raw OSN made identities the site never matched (vbor, summit),
+    // so they wait: add the board on the site and the next run attaches them.
+    if (!mk_board_known($osn)) { $unknown[strtolower($osn)] = ($unknown[strtolower($osn)] ?? 0) + 1; continue; }
     // Unlicensed staff are not brokers the website can show.
     if (stripos((string)($m['MemberType'] ?? ''), 'unlicensed') !== false
         || stripos((string)($m['JobTitle'] ?? ''), 'unlicensed') !== false) { $skipped++; continue; }
@@ -249,6 +265,9 @@ foreach ($members as $m) {
     ];
 }
 if ($skipped) out("Skipped {$skipped} record(s): unlicensed, or no MemberMlsId / board.");
+foreach ($unknown as $osn => $n) {
+    out("⚠ board {$osn}: {$n} member record(s) skipped, it is not in the board registry. Add it to the site's anyprop_boards.php (+ _mls.php) and deploy; this sync picks it up within the hour.");
+}
 
 // ── 3. Prepared statements ───────────────────────────────────────────────────
 function prep(mysqli $conn, string $sql): mysqli_stmt {
@@ -307,7 +326,7 @@ $inactive_before = array_map('intval', array_column($conn->query(
 foreach ($by_market as $market => $list) {
     $n_active = count(array_filter($list, fn($x) => $x['active']));
     out("── {$market}: " . count($list) . " member(s), {$n_active} active");
-    $office = MK_MARKET_OFFICE[$market] ?? null;
+    $office = mk_market_office($market);
 
     foreach ($list as $mls_id => $m) {
         if (!$m['active']) continue;   // non-active records count as "not in the feed" below

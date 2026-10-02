@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- agent_mls_ids_summit_cleanup.sql — Altitude identities stored as 'summit' (2026-10-02)
 --

@@ -11,11 +11,9 @@
 const MK_RESERVED_SLUGS = ['www','mail','smtp','ftp','admin','api','site','app','dev','staging',
                            'marketing','newdev','listings','search','blog','info','support','test'];
 
-// Which office a board's agents default to, when the row has none yet.
-// CREN and REColorado map to Aspen, matching the public site's config;
-// elevateMLS to Colorado Springs. Telluride and Altitude have no office: none.
-const MK_MARKET_OFFICE = ['aspen' => 'aspen', 'vail' => 'vail', 'cren' => 'aspen', 'recolorado' => 'aspen',
-                          'elevate' => 'colorado-springs'];
+// Boards (slug map, labels, default offices, Hot Sheet towns) come from the
+// site's registry: inc/boards.php. Nothing board-specific is typed in here.
+require_once __DIR__ . '/boards.php';
 
 /**
  * " AND [alias.]entity_type = 'agent'" once agent_roster_v2_teams.sql has run,
@@ -41,19 +39,6 @@ function mk_agents_only_sql(mysqli $conn, string $alias = ''): string {
 }
 /** Old name of mk_agents_only_sql(); kept so nothing breaks. */
 function mk_team_sql(mysqli $conn, string $alias = ''): string { return mk_agents_only_sql($conn, $alias); }
-
-/** Anyprop OriginatingSystemName → our market slug. agsmls is the Aspen board. */
-function mk_market_slug(string $osn): string {
-    // Must agree with the public site's slug_osn() / apx_slug() /
-    // ap_history_market_slug(): ppmls is Pikes Peak REALTOR Services, which the
-    // site calls elevate (live in Anyprop 2026-09-30); tridemls is Telluride
-    // (live 2026-10-01); vbor is the Vail Board of REALTORS (live 2026-10-01);
-    // summit is Altitude REALTORS, Summit County + Steamboat (live 2026-10-02).
-    static $alias = ['agsmls' => 'aspen', 'ppmls' => 'elevate', 'tridemls' => 'telluride', 'vbor' => 'vail',
-                     'summit' => 'altitude'];
-    $s = substr(preg_replace('/[^a-z0-9]+/', '', strtolower($osn)), 0, 20);
-    return $alias[$s] ?? $s;
-}
 
 /** DNS-safe base slug from a name. */
 function mk_slug_base(string $name): string {

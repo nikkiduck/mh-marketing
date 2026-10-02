@@ -1,40 +1,43 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-09-29 03:08 from the Mont Haus Master folder.
+# Generated 2026-10-02 21:59 from the Mont Haus Master folder.
 # Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
 # and assets/js/mh-qr.js, portal/*.php, assets/css/portal.css.
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-24d47c8d424fa6b07ca86670e4aaa297  agent.php
+f0b770bd8df7f9666ba470e0d8a7db0d  agent.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
-5072dbb767e334dafbc2c3093a340f2c  api/roster.php
+7f95c5b8e92a7b737edd6edba04eb98e  api/roster.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
+09d6404437f4d1582066c00c82756de2  assets/css/portal.css
+a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 308eea76bb7a9af0b9267f0c611d5445  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
 18f86e70bdc154a8cace266e54daff72  cron/activate_roster.php
+4ac85b0bcb05ae3f538454537f8f6b87  cron/check_health.php
 757c6c30f565757b1ba78cc9ff05f2f2  cron/import_hot_sheets.php
-783dfe691e3dd0e3711bea090cc7c765  cron/import_profiles.php
+e5a792ea57ea1800be069453deabcf43  cron/import_profiles.php
 e0d27d34f0d680969bd96950b29d1473  cron/import_site_agents.php
 f0cb50b5d5895138a6ef1db662c6aa67  cron/merge_agents.php
 3aabe4d159f1e1fe113f18e9a06008dc  cron/parse_pipeline_events.php
 a9191e8f282c3df451ef6868883597a5  cron/send_hot_sheet.php
 4e14395dff4a22eb66c4d0b771d0312a  cron/split_team.php
-ac0ffd5941a4a5767b0acf4ad7d92359  cron/sync_anyprop_roster.php
+d63fe714d74b398d36c99441467dd2ed  cron/sync_anyprop_roster.php
 06e4674e8bf5204dde84021de30170e9  cron/sync_hot_sheet_listings.php
 dc625ba4ad1cfcb4c13d0067bc8fe4ce  cron/sync_mh_brokers.php
 d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php
-82bfbedfbc39a49cd080d4faa0c22c14  cron/check_health.php
 dfb28c4e16681b9f76c7e592fbaf96ed  forgot-password.php
 0c75ba0e3238df56dd8be21081c55a5c  hot_sheet_preview.php
 4ba218c544f473278a06edf382693d3e  inc/_footer.php
 2e9659fd4eb8881d3556094d834d04ae  inc/_nav.php
 381255aa6a16f6793836e7b9ea1b73a3  inc/_onboarding.php
 435c467f99844fff6b204159975058bf  inc/agent_lifecycle.php
-2ef35a9e3ef713e68882d8482a8bed44  inc/agent_roster.php
+adee107afca49bf84fe4181ed0aff97b  inc/agent_roster.php
 93b8e3978a2e7d86ecb6b99b0f40b5a8  inc/auth.php
+3ba9eb4467faefd4716b543436805e41  inc/boards.php
 a2609a3b3de8ed8764acd862db2a0245  inc/config.php
 0f2ccd665f7cf6ebef2b916bff6ea510  inc/financials.php
-702334ae2008a5aeca59d6e0ab3a5bc2  inc/hs_data.php
+1b4401f5942f2be10a7ac65cf1b072c3  inc/hs_data.php
 e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 98ca55f6491ad80b3d49d1c6ad78a9a5  inc/hs_mail.php
 f4a24df5eefa50638b22149aef9aadb9  inc/hs_template.php
@@ -42,13 +45,15 @@ f4a24df5eefa50638b22149aef9aadb9  inc/hs_template.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 700f1b9417dbacfbaccc3e309cf3b3dc  inc/pipeline.php
+5a955fb79d6f84004c4fd0aef2688b7a  inc/portal.php
 c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
-7fba6f5f1f9ff652d2c4f86a02b5c98f  inc/roster_alerts.php
+0a8728b2cab19c07755f953bbfb1a6c0  inc/roster_alerts.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-a512bce9668bf2767ff30141e4faced0  index.php
+bdab5e5c9eb8f1030c20ff862063f2e0  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
+8bce1a103a42a7e017e711547c910e10  leadership.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php
 bb73a2b0b1ccb8ca4b160bb7a05ff140  logout.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
@@ -56,6 +61,10 @@ f3327ec6854ed5362ede027a9b198064  oauth_start.php
 210a1c8334cfa292107df4eac8d2fa85  order_split.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 e476b97fd392340003bddd09f7ce308d  pipeline_review.php
+e60ae4b56c036ebddcdc4b66856f967f  portal/index.php
+84273aef9c89d39ca274bda11d5a3ce0  portal/qr.php
+e416e60cc675ccc3853652ef106913c9  portal/receipt.php
+bdca909a6507918b34beb8a4ab7544b6  portal/spend.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 8e6d7d7742f6c9589b47c7a0e28b4d0d  qr_codes.php
 70fce00dc60a09f6be11d7e5e7062afe  receipt.php
@@ -66,11 +75,3 @@ a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 9bf1eb8b77a42637743d0d974eba5205  users.php
 90750ac4905fdab022c241560911f5ba  website_order.php
-a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
-5a955fb79d6f84004c4fd0aef2688b7a  inc/portal.php
-e60ae4b56c036ebddcdc4b66856f967f  portal/index.php
-84273aef9c89d39ca274bda11d5a3ce0  portal/qr.php
-09d6404437f4d1582066c00c82756de2  assets/css/portal.css
-bdca909a6507918b34beb8a4ab7544b6  portal/spend.php
-e416e60cc675ccc3853652ef106913c9  portal/receipt.php
-345d95aecf3e06f5873419a7af05b9e4  leadership.php

@@ -218,9 +218,7 @@ if ($csv && ($fh = fopen($csv, 'r'))) {
         'service_area'     => ['servicearea', 'serviceareas', 'areasserved', 'markets served'],
         'office'           => ['office', 'officelocation'],
     ] as $col => $names) foreach ($names as $nm) $cols[preg_replace('/[^a-z0-9]/', '', $nm)] = $col;
-    $boards = ['aspen' => 'aspen', 'agsmls' => 'aspen', 'vail' => 'vail', 'cren' => 'cren', 'recolorado' => 'recolorado',
-               'denver' => 'recolorado', 'remetrodenver' => 'recolorado', 'elevate' => 'elevate', 'altitude' => 'altitude',
-               'ppmls' => 'elevate', 'summit' => 'altitude', 'vbor' => 'vail', 'telluride' => 'telluride', 'tridemls' => 'telluride'];
+    $boards = mk_board_names();   // every spelling the registry knows (slug, OSN, alias) → slug
     $head = fgetcsv($fh) ?: [];
     $head = array_map(fn($h) => strtolower(preg_replace('/[^a-z0-9]/i', '', (string)$h)), $head);
     $find = function (array $names) use ($head) {

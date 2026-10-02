@@ -769,7 +769,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $market = strtolower(trim((string)($_POST['market'] ?? '')));
         $mls_id = trim((string)($_POST['mls_agent_id'] ?? ''));
         $alias  = isset($_POST['is_alias']) ? 1 : 0;
-        if ($market !== '' && $mls_id !== '') {
+        // Only a registry slug: an identity under any other market would never
+        // match the site's listings (check_health.php reports such rows).
+        if (isset(mk_board_registry()[$market]) && $mls_id !== '') {
             // last_seen_at stays NULL: an identity the feed has never returned
             // is never used to mark anyone Inactive.
             $st = $conn->prepare("INSERT IGNORE INTO agent_mls_ids (intake_id, market, mls_agent_id, member_status, is_alias)
@@ -1034,8 +1036,7 @@ if (mk_table_exists($conn, 'hs_listing_state') && mk_table_exists($conn, 'agent_
 }
 
 // ── Profile tab data ────────────────────────────────────────────────────────
-const MK_BOARD_LABEL = ['aspen' => 'Aspen', 'vail' => 'Vail', 'cren' => 'CREN', 'recolorado' => 'REColorado',
-                        'elevate' => 'Elevate', 'altitude' => 'Altitude', 'telluride' => 'Telluride'];
+// Board labels and the picker's choices come from the registry (inc/boards.php, via agent_roster.php).
 function e_attr($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
 
 $agent_slug = trim((string)($agent['slug'] ?? ''));
@@ -2445,7 +2446,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <table class="mini-table" style="width:100%;">
               <?php foreach ($identities as $i): ?>
                 <tr>
-                  <td style="text-transform:uppercase;font-size:11px;letter-spacing:.06em;color:#6b7280;"><?= htmlspecialchars(MK_BOARD_LABEL[$i['market']] ?? $i['market']) ?></td>
+                  <td style="text-transform:uppercase;font-size:11px;letter-spacing:.06em;color:#6b7280;"><?= htmlspecialchars(mk_board_label($i['market'])) ?></td>
                   <td style="font-weight:600;"><?= htmlspecialchars($i['mls_agent_id']) ?>
                     <?php if ((int)$i['is_alias']): ?><span class="tag-team" style="margin-left:6px;">Team ID</span><?php endif; ?>
                     <?php if ($i['member_status'] !== 'Active'): ?><span class="pill w-inactive" style="margin-left:6px;">Off the feed</span><?php endif; ?>
@@ -2471,7 +2472,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <div class="form-row">
               <label style="width:150px;">Board
                 <select name="market" class="form-input">
-                  <?php foreach (MK_BOARD_LABEL as $slug => $label): ?><option value="<?= $slug ?>"><?= $label ?></option><?php endforeach; ?>
+                  <?php foreach (mk_board_labels() as $slug => $label): ?><option value="<?= $slug ?>"><?= htmlspecialchars($label) ?></option><?php endforeach; ?>
                 </select>
               </label>
               <label class="grow">MLS ID <input type="text" name="mls_agent_id" class="form-input" placeholder="55061958"></label>
