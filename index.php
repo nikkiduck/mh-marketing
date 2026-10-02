@@ -413,12 +413,13 @@ foreach (array_merge($agents, $archived) as $a) {
     ];
 }
 
-$counts = ['active' => 0, 'onboarding' => 0, 'inactive' => 0, 'archived' => 0];
+// No Onboarding tab since 2026-10-02 (Nikki): the checklist lives on the
+// Profile editor, and the Tasks column still shows open items.
+$counts = ['active' => 0, 'inactive' => 0, 'archived' => 0];
 $attn_counts = ['inactive' => 0, 'web_pending' => 0, 'web_incomplete' => 0, 'balance' => 0];
 $offices = [];
 foreach ($rows as $x) {
     if (isset($counts[$x['_status']])) $counts[$x['_status']]++;
-    if ($x['_onb']) $counts['onboarding']++;
     foreach ($x['_attn'] as $k) $attn_counts[$k]++;
     if (!empty($x['office'])) $offices[$x['office']] = true;
 }
@@ -502,6 +503,13 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     .search-wrap .ti-search { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#9ca3af; font-size:15px; pointer-events:none; }
     #agentSearch { width:100%; padding:7px 10px 7px 32px; font-size:13px; border:1px solid #d1d5db; border-radius:4px; outline:none; font-family:inherit; color:#111; }
     #agentSearch:focus { border-color:#75BDB6; box-shadow:0 0 0 2px rgba(117,189,182,.2); }
+    .suggest { position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:30; background:#fff; border:1px solid #d1d5db; border-radius:6px;
+               box-shadow:0 8px 24px rgba(0,0,0,.12); padding:4px 0; max-height:320px; overflow-y:auto; }
+    .suggest-item { display:flex; align-items:center; gap:8px; padding:7px 12px; font-size:13px; color:#111; text-decoration:none; cursor:pointer; }
+    .suggest-item:hover, .suggest-item.on { background:#f0f9f8; }
+    .suggest-item .s-name { font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .suggest-item .s-meta { margin-left:auto; font-size:11px; color:#6b7280; white-space:nowrap; text-transform:capitalize; }
+    .suggest-item .s-meta.off { color:#b45309; }
     .toolbar select { padding:7px 10px; font-size:13px; border:1px solid #d1d5db; border-radius:4px; background:#fff; font-family:inherit; color:#111; }
     .view-toggle { margin-left:auto; display:flex; border:1px solid #d1d5db; border-radius:4px; overflow:hidden; }
     .view-toggle button { border:0; background:#fff; padding:6px 10px; font-size:15px; color:#6b7280; cursor:pointer; }
@@ -673,7 +681,11 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     <div class="toolbar">
       <div class="search-wrap">
         <i class="ti ti-search"></i>
-        <input type="text" id="agentSearch" placeholder="Search name or email" autocomplete="off">
+        <input type="text" id="agentSearch" placeholder="Search name or email" autocomplete="off"
+               role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="agentSuggest">
+        <!-- Typeahead: pick a name (or press Enter on the first match) to open
+             the profile; typing alone still filters the list below. -->
+        <div class="suggest" id="agentSuggest" role="listbox" hidden></div>
       </div>
       <?php if ($offices): ?>
       <select id="officeFilter" aria-label="Office">
@@ -692,8 +704,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     </div>
 
     <div class="filter-bar">
-      <?php foreach (['active' => 'Active', 'onboarding' => 'Onboarding', 'inactive' => 'Inactive', 'archived' => 'Archived'] as $k => $lbl): ?>
-        <button class="filter-tab<?= $k === 'active' ? ' active-tab' : '' ?>" data-filter="<?= $k ?>"<?= $k === 'onboarding' ? ' title="Active agents with marketing checklist items still open"' : '' ?>><?= $lbl ?>
+      <?php foreach (['active' => 'Active', 'inactive' => 'Inactive', 'archived' => 'Archived'] as $k => $lbl): ?>
+        <button class="filter-tab<?= $k === 'active' ? ' active-tab' : '' ?>" data-filter="<?= $k ?>"><?= $lbl ?>
           <?php if ($k === 'inactive' && $attn_counts['inactive']): ?><span class="red-dot" title="No longer with Mont Haus in the MLS"></span><?php endif; ?>
           <span class="count"><?= $counts[$k] ?></span></button>
       <?php endforeach; ?>
@@ -703,7 +715,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     <?php
       /** Attributes every view shares; the script filters and sorts on these. */
       $row_attrs = function (array $x): string {
-          return 'data-status="' . e($x['_status']) . '" data-onb="' . ($x['_onb'] ? '1' : '0') . '"'
+          return 'data-status="' . e($x['_status']) . '"'
                . ' data-search="' . e(strtolower($x['_name'] . ' ' . ($x['mh_email'] ?? '') . ' ' . ($x['mls_email'] ?? ''))) . '"'
                . ' data-first="' . e($x['_first']) . '" data-last="' . e($x['_last']) . '"'
                . ' data-updated="' . e($x['updated_at'] ?? '') . '" data-start="' . e(($x['start_date'] ?: $x['intake_date']) ?: '9999-12-31') . '"'
@@ -813,7 +825,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     <!-- Table view (default) -->
     <table class="roster-table" id="viewTable">
       <thead><tr>
-        <th data-sort="last">Agent <i class="ti ti-selector"></i></th>
+        <th data-sort="first" title="Sort by first name">Agent <i class="ti ti-selector"></i></th>
         <th>Boards</th>
         <th style="text-align:center;" title="On the website">Web</th>
         <th>Status</th>
@@ -886,7 +898,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
 <script>
 (function () {
   var views = { table: document.getElementById('viewTable'), cards: document.getElementById('viewCards') };
-  var state = { filter: 'active', attn: '', search: '', office: '', board: '', sort: 'last', dir: 'asc' };   // last name A-Z (Nikki, 2026-09-22)
+  var state = { filter: 'active', attn: '', search: '', office: '', board: '', sort: 'first', dir: 'asc' };   // first name A-Z (Nikki, 2026-10-02; was last name)
   var noResults = document.getElementById('noResults');
 
   // View choice is a per-browser convenience only; storage can be missing or
@@ -899,7 +911,6 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
   function matches(r) {
     var d = r.dataset;
     if (state.attn) { if (d.attn.indexOf(' ' + state.attn + ' ') === -1) return false; }
-    else if (state.filter === 'onboarding') { if (d.onb !== '1') return false; }
     else if (state.filter !== 'all' && d.status !== state.filter) return false;
     if (state.search && d.search.indexOf(state.search) === -1) return false;
     if (state.office && d.office !== state.office) return false;
@@ -915,7 +926,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       rows.forEach(function (r) { var ok = matches(r); r.style.display = ok ? '' : 'none'; if (ok && k === view) shown++; });
       rows.sort(function (a, b) {
         var va = a.dataset[state.sort] || '', vb = b.dataset[state.sort] || '';
-        var c = va.localeCompare(vb) || (a.dataset.first || '').localeCompare(b.dataset.first || '');
+        var tie = state.sort === 'first' ? 'last' : 'first';
+        var c = va.localeCompare(vb) || (a.dataset[tie] || '').localeCompare(b.dataset[tie] || '');
         return state.dir === 'asc' ? c : -c;
       }).forEach(function (r) { box.appendChild(r); });
     });
@@ -933,7 +945,57 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
   document.querySelectorAll('.attn-chip[data-attn]').forEach(function (c) {
     c.addEventListener('click', function () { state.attn = state.attn === c.dataset.attn ? '' : c.dataset.attn; apply(); });
   });
-  document.getElementById('agentSearch').addEventListener('input', function (e) { state.search = e.target.value.toLowerCase().trim(); apply(); });
+  // Search box: filters the list as you type, and offers the matching agents as
+  // a typeahead (table rows only: the cards repeat them). Down/Up move, Enter
+  // opens the highlighted name (the first match when none is highlighted),
+  // Escape closes. Any status is offered, so an archived agent is one search away.
+  var search = document.getElementById('agentSearch'), suggest = document.getElementById('agentSuggest'), cursor = -1;
+  function suggestItems() { return Array.prototype.slice.call(suggest.querySelectorAll('.suggest-item')); }
+  function closeSuggest() { suggest.hidden = true; suggest.innerHTML = ''; cursor = -1; search.setAttribute('aria-expanded', 'false'); }
+  function highlight(i) {
+    var items = suggestItems();
+    cursor = items.length ? Math.max(-1, Math.min(i, items.length - 1)) : -1;
+    items.forEach(function (it, n) { it.classList.toggle('on', n === cursor); });
+    if (cursor >= 0) items[cursor].scrollIntoView({ block: 'nearest' });
+  }
+  function renderSuggest() {
+    var q = state.search;
+    closeSuggest();
+    if (!q) return;
+    var hits = rowsIn(views.table).filter(function (r) { return r.dataset.search.indexOf(q) !== -1 && r.querySelector('a.who-name'); });
+    hits.sort(function (a, b) {   // names that START with what was typed first, then first-name order
+      var sa = a.dataset.search.indexOf(q) === 0 ? 0 : 1, sb = b.dataset.search.indexOf(q) === 0 ? 0 : 1;
+      return (sa - sb) || a.dataset.first.localeCompare(b.dataset.first) || a.dataset.last.localeCompare(b.dataset.last);
+    });
+    if (!hits.length) return;
+    hits.slice(0, 8).forEach(function (r) {
+      var link = r.querySelector('a.who-name');
+      var a = document.createElement('a');
+      a.className = 'suggest-item'; a.href = link.href; a.setAttribute('role', 'option');
+      var name = document.createElement('span'); name.className = 's-name'; name.textContent = link.textContent;
+      var meta = document.createElement('span'); meta.className = 's-meta' + (r.dataset.status === 'active' ? '' : ' off');
+      meta.textContent = r.dataset.status === 'active' ? (r.dataset.office || '').replace(/-/g, ' ') : r.dataset.status;
+      a.appendChild(name); a.appendChild(meta);
+      a.addEventListener('mousedown', function (e) { e.preventDefault(); });   // keep focus so blur does not close it first
+      suggest.appendChild(a);
+    });
+    suggest.hidden = false;
+    search.setAttribute('aria-expanded', 'true');
+  }
+  search.addEventListener('input', function (e) { state.search = e.target.value.toLowerCase().trim(); apply(); renderSuggest(); });
+  search.addEventListener('keydown', function (e) {
+    if (suggest.hidden) { if (e.key === 'Escape') { search.value = ''; state.search = ''; apply(); } return; }
+    if (e.key === 'ArrowDown')  { e.preventDefault(); highlight(cursor + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); highlight(cursor - 1); }
+    else if (e.key === 'Escape') { closeSuggest(); }
+    else if (e.key === 'Enter') {
+      var items = suggestItems(), pick = items[cursor >= 0 ? cursor : 0];
+      if (pick) { e.preventDefault(); window.location.href = pick.href; }
+    }
+  });
+  search.addEventListener('focus', function () { renderSuggest(); });
+  search.addEventListener('blur', function () { setTimeout(closeSuggest, 150); });
+  document.addEventListener('click', function (e) { if (!e.target.closest('.search-wrap')) closeSuggest(); });
   var of = document.getElementById('officeFilter');
   if (of) of.addEventListener('change', function (e) { state.office = e.target.value; apply(); });
   document.getElementById('boardFilter').addEventListener('change', function (e) { state.board = e.target.value; apply(); });

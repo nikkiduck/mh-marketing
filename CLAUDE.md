@@ -373,7 +373,14 @@ A table by default, cards as an option (per-browser, localStorage, wrapped in
 try/catch). Every row is shaped once in PHP (`$rows`) and both views render
 from it with the same data-* attributes the script filters and sorts on.
 "Needs attention" chips filter by `data-attn` (onboard, web_pending,
-web_incomplete, balance); the Pipeline chip links out. Onboard / Offboard /
+web_incomplete, balance); the Pipeline chip links out. Default order is
+first name A-Z (Nikki, 2026-10-02; last name until then), tie on last name.
+The search box is also a typeahead (2026-10-02): matching agents of ANY
+status drop down under it (prefix matches first, 8 max), Down/Up/Enter opens
+the profile, Escape closes; typing alone still filters the list. The
+Onboarding tab was removed the same day (the checklist is on the Profile
+editor; the Tasks column stays), so the tabs are Active / Inactive /
+Archived / All. Onboard / Offboard /
 Restore are `inc/agent_lifecycle.php` (mk_onboard, mk_offboard), which report
 back what they did as a flash list. Archived intakes come from their own query
 (the UNION arms join is_active = 1 only). The rules below about the UNION, the
