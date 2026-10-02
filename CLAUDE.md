@@ -531,6 +531,16 @@ typed into the Initials box on the Overview tab. Blank means keep deriving.
 stay in step: the roster card and the profile show the same avatar for the same
 person, so a divergence is immediately visible and reads as a data bug.
 
+## agent.php closes its connection early too
+
+`agent.php` calls `$conn->close()` (line ~1090) after loading everything and
+before rendering. Any database call in the template (`mk_column_exists()`
+included) is a fatal that cuts the page off at that point, taking every
+script below it (crop tools, Quill, the stepper). It happened on 2026-10-02:
+the Leadership card checked a column while rendering and every agent page was
+truncated for about 4 minutes. Compute flags like `$has_leadership` above the
+close.
+
 ## index.php closes its connection early
 
 `index.php` calls `$conn->close()` right after loading the roster, well before

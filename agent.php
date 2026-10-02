@@ -2372,7 +2372,6 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </form>
         </div>
 
-    <?php if (!$is_staff): ?>
     <!-- ── Bio ──────────────────────────────────────────────────────────── -->
     <div class="card">
       <div class="card-title" style="display:flex;align-items:center;">
@@ -2435,7 +2434,6 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         </form>
       </div>
     </div>
-    <?php endif; /* staff: no bio */ ?>
       </div>
 
       <div>

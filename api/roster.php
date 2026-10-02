@@ -72,7 +72,7 @@ $leaders = null;
 $chk2 = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'leadership_show'");
 if ($chk2 && $chk2->fetch_row()) {
     $lr = $conn->query("
-        SELECT slug, entity_type, agent_name, mls_full_name, agent_title, mh_email, mls_email, cell_phone, mls_phone,
+        SELECT slug, entity_type, agent_name, mls_full_name, agent_title, bio_text, mh_email, mls_email, cell_phone, mls_phone,
                headshot_url, headshot_face_url, leadership_sort
           FROM marketing_intakes
          WHERE leadership_show = 1 AND is_active = 1 AND status <> 'archived'
@@ -161,6 +161,7 @@ if ($leaders !== null) {
             'agent_key'          => $is_staff ? null : $l['slug'],   // links to the broker page; null for staff
             'name'               => $name,
             'title'              => (string)$l['agent_title'],
+            'bio'                => mk_clean_bio($l['bio_text']),
             'email'              => strtolower(trim((string)($l['mh_email'] ?: $l['mls_email']))),
             'phone'              => mk_e164($l['cell_phone'] ?: $l['mls_phone']),
             'headshot_url'       => feed_photo($l['headshot_url']),

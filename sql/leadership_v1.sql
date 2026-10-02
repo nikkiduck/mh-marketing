@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run (columns verified 2026-10-02)
 --
 -- leadership_v1.sql — the public site's Leadership page managed here, and
 -- non-agent staff in the roster (docs/HANDOFF-leadership-and-staff.md). 2026-10-01.

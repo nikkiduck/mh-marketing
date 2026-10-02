@@ -271,11 +271,6 @@ function wo_title(string $t): string {
       </div>
     </div>
 
-    <p class="lede">
-      The website's Leadership page, in order. Drag a card where you want it, or use the arrows, then Save.
-      The website picks changes up on its hourly sync, or straight away with Sync to Website.
-      Staff are people who are not agents: they appear on Leadership only, never as agents anywhere.
-    </p>
 
     <?php if (!$ready): ?>
       <div class="empty-state">Leadership is not set up in this database yet. Run <code>sql/leadership_v1.sql</code>, then reload.</div>
