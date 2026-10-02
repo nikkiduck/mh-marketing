@@ -893,6 +893,10 @@ if (!$agent) { header('Location: index.php'); exit; }
 // agent. The page shows only what applies to them: contact, headshots, QR
 // codes and the Leadership settings. No tasks, billing, MLS or website tabs.
 $is_staff = ($agent['entity_type'] ?? 'agent') === 'staff';
+// Asked HERE, not in the template: the connection is closed before the page
+// renders, and a query after that is a fatal that cuts the page off mid-way
+// (it took the crop tool with it on 2026-10-02).
+$has_leadership = mk_column_exists($conn, 'marketing_intakes', 'leadership_show');
 
 // ── Auto-seed onboarding tasks if none exist yet ──────────────────────────────
 // Not for staff: the checklist is agent onboarding.
@@ -2509,7 +2513,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
         <?php endif; /* staff: no board identities or subscriptions */ ?>
 
-        <?php if (mk_column_exists($conn, 'marketing_intakes', 'leadership_show') && ($agent['entity_type'] ?? 'agent') !== 'team'): ?>
+        <?php if ($has_leadership && ($agent['entity_type'] ?? 'agent') !== 'team'): ?>
         <!-- ── Leadership (leadership_v1.sql) ───────────────────────────────── -->
         <div class="card" id="leadership">
           <div class="card-title"><i class="ti ti-crown" style="margin-right:6px;"></i> Leadership page</div>
