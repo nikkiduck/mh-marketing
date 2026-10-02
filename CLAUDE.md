@@ -3,6 +3,12 @@
 The Mont Haus marketing tool, standalone on its own subdomain.
 PHP 8 / MySQL 8 on an AWS Lightsail instance (Debian, LAMP blueprint).
 
+**Site + marketing are one system (2026-10-02).** Start sessions in the parent
+folder `/Users/nikkiduck/Mont Haus Master`; its CLAUDE.md has the shared rules
+and the new-board checklist for both projects. Board, agent and feed changes
+are made in both repos in the same piece of work. Planned single board
+registry: site.monthaus.com docs/HANDOFF-board-registry.md.
+
 Replicated from `monthausint.com/marketing`, and fully independent of it.
 Its own code, its own database, its own cron. Nothing is shared with the hub
 except the Spark MLS API credentials — so a fix made here does not reach
