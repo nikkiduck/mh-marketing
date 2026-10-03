@@ -1512,6 +1512,14 @@ the fix is at the boards, not in the feed. Name search is `contains` on
 MemberFullName in several casings because Anyprop cannot filter on last
 name and `contains` is case-sensitive.
 
+`spark_debug.php` is the same tool against a board's own Spark (FBS) RESO
+feed, to compare with Anyprop: tokens from inc/db.php (Aspen, Vail) or one
+pasted into the form (POSTed, kept in the PHP session, "Forget token"
+drops it; never in a URL or on disk). Spark honours only `eq`: startswith()
+and contains() return 200 with an empty list, so member searches are exact
+and an office NAME search pages through the whole Office list and matches
+in PHP (`*` lists every office).
+
 ## Dynamic QR codes (qr.monthaus.com, 2026-09-28)
 
 Printed QR codes encode `https://qr.monthaus.com/<code>`; where each one opens
