@@ -51,17 +51,30 @@ if (defined('SPARK_ACCESS_TOKEN') && SPARK_ACCESS_TOKEN !== '')           $confi
 if (defined('VAIL_SPARK_ACCESS_TOKEN') && VAIL_SPARK_ACCESS_TOKEN !== '') $configured['vail']  = ['Vail (configured)',  VAIL_SPARK_ACCESS_TOKEN];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Field names are deliberately not "label"/"token"/"password": a text box
+    // followed by a password box reads as a sign-in form to browser password
+    // managers, which autofilled Nikki's email and password over the token
+    // (2026-10-02). The token box is a text input masked with CSS for the same reason.
     if (isset($_POST['forget'])) {
         unset($_SESSION['spark_debug_token'], $_SESSION['spark_debug_label']);
+        $_SESSION['spark_debug_flash'] = ['ok', 'Token forgotten.'];
     } else {
-        $t = trim((string)($_POST['token'] ?? ''));
-        if ($t !== '' && preg_match('/^[A-Za-z0-9._-]{8,200}$/', $t)) {
+        $t = trim((string)($_POST['spk_feed_key'] ?? ''));
+        $lbl = mb_substr(trim((string)($_POST['spk_feed_name'] ?? '')), 0, 40) ?: 'pasted token';
+        if ($t === '') {
+            $_SESSION['spark_debug_flash'] = ['err', 'No token was pasted.'];
+        } elseif (!preg_match('/^[\x21-\x7E]{8,300}$/', $t)) {
+            $_SESSION['spark_debug_flash'] = ['err', 'That does not look like a Spark token (expected 8 to 300 characters, no spaces). If the browser filled the box in for you, clear it and paste the token again.'];
+        } else {
             $_SESSION['spark_debug_token'] = $t;
-            $_SESSION['spark_debug_label'] = mb_substr(trim((string)($_POST['label'] ?? '')), 0, 40) ?: 'pasted token';
+            $_SESSION['spark_debug_label'] = $lbl;
+            $_SESSION['spark_debug_flash'] = ['ok', "Using the pasted token for \"{$lbl}\" (" . strlen($t) . ' characters). Pick it under Feed below.'];
         }
     }
     header('Location: spark_debug.php'); exit;
 }
+$flash = $_SESSION['spark_debug_flash'] ?? null;
+unset($_SESSION['spark_debug_flash']);
 
 $pasted = $_SESSION['spark_debug_token'] ?? '';
 $pasted_label = $_SESSION['spark_debug_label'] ?? 'pasted token';
@@ -168,6 +181,8 @@ $conn->close();
     .hint { font-size:12px; color:#9ca3af; }
     .flash { padding:10px 14px; border-radius:6px; margin-bottom:16px; font-size:14px; }
     .flash.err { background:#fef2f2; color:#b91c1c; }
+    .flash.ok  { background:#f0fdf4; color:#15803d; }
+    .form-input.masked { -webkit-text-security:disc; }   /* looks like a password box without being one */
     .note { background:#fbf7ec; border:1px solid #e3dccb; padding:12px 14px; font-size:13px; color:#5c4a28; margin-bottom:18px; }
     .q { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; color:#374151; word-break:break-all; background:#f5f3ee; padding:8px 10px; border-radius:4px; }
     table.sum { width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
@@ -200,15 +215,16 @@ $conn->close();
 
     <div class="card">
       <div class="card-title"><i class="ti ti-key"></i> Access token</div>
+      <?php if ($flash): ?><div class="flash <?= $flash[0] ?>"><?= e($flash[1]) ?></div><?php endif; ?>
       <form method="POST" action="spark_debug.php" autocomplete="off">
         <div class="form-row">
           <div style="flex:0 0 200px;">
-            <label class="fld-label" for="label">Board</label>
-            <input class="form-input" type="text" name="label" id="label" placeholder="Telluride" maxlength="40">
+            <label class="fld-label" for="spk_feed_name">Board</label>
+            <input class="form-input" type="text" name="spk_feed_name" id="spk_feed_name" placeholder="Telluride" maxlength="40" autocomplete="off" data-lpignore="true" data-1p-ignore data-bwignore>
           </div>
           <div style="flex:1 1 320px;">
-            <label class="fld-label" for="token">Spark access token</label>
-            <input class="form-input" type="password" name="token" id="token" placeholder="paste the token for that board" autocomplete="off">
+            <label class="fld-label" for="spk_feed_key">Spark access token</label>
+            <input class="form-input masked" type="text" name="spk_feed_key" id="spk_feed_key" placeholder="paste the token for that board" autocomplete="off" spellcheck="false" data-lpignore="true" data-1p-ignore data-bwignore>
           </div>
           <div><button type="submit" class="btn btn-primary">Use this token</button></div>
           <?php if ($pasted !== ''): ?><div><button type="submit" name="forget" value="1" class="btn btn-outline">Forget token (<?= e($pasted_label) ?>)</button></div><?php endif; ?>
