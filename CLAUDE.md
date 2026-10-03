@@ -1499,6 +1499,19 @@ from site.monthaus.com's `api/listings.php` (the site is the only Anyprop
 listings consumer); change tracking, subscribers, emails and Paperless Pipeline
 live here. The hub's copy keeps running on Spark until the new site is live.
 
+## Anyprop feed lookup (anyprop_debug.php, 2026-10-02)
+
+Admin page ("Anyprop Feed" button on the roster): search Anyprop's Member or
+Office resource by name / email / MLS id / office id, per board or all, and
+see the summary table plus the raw JSON. Reads only, same credentials as the
+roster sync, no cache. Built when Jonathan Boxer's Vail and Telluride
+identities were missing: both Anyprop and the old Spark feed showed him at
+Christie's on VBOR (last changed 2026-05-06), and Anyprop's Telluride feed
+has no Mont Haus office at all (docs/vail-member-check-2026-10-02.md), so
+the fix is at the boards, not in the feed. Name search is `contains` on
+MemberFullName in several casings because Anyprop cannot filter on last
+name and `contains` is case-sensitive.
+
 ## Dynamic QR codes (qr.monthaus.com, 2026-09-28)
 
 Printed QR codes encode `https://qr.monthaus.com/<code>`; where each one opens
