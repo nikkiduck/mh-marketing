@@ -275,7 +275,7 @@ function prep(mysqli $conn, string $sql): mysqli_stmt {
     if (!$s) throw new RuntimeException("prepare failed: {$conn->error} — {$sql}");
     return $s;
 }
-$q_ident   = prep($conn, "SELECT a.intake_id, a.is_alias, mi.agent_name
+$q_ident   = prep($conn, "SELECT a.intake_id, a.is_alias, a.member_status, mi.agent_name
                             FROM agent_mls_ids a JOIN marketing_intakes mi ON mi.id = a.intake_id
                            WHERE a.market = ? AND a.mls_agent_id = ?");
 $not_team  = mk_agents_only_sql($conn);   // a team row is never an MLS person
@@ -318,7 +318,7 @@ $stats = ['refreshed' => 0, 'alias' => 0, 'attached' => 0, 'created' => 0, 'ambi
           'identity_off' => 0, 'inactive' => 0, 'never_seen' => 0];
 // For the alert email. "Back" is worked out at the end: Inactive before this
 // run, Active after it (u_mls clears departure_detected_at when a row is seen).
-$alert = ['new' => [], 'inactive' => [], 'back' => []];
+$alert = ['new' => [], 'inactive' => [], 'back' => [], 'identities' => []];   // identities: [intake id, market, MLS id, what happened]
 $inactive_before = array_map('intval', array_column($conn->query(
     "SELECT id FROM marketing_intakes WHERE departure_detected_at IS NOT NULL AND is_active = 1")->fetch_all(MYSQLI_ASSOC), 'id'));
 
@@ -349,6 +349,10 @@ foreach ($by_market as $market => $list) {
                 $iid = (int)$r['intake_id'];
                 $stats['refreshed']++;
                 echo "    = {$market}/{$mls_id} {$m['full']} → #{$iid} {$r['agent_name']}\n";
+                if (($r['member_status'] ?? '') === 'Other brokerage') {
+                    echo "      ↑ the board now has them under Mont Haus: Active\n";
+                    $alert['identities'][] = [$iid, $market, $mls_id, 'now under Mont Haus on this board (was at another brokerage)'];
+                }
                 if (!$dry) {
                     $u_mls->bind_param('sssssi', $m['full'], $m['email'], $m['phone'], $now, $office, $iid); $u_mls->execute();
                     $u_ident->bind_param('sssssi', $m['key'], $status, $now, $market, $mls_id, $iid); $u_ident->execute();
@@ -387,6 +391,7 @@ foreach ($by_market as $market => $list) {
         if ($iid) {
             $stats['attached']++;
             echo "    + attach {$market}/{$mls_id} {$m['full']} → #{$iid} (by {$how})\n";
+            $alert['identities'][] = [$iid, $market, $mls_id, "new board identity, matched by {$how}"];
             if (!$dry) {
                 $i_ident->bind_param('isssss', $iid, $market, $mls_id, $m['key'], $status, $now); $i_ident->execute();
                 $u_mls->bind_param('sssssi', $m['full'], $m['email'], $m['phone'], $now, $office, $iid); $u_mls->execute();
@@ -525,6 +530,7 @@ if (!$fixture) {
         if ($rows) continue;   // that MLS id belongs to someone else here: leave it
         $stats['elsewhere']++;
         echo "    + {$market}/{$mls_id} {$name} → #{$iid}, at {$office} (stored as Other brokerage)\n";
+        $alert['identities'][] = [$iid, $market, $mls_id, "found on this board under {$office}: saved as Other brokerage, not on the website"];
         if (!$dry) { $i_else->bind_param('issss', $iid, $market, $mls_id, $key, $now); $i_else->execute(); }
     }
 }

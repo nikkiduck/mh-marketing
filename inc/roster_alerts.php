@@ -24,16 +24,23 @@ function mk_roster_alert_recipients(): array {
 }
 
 /**
- * $changes = ['new' => [ids], 'inactive' => [ids], 'back' => [ids]].
+ * $changes = ['new' => [ids], 'inactive' => [ids], 'back' => [ids],
+ *             'identities' => [[intake id, market, MLS id, what happened], ...]].
+ * identities (2026-10-04): a board identity attached to an EXISTING agent, so
+ * a board going live, or a feed gap closing, announces itself. Agents listed
+ * under 'new' are left out of it (their boards are already in that table).
  * Returns the lines to print. With $dry, says what it would send.
  */
 function mk_roster_alert(mysqli $conn, array $changes, bool $dry = false): array {
+    $idents = $changes['identities'] ?? [];
+    unset($changes['identities']);
     $changes = array_map(fn($ids) => array_values(array_unique(array_map('intval', $ids))), $changes + ['new' => [], 'inactive' => [], 'back' => []]);
-    if (!array_filter($changes)) return [];
+    $idents = array_values(array_filter($idents, fn($i) => !in_array((int)$i[0], $changes['new'], true)));
+    if (!array_filter($changes) && !$idents) return [];
     $to = mk_roster_alert_recipients();
     if (!$to) return ['Roster alert not sent: set ROSTER_ALERT_EMAILS in inc/config.php.'];
 
-    $all = array_merge(...array_values($changes));
+    $all = array_values(array_unique(array_merge(array_merge(...array_values($changes)), array_map(fn($i) => (int)$i[0], $idents))));
     $info = [];
     $r = $conn->query("SELECT id, agent_name, mls_full_name, web_status, in_fub, mh_email, mls_email
                          FROM marketing_intakes WHERE id IN (" . implode(',', $all) . ")");
@@ -84,6 +91,22 @@ function mk_roster_alert(mysqli $conn, array $changes, bool $dry = false): array
     if ($ni) $parts[] = "{$ni} no longer with Mont Haus in the MLS";
     if ($nn) $parts[] = "{$nn} new agent" . ($nn === 1 ? '' : 's');
     if ($nb) $parts[] = "{$nb} back in the MLS";
+    if ($idents) $parts[] = count($idents) . ' new board identit' . (count($idents) === 1 ? 'y' : 'ies');
+
+    $ident_html = '';
+    if ($idents) {
+        $rows = '';
+        foreach ($idents as [$iid, $mkt, $mid, $what]) {
+            $rows .= "<tr><td {$td}>" . $name((int)$iid) . "</td><td {$td}>" . $h(mk_board_label((string)$mkt)) . "</td><td {$td}><strong>" . $h($mid) . "</strong></td><td {$td}>" . $h($what) . '</td></tr>';
+        }
+        $ident_html = '<h3 style="font-size:15px;margin:22px 0 4px;">New board identities</h3>'
+            . '<p style="margin:0 0 8px;color:#4b5563;">The MLS feed returned these for agents already on the roster. Nothing to do: they are on the agent\'s profile now.</p>'
+            . '<table style="border-collapse:collapse;font-size:13px;"><tr>'
+            . '<th align="left" style="padding:6px 10px;border-bottom:2px solid #ddd;">Agent</th>'
+            . '<th align="left" style="padding:6px 10px;border-bottom:2px solid #ddd;">Board</th>'
+            . '<th align="left" style="padding:6px 10px;border-bottom:2px solid #ddd;">MLS ID</th>'
+            . '<th align="left" style="padding:6px 10px;border-bottom:2px solid #ddd;">What happened</th></tr>' . $rows . '</table>';
+    }
     $subject = 'Agent roster: ' . implode(', ', $parts);
 
     $html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;">'
@@ -95,6 +118,7 @@ function mk_roster_alert(mysqli $conn, array $changes, bool $dry = false): array
                      $changes['new'], false)
           . $section('Back in the MLS under Mont Haus',
                      'They were Inactive and are Active again.', $changes['back'], false)
+          . $ident_html
           . '<p style="margin-top:22px;"><a href="' . $h($base . '/index.php') . '"'
           . ' style="background:#0184BB;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;">Open the roster</a></p></div>';
 

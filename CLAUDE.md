@@ -409,7 +409,11 @@ follow describe the old card layout; the optional card view keeps its spirit.
 - Hot Sheet subscriptions are never automatic: ticking the checklist item
   MK_HS_TASK ('Hot Sheets: Subscribe') calls mk_hs_subscribe (agent.php
   toggle_task); un-ticking calls mk_hs_pause.
-- Roster change emails: inc/roster_alerts.php, ROSTER_ALERT_EMAILS.
+- Roster change emails: inc/roster_alerts.php, ROSTER_ALERT_EMAILS. Since
+  2026-10-04 the email also has a "New board identities" table: an MLS ID
+  attached to an EXISTING agent (matched by email or name, found under
+  another brokerage, or promoted when the board moves them to Mont Haus),
+  so a board going live or a feed gap closing shows up in Nikki's inbox.
 
 ### Bulk profiles
 - cron/import_profiles.php: import/headshots, import/bios, import/profiles.csv →

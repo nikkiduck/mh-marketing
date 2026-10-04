@@ -23,7 +23,7 @@ f0cb50b5d5895138a6ef1db662c6aa67  cron/merge_agents.php
 3aabe4d159f1e1fe113f18e9a06008dc  cron/parse_pipeline_events.php
 a9191e8f282c3df451ef6868883597a5  cron/send_hot_sheet.php
 4e14395dff4a22eb66c4d0b771d0312a  cron/split_team.php
-92a32d90a4436014dbdc34aca71f7cc5  cron/sync_anyprop_roster.php
+058adfa2d13f1f403a390057f2d39b95  cron/sync_anyprop_roster.php
 bdb3bb0d824c203a13887e8dc04d0a96  cron/sync_hot_sheet_listings.php
 dc625ba4ad1cfcb4c13d0067bc8fe4ce  cron/sync_mh_brokers.php
 d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php
@@ -48,7 +48,7 @@ d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 700f1b9417dbacfbaccc3e309cf3b3dc  inc/pipeline.php
 5a955fb79d6f84004c4fd0aef2688b7a  inc/portal.php
 c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
-0a8728b2cab19c07755f953bbfb1a6c0  inc/roster_alerts.php
+9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
