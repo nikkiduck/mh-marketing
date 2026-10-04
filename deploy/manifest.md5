@@ -6,7 +6,7 @@
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
 fd713fe7f1042d582ee86ef5d7558a2e  agent.php
-ff28c4a3018e863b33990228c7bb111e  anyprop_debug.php
+3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 9ba8eabe8607a34ef24b6424622d0455  api/roster.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
@@ -72,7 +72,7 @@ ede9546aa4b73e5b24454d3d3b45a455  qr.php
 433c74fae7846a5d72927080970946b5  reset-password.php
 cc53d974b2ea12ac47bb365dc8eb73cc  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
-9700e006f3849ae145431b32b5a6250f  spark_debug.php
+a42b13cfa61eb0ba3b0e26baac3d969e  spark_debug.php
 68440f4fe504098d67af396da6443dae  subscribers.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 9bf1eb8b77a42637743d0d974eba5205  users.php

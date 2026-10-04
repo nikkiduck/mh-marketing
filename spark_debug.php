@@ -19,6 +19,10 @@
  * OfficeKey / OfficeMlsId). An office NAME search therefore pages through the
  * board's whole Office list (a few hundred rows) and matches in PHP, case-
  * insensitively; "*" lists every office.
+ *
+ * "Mont Haus office" (2026-10-04): no search text needed. Reads the board's
+ * Office list, keeps the offices named Mont Haus, and lists everyone in them
+ * (OfficeKey eq …): the direct comparison with the Anyprop page's same mode.
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
@@ -90,12 +94,38 @@ $by       = (string)($_GET['by'] ?? 'last');
 $top      = max(1, min(500, (int)($_GET['top'] ?? 50)));
 $active   = !isset($_GET['q']) || !empty($_GET['active']);
 $allowed_by = $resource === 'Member'
-    ? ['last' => 'Last name (exact)', 'email' => 'Email (exact)', 'mlsid' => 'MLS ID (exact)', 'office' => 'Office MLS ID (exact)', 'officekey' => 'Office key (exact)']
+    ? ['mhoffice' => 'Mont Haus office (everyone)', 'last' => 'Last name (exact)', 'email' => 'Email (exact)', 'mlsid' => 'MLS ID (exact)', 'office' => 'Office MLS ID (exact)', 'officekey' => 'Office key (exact)']
     : ['name' => 'Office name (contains, * = all)', 'mlsid' => 'Office MLS ID (exact)', 'officekey' => 'Office key (exact)'];
-if (!isset($allowed_by[$by])) $by = array_key_first($allowed_by);
+if (!isset($allowed_by[$by])) $by = $resource === 'Member' ? 'last' : array_key_first($allowed_by);
+$mh_mode = $resource === 'Member' && $by === 'mhoffice';
+$mh_offices = [];
 
 $result = null; $error = ''; $url = ''; $filter = '';
-if ($q !== '' && $src !== '') {
+if ($mh_mode && isset($_GET['by']) && $src !== '') {
+    // Spark ignores contains()/startswith(), so read the whole Office list and
+    // keep the Mont Haus ones here; then everyone in each by OfficeKey.
+    $tok = $sources[$src][1];
+    $next = SPARK_BASE . 'Office?' . http_build_query(['$select' => 'OfficeKey,OfficeMlsId,OfficeName,OfficeStatus,OfficeCity', '$top' => 500]);
+    $url = $next; $pages = 0;
+    while ($next !== null && $pages++ < 20) {
+        [$code, $data, $raw] = spk_get($next, $tok);
+        if ($code !== 200) { $error = "Spark answered HTTP {$code}: " . mb_substr($raw, 0, 600); break; }
+        foreach ($data['value'] ?? [] as $o) if (preg_match('/mont\s*haus/i', (string)($o['OfficeName'] ?? ''))) $mh_offices[] = $o;
+        $next = $data['@odata.nextLink'] ?? null;
+    }
+    if ($error === '') {
+        $members = [];
+        $sel = 'MemberKey,MemberMlsId,MemberFullName,MemberFirstName,MemberLastName,MemberEmail,MemberStatus,MemberType,MemberStateLicense,MemberMobilePhone,OfficeKey,OfficeMlsId,OfficeName,ModificationTimestamp,OriginatingSystemName';
+        foreach ($mh_offices as $o) {
+            $mf = "OfficeKey eq '" . odata_q((string)$o['OfficeKey']) . "'" . ($active ? " and MemberStatus eq 'Active'" : '');
+            [$code, $md, $raw] = spk_get(SPARK_BASE . 'Member?' . http_build_query(['$filter' => $mf, '$select' => $sel, '$top' => 500]), $tok);
+            if ($code !== 200) { $error = "Spark answered HTTP {$code} for office {$o['OfficeMlsId']}: " . mb_substr($raw, 0, 400); break; }
+            foreach ($md['value'] ?? [] as $m) $members[] = $m;
+        }
+        $filter = "(client side) OfficeName contains 'Mont Haus', {$pages} page(s) of offices read; then Member by OfficeKey" . ($active ? ', Active only' : '');
+        if ($error === '') $result = ['data' => ['mont_haus_offices' => $mh_offices, 'value' => $members], 'raw' => ''];
+    }
+} elseif ($q !== '' && $src !== '') {
     $v = odata_q($q);
     $parts = [];
     if ($resource === 'Member') {
@@ -263,7 +293,7 @@ $conn->close();
           </div>
           <div style="flex:1 1 220px;">
             <label class="fld-label" for="q">Search for</label>
-            <input class="form-input" type="text" name="q" id="q" value="<?= e($q) ?>" placeholder="<?= $resource === 'Member' ? 'Boxer, jonathan.boxer@monthaus.com, 49179…' : 'Mont Haus, or * for every office' ?>" autofocus>
+            <input class="form-input" type="text" name="q" id="q" value="<?= e($q) ?>" placeholder="<?= $mh_mode ? 'not needed for Mont Haus office' : ($resource === 'Member' ? 'Boxer, jonathan.boxer@monthaus.com, 49179…' : 'Mont Haus, or * for every office') ?>" autofocus>
           </div>
           <div style="flex:0 0 90px;">
             <label class="fld-label" for="top">Max rows</label>
@@ -275,12 +305,29 @@ $conn->close();
           <div><button type="submit" class="btn btn-primary"><i class="ti ti-search"></i> Search</button></div>
         </div>
         <p class="hint" style="margin:0;">
+          <strong>Mont Haus office</strong> lists everyone the board has in its Mont Haus office(s): no search text needed.
           Member searches are exact matches (last name, email, IDs) and case-sensitive, so spell them as the board does. An office name search reads the board's whole office list and matches anywhere in the name; type * to list every office.
         </p>
       </form>
     </div>
 
-    <?php if ($q !== ''): ?>
+    <?php if ($q !== '' || ($mh_mode && isset($_GET['by']))): ?>
+      <?php if ($mh_mode && $error === ''): ?>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-building"></i> <?= count($mh_offices) ?> Mont Haus office<?= count($mh_offices) === 1 ? '' : 's' ?> in this board's Spark feed</div>
+        <?php if ($mh_offices): ?>
+        <div class="tbl-scroll"><table class="sum">
+          <thead><tr><th>OfficeMlsId</th><th>OfficeName</th><th>OfficeStatus</th><th>OfficeCity</th><th>OfficeKey</th><th>Members returned</th></tr></thead>
+          <tbody>
+          <?php foreach ($mh_offices as $o): $n_m = count(array_filter($result['data']['value'] ?? [], fn($m) => ($m['OfficeKey'] ?? '') === $o['OfficeKey'])); ?>
+            <tr><td><?= e($o['OfficeMlsId'] ?? '') ?></td><td class="mh"><?= e($o['OfficeName'] ?? '') ?></td><td><?= e($o['OfficeStatus'] ?? '') ?></td><td><?= e($o['OfficeCity'] ?? '') ?></td><td><?= e($o['OfficeKey'] ?? '') ?></td><td><?= $n_m ?></td></tr>
+          <?php endforeach; ?>
+          </tbody></table></div>
+        <?php else: ?>
+          <p class="hint">This board's Spark feed has no office named Mont Haus.</p>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
       <div class="card">
         <div class="card-title"><i class="ti ti-api"></i> Request</div>
         <div class="q">GET <?= e($url) ?></div>

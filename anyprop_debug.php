@@ -15,6 +15,11 @@
  * is case-sensitive there, so a name search tries the spelling as typed,
  * lower case, UPPER CASE and Title Case together.
  *
+ * "Mont Haus office" (2026-10-04): no search text needed. Finds every office
+ * whose name contains Mont Haus on the chosen board (or all boards), the same
+ * search the roster sync runs, then lists everyone in those offices: the
+ * question to ask when an agent is missing from a board.
+ *
  * Results are shown as the raw JSON the API returned, plus a short table.
  */
 require_once __DIR__ . '/inc/auth.php';
@@ -67,15 +72,42 @@ $board    = preg_replace('/[^a-z0-9]/', '', strtolower((string)($_GET['board'] ?
 $q        = trim((string)($_GET['q'] ?? ''));
 $by       = (string)($_GET['by'] ?? 'name');
 $top      = max(1, min(200, (int)($_GET['top'] ?? 50)));
-$allowed_by = $resource === 'Member' ? ['name', 'email', 'mlsid', 'office'] : ['name', 'mlsid'];
+$allowed_by = $resource === 'Member' ? ['mhoffice', 'name', 'email', 'mlsid', 'office'] : ['name', 'mlsid'];
 if (!in_array($by, $allowed_by, true)) $by = 'name';
+$mh_mode = $resource === 'Member' && $by === 'mhoffice';   // every member of the Mont Haus office(s)
+$mh_offices = [];
 
 $boards = mk_board_registry();   // slug => entry; the OSN is what the API filters on
 $osn_of = [];
 foreach ($boards as $slug => $b) $osn_of[$slug] = $b['osn'];
 
 $result = null; $error = ''; $url = ''; $filter = '';
-if ($q !== '') {
+if ($mh_mode && isset($_GET['by'])) {
+    // Same office discovery as cron/sync_anyprop_roster.php: contains() is
+    // case-sensitive, so ask for three spellings and keep real Mont Haus names.
+    $base = 'https://api.anyprop.com/v1/listings/data/';
+    $osn_clause = ($board !== '' && isset($osn_of[$board])) ? "OriginatingSystemName eq '" . odata_q($osn_of[$board]) . "' and " : '';
+    $of = $osn_clause . "(contains(OfficeName,'Mont') or contains(OfficeName,'MONT') or contains(OfficeName,'mont'))";
+    try {
+        [$code, $data, $raw] = apd_get($base . 'Office?$filter=' . rawurlencode($of) . '&$top=200');
+        if ($code !== 200) throw new RuntimeException("Anyprop answered HTTP {$code}: " . mb_substr($raw, 0, 400));
+        foreach ($data['value'] ?? [] as $o) {
+            if (preg_match('/mont\s*haus/i', (string)($o['OfficeName'] ?? '')) && (string)($o['OfficeMlsId'] ?? '') !== '') $mh_offices[] = $o;
+        }
+        $members = [];
+        foreach ($mh_offices as $o) {
+            $mf = "OriginatingSystemName eq '" . odata_q((string)$o['OriginatingSystemName']) . "' and OfficeMlsId eq '" . odata_q((string)$o['OfficeMlsId']) . "'";
+            [$code, $md, $raw] = apd_get($base . 'Member?$filter=' . rawurlencode($mf) . '&$top=500');
+            if ($code !== 200) throw new RuntimeException("Anyprop answered HTTP {$code} for office {$o['OfficeMlsId']}: " . mb_substr($raw, 0, 300));
+            foreach ($md['value'] ?? [] as $m) $members[] = $m;
+        }
+        $url    = $base . 'Office?$filter=' . rawurlencode($of) . '  then  Member?$filter=OriginatingSystemName eq <board> and OfficeMlsId eq <office> for each office found';
+        $filter = $of;
+        $result = ['data' => ['mont_haus_offices' => $mh_offices, 'value' => $members], 'raw' => ''];
+    } catch (Throwable $ex) {
+        $error = $ex->getMessage();
+    }
+} elseif ($q !== '') {
     $parts = [];
     if ($board !== '' && isset($osn_of[$board])) $parts[] = "OriginatingSystemName eq '" . odata_q($osn_of[$board]) . "'";
     $v = odata_q($q);
@@ -198,7 +230,7 @@ $conn->close();
           <div style="flex:0 0 170px;">
             <label class="fld-label" for="by">Search by</label>
             <select class="form-input" name="by" id="by">
-              <?php $labels = ['name' => 'Name (contains)', 'email' => 'Email (exact)', 'mlsid' => 'MLS ID (exact)', 'office' => 'Office MLS ID (exact)'];
+              <?php $labels = ['mhoffice' => 'Mont Haus office (everyone)', 'name' => 'Name (contains)', 'email' => 'Email (exact)', 'mlsid' => 'MLS ID (exact)', 'office' => 'Office MLS ID (exact)'];
                     foreach ($allowed_by as $k): ?>
                 <option value="<?= $k ?>" <?= $k === $by ? 'selected' : '' ?>><?= $labels[$k] ?></option>
               <?php endforeach; ?>
@@ -206,7 +238,7 @@ $conn->close();
           </div>
           <div style="flex:1 1 240px;">
             <label class="fld-label" for="q">Search for</label>
-            <input class="form-input" type="text" name="q" id="q" value="<?= e($q) ?>" placeholder="<?= $resource === 'Member' ? 'Boxer, jonathan.boxer@monthaus.com, 1513…' : 'Mont Haus, 805522330…' ?>" autofocus>
+            <input class="form-input" type="text" name="q" id="q" value="<?= e($q) ?>" placeholder="<?= $mh_mode ? 'not needed for Mont Haus office' : ($resource === 'Member' ? 'Boxer, jonathan.boxer@monthaus.com, 1513…' : 'Mont Haus, 805522330…') ?>" autofocus>
           </div>
           <div style="flex:0 0 90px;">
             <label class="fld-label" for="top">Max rows</label>
@@ -217,13 +249,30 @@ $conn->close();
           </div>
         </div>
         <p class="hint" style="margin:0;">
+          <strong>Mont Haus office</strong> lists everyone Anyprop has in the Mont Haus office(s) of the chosen board, or of every board: no search text needed.
           Members: name searches the full name as the board spells it (tries the typed spelling, lower, UPPER and Title Case); email and IDs are exact.
           Offices: name (contains) or office MLS ID. Anyprop cannot filter on last name alone.
         </p>
       </form>
     </div>
 
-    <?php if ($q !== ''): ?>
+    <?php if ($q !== '' || ($mh_mode && isset($_GET['by']))): ?>
+      <?php if ($mh_mode && $error === ''): ?>
+      <div class="card">
+        <div class="card-title"><i class="ti ti-building"></i> <?= count($mh_offices) ?> Mont Haus office<?= count($mh_offices) === 1 ? '' : 's' ?> in the feed<?= $board !== '' ? ' for ' . e($boards[$board]['label'] ?? $board) : '' ?></div>
+        <?php if ($mh_offices): ?>
+        <div class="tbl-scroll"><table class="sum">
+          <thead><tr><th>Board</th><th>OfficeMlsId</th><th>OfficeName</th><th>OfficeStatus</th><th>Members returned</th></tr></thead>
+          <tbody>
+          <?php foreach ($mh_offices as $o): $n_m = count(array_filter($result['data']['value'] ?? [], fn($m) => ($m['OfficeMlsId'] ?? '') === $o['OfficeMlsId'] && ($m['OriginatingSystemName'] ?? '') === $o['OriginatingSystemName'])); ?>
+            <tr><td><?= e(mk_board_label(mk_market_slug((string)$o['OriginatingSystemName']))) ?> (<?= e($o['OriginatingSystemName']) ?>)</td><td><?= e($o['OfficeMlsId']) ?></td><td class="mh"><?= e($o['OfficeName']) ?></td><td><?= e($o['OfficeStatus'] ?? '') ?></td><td><?= $n_m ?></td></tr>
+          <?php endforeach; ?>
+          </tbody></table></div>
+        <?php else: ?>
+          <p class="hint">Anyprop has no office named Mont Haus <?= $board !== '' ? 'on this board' : 'on any board' ?>. Until the board sends one, nobody can be attached here by office.</p>
+        <?php endif; ?>
+      </div>
+      <?php endif; ?>
       <div class="card">
         <div class="card-title"><i class="ti ti-api"></i> Request</div>
         <div class="q">GET <?= e($url) ?></div>
@@ -242,7 +291,9 @@ $conn->close();
               <tbody>
               <?php foreach ($rows as $r): ?>
                 <tr>
-                  <?php foreach ($summary_cols as $c): $v = $r[$c] ?? ''; $v = is_scalar($v) || $v === null ? (string)$v : json_encode($v); ?>
+                  <?php foreach ($summary_cols as $c): $v = $r[$c] ?? ''; $v = is_scalar($v) || $v === null ? (string)$v : json_encode($v);
+                        // CREN sends no MemberFullName: show first + last so the row is readable
+                        if ($c === 'MemberFullName' && trim($v) === '') $v = trim(($r['MemberFirstName'] ?? '') . ' ' . ($r['MemberLastName'] ?? '')); ?>
                     <td class="<?= $c === 'OfficeName' && preg_match('/mont\s*haus/i', $v) ? 'mh' : '' ?>"><?= e($v) ?></td>
                   <?php endforeach; ?>
                 </tr>
