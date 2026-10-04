@@ -15,7 +15,7 @@ a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 308eea76bb7a9af0b9267f0c611d5445  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
 18f86e70bdc154a8cace266e54daff72  cron/activate_roster.php
-4ac85b0bcb05ae3f538454537f8f6b87  cron/check_health.php
+008c4df159212ddaf35daf9dd0b6f571  cron/check_health.php
 757c6c30f565757b1ba78cc9ff05f2f2  cron/import_hot_sheets.php
 e5a792ea57ea1800be069453deabcf43  cron/import_profiles.php
 e0d27d34f0d680969bd96950b29d1473  cron/import_site_agents.php

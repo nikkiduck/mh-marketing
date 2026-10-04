@@ -45,11 +45,19 @@ $now = time();
  * Log timestamps here are UTC.
  */
 function log_state(string $file, string $done_re): array {
-    if (!is_readable($file)) return ['done_at' => null, 'text' => ''];
-    $fh = fopen($file, 'r');
-    fseek($fh, max(0, filesize($file) - 200000));
-    $lines = preg_split('/\R/', (string)stream_get_contents($fh));
-    fclose($fh);
+    // logrotate empties these logs every Sunday 00:00 UTC (copytruncate), which
+    // on the site made every job read as "not completed since never" until it
+    // next ran (2026-10-04). Read the rotated copy first, then the current file.
+    if (!is_readable($file) && !is_readable($file . '.1')) return ['done_at' => null, 'text' => ''];
+    $text = '';
+    foreach ([$file . '.1', $file] as $part) {
+        if (!is_readable($part)) continue;
+        $fh = fopen($part, 'r');
+        fseek($fh, max(0, filesize($part) - 200000));
+        $text .= (string)stream_get_contents($fh) . "\n";
+        fclose($fh);
+    }
+    $lines = preg_split('/\R/', $text);
     $done_idx = [];
     foreach ($lines as $i => $l) if (preg_match($done_re, $l)) $done_idx[] = $i;
     $done_at = null;
