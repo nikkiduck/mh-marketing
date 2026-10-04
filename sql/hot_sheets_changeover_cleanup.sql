@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- hot_sheets_changeover_cleanup.sql — undo the feed changeover's false Hot
 -- Sheet changes (2026-10-04). Run once, as the master user.
