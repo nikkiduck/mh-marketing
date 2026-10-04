@@ -1484,7 +1484,11 @@ wrapped.
 
 `docs/HOT_SHEETS_PLAN.md` (plan + runbook). Built so far: `hs_listing_state` /
 `hs_listing_changes` (`sql/hot_sheets_v1.sql`) filled by
-`cron/sync_hot_sheet_listings.php`, which logs EVERY transition; never add back
+`cron/sync_hot_sheet_listings.php`, which logs EVERY transition (except a
+listing first seen whose feed `on_market_date` is older than 7 days: that is
+a board going live, carried in silently since 2026-10-04, after Vail +
+Elevate announced 16 old listings as new;
+sql/hot_sheets_changeover_cleanup.sql removed those rows); never add back
 the hub's "skip if an un-notified row of this type exists" rule, it is how
 sales went missing. Emails: `cron/send_hot_sheet.php` + `inc/hs_*.php`.
 `HOT_SHEET_ALLOWED_RECIPIENTS` (config.php, checked in `hs_send_email()`)

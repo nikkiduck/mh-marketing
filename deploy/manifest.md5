@@ -24,7 +24,7 @@ f0cb50b5d5895138a6ef1db662c6aa67  cron/merge_agents.php
 a9191e8f282c3df451ef6868883597a5  cron/send_hot_sheet.php
 4e14395dff4a22eb66c4d0b771d0312a  cron/split_team.php
 d63fe714d74b398d36c99441467dd2ed  cron/sync_anyprop_roster.php
-06e4674e8bf5204dde84021de30170e9  cron/sync_hot_sheet_listings.php
+bdb3bb0d824c203a13887e8dc04d0a96  cron/sync_hot_sheet_listings.php
 dc625ba4ad1cfcb4c13d0067bc8fe4ce  cron/sync_mh_brokers.php
 d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php
 dfb28c4e16681b9f76c7e592fbaf96ed  forgot-password.php

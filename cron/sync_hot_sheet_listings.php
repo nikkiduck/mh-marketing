@@ -107,7 +107,7 @@ $log = $conn->prepare("INSERT INTO hs_listing_changes (market, listing_key, chan
                        VALUES (?,?,?,?,?,?)");
 if (!$up || !$log) { out('✗ prepare failed: ' . $conn->error); exit(1); }
 
-$stats = ['new' => 0, 'status' => 0, 'closed' => 0, 'price' => 0, 'removed' => 0, 'unchanged' => 0];
+$stats = ['new' => 0, 'carried' => 0, 'status' => 0, 'closed' => 0, 'price' => 0, 'removed' => 0, 'unchanged' => 0];
 $seen = [];
 
 $conn->begin_transaction();
@@ -122,7 +122,15 @@ try {
         $changes = [];
 
         if (!$old) {
-            if (!$baseline) $changes[] = ['new_listing', null, (string)$l['status']];
+            // First time we see it. New to the MARKET, or just new to us? A board
+            // going live (Vail, Elevate on 2026-10-01) delivered 16 long-listed
+            // homes at once and every one went out as "New Listing". The feed
+            // now carries the board's on-market date: older than 7 days means
+            // the listing predates us and is carried in silently.
+            $on = (string)($l['on_market_date'] ?? '');
+            $carried = $on !== '' && strtotime($on) < strtotime('-7 days');
+            if (!$baseline && !$carried) $changes[] = ['new_listing', null, (string)$l['status']];
+            elseif ($carried) { $stats['carried']++; echo "    ~ {$label} carried in, on market since {$on}\n"; }
         } else {
             if ((string)$old['status'] !== (string)$l['status']) {
                 $changes[] = ['status', $old['status'], (string)$l['status']];
@@ -184,6 +192,6 @@ try {
 }
 
 out(($dry ? '✓ DRY RUN: ' : '✓ Done: ') . ($baseline ? '(baseline) ' : '')
-    . "{$stats['new']} new, {$stats['status']} status, {$stats['closed']} closed, {$stats['price']} price, "
+    . "{$stats['new']} new, {$stats['carried']} carried in, {$stats['status']} status, {$stats['closed']} closed, {$stats['price']} price, "
     . "{$stats['removed']} removed, {$stats['unchanged']} unchanged.");
 $conn->close();
