@@ -52,7 +52,7 @@ c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-86f2dd40fc24c55195912d86fbdefd98  index.php
+fd5206860c2cc10ec418badcd5576f0d  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
 8bce1a103a42a7e017e711547c910e10  leadership.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php
@@ -73,7 +73,7 @@ ede9546aa4b73e5b24454d3d3b45a455  qr.php
 cc53d974b2ea12ac47bb365dc8eb73cc  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 9700e006f3849ae145431b32b5a6250f  spark_debug.php
-836997648142ad8a78d7a559e21f9c4c  subscribers.php
+68440f4fe504098d67af396da6443dae  subscribers.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 9bf1eb8b77a42637743d0d974eba5205  users.php
 90750ac4905fdab022c241560911f5ba  website_order.php

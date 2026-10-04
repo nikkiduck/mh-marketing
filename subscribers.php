@@ -184,7 +184,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       </div>
       <div class="hdr-actions">
         <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>
-        <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Preview the email</a>
+        <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Preview listings email</a>
+        <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php?type=rentals"><i class="ti ti-mail"></i> Preview rentals email</a>
       </div>
     </div>
 
