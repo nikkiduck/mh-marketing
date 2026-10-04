@@ -1463,6 +1463,16 @@ wrapped.
   board lists them under Mont Haus, and an identity typed in by hand that
   Anyprop has never returned (last_seen_at NULL) is never used to mark them
   departed.
+- **Board record still under another brokerage (2026-10-04):** step 4b of the
+  roster sync looks every live agent up by email (mh, alt, mls) on all
+  boards. A record under a non-Mont Haus office is stored as an identity with
+  `member_status = 'Other brokerage'` (Sierrah Smith, Telluride, Mountain
+  Rose Realty; Jonathan Boxer, Vail, Christie's): shown on the agent page with
+  that pill, NOT sent to the website (api/roster.php skips it) and not counted
+  as a board on the roster. Step 4 sets it Active the run after the board
+  moves them into a Mont Haus office. The pass only inserts and heartbeats
+  its own rows; it never touches an Active or Inactive identity. An agent
+  with NO record on a board (Jonathan on elevateMLS) cannot be captured.
 - `last_seen_at IS NULL` on an identity means Anyprop has never returned it.
   The sync never deactivates anyone over such a row. Keep that guard.
 - `api/roster.php` is public (no `auth.php`), guarded by `ROSTER_FEED_TOKEN`

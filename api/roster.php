@@ -84,8 +84,12 @@ if ($chk2 && $chk2->fetch_row()) {
 }
 
 $idents = [];
+// 'Other brokerage' = the board still has the agent under their previous firm
+// (cron/sync_anyprop_roster.php step 4b): kept off the website, or that firm's
+// listings would be credited to a Mont Haus profile.
 $r = $conn->query("SELECT intake_id, market, mls_agent_id, is_alias, member_status
-                     FROM agent_mls_ids ORDER BY market, is_alias, mls_agent_id");
+                     FROM agent_mls_ids WHERE member_status <> 'Other brokerage'
+                    ORDER BY market, is_alias, mls_agent_id");
 if ($r) foreach ($r->fetch_all(MYSQLI_ASSOC) as $i) {
     $idents[(int)$i['intake_id']][] = [
         'market'        => $i['market'],

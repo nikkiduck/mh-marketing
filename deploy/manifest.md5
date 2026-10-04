@@ -5,10 +5,10 @@
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-f0b770bd8df7f9666ba470e0d8a7db0d  agent.php
+fd713fe7f1042d582ee86ef5d7558a2e  agent.php
 ff28c4a3018e863b33990228c7bb111e  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
-7f95c5b8e92a7b737edd6edba04eb98e  api/roster.php
+9ba8eabe8607a34ef24b6424622d0455  api/roster.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 09d6404437f4d1582066c00c82756de2  assets/css/portal.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
@@ -23,7 +23,7 @@ f0cb50b5d5895138a6ef1db662c6aa67  cron/merge_agents.php
 3aabe4d159f1e1fe113f18e9a06008dc  cron/parse_pipeline_events.php
 a9191e8f282c3df451ef6868883597a5  cron/send_hot_sheet.php
 4e14395dff4a22eb66c4d0b771d0312a  cron/split_team.php
-d63fe714d74b398d36c99441467dd2ed  cron/sync_anyprop_roster.php
+92a32d90a4436014dbdc34aca71f7cc5  cron/sync_anyprop_roster.php
 bdb3bb0d824c203a13887e8dc04d0a96  cron/sync_hot_sheet_listings.php
 dc625ba4ad1cfcb4c13d0067bc8fe4ce  cron/sync_mh_brokers.php
 d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php

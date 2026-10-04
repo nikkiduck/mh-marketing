@@ -459,6 +459,76 @@ foreach ($by_market as $market => $list) {
     }
 }
 
+// ── 4b. Board records under ANOTHER brokerage (2026-10-04) ───────────────────
+// Everything above reads Mont Haus offices only. But agents join before their
+// license moves on every board (Sierrah Smith is still at Mountain Rose Realty
+// on Telluride; Jonathan Boxer at Christie's on Vail), and Nikki wants their
+// MLS IDs captured as soon as a board carries them. So: look every live agent
+// up by email on all boards, and store a record found under a non-Mont Haus
+// office as an identity with member_status 'Other brokerage'. That status is
+// deliberately not 'Active': it is shown on the agent page, but it is not
+// sent to the website (api/roster.php), so the old brokerage's listings are
+// not credited to a Mont Haus profile. When the board moves the agent into a
+// Mont Haus office, step 4 finds the same market + MLS id and sets it Active.
+// This pass only INSERTS new identities and heartbeats its own; it never
+// touches an Active or Inactive one, so departures are unaffected.
+if (!$fixture) {
+    $have = [];   // "osn|MemberMlsId" already returned by a Mont Haus office this run
+    foreach ($members as $m) $have[strtolower((string)($m['OriginatingSystemName'] ?? '')) . '|' . trim((string)($m['MemberMlsId'] ?? ''))] = true;
+    $people = $conn->query("SELECT id, agent_name, LOWER(TRIM(mh_email)) e1, LOWER(TRIM(COALESCE(alt_email,''))) e2, LOWER(TRIM(COALESCE(mls_email,''))) e3
+                              FROM marketing_intakes WHERE is_active = 1 AND status <> 'archived'{$not_team}")->fetch_all(MYSQLI_ASSOC);
+    $by_email = [];   // email → [intake ids]
+    foreach ($people as $p) foreach ([$p['e1'], $p['e2'], $p['e3']] as $e) {
+        if ($e !== '' && str_contains($e, '@')) $by_email[$e][(int)$p['id']] = $p['agent_name'];
+    }
+    $elsewhere = [];
+    try {
+        foreach (array_chunk(array_keys($by_email), 12) as $chunk) {
+            $f = implode(' or ', array_map(fn($e) => "MemberEmail eq '" . odata_q($e) . "'", $chunk));
+            foreach (ap_get_all(AP_BASE . '/Member?$filter=' . rawurlencode($f) . '&$top=200') as $m) $elsewhere[] = $m;
+        }
+    } catch (Throwable $e) {
+        out('! other-brokerage lookup skipped: ' . $e->getMessage());
+        $elsewhere = [];
+    }
+    $q_any  = prep($conn, "SELECT id, intake_id, member_status FROM agent_mls_ids WHERE market = ? AND mls_agent_id = ?");
+    $i_else = prep($conn, "INSERT INTO agent_mls_ids (intake_id, market, mls_agent_id, agent_key, member_status, is_alias, last_seen_at)
+                           VALUES (?, ?, ?, ?, 'Other brokerage', 0, ?)");
+    $u_else = prep($conn, "UPDATE agent_mls_ids SET last_seen_at = ?, agent_key = ? WHERE id = ? AND member_status = 'Other brokerage'");
+    $stats['elsewhere'] = 0; $first = true;
+    foreach ($elsewhere as $m) {
+        $osn    = (string)($m['OriginatingSystemName'] ?? '');
+        $mls_id = trim((string)($m['MemberMlsId'] ?? ''));
+        $email  = strtolower(trim((string)($m['MemberEmail'] ?? '')));
+        $office = trim((string)($m['OfficeName'] ?? ''));
+        if ($osn === '' || $mls_id === '' || ($board && strtolower($osn) !== $board)) continue;
+        if (isset($have[strtolower($osn) . '|' . $mls_id])) continue;               // a Mont Haus office returned it: handled above
+        if (preg_match('/mont\s*haus/i', $office)) continue;                         // Mont Haus office the search missed: next run's job
+        if (strcasecmp(trim((string)($m['MemberStatus'] ?? 'Active')), 'Active') !== 0) continue;
+        if (!mk_board_known($osn)) continue;                                         // unregistered board: already warned above
+        $who = $by_email[$email] ?? [];
+        if (count($who) !== 1) continue;                                             // shared or unknown email: never guess
+        $iid = (int)array_key_first($who); $name = reset($who);
+        $market = mk_market_slug($osn);
+        $q_any->bind_param('ss', $market, $mls_id);
+        $rows = fetch_all_stmt($q_any);
+        $mine = array_values(array_filter($rows, fn($r) => (int)$r['intake_id'] === $iid));
+        if ($first) { out('── other brokerages (board record not yet under Mont Haus)'); $first = false; }
+        $key = trim((string)($m['MemberKey'] ?? ''));
+        if ($mine) {
+            if ($mine[0]['member_status'] === 'Other brokerage') {
+                echo "    · {$market}/{$mls_id} {$name}: still at {$office}\n";
+                if (!$dry) { $rid = (int)$mine[0]['id']; $u_else->bind_param('ssi', $now, $key, $rid); $u_else->execute(); }
+            }
+            continue;   // an Active / Inactive identity is step 4's business
+        }
+        if ($rows) continue;   // that MLS id belongs to someone else here: leave it
+        $stats['elsewhere']++;
+        echo "    + {$market}/{$mls_id} {$name} → #{$iid}, at {$office} (stored as Other brokerage)\n";
+        if (!$dry) { $i_else->bind_param('issss', $iid, $market, $mls_id, $key, $now); $i_else->execute(); }
+    }
+}
+
 // ── 5. Who came back ─────────────────────────────────────────────────────────
 if (!$dry && $inactive_before) {
     $still = array_map('intval', array_column($conn->query(

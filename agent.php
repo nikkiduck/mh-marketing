@@ -2449,7 +2449,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                   <td style="text-transform:uppercase;font-size:11px;letter-spacing:.06em;color:#6b7280;"><?= htmlspecialchars(mk_board_label($i['market'])) ?></td>
                   <td style="font-weight:600;"><?= htmlspecialchars($i['mls_agent_id']) ?>
                     <?php if ((int)$i['is_alias']): ?><span class="tag-team" style="margin-left:6px;">Team ID</span><?php endif; ?>
-                    <?php if ($i['member_status'] !== 'Active'): ?><span class="pill w-inactive" style="margin-left:6px;">Off the feed</span><?php endif; ?>
+                    <?php if ($i['member_status'] === 'Other brokerage'): ?><span class="pill w-inactive" style="margin-left:6px;" title="The board still lists this agent under their previous brokerage. Captured for reference; not sent to the website until the board moves them to Mont Haus.">Other brokerage</span><?php elseif ($i['member_status'] !== 'Active'): ?><span class="pill w-inactive" style="margin-left:6px;">Off the feed</span><?php endif; ?>
                   </td>
                   <td style="text-align:right;color:#9ca3af;font-size:12px;">
                     <?= $i['last_seen_at'] ? 'seen ' . htmlspecialchars(date('M j', strtotime($i['last_seen_at']))) : 'added by hand' ?>
