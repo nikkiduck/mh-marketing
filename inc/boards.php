@@ -50,13 +50,19 @@ const MK_BOARDS_FALLBACK = [
                      'towns' => ['telluride', 'mountain village', 'ophir', 'placerville', 'sawpit', 'norwood', 'rico']],
     'altitude'   => ['osn' => 'summit',     'label' => 'Altitude',   'status' => 'live',    'office' => null, 'aliases' => [],
                      'towns' => ['breckenridge', 'blue river', 'frisco', 'dillon', 'silverthorne', 'keystone', 'copper mountain', 'heeney',
-                                 'steamboat springs', 'oak creek', 'hayden', 'clark', 'yampa']],
+                                 'steamboat springs', 'oak creek', 'hayden', 'clark', 'yampa', 'craig', 'maybell',
+                                 'fairplay', 'alma', 'como', 'jefferson', 'hartsel']],
     'elevate'    => ['osn' => 'ppmls',      'label' => 'Elevate',    'status' => 'live',    'office' => 'colorado-springs', 'aliases' => [],
                      'towns' => ['colorado springs', 'monument', 'manitou springs', 'woodland park', 'fountain', 'peyton', 'falcon',
                                  'black forest', 'palmer lake']],
     'cren'       => ['osn' => 'cren',       'label' => 'CREN',       'status' => 'pending', 'office' => 'aspen', 'aliases' => [], 'towns' => []],
     'recolorado' => ['osn' => 'recolorado', 'label' => 'REColorado', 'status' => 'live',    'office' => 'aspen',
-                     'aliases' => ['denver', 'remetrodenver'], 'towns' => []],
+                     'aliases' => ['denver', 'remetrodenver'],
+                     'towns' => ['denver', 'aurora', 'lakewood', 'littleton', 'centennial', 'englewood', 'arvada', 'westminster', 'thornton',
+                                 'northglenn', 'broomfield', 'golden', 'wheat ridge', 'commerce city', 'brighton', 'parker', 'castle rock',
+                                 'castle pines', 'highlands ranch', 'lone tree', 'greenwood village', 'cherry hills village', 'larkspur',
+                                 'franktown', 'sedalia', 'elizabeth', 'kiowa', 'morrison', 'evergreen', 'conifer', 'bailey',
+                                 'boulder', 'louisville', 'lafayette', 'superior', 'erie', 'longmont']],
 ];
 
 /** Where the registry is fetched from ('' when neither constant is set). */
