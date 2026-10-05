@@ -213,6 +213,21 @@ bind strings. Billing modes, Financials, Billing and the portal are
 unchanged. The tab names stay Collateral and Advertising (a rename to
 Printed Marketing / Digital Advertising was tried and reverted the same day).
 
+**Sharing a placement among agents (2026-10-05).** "Share" on a placement
+(`share_campaign` in agent.php; sql/campaign_share_v1.sql) divides one ad
+among several agents: this agent's placement is scaled to their percentage
+and each other agent (or team; never staff) gets a copy at theirs, with the
+creatives, and with budget, day rate, who-pays amounts and every entered
+month row divided. `inc/campaign_share.php` holds the arithmetic
+(largest-remainder in cents: parts always sum to the original, nobody below
+zero, NULL stays NULL) and `tests/test_campaign_share.php` (22 assertions)
+tests the real functions. **The copies are independent after the split**
+(Nikki: an agent may drop out or take a bigger part later): `split_group`
+only links them for the "Shared with" line, `split_pct` records the first
+division. Same principle as order_split.php: each agent's own record carries
+their own figure, so inc/financials.php is untouched. This is separate from
+Who Pays, which splits one agent's placement between that agent and Mont Haus.
+
 ## Advertising: how a placement reaches Financials
 
 `marketing_campaigns.billing_mode` decides how a placement is charged:

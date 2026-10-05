@@ -494,6 +494,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: agent.php?id={$id}&tab=advertising"); exit;
     }
 
+    /* --- Share one placement among several agents (2026-10-05) ---
+     *
+     * One ad, several agents: this agent's placement is scaled to their own
+     * percentage and every other agent gets a copy at theirs (same outlet,
+     * run, billing mode and creatives; budget, day rate, who-pays amounts and
+     * every entered month scaled). inc/campaign_share.php does the arithmetic
+     * and tests/test_campaign_share.php pins it: parts always sum to the
+     * original, NULL stays NULL.
+     *
+     * The copies are independent afterwards (Nikki): an agent can drop out or
+     * take a bigger part later by editing their own card. split_group links
+     * them for display only; split_pct records the first division.
+     * Needs sql/campaign_share_v1.sql. All or nothing, in one transaction.
+     */
+    if ($action === 'share_campaign' && mk_column_exists($conn, 'marketing_campaigns', 'split_group')) {
+        require_once __DIR__ . '/inc/campaign_share.php';
+        $cid  = (int)($_POST['campaign_id'] ?? 0);
+        $back = "agent.php?id={$id}&tab=advertising";
+        $src  = null;
+        $q = $conn->prepare("SELECT * FROM marketing_campaigns WHERE id=? AND intake_id=? LIMIT 1");
+        if ($q) { $q->bind_param('ii', $cid, $id); $q->execute(); $src = $q->get_result()->fetch_assoc(); $q->close(); }
+        if (!$src) { header("Location: {$back}&err=" . urlencode('That placement could not be found.')); exit; }
+
+        [$shares, $serr] = mk_share_validate($id, (array)($_POST['share'] ?? []));
+        if ($serr === '') {
+            // Everyone else must be a live agent or team; never staff, never archived.
+            $others = array_values(array_diff(array_keys($shares), [$id]));
+            $staff  = mk_column_exists($conn, 'marketing_intakes', 'entity_type') ? " AND entity_type <> 'staff'" : '';
+            $r = $conn->query("SELECT id FROM marketing_intakes WHERE id IN (" . implode(',', array_map('intval', $others)) . ")
+                                  AND is_active = 1 AND status <> 'archived'{$staff}");
+            $valid = $r ? array_map('intval', array_column($r->fetch_all(MYSQLI_ASSOC), 'id')) : [];
+            if (count($valid) !== count($others)) $serr = 'One of the chosen agents is not on the active roster.';
+        }
+        if ($serr !== '') { header("Location: {$back}&err=" . urlencode($serr) . "#camp-{$cid}"); exit; }
+
+        $group   = (int)($src['split_group'] ?: $src['id']);
+        $has_med = array_key_exists('medium', $src);
+        $money   = ['budget', 'unit_rate', 'paid_broker_amount', 'paid_mh_amount'];
+        $parts   = [];   // field => [intake_id => 'x.xx' | null]
+        foreach ($money as $f) $parts[$f] = mk_share_amount($src[$f], $shares);
+        $months  = $conn->query("SELECT * FROM marketing_campaign_months WHERE campaign_id = " . (int)$src['id'])->fetch_all(MYSQLI_ASSOC);
+
+        $conn->begin_transaction();
+        try {
+            $ins = $conn->prepare(
+                "INSERT INTO marketing_campaigns
+                    (intake_id, platform, " . ($has_med ? 'medium, ad_size, ' : '') . "name, budget, billing_mode, unit_rate, unit_weekday, unit_label,
+                     start_date, end_date, status, notes, target_url, utm_source, utm_medium, utm_campaign, utm_content,
+                     sent, paid_by, paid_broker_amount, paid_mh_amount, split_group, split_pct)
+                 SELECT ?, platform, " . ($has_med ? 'medium, ad_size, ' : '') . "name, ?, billing_mode, ?, unit_weekday, unit_label,
+                        start_date, end_date, status, notes, target_url, utm_source, utm_medium, utm_campaign, utm_content,
+                        sent, paid_by, ?, ?, ?, ?
+                   FROM marketing_campaigns WHERE id = ?");
+            $ins_m = $conn->prepare("INSERT INTO marketing_campaign_months (campaign_id, ym, amount, units, unit_rate, paid_by, paid_broker_amount, paid_mh_amount, note)
+                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $upd_m = $conn->prepare("UPDATE marketing_campaign_months SET amount = ?, unit_rate = ?, paid_broker_amount = ?, paid_mh_amount = ? WHERE id = ?");
+            $ins_a = $conn->prepare("INSERT INTO marketing_campaign_assets (campaign_id, label, file_url, target_url, file_type)
+                                     SELECT ?, label, file_url, target_url, file_type FROM marketing_campaign_assets WHERE campaign_id = ? ORDER BY id");
+            $new_ids = [];   // intake_id => new campaign id
+            foreach ($shares as $iid => $pct) {
+                if ($iid === $id) continue;
+                $b = $parts['budget'][$iid]; $ur = $parts['unit_rate'][$iid];
+                $pb = $parts['paid_broker_amount'][$iid]; $pm = $parts['paid_mh_amount'][$iid];
+                $pcts = number_format($pct, 2, '.', '');
+                // 8 placeholders: i s s s s i s i
+                $ins->bind_param('issssisi', $iid, $b, $ur, $pb, $pm, $group, $pcts, $cid);
+                $ins->execute();
+                $new_ids[$iid] = (int)$conn->insert_id;
+                $ins_a->bind_param('ii', $new_ids[$iid], $cid);
+                $ins_a->execute();
+            }
+            // Every entered month is divided the same way; units (day counts) are not money and stay whole.
+            foreach ($months as $m) {
+                $mp = [];
+                foreach (['amount', 'unit_rate', 'paid_broker_amount', 'paid_mh_amount'] as $f) $mp[$f] = mk_share_amount($m[$f], $shares);
+                foreach ($new_ids as $iid => $ncid) {
+                    $a = $mp['amount'][$iid]; $ur = $mp['unit_rate'][$iid]; $pb = $mp['paid_broker_amount'][$iid]; $pm = $mp['paid_mh_amount'][$iid];
+                    // 9 placeholders: i s s s s s s s s
+                    $ins_m->bind_param('issssssss', $ncid, $m['ym'], $a, $m['units'], $ur, $m['paid_by'], $pb, $pm, $m['note']);
+                    $ins_m->execute();
+                }
+                $a = $mp['amount'][$id]; $ur = $mp['unit_rate'][$id]; $pb = $mp['paid_broker_amount'][$id]; $pm = $mp['paid_mh_amount'][$id];
+                $mid = (int)$m['id'];
+                $upd_m->bind_param('ssssi', $a, $ur, $pb, $pm, $mid);
+                $upd_m->execute();
+            }
+            // Last: this agent's own placement down to its share.
+            $own = number_format($shares[$id], 2, '.', '');
+            $u = $conn->prepare("UPDATE marketing_campaigns SET budget = ?, unit_rate = ?, paid_broker_amount = ?, paid_mh_amount = ?,
+                                        split_group = ?, split_pct = ? WHERE id = ? AND intake_id = ?");
+            $u->bind_param('ssssisii', $parts['budget'][$id], $parts['unit_rate'][$id], $parts['paid_broker_amount'][$id], $parts['paid_mh_amount'][$id],
+                           $group, $own, $cid, $id);
+            $u->execute();
+            $conn->commit();
+        } catch (Throwable $e) {
+            $conn->rollback();
+            error_log('share_campaign: ' . $e->getMessage());
+            header("Location: {$back}&err=" . urlencode('The placement could not be shared; nothing was changed.') . "#camp-{$cid}"); exit;
+        }
+        $n = count($new_ids);
+        header("Location: {$back}&saved=1&note=" . urlencode("Shared with {$n} other agent" . ($n === 1 ? '' : 's') . '. Each has their own copy at their share; edit any of them on that agent\'s page.') . "#camp-{$cid}"); exit;
+    }
+
     if ($action === 'delete_campaign') {
         $cid = (int)($_POST['campaign_id'] ?? 0);
         $s   = $conn->prepare("DELETE FROM marketing_campaigns WHERE id=? AND intake_id=?");
@@ -1014,6 +1117,27 @@ if ($r) {
         $ar  = $conn->query("SELECT * FROM marketing_campaign_assets WHERE campaign_id={$cid} ORDER BY uploaded_at ASC");
         $row['assets'] = $ar ? $ar->fetch_all(MYSQLI_ASSOC) : [];
         $campaigns[] = $row;
+    }
+}
+// Sharing a placement among agents (sql/campaign_share_v1.sql). Loaded here,
+// above the early close: the people a placement can be shared with (live
+// agents and teams, never staff), and, for placements already shared, the
+// other agents' copies so each card can name and link them.
+$has_share = mk_column_exists($conn, 'marketing_campaigns', 'split_group');
+$share_agents = []; $share_groups = [];
+if ($has_share && !$is_staff) {
+    $staff_sql = mk_column_exists($conn, 'marketing_intakes', 'entity_type') ? " AND entity_type <> 'staff'" : '';
+    $r = $conn->query("SELECT id, agent_name FROM marketing_intakes
+                         WHERE is_active = 1 AND status <> 'archived' AND id <> {$id}{$staff_sql}
+                           AND TRIM(COALESCE(agent_name, '')) <> '' ORDER BY agent_name");
+    if ($r) $share_agents = $r->fetch_all(MYSQLI_ASSOC);
+    $gids = array_values(array_unique(array_filter(array_map(fn($c) => (int)($c['split_group'] ?? 0), $campaigns))));
+    if ($gids) {
+        $r = $conn->query("SELECT c.id, c.intake_id, c.split_group, c.split_pct, mi.agent_name
+                             FROM marketing_campaigns c JOIN marketing_intakes mi ON mi.id = c.intake_id
+                            WHERE c.split_group IN (" . implode(',', $gids) . ") AND c.intake_id <> {$id}
+                            ORDER BY mi.agent_name");
+        if ($r) foreach ($r->fetch_all(MYSQLI_ASSOC) as $g) $share_groups[(int)$g['split_group']][] = $g;
     }
 }
 // Financials renders per-month editors against the campaign row, and it only
@@ -1557,6 +1681,25 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
     /* ── Campaigns ── */
     .campaign-card { border:1px solid #f3f4f6; border-radius:6px; padding:16px; margin-bottom:12px; }
+    /* Sharing a placement among agents (2026-10-05) */
+    .camp-shared { font-size:12px; color:#4b5563; margin-top:4px; }
+    .camp-shared a { color:#0184BB; text-decoration:none; font-weight:600; }
+    .camp-shared a:hover { text-decoration:underline; }
+    .camp-shared-note { color:#9ca3af; margin-left:6px; }
+    .share-title { font-size:13px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+    .share-help { font-size:12.5px; color:#4b5563; line-height:1.55; margin:0 0 12px; max-width:760px; }
+    .share-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:4px 18px; margin-bottom:14px; }
+    .share-row { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:6px; font-size:13px; cursor:pointer; }
+    .share-row:hover { background:#f9fafb; }
+    .share-row.own { background:#f3f4f6; cursor:default; }
+    .share-row.picked { background:#eff6ff; }
+    .share-name { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .share-name em { color:#9ca3af; font-style:normal; font-size:11.5px; }
+    .share-pct { display:inline-flex; align-items:center; gap:4px; color:#6b7280; font-size:12px; }
+    .share-pct .form-input { width:78px; padding:5px 7px; text-align:right; }
+    .share-pct .form-input:disabled { background:#f9fafb; color:#d1d5db; }
+    .share-total { margin-left:auto; font-size:12.5px; font-weight:700; color:#15803d; }
+    .share-total.bad { color:#b91c1c; }
     /* Print vs digital (2026-10-05) */
     .camp-medium-chip { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
                         padding:2px 7px; border-radius:10px; margin-left:6px; vertical-align:middle; }
@@ -3668,6 +3811,13 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <div style="flex:1;min-width:0;">
               <div class="campaign-platform"><?= htmlspecialchars($platform_labels[$c['platform']] ?? $c['platform']) ?><?php if ($has_medium): ?> <span class="camp-medium-chip <?= $_medium ?>"><?= $_medium === 'print' ? 'Print' : 'Digital' ?></span><?php endif; ?><?php if ($_medium === 'print' && !empty($c['ad_size'])): ?> <span class="camp-adsize"><?= htmlspecialchars($c['ad_size']) ?></span><?php endif; ?></div>
               <?php if ($c['name']): ?><div class="campaign-name"><?= htmlspecialchars($c['name']) ?></div><?php endif; ?>
+              <?php $_mates = $has_share && !empty($c['split_group']) ? ($share_groups[(int)$c['split_group']] ?? []) : [];
+                    if ($_mates): ?>
+              <div class="camp-shared"><i class="ti ti-users"></i> Shared with
+                <?php foreach ($_mates as $_i => $_g): ?><?= $_i ? ', ' : '' ?><a href="agent.php?id=<?= (int)$_g['intake_id'] ?>&tab=advertising#camp-<?= (int)$_g['id'] ?>"><?= htmlspecialchars($_g['agent_name']) ?></a><?php endforeach; ?>
+                <span class="camp-shared-note">each copy is edited on its own page</span>
+              </div>
+              <?php endif; ?>
             </div>
             <span class="camp-status-chip" style="background:<?= $csc ?>;"><?= $csl ?></span>
 
@@ -3897,6 +4047,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <i class="ti ti-copy"></i> Duplicate
               </button>
             </form>
+            <?php if ($has_share && $share_agents): ?>
+            <button type="button" class="btn btn-outline btn-xs" onclick="toggleInline('share-camp-<?= $c['id'] ?>')" title="Divide this placement's cost among several agents">
+              <i class="ti ti-users"></i> Share
+            </button>
+            <?php endif; ?>
             <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this placement and all its ad files?')">
               <input type="hidden" name="_action" value="delete_campaign">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
@@ -3974,6 +4129,45 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               </div>
             </form>
           </div>
+
+          <?php // ── Share with other agents ──────────────────────────────────
+                // A sibling of the edit form, never inside it (nested forms are
+                // dropped by the browser). Tick the agents, set each share, and
+                // every figure on this placement is divided: this card keeps
+                // this agent's part and each other agent gets their own copy.
+                if ($has_share && $share_agents): ?>
+          <div id="share-camp-<?= $c['id'] ?>" style="display:none;" class="inline-edit-form share-form">
+            <form method="POST" class="js-share-form" data-own="<?= (int)$id ?>">
+              <input type="hidden" name="_action" value="share_campaign">
+              <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
+              <div class="share-title"><i class="ti ti-users"></i> Share this placement</div>
+              <p class="share-help">Tick everyone who is sharing this ad and set each share. This placement keeps
+                <strong><?= htmlspecialchars($agent['agent_name'] ?? 'this agent') ?></strong>'s part; each other agent gets their own copy on their Advertising tab with the
+                same outlet, run and creatives, and the amounts (budget, day rate, every month already entered) divided to match.
+                After that each copy is separate: change or delete one without touching the others.</p>
+              <div class="share-grid">
+                <label class="share-row own">
+                  <input type="checkbox" checked disabled>
+                  <span class="share-name"><?= htmlspecialchars($agent['agent_name'] ?? 'This agent') ?> <em>(this page)</em></span>
+                  <span class="share-pct"><input type="number" name="share[<?= (int)$id ?>]" class="form-input js-share-pct" min="0" max="100" step="0.01" value="100"> %</span>
+                </label>
+                <?php foreach ($share_agents as $sa): ?>
+                <label class="share-row">
+                  <input type="checkbox" class="js-share-pick">
+                  <span class="share-name"><?= htmlspecialchars($sa['agent_name']) ?></span>
+                  <span class="share-pct"><input type="number" name="share[<?= (int)$sa['id'] ?>]" class="form-input js-share-pct" min="0" max="100" step="0.01" value="" disabled> %</span>
+                </label>
+                <?php endforeach; ?>
+              </div>
+              <div class="btn-row" style="align-items:center;">
+                <button type="submit" class="btn btn-primary btn-sm js-share-submit" disabled><i class="ti ti-check"></i> Share</button>
+                <button type="button" class="btn btn-outline btn-sm js-share-equal">Split equally</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('share-camp-<?= $c['id'] ?>')">Cancel</button>
+                <span class="share-total js-share-total">Total 100%</span>
+              </div>
+            </form>
+          </div>
+          <?php endif; ?>
 
           <?php // ── Month-by-month, for a recurring placement ──────────────
                 // A sibling of the edit form, never a child: nested <form>
@@ -4741,6 +4935,42 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.target && e.target.classList && e.target.classList.contains('js-medium')) mhApplyMedium(e.target);
   });
   document.querySelectorAll('.js-medium').forEach(mhApplyMedium);
+  // Share a placement: ticking an agent enables their share and re-splits
+  // equally; typing a share stops the automatic split for that form (until
+  // "Split equally" is pressed). The button stays off until the shares total
+  // 100 and at least one other agent is in. The server checks it all again.
+  document.querySelectorAll('.js-share-form').forEach(function (form) {
+    var manual = false;
+    var inputs = function () { return Array.prototype.slice.call(form.querySelectorAll('.js-share-pct')); };
+    var active = function () { return inputs().filter(function (i) { return !i.disabled; }); };
+    function equal() {
+      var a = active(), n = a.length, base = Math.floor(10000 / n) / 100, used = 0;
+      a.forEach(function (i, k) { var v = k === 0 ? 0 : base; if (k) { i.value = v.toFixed(2); used += v; } });
+      a[0].value = (100 - used).toFixed(2);   // this page's agent takes the odd hundredth
+      manual = false; total();
+    }
+    function total() {
+      var a = active(), t = a.reduce(function (s, i) { return s + (parseFloat(i.value) || 0); }, 0);
+      t = Math.round(t * 100) / 100;
+      var others = a.filter(function (i, k) { return k > 0 && (parseFloat(i.value) || 0) > 0; }).length;
+      var own = parseFloat(a[0].value) || 0;
+      var ok = Math.abs(t - 100) < 0.005 && others >= 1 && own > 0;
+      var el = form.querySelector('.js-share-total');
+      el.textContent = 'Total ' + t.toFixed(2).replace(/\.00$/, '') + '%' + (others < 1 ? ' · tick at least one other agent' : (own <= 0 ? ' · this agent must keep a share' : ''));
+      el.classList.toggle('bad', !ok);
+      form.querySelector('.js-share-submit').disabled = !ok;
+    }
+    form.addEventListener('change', function (e) {
+      if (!e.target.classList.contains('js-share-pick')) return;
+      var row = e.target.closest('.share-row'), inp = row.querySelector('.js-share-pct');
+      inp.disabled = !e.target.checked; row.classList.toggle('picked', e.target.checked);
+      if (!e.target.checked) inp.value = '';
+      if (manual && e.target.checked) { inp.value = '0'; total(); } else equal();
+    });
+    form.addEventListener('input', function (e) { if (e.target.classList.contains('js-share-pct')) { manual = true; total(); } });
+    form.querySelector('.js-share-equal').addEventListener('click', equal);
+    total();
+  });
   // All / Digital / Print above the placements list.
   var campFilter = document.getElementById('campFilter');
   if (campFilter) campFilter.addEventListener('click', function (e) {
