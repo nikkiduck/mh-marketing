@@ -70,5 +70,28 @@ foreach ([0.01, 0.02, 0.03, 0.05, 0.07] as $amt) foreach ([2, 3, 4, 5, 7] as $n)
 }
 ok($neg === 0, 'a few cents split up to seven ways never produces a negative share');
 
+echo "── dollar shares\n";
+[$s, $e] = mk_share_validate(30, [30 => '600', 21 => '400'], 1000.00, '$');
+ok($e === '' && $s === [30 => 600.0, 21 => 400.0], '$600 + $400 of $1,000');
+[$s, $e] = mk_share_validate(30, [30 => '600', 21 => '300'], 1000.00, '$');
+ok($s === [] && str_contains($e, '$900.00') && str_contains($e, '$1,000.00'), 'dollars short of the amount are refused, naming both figures');
+[$s, $e] = mk_share_validate(30, [30 => '333.34', 21 => '333.33', 34 => '333.33'], 1000.00, '$');
+ok($e === '', 'thirds of $1,000 to the cent are accepted');
+[$s, $e] = mk_share_validate(30, [30 => '1200', 21 => '-200'], 1000.00, '$');
+ok($s === [], 'one share above the whole amount is refused');
+[$s, $e] = mk_share_validate(30, [21 => '1000'], 1000.00, '$');
+ok($s === [] && str_contains($e, 'keep a share'), 'in dollars too, the owner must keep a share');
+// Dollars as weights: every other figure follows the same proportion.
+$w = [30 => 600.0, 21 => 400.0];
+ok(mk_share_amount('500.00', $w) === [30 => '300.00', 21 => '200.00'], 'a $500 month divides 60/40 when the budget was shared $600/$400');
+ok(mk_share_amount('1000.00', $w) === [30 => '600.00', 21 => '400.00'], 'dividing the base figure by its own shares returns exactly what was typed');
+$w3 = [30 => 333.34, 21 => 333.33, 34 => 333.33];
+ok(mk_share_amount('1000.00', $w3) === [30 => '333.34', 21 => '333.33', 34 => '333.33'], 'typed thirds come back to the cent');
+ok($sum(mk_share_amount('847.19', $w3)) === 847.19, 'an awkward month divided by dollar weights still sums exactly');
+ok(mk_share_amount(null, $w) === [30 => null, 21 => null], 'a month with no figure stays not-set under dollar weights');
+ok(mk_share_base_field('per_unit') === 'unit_rate' && mk_share_base_field('one_time') === 'budget' && mk_share_base_field('monthly_flat') === 'budget' && mk_share_base_field(null) === 'budget', 'per-day shares divide the day rate; everything else the budget');
+ok(mk_share_percentages($w) === [30 => '60.00', 21 => '40.00'], 'the recorded percentages follow the dollars');
+ok(mk_share_percentages([30 => 100.0, 21 => 25.0]) === [30 => '80.00', 21 => '20.00'], 'a $125 day rate shared $100/$25 is recorded as 80/20');
+
 echo str_repeat('─', 65) . "\n{$pass} passed, {$fail} failed\n";
 exit($fail ? 1 : 0);

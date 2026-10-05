@@ -218,10 +218,15 @@ Printed Marketing / Digital Advertising was tried and reverted the same day).
 among several agents: this agent's placement is scaled to their percentage
 and each other agent (or team; never staff) gets a copy at theirs, with the
 creatives, and with budget, day rate, who-pays amounts and every entered
-month row divided. `inc/campaign_share.php` holds the arithmetic
-(largest-remainder in cents: parts always sum to the original, nobody below
-zero, NULL stays NULL) and `tests/test_campaign_share.php` (22 assertions)
-tests the real functions. **The copies are independent after the split**
+month row divided. Shares are entered in DOLLARS of the placement's base
+figure (budget, or the day rate for per-day; Nikki found percentages
+"weird"), must add up to it to the cent, and "Split equally" divides the
+dollars; a placement with no figure yet falls back to percentages, and the
+form posts `share_unit` so a mismatch is refused. `inc/campaign_share.php`
+holds the arithmetic (largest-remainder in cents, shares as weights: parts
+always sum to the original, the base figure comes back exactly as typed,
+nobody below zero, NULL stays NULL) and `tests/test_campaign_share.php`
+(35 assertions) tests the real functions. **The copies are independent after the split**
 (Nikki: an agent may drop out or take a bigger part later): `split_group`
 only links them for the "Shared with" line, `split_pct` records the first
 division. Same principle as order_split.php: each agent's own record carries

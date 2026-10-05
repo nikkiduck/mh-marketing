@@ -517,7 +517,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($q) { $q->bind_param('ii', $cid, $id); $q->execute(); $src = $q->get_result()->fetch_assoc(); $q->close(); }
         if (!$src) { header("Location: {$back}&err=" . urlencode('That placement could not be found.')); exit; }
 
-        [$shares, $serr] = mk_share_validate($id, (array)($_POST['share'] ?? []));
+        // Shares arrive in DOLLARS of the placement's base figure (budget, or the
+        // day rate for per-day); only a placement with no figure yet is shared
+        // by percentage. The form says which it showed, and a mismatch (the
+        // placement was edited in another tab) is refused rather than guessed at.
+        $base_field = mk_share_base_field($src['billing_mode'] ?? null);
+        $base       = is_numeric($src[$base_field] ?? null) ? round((float)$src[$base_field], 2) : 0.0;
+        $unit       = $base > 0 ? '$' : '%';
+        if (($_POST['share_unit'] ?? '') !== $unit) {
+            header("Location: {$back}&err=" . urlencode('That placement changed since the page was loaded. Open Share again.') . "#camp-{$cid}"); exit;
+        }
+        [$shares, $serr] = $unit === '$'
+            ? mk_share_validate($id, (array)($_POST['share'] ?? []), $base, '$')
+            : mk_share_validate($id, (array)($_POST['share'] ?? []));
         if ($serr === '') {
             // Everyone else must be a live agent or team; never staff, never archived.
             $others = array_values(array_diff(array_keys($shares), [$id]));
@@ -530,6 +542,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($serr !== '') { header("Location: {$back}&err=" . urlencode($serr) . "#camp-{$cid}"); exit; }
 
         $group   = (int)($src['split_group'] ?: $src['id']);
+        $share_pcts = mk_share_percentages($shares);   // recorded on each copy; display only
         $has_med = array_key_exists('medium', $src);
         $money   = ['budget', 'unit_rate', 'paid_broker_amount', 'paid_mh_amount'];
         $parts   = [];   // field => [intake_id => 'x.xx' | null]
@@ -557,7 +570,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($iid === $id) continue;
                 $b = $parts['budget'][$iid]; $ur = $parts['unit_rate'][$iid];
                 $pb = $parts['paid_broker_amount'][$iid]; $pm = $parts['paid_mh_amount'][$iid];
-                $pcts = number_format($pct, 2, '.', '');
+                $pcts = $share_pcts[$iid];
                 // 8 placeholders: i s s s s i s i
                 $ins->bind_param('issssisi', $iid, $b, $ur, $pb, $pm, $group, $pcts, $cid);
                 $ins->execute();
@@ -581,7 +594,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $upd_m->execute();
             }
             // Last: this agent's own placement down to its share.
-            $own = number_format($shares[$id], 2, '.', '');
+            $own = $share_pcts[$id];
             $u = $conn->prepare("UPDATE marketing_campaigns SET budget = ?, unit_rate = ?, paid_broker_amount = ?, paid_mh_amount = ?,
                                         split_group = ?, split_pct = ? WHERE id = ? AND intake_id = ?");
             $u->bind_param('ssssisii', $parts['budget'][$id], $parts['unit_rate'][$id], $parts['paid_broker_amount'][$id], $parts['paid_mh_amount'][$id],
@@ -1687,6 +1700,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .camp-shared a:hover { text-decoration:underline; }
     .camp-shared-note { color:#9ca3af; margin-left:6px; }
     .share-title { font-size:13px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+    .share-amount { font-size:13.5px; color:#111; margin:0 0 6px; }
     .share-help { font-size:12.5px; color:#4b5563; line-height:1.55; margin:0 0 12px; max-width:760px; }
     .share-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:4px 18px; margin-bottom:14px; }
     .share-row { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:6px; font-size:13px; cursor:pointer; }
@@ -1696,7 +1710,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .share-name { flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .share-name em { color:#9ca3af; font-style:normal; font-size:11.5px; }
     .share-pct { display:inline-flex; align-items:center; gap:4px; color:#6b7280; font-size:12px; }
-    .share-pct .form-input { width:78px; padding:5px 7px; text-align:right; }
+    .share-pct .form-input { width:104px; padding:5px 7px; text-align:right; }
     .share-pct .form-input:disabled { background:#f9fafb; color:#d1d5db; }
     .share-total { margin-left:auto; font-size:12.5px; font-weight:700; color:#15803d; }
     .share-total.bad { color:#b91c1c; }
@@ -4137,10 +4151,25 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 // this agent's part and each other agent gets their own copy.
                 if ($has_share && $share_agents): ?>
           <div id="share-camp-<?= $c['id'] ?>" style="display:none;" class="inline-edit-form share-form">
-            <form method="POST" class="js-share-form" data-own="<?= (int)$id ?>">
+            <?php // Dollars, not percentages (Nikki, 2026-10-05). What is divided is the
+                  // placement's base figure: the budget, or the day rate for per-day.
+                  // Only a placement with no figure yet falls back to percentages.
+                  $_sb_mode  = $c['billing_mode'] ?: 'one_time';
+                  $_sb_field = $_sb_mode === 'per_unit' ? 'unit_rate' : 'budget';
+                  $_sb       = is_numeric($c[$_sb_field] ?? null) ? round((float)$c[$_sb_field], 2) : 0.0;
+                  $_sb_usd   = $_sb > 0;
+                  $_sb_what  = ['one_time' => 'in total', 'monthly_flat' => 'a month', 'monthly' => 'a month (the usual amount)',
+                                'per_unit' => 'a ' . ($c['unit_label'] ?: 'day')][$_sb_mode] ?? 'in total'; ?>
+            <form method="POST" class="js-share-form" data-own="<?= (int)$id ?>" data-unit="<?= $_sb_usd ? '$' : '%' ?>" data-total="<?= $_sb_usd ? number_format($_sb, 2, '.', '') : '100' ?>">
               <input type="hidden" name="_action" value="share_campaign">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
+              <input type="hidden" name="share_unit" value="<?= $_sb_usd ? '$' : '%' ?>">
               <div class="share-title"><i class="ti ti-users"></i> Share this placement</div>
+              <?php if ($_sb_usd): ?>
+              <p class="share-amount">Dividing <strong><?= money2($_sb) ?></strong> <?= htmlspecialchars($_sb_what) ?>. Enter each agent's dollar amount.</p>
+              <?php else: ?>
+              <p class="share-amount">This placement has no <?= $_sb_field === 'unit_rate' ? 'day rate' : 'budget' ?> yet, so shares are entered as percentages. Add the amount first if you would rather divide dollars.</p>
+              <?php endif; ?>
               <p class="share-help">Tick everyone who is sharing this ad and set each share. This placement keeps
                 <strong><?= htmlspecialchars($agent['agent_name'] ?? 'this agent') ?></strong>'s part; each other agent gets their own copy on their Advertising tab with the
                 same outlet, run and creatives, and the amounts (budget, day rate, every month already entered) divided to match.
@@ -4149,13 +4178,13 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <label class="share-row own">
                   <input type="checkbox" checked disabled>
                   <span class="share-name"><?= htmlspecialchars($agent['agent_name'] ?? 'This agent') ?> <em>(this page)</em></span>
-                  <span class="share-pct"><input type="number" name="share[<?= (int)$id ?>]" class="form-input js-share-pct" min="0" max="100" step="0.01" value="100"> %</span>
+                  <span class="share-pct"><?= $_sb_usd ? '$ ' : '' ?><input type="number" name="share[<?= (int)$id ?>]" class="form-input js-share-pct" min="0" max="<?= $_sb_usd ? number_format($_sb, 2, '.', '') : '100' ?>" step="0.01" value="<?= $_sb_usd ? number_format($_sb, 2, '.', '') : '100' ?>"><?= $_sb_usd ? '' : ' %' ?></span>
                 </label>
                 <?php foreach ($share_agents as $sa): ?>
                 <label class="share-row">
                   <input type="checkbox" class="js-share-pick">
                   <span class="share-name"><?= htmlspecialchars($sa['agent_name']) ?></span>
-                  <span class="share-pct"><input type="number" name="share[<?= (int)$sa['id'] ?>]" class="form-input js-share-pct" min="0" max="100" step="0.01" value="" disabled> %</span>
+                  <span class="share-pct"><?= $_sb_usd ? '$ ' : '' ?><input type="number" name="share[<?= (int)$sa['id'] ?>]" class="form-input js-share-pct" min="0" max="<?= $_sb_usd ? number_format($_sb, 2, '.', '') : '100' ?>" step="0.01" value="" disabled><?= $_sb_usd ? '' : ' %' ?></span>
                 </label>
                 <?php endforeach; ?>
               </div>
@@ -4163,7 +4192,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <button type="submit" class="btn btn-primary btn-sm js-share-submit" disabled><i class="ti ti-check"></i> Share</button>
                 <button type="button" class="btn btn-outline btn-sm js-share-equal">Split equally</button>
                 <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('share-camp-<?= $c['id'] ?>')">Cancel</button>
-                <span class="share-total js-share-total">Total 100%</span>
+                <span class="share-total js-share-total"></span>
               </div>
             </form>
           </div>
@@ -4935,28 +4964,41 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.target && e.target.classList && e.target.classList.contains('js-medium')) mhApplyMedium(e.target);
   });
   document.querySelectorAll('.js-medium').forEach(mhApplyMedium);
-  // Share a placement: ticking an agent enables their share and re-splits
-  // equally; typing a share stops the automatic split for that form (until
-  // "Split equally" is pressed). The button stays off until the shares total
-  // 100 and at least one other agent is in. The server checks it all again.
+  // Share a placement. Shares are dollars of the placement's amount (or
+  // percentages when it has no amount yet): the form's data-total is what they
+  // must add up to, data-unit says which. Ticking an agent enables their share
+  // and re-splits equally; typing a share stops the automatic split for that
+  // form until "Split equally" is pressed. The button stays off until the
+  // shares add up exactly and at least one other agent is in. The server
+  // checks all of it again.
   document.querySelectorAll('.js-share-form').forEach(function (form) {
-    var manual = false;
+    var manual = false, usd = form.dataset.unit === '$';
+    var targetCents = Math.round(parseFloat(form.dataset.total) * 100);
+    var show = function (cents) {
+      var v = cents / 100;
+      return usd ? '$' + v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                 : v.toFixed(2).replace(/\.00$/, '') + '%';
+    };
     var inputs = function () { return Array.prototype.slice.call(form.querySelectorAll('.js-share-pct')); };
     var active = function () { return inputs().filter(function (i) { return !i.disabled; }); };
+    var cents  = function (i) { return Math.round((parseFloat(i.value) || 0) * 100); };
     function equal() {
-      var a = active(), n = a.length, base = Math.floor(10000 / n) / 100, used = 0;
-      a.forEach(function (i, k) { var v = k === 0 ? 0 : base; if (k) { i.value = v.toFixed(2); used += v; } });
-      a[0].value = (100 - used).toFixed(2);   // this page's agent takes the odd hundredth
+      var a = active(), n = a.length, each = Math.floor(targetCents / n);
+      a.forEach(function (i, k) { if (k) i.value = (each / 100).toFixed(2); });
+      a[0].value = ((targetCents - each * (n - 1)) / 100).toFixed(2);   // this page's agent takes the odd cents
       manual = false; total();
     }
     function total() {
-      var a = active(), t = a.reduce(function (s, i) { return s + (parseFloat(i.value) || 0); }, 0);
-      t = Math.round(t * 100) / 100;
-      var others = a.filter(function (i, k) { return k > 0 && (parseFloat(i.value) || 0) > 0; }).length;
-      var own = parseFloat(a[0].value) || 0;
-      var ok = Math.abs(t - 100) < 0.005 && others >= 1 && own > 0;
+      var a = active(), t = a.reduce(function (s, i) { return s + cents(i); }, 0);
+      var others = a.filter(function (i, k) { return k > 0 && cents(i) > 0; }).length;
+      var own = cents(a[0]);
+      var ok = t === targetCents && others >= 1 && own > 0;
       var el = form.querySelector('.js-share-total');
-      el.textContent = 'Total ' + t.toFixed(2).replace(/\.00$/, '') + '%' + (others < 1 ? ' · tick at least one other agent' : (own <= 0 ? ' · this agent must keep a share' : ''));
+      var msg = 'Total ' + show(t) + (usd ? ' of ' + show(targetCents) : '');
+      if (others < 1) msg += ' · tick at least one other agent';
+      else if (own <= 0) msg += ' · this agent must keep a share';
+      else if (t !== targetCents) msg += usd ? (t < targetCents ? ' · ' + show(targetCents - t) + ' left to assign' : ' · ' + show(t - targetCents) + ' over') : '';
+      el.textContent = msg;
       el.classList.toggle('bad', !ok);
       form.querySelector('.js-share-submit').disabled = !ok;
     }
@@ -4965,7 +5007,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var row = e.target.closest('.share-row'), inp = row.querySelector('.js-share-pct');
       inp.disabled = !e.target.checked; row.classList.toggle('picked', e.target.checked);
       if (!e.target.checked) inp.value = '';
-      if (manual && e.target.checked) { inp.value = '0'; total(); } else equal();
+      if (manual && e.target.checked) { inp.value = '0.00'; total(); } else equal();
     });
     form.addEventListener('input', function (e) { if (e.target.classList.contains('js-share-pct')) { manual = true; total(); } });
     form.querySelector('.js-share-equal').addEventListener('click', equal);
