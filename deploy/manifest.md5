@@ -5,14 +5,14 @@
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-2870d38a9312ce4ae35cfe4326f46a2e  agent.php
+ffe11209ce0da46d4b2695bf04ffb409  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 0770cb67a12f1a8c41942c91b79b991a  api/roster.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 09d6404437f4d1582066c00c82756de2  assets/css/portal.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
-308eea76bb7a9af0b9267f0c611d5445  billing.php
+05e2ca44b38c1566d1aa7fc44d22e0e0  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
 18f86e70bdc154a8cace266e54daff72  cron/activate_roster.php
 008c4df159212ddaf35daf9dd0b6f571  cron/check_health.php
@@ -59,13 +59,13 @@ b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 bb73a2b0b1ccb8ca4b160bb7a05ff140  logout.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
 f3327ec6854ed5362ede027a9b198064  oauth_start.php
-210a1c8334cfa292107df4eac8d2fa85  order_split.php
+48ae8a1d67f3602829dc9ea9bb0417ea  order_split.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 e476b97fd392340003bddd09f7ce308d  pipeline_review.php
 e60ae4b56c036ebddcdc4b66856f967f  portal/index.php
 84273aef9c89d39ca274bda11d5a3ce0  portal/qr.php
 e416e60cc675ccc3853652ef106913c9  portal/receipt.php
-bdca909a6507918b34beb8a4ab7544b6  portal/spend.php
+c512242fcefb756fff0a6d787388572c  portal/spend.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 8e6d7d7742f6c9589b47c7a0e28b4d0d  qr_codes.php
 70fce00dc60a09f6be11d7e5e7062afe  receipt.php

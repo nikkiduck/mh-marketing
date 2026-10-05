@@ -242,7 +242,7 @@ foreach ($intakes as $ag) {
         $lines = [];
         foreach (($m['items'] ?? []) as $it) {
             $lines[] = [
-                'kind'     => (string)($it['kind'] ?? ''),
+                'kind'     => ((string)($it['kind'] ?? '')) === 'Collateral' ? 'Printed Marketing' : (((string)($it['kind'] ?? '')) === 'Advertising' ? 'Digital Advertising' : (string)($it['kind'] ?? '')),   // shown in the breakdown; the agent page's tab names
                 'name'     => (string)($it['name'] ?? ''),
                 'platform' => (string)($it['platform'] ?? ''),
                 'total'    => (float)($it['total'] ?? 0),

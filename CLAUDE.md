@@ -199,6 +199,15 @@ and a fifth would need re-measuring first — see the `order_split.php` note bel
 for the same reasoning. A 26px icon beside the avatar does not move where the
 bar runs out of room, and it grows exactly one person's header.
 
+**Tab names (2026-10-05, Nikki):** the agent page's Collateral tab is shown
+as **Printed Marketing** (print placements go here too) and Advertising as
+**Digital Advertising**. Only the labels changed: the tab keys (`?tab=collateral`,
+`?tab=advertising`), the `kind` values ('Collateral', 'Advertising'), table
+and function names are as before, and this file still uses the old words for
+the code. Billing's breakdown and the portal's Spend page show the new names.
+The tab strip's mobile breakpoint moved from 860px to 1040px for the longer
+labels.
+
 ## Advertising: how a placement reaches Financials
 
 `marketing_campaigns.billing_mode` decides how a placement is charged:
@@ -1370,7 +1379,7 @@ actually runs out of room, not from a device table:
 | Where | Breakpoint | What runs out |
 |---|---|---|
 | `inc/_nav.php` | 820px | Marketing, Billing, the user chip, Sign out, plus a crumb |
-| `agent.php` tabs | 860px | seven tabs with icons and badges |
+| `agent.php` tabs | 1040px | seven tabs with icons and badges (two longer names since 2026-10-05) |
 | `agent.php` cards | 700px | Collateral / Advertising card internals |
 | `index.php` toolbar | 620px | search plus four sort buttons |
 | `billing.php` rows | 640px | month, amount, chip and two checkboxes |
