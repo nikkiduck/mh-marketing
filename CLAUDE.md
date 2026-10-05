@@ -245,6 +245,29 @@ typed into the form.
 - The form posts `share_seen` (each copy id and figure); if a copy changed
   since the page loaded the save is refused.
 
+**A placement's receipt (2026-10-05, sql/campaign_receipt_v1.sql).** One
+receipt (the vendor's invoice) per placement: `receipt_file`,
+`receipt_orig_name`, `receipt_uploaded_at` on `marketing_campaigns`, the same
+three columns and the same storage as collateral (RECEIPTS_DIR, outside the
+web root), served by `receipt.php?campaign_id=`. On the card: a Receipt row
+(Open / Download / Remove) and an "Add Receipt" / "Replace Receipt" button
+with its own upload form. A shared placement is one invoice, so (Nikki: it
+"should carry over to shared agents"):
+
+- uploading on ANY copy puts the receipt on every agent's copy;
+- sharing a placement that has a receipt, or adding an agent later, gives the
+  new copy the receipt too;
+- every copy has its OWN physical file, as with collateral, so Remove is
+  local to that agent's copy and breaks nobody else's link;
+- deleting a placement, or removing an agent from a share, deletes that
+  copy's file.
+
+Admin only for now: placement receipts are not in Financials or the agent
+portal (a shared ad's invoice shows the full amount, every agent's part).
+The receipt file helpers (`mk_store_receipt`, `mk_delete_receipt_file`,
+`mk_copy_receipt_file`) live in `inc/receipts.php`; the first two moved there
+unchanged from inside agent.php's POST block so every handler can use them.
+
 `inc/campaign_share.php` holds the arithmetic and
 `tests/test_campaign_share.php` (52 assertions) tests the real functions.
 `split_pct` is each copy's percentage of the whole, for the record only. Same

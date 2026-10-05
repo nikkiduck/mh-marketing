@@ -5,7 +5,7 @@
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-7d7cd2edb8fc316e025e742bb8421fe5  agent.php
+1fb9078c133dae993670d0788149b66f  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 0770cb67a12f1a8c41942c91b79b991a  api/roster.php
@@ -49,6 +49,7 @@ d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 700f1b9417dbacfbaccc3e309cf3b3dc  inc/pipeline.php
 1dbf31a461f5320c012f7bc6cef61f07  inc/portal.php
 c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
+68873098d2d9819e61c4891917b4275d  inc/receipts.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
@@ -69,7 +70,7 @@ e416e60cc675ccc3853652ef106913c9  portal/receipt.php
 bdca909a6507918b34beb8a4ab7544b6  portal/spend.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 8e6d7d7742f6c9589b47c7a0e28b4d0d  qr_codes.php
-70fce00dc60a09f6be11d7e5e7062afe  receipt.php
+e154338096723d27e76e2b7dc979fe70  receipt.php
 433c74fae7846a5d72927080970946b5  reset-password.php
 cc53d974b2ea12ac47bb365dc8eb73cc  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php

@@ -13,6 +13,7 @@ require_once __DIR__ . '/inc/agent_lifecycle.php';   // Hot Sheets checklist ite
 require_once __DIR__ . '/inc/agent_roster.php';     // mk_slug_base() for the web address
 require_once __DIR__ . '/inc/photos.php';           // headshots, and PHP's upload limits
 require_once __DIR__ . '/inc/qr.php';               // QR codes card on the Profile tab
+require_once __DIR__ . '/inc/receipts.php';         // receipt files: collateral orders and advertising placements
 require_login();
 require_role('admin');
 
@@ -598,6 +599,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $keep = array_keys($plan['keep']); $add = array_keys($plan['add']); $remove = $plan['remove'];
         }
         $alone = count($shares) === 1;   // back to one agent: no longer a shared placement
+        // The receipt (sql/campaign_receipt_v1.sql) carries over: each new copy
+        // gets its OWN physical copy of the file. Files are not transactional,
+        // so the ones made here are removed again if the save fails.
+        $has_rcpt = array_key_exists('receipt_file', $src);
+        $made_files = [];
 
         $conn->begin_transaction();
         try {
@@ -618,6 +624,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $upd_c = $conn->prepare("UPDATE marketing_campaigns SET budget = ?, unit_rate = ?, paid_broker_amount = ?, paid_mh_amount = ?,
                                             split_group = ?, split_pct = ? WHERE id = ?");
             $del_c = $conn->prepare("DELETE FROM marketing_campaigns WHERE id = ? AND split_group = ?");
+            $upd_r = $has_rcpt ? $conn->prepare("UPDATE marketing_campaigns SET receipt_file = ?, receipt_orig_name = ?, receipt_uploaded_at = ? WHERE id = ?") : null;
 
             // New copies first, made from this placement while it is still as it was.
             foreach ($add as $iid) {
@@ -629,6 +636,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ncid = (int)$conn->insert_id;
                 $ins_a->bind_param('ii', $ncid, $cid);
                 $ins_a->execute();
+                if ($has_rcpt && !empty($src['receipt_file']) && ($rcopy = mk_copy_receipt_file($src['receipt_file']))) {
+                    $made_files[] = $rcopy;
+                    $ro = $src['receipt_orig_name']; $ra = $src['receipt_uploaded_at'];
+                    $upd_r->bind_param('sssi', $rcopy, $ro, $ra, $ncid);
+                    $upd_r->execute();
+                }
                 // Units (day counts) are not money and stay whole.
                 foreach ($src_months as $k => $m) {
                     $a = $newm[$iid][$k]['amount']; $ur = $newm[$iid][$k]['unit_rate'];
@@ -659,9 +672,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $conn->commit();
         } catch (Throwable $e) {
             $conn->rollback();
+            foreach ($made_files as $mf) mk_delete_receipt_file($mf);
             error_log('share_campaign: ' . $e->getMessage());
             $fail('The shares could not be saved; nothing was changed.');
         }
+        // Their placement is gone; so is its receipt file.
+        foreach ($remove as $iid) mk_delete_receipt_file($members[$iid]['receipt_file'] ?? null);
         $total = '$' . number_format(array_sum($shares), 2);
         $n     = count($shares);
         if ($alone)        $note = 'This placement is no longer shared.';
@@ -671,10 +687,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: {$back}&saved=1&note=" . urlencode($note) . "#camp-{$cid}"); exit;
     }
 
+    /* --- A placement's receipt (2026-10-05) ---
+     *
+     * One receipt (the vendor's invoice) per placement, stored exactly like a
+     * collateral receipt: outside the web root, served by
+     * receipt.php?campaign_id=. A shared placement is ONE invoice, so
+     * uploading on any copy puts the receipt on every agent's copy, each with
+     * its own physical file (never one shared file: removing it on one agent
+     * must not break the others). Removing is local to this copy.
+     * Needs sql/campaign_receipt_v1.sql.
+     */
+    if ($action === 'upload_campaign_receipt' && mk_column_exists($conn, 'marketing_campaigns', 'receipt_file')) {
+        $cid  = (int)($_POST['campaign_id'] ?? 0);
+        $back = "agent.php?id={$id}&tab=advertising";
+        $q = $conn->prepare("SELECT id, split_group, receipt_file FROM marketing_campaigns WHERE id=? AND intake_id=? LIMIT 1");
+        $q->bind_param('ii', $cid, $id); $q->execute(); $own = $q->get_result()->fetch_assoc(); $q->close();
+        if (!$own) { header("Location: {$back}&err=" . urlencode('That placement could not be found.')); exit; }
+        $rec = mk_store_receipt();
+        if ($rec === null || isset($rec['error'])) {
+            header("Location: {$back}&err=" . urlencode($rec['error'] ?? 'Choose a PDF, JPG or PNG to upload.') . "#camp-{$cid}"); exit;
+        }
+        // [placement id, the file it had, the file it gets]: this copy takes the upload itself.
+        $targets = [[(int)$own['id'], $own['receipt_file'], $rec['file']]];
+        if (!empty($own['split_group'])) {
+            $r = $conn->query("SELECT id, receipt_file FROM marketing_campaigns WHERE split_group = " . (int)$own['split_group'] . " AND id <> " . (int)$own['id']);
+            foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $o) {
+                $copy = mk_copy_receipt_file($rec['file']);
+                if ($copy) $targets[] = [(int)$o['id'], $o['receipt_file'], $copy];
+            }
+        }
+        $now  = date('Y-m-d H:i:s');
+        $orig = $rec['orig'];
+        $u = $conn->prepare("UPDATE marketing_campaigns SET receipt_file = ?, receipt_orig_name = ?, receipt_uploaded_at = ? WHERE id = ?");
+        foreach ($targets as [$tid, $old, $file]) {
+            $u->bind_param('sssi', $file, $orig, $now, $tid);
+            $u->execute();
+            mk_delete_receipt_file($old);   // the one it replaces
+        }
+        $n = count($targets) - 1;
+        $note = 'Receipt saved.' . ($n ? ' It is also on the other ' . ($n === 1 ? 'agent\'s copy' : "{$n} agents' copies") . ' of this shared placement.' : '');
+        header("Location: {$back}&saved=1&note=" . urlencode($note) . "#camp-{$cid}"); exit;
+    }
+
+    if ($action === 'delete_campaign_receipt' && mk_column_exists($conn, 'marketing_campaigns', 'receipt_file')) {
+        $cid = (int)($_POST['campaign_id'] ?? 0);
+        $g = $conn->prepare("SELECT receipt_file FROM marketing_campaigns WHERE id=? AND intake_id=? LIMIT 1");
+        $g->bind_param('ii', $cid, $id); $g->execute(); $grow = $g->get_result()->fetch_assoc(); $g->close();
+        if ($grow) {
+            mk_delete_receipt_file($grow['receipt_file'] ?? null);
+            $s = $conn->prepare("UPDATE marketing_campaigns SET receipt_file=NULL, receipt_orig_name=NULL, receipt_uploaded_at=NULL WHERE id=? AND intake_id=?");
+            $s->bind_param('ii', $cid, $id); $s->execute(); $s->close();
+        }
+        header("Location: agent.php?id={$id}&tab=advertising#camp-{$cid}"); exit;
+    }
+
     if ($action === 'delete_campaign') {
         $cid = (int)($_POST['campaign_id'] ?? 0);
+        // The placement's receipt file goes with it.
+        $rfile = null;
+        if (mk_column_exists($conn, 'marketing_campaigns', 'receipt_file')) {
+            $g = $conn->prepare("SELECT receipt_file FROM marketing_campaigns WHERE id=? AND intake_id=? LIMIT 1");
+            $g->bind_param('ii', $cid, $id); $g->execute(); $rfile = $g->get_result()->fetch_assoc()['receipt_file'] ?? null; $g->close();
+        }
         $s   = $conn->prepare("DELETE FROM marketing_campaigns WHERE id=? AND intake_id=?");
         $s->bind_param('ii', $cid, $id); $s->execute(); $s->close();
+        mk_delete_receipt_file($rfile);
         header("Location: agent.php?id={$id}&tab=advertising"); exit;
     }
 
@@ -683,46 +760,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           'ordered_at','tracking_number','tracking_url','delivered_at','file_url','notes',
                           'paid_by','paid_broker_amount','paid_mh_amount','billed_with_order_id'];
     $valid_coll_types  = ['business_cards','yard_signs','oh_signs','postcards','brochures','other'];
-
-    /**
-     * Save an uploaded receipt and return [stored_filename, original_name],
-     * or null when no file was submitted.
-     *
-     * Files go OUTSIDE the document root, next to logs/, and are served by
-     * receipt.php behind the admin session — they carry vendor and cost detail
-     * and shouldn't be reachable by guessing a URL.
-     */
-    function mk_store_receipt(string $field = 'receipt'): ?array {
-        if (empty($_FILES[$field]['tmp_name']) || ($_FILES[$field]['error'] ?? 1) !== UPLOAD_ERR_OK) {
-            return null;   // nothing uploaded — not an error
-        }
-        $tmp  = $_FILES[$field]['tmp_name'];
-        $mime = function_exists('mime_content_type') ? mime_content_type($tmp) : '';
-        $ext_map = [
-            'application/pdf' => 'pdf',
-            'image/jpeg'      => 'jpg',
-            'image/png'       => 'png',
-        ];
-        if (!isset($ext_map[$mime]))                    return ['error' => 'Receipt must be a PDF, JPG or PNG.'];
-        if ($_FILES[$field]['size'] > 10 * 1024 * 1024) return ['error' => 'Receipt exceeds the 10 MB limit.'];
-
-        $dir = RECEIPTS_DIR;
-        if (!is_dir($dir) && !mkdir($dir, 0750, true)) return ['error' => 'Could not create the receipts folder.'];
-
-        $stored = 'receipt_' . date('Ymd') . '_' . bin2hex(random_bytes(6)) . '.' . $ext_map[$mime];
-        if (!move_uploaded_file($tmp, $dir . $stored))  return ['error' => 'Failed to save the receipt.'];
-
-        $orig = preg_replace('/[^A-Za-z0-9._ -]/', '_', (string)($_FILES[$field]['name'] ?? $stored));
-        return ['file' => $stored, 'orig' => $orig];
-    }
-
-    /** Remove a stored receipt file from disk. Silent if already gone. */
-    function mk_delete_receipt_file(?string $stored): void {
-        $stored = trim((string)$stored);
-        if ($stored === '') return;
-        $path = RECEIPTS_DIR . basename($stored);
-        if (is_file($path)) @unlink($path);
-    }
 
     if ($action === 'add_collateral_order') {
         $type = trim($_POST['type'] ?? '');
@@ -1198,6 +1235,7 @@ if ($r) {
 // agents and teams, never staff), and, for placements already shared, EVERY
 // copy in the group (this page's too) with its figure, so each card can show
 // the full amount and who pays what.
+$has_receipt = mk_column_exists($conn, 'marketing_campaigns', 'receipt_file');   // sql/campaign_receipt_v1.sql
 $has_share = mk_column_exists($conn, 'marketing_campaigns', 'split_group');
 if ($has_share) require_once __DIR__ . '/inc/campaign_share.php';
 $share_agents = []; $share_groups = [];
@@ -1763,6 +1801,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .camp-shared a:hover { text-decoration:underline; }
     .camp-shared-who { display:block; color:#4b5563; }
     .camp-shared-who .sep { color:#d1d5db; margin:0 4px; }
+    .rcpt-name { font-weight:400; color:#6b7280; margin-left:6px; }
     .camp-share-of { font-style:normal; color:#6b7280; font-size:11.5px; margin-left:4px; }
     .share-title { font-size:13px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
     .share-help { font-size:12.5px; color:#4b5563; line-height:1.55; margin:0 0 12px; max-width:760px; }
@@ -3991,6 +4030,21 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             </div>
           <?php endif; ?>
 
+          <?php // The vendor's invoice for this placement; served by receipt.php behind the admin session. ?>
+          <?php if ($has_receipt && !empty($c['receipt_file'])): ?>
+            <div class="link-row">
+              <span class="link-row-label"><i class="ti ti-receipt"></i> Receipt
+                <span class="rcpt-name"><?= htmlspecialchars($c['receipt_orig_name'] ?: 'on file') ?></span></span>
+              <a class="btn btn-outline btn-xs" href="receipt.php?campaign_id=<?= (int)$c['id'] ?>" target="_blank"><i class="ti ti-external-link"></i> Open</a>
+              <a class="btn btn-outline btn-xs" href="receipt.php?campaign_id=<?= (int)$c['id'] ?>&amp;dl=1"><i class="ti ti-download"></i> Download</a>
+              <form method="POST" style="margin:0;" onsubmit="return confirm('Remove the receipt from this placement?')">
+                <input type="hidden" name="_action" value="delete_campaign_receipt">
+                <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
+                <button type="submit" class="btn btn-outline btn-xs" title="Remove receipt"><i class="ti ti-receipt-off"></i> Remove</button>
+              </form>
+            </div>
+          <?php endif; ?>
+
           <!-- Creatives: any number per placement, each with its own target URL -->
           <div class="ad-files">
             <div class="ad-files-title">Creatives <span class="ad-count"><?= count($ad_files) ?></span></div>
@@ -4149,6 +4203,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               <i class="ti ti-users"></i> Share
             </button>
             <?php endif; ?>
+            <?php if ($has_receipt): ?>
+            <button type="button" class="btn btn-outline btn-xs" onclick="toggleInline('rcpt-camp-<?= $c['id'] ?>')">
+              <i class="ti ti-receipt"></i> <?= empty($c['receipt_file']) ? 'Add Receipt' : 'Replace Receipt' ?>
+            </button>
+            <?php endif; ?>
             <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this placement and all its ad files?')">
               <input type="hidden" name="_action" value="delete_campaign">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
@@ -4226,6 +4285,26 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               </div>
             </form>
           </div>
+
+          <?php // ── Receipt ──────────────────────────────────────────────────
+                // Its own form (file upload), a sibling of the edit form. ?>
+          <?php if ($has_receipt): ?>
+          <div id="rcpt-camp-<?= $c['id'] ?>" style="display:none;" class="inline-edit-form">
+            <form method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="_action" value="upload_campaign_receipt">
+              <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
+              <div class="share-title"><i class="ti ti-receipt"></i> Receipt</div>
+              <p class="share-help">The vendor's invoice or receipt for this placement: PDF, JPG or PNG, up to 10 MB.
+                <?php if (!empty($c['receipt_file'])): ?>Uploading replaces the one on file.<?php endif; ?>
+                <?php if ($_sh_on): ?>This placement is shared, so the receipt goes on every agent's copy.<?php endif; ?></p>
+              <input type="file" name="receipt" class="form-input" accept="application/pdf,image/jpeg,image/png" required style="max-width:420px;margin-bottom:12px;">
+              <div class="btn-row">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-upload"></i> Upload</button>
+                <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('rcpt-camp-<?= $c['id'] ?>')">Cancel</button>
+              </div>
+            </form>
+          </div>
+          <?php endif; ?>
 
           <?php // ── Share with agent(s) ──────────────────────────────────────
                 // A sibling of the edit form, never inside it (nested forms are

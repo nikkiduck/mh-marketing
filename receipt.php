@@ -10,6 +10,7 @@
  *   receipt.php?order_id=42            → inline
  *   receipt.php?order_id=42&dl=1       → download
  *   receipt.php?invoice_id=3           → the combined invoice behind a split
+ *   receipt.php?campaign_id=12         → an advertising placement's receipt
  *
  * invoice_id serves marketing_vendor_invoices, which order_split.php writes.
  * The two are separate physical files on purpose: every collateral order gets
@@ -25,7 +26,8 @@ require_role('admin');
 
 $order_id   = (int)($_GET['order_id']   ?? 0);
 $invoice_id = (int)($_GET['invoice_id'] ?? 0);
-if (!$order_id && !$invoice_id) { http_response_code(400); exit('Missing order_id or invoice_id.'); }
+$campaign_id = (int)($_GET['campaign_id'] ?? 0);
+if (!$order_id && !$invoice_id && !$campaign_id) { http_response_code(400); exit('Missing order_id, invoice_id or campaign_id.'); }
 
 // Table and id chosen here, never interpolated from input — the only thing that
 // reaches the query is a bound integer.
@@ -33,6 +35,10 @@ if ($order_id) {
     $sql  = "SELECT receipt_file, receipt_orig_name FROM marketing_collateral_orders WHERE id = ? LIMIT 1";
     $want = $order_id;
     $miss = 'No receipt on this order.';
+} elseif ($campaign_id) {
+    $sql  = "SELECT receipt_file, receipt_orig_name FROM marketing_campaigns WHERE id = ? LIMIT 1";
+    $want = $campaign_id;
+    $miss = 'No receipt on this placement.';
 } else {
     $sql  = "SELECT receipt_file, receipt_orig_name FROM marketing_vendor_invoices WHERE id = ? LIMIT 1";
     $want = $invoice_id;
