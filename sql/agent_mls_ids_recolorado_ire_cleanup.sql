@@ -1,4 +1,6 @@
--- STATUS: not run
+-- STATUS: run (by Nikki, 2026-10-05; checked 21:22 UTC: no IRE rows remain, and the roster
+--         sync has attached the four correct ids: Allison Decent, Jean-Michel Drai,
+--         Jonathan Boxer, Noah Walz)
 --
 -- agent_mls_ids_recolorado_ire_cleanup.sql — REcolorado identities from the
 -- wrong feed (2026-10-05)
