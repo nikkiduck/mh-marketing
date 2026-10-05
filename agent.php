@@ -177,6 +177,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $new_cid = (int)$conn->insert_id;
             $s->close();
 
+            // Print or digital (campaign_medium_v1.sql). Written as a follow-up
+            // UPDATE rather than two more placeholders in the INSERT above,
+            // whose type string is counted by hand; before the migration the
+            // columns do not exist and the placement is simply digital.
+            if ($new_cid && mk_column_exists($conn, 'marketing_campaigns', 'medium')) {
+                $medium  = ($_POST['medium'] ?? '') === 'print' ? 'print' : 'digital';
+                $ad_size = $medium === 'print' ? (mb_substr(trim((string)($_POST['ad_size'] ?? '')), 0, 80) ?: null) : null;
+                $m = $conn->prepare("UPDATE marketing_campaigns SET medium = ?, ad_size = ? WHERE id = ? AND intake_id = ?");
+                if ($m) { $m->bind_param('ssii', $medium, $ad_size, $new_cid, $id); $m->execute(); $m->close(); }
+            }
+
             // Repeating ad rows posted as ads[0][label], ads[0][file_url], ads[0][target_url]
             $ads = $_POST['ads'] ?? [];
             if ($new_cid && is_array($ads)) {
@@ -214,6 +225,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                    'start_date','end_date','notes','target_url',
                    'utm_source','utm_medium','utm_campaign','utm_content',
                    'paid_by','paid_broker_amount','paid_mh_amount'];
+        // Print or digital (campaign_medium_v1.sql): only once the columns exist,
+        // and medium only ever one of the two values.
+        if (mk_column_exists($conn, 'marketing_campaigns', 'medium')) {
+            if (array_key_exists('medium', $_POST)) $_POST['medium'] = $_POST['medium'] === 'print' ? 'print' : 'digital';
+            if (($_POST['medium'] ?? '') !== 'print' && array_key_exists('ad_size', $_POST)) $_POST['ad_size'] = '';
+            $fields[] = 'medium'; $fields[] = 'ad_size';
+        }
         $sets = []; $vals = []; $types = '';
         foreach ($fields as $f) {
             if (!array_key_exists($f, $_POST)) continue;
@@ -419,6 +437,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                      paid_by,paid_broker_amount,paid_mh_amount,sent,status)
                  VALUES (?,?,?,?,?,?,?,?,NULL,NULL,?,?,?,?,?,?,?,?,?,0,'planned')"
             );
+            // medium / ad_size (campaign_medium_v1.sql) are copied after the insert, below.
             // 17 placeholders: i + 16×s = 17 characters in the type string.
             // Count them against the column list every time this is touched.
             if ($s) {
@@ -443,6 +462,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $s->execute();
                 $new_cid = (int)$conn->insert_id;
                 $s->close();
+            }
+            // A copy of a print ad is a print ad, same size.
+            if ($new_cid && array_key_exists('medium', $src)) {
+                $m = $conn->prepare("UPDATE marketing_campaigns SET medium = ?, ad_size = ? WHERE id = ? AND intake_id = ?");
+                if ($m) {
+                    $md = $src['medium'] === 'print' ? 'print' : 'digital'; $az = $v('ad_size');
+                    $m->bind_param('ssii', $md, $az, $new_cid, $id); $m->execute(); $m->close();
+                }
             }
 
             // Every creative comes along with its own file and target URL —
@@ -978,6 +1005,7 @@ if ($r) {
 }
 
 // ── Campaigns ─────────────────────────────────────────────────────────────────
+$has_medium = mk_column_exists($conn, 'marketing_campaigns', 'medium');   // print vs digital; checked here, above the early close
 $campaigns = [];
 $r = $conn->query("SELECT * FROM marketing_campaigns WHERE intake_id={$id} ORDER BY created_at DESC");
 if ($r) {
@@ -1529,6 +1557,18 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
     /* ── Campaigns ── */
     .campaign-card { border:1px solid #f3f4f6; border-radius:6px; padding:16px; margin-bottom:12px; }
+    /* Print vs digital (2026-10-05) */
+    .camp-medium-chip { display:inline-block; font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+                        padding:2px 7px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+    .camp-medium-chip.digital { background:#eff6ff; color:#1d4ed8; }
+    .camp-medium-chip.print   { background:#fdf4e7; color:#92400e; }
+    .camp-adsize { font-size:12px; font-weight:500; color:#6b7280; margin-left:6px; }
+    .camp-filter { display:flex; gap:6px; margin:0 0 14px; flex-wrap:wrap; }
+    .camp-filter-btn { border:1px solid #e5e7eb; background:#fff; border-radius:16px; padding:5px 12px; font-size:12px; font-weight:600;
+                       color:#6b7280; cursor:pointer; font-family:inherit; }
+    .camp-filter-btn span { color:#9ca3af; font-weight:500; margin-left:3px; }
+    .camp-filter-btn.on { background:#111; border-color:#111; color:#fff; }
+    .camp-filter-btn.on span { color:#d1d5db; }
     .campaign-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
     .campaign-platform { font-size:14px; font-weight:700; }
     .campaign-name { font-size:12px; color:#6b7280; }
@@ -3490,6 +3530,19 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             </label>
           </div>
           <?php mk_unit_fields(); ?>
+          <?php if ($has_medium): /* Print or digital (2026-10-05). Print hides the URL builder and asks for the ad size. */ ?>
+          <div class="form-row js-medium-row" style="align-items:flex-end;">
+            <label>Medium
+              <select name="medium" class="form-input js-medium">
+                <option value="digital">Digital</option>
+                <option value="print">Print</option>
+              </select>
+            </label>
+            <label class="grow js-print-only" style="display:none;">Ad size
+              <input type="text" name="ad_size" class="form-input" maxlength="80" placeholder="e.g. Full page, Half page horizontal, 1/4 page">
+            </label>
+          </div>
+          <?php endif; ?>
           <div class="form-row">
             <label>Run Start <input type="date" name="start_date" class="form-input"></label>
             <label>Run End   <input type="date" name="end_date"   class="form-input"></label>
@@ -3501,17 +3554,17 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 // rebuilding a URL that already existed. The builder is still
                 // here, one click away, for when it earns its keep. ?>
           <div class="form-row" style="align-items:flex-end;">
-            <label class="grow">Target URL
+            <label class="grow"><span class="js-digital-only">Target URL</span><span class="js-print-only" style="display:none;">QR / landing URL (optional)</span>
               <input type="url" name="target_url" id="targetUrlInput" class="form-input"
                      placeholder="https://monthaus.com/… — paste one, or build it below">
             </label>
-            <button type="button" class="btn btn-outline btn-sm" id="toggleUrlBuilder">
+            <button type="button" class="btn btn-outline btn-sm js-digital-only" id="toggleUrlBuilder">
               <i class="ti ti-tools"></i> Build with UTMs
             </button>
           </div>
 
           <!-- URL Builder -->
-          <div class="url-builder" id="urlBuilder" style="display:none;">
+          <div class="url-builder js-digital-builder" id="urlBuilder" style="display:none;">
             <div class="url-builder-title"><i class="ti ti-link"></i> Target URL Builder</div>
             <div class="form-row" style="margin-bottom:8px;">
               <label>Destination
@@ -3576,6 +3629,13 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         </form>
       </div>
 
+      <?php if ($has_medium && count($campaigns) > 1): ?>
+      <div class="camp-filter" id="campFilter">
+        <button type="button" class="camp-filter-btn on" data-medium="">All <span><?= count($campaigns) ?></span></button>
+        <button type="button" class="camp-filter-btn" data-medium="digital">Digital <span><?= count(array_filter($campaigns, fn($x) => ($x['medium'] ?? 'digital') !== 'print')) ?></span></button>
+        <button type="button" class="camp-filter-btn" data-medium="print">Print <span><?= count(array_filter($campaigns, fn($x) => ($x['medium'] ?? 'digital') === 'print')) ?></span></button>
+      </div>
+      <?php endif; ?>
       <?php if (empty($campaigns)): ?>
         <div class="no-campaigns"><i class="ti ti-speakerphone" style="font-size:28px;display:block;margin-bottom:8px;color:#d1d5db;"></i>No advertising placements yet. Click “Add Placement” to create one.</div>
       <?php else: ?>
@@ -3602,10 +3662,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                              'legacy' => false];
           }
         ?>
-        <div class="campaign-card" id="camp-<?= (int)$c['id'] ?>">
+        <?php $_medium = ($c['medium'] ?? 'digital') === 'print' ? 'print' : 'digital'; ?>
+        <div class="campaign-card" id="camp-<?= (int)$c['id'] ?>" data-medium="<?= $_medium ?>">
           <div class="campaign-header">
             <div style="flex:1;min-width:0;">
-              <div class="campaign-platform"><?= htmlspecialchars($platform_labels[$c['platform']] ?? $c['platform']) ?></div>
+              <div class="campaign-platform"><?= htmlspecialchars($platform_labels[$c['platform']] ?? $c['platform']) ?><?php if ($has_medium): ?> <span class="camp-medium-chip <?= $_medium ?>"><?= $_medium === 'print' ? 'Print' : 'Digital' ?></span><?php endif; ?><?php if ($_medium === 'print' && !empty($c['ad_size'])): ?> <span class="camp-adsize"><?= htmlspecialchars($c['ad_size']) ?></span><?php endif; ?></div>
               <?php if ($c['name']): ?><div class="campaign-name"><?= htmlspecialchars($c['name']) ?></div><?php endif; ?>
             </div>
             <span class="camp-status-chip" style="background:<?= $csc ?>;"><?= $csl ?></span>
@@ -3877,17 +3938,30 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 </label>
               </div>
               <?php mk_unit_fields($c); ?>
+              <?php if ($has_medium): ?>
+              <div class="form-row js-medium-row" style="align-items:flex-end;">
+                <label>Medium
+                  <select name="medium" class="form-input js-medium">
+                    <option value="digital" <?= $_medium === 'digital' ? 'selected' : '' ?>>Digital</option>
+                    <option value="print" <?= $_medium === 'print' ? 'selected' : '' ?>>Print</option>
+                  </select>
+                </label>
+                <label class="grow js-print-only"<?= $_medium === 'print' ? '' : ' style="display:none;"' ?>>Ad size
+                  <input type="text" name="ad_size" class="form-input" maxlength="80" value="<?= htmlspecialchars($c['ad_size'] ?? '') ?>" placeholder="e.g. Full page, Half page horizontal, 1/4 page">
+                </label>
+              </div>
+              <?php endif; ?>
               <div class="form-row">
                 <label>Run Start <input type="date" name="start_date" class="form-input" value="<?= htmlspecialchars($c['start_date'] ?? '') ?>"></label>
                 <label>Run End   <input type="date" name="end_date"   class="form-input" value="<?= htmlspecialchars($c['end_date'] ?? '') ?>"></label>
                 <label class="grow">Notes <textarea name="notes" class="form-input" rows="2" placeholder="Any notes about this placement…"><?= htmlspecialchars($c['notes'] ?? '') ?></textarea></label>
               </div>
               <div class="form-row">
-                <label class="grow">Target URL
+                <label class="grow"><span class="js-digital-only"<?= $_medium === 'print' ? ' style="display:none;"' : '' ?>>Target URL</span><span class="js-print-only"<?= $_medium === 'print' ? '' : ' style="display:none;"' ?>>QR / landing URL (optional)</span>
                   <input type="text" name="target_url" class="form-input" value="<?= htmlspecialchars($c['target_url'] ?? '') ?>" placeholder="https://monthaus.com/…">
                 </label>
               </div>
-              <div class="form-row">
+              <div class="form-row js-digital-only"<?= $_medium === 'print' ? ' style="display:none;"' : '' ?>>
                 <label>UTM Source   <input type="text" name="utm_source"   class="form-input" value="<?= htmlspecialchars($c['utm_source']   ?? '') ?>"></label>
                 <label>UTM Medium   <input type="text" name="utm_medium"   class="form-input" value="<?= htmlspecialchars($c['utm_medium']   ?? '') ?>"></label>
                 <label>UTM Campaign <input type="text" name="utm_campaign" class="form-input" value="<?= htmlspecialchars($c['utm_campaign'] ?? '') ?>"></label>
@@ -4653,6 +4727,29 @@ document.addEventListener('change', function (e) {
 // than a blank one until something is touched.
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.js-billing-mode').forEach(mhApplyBillingMode);
+  // Print vs digital: within one placement form, show the print fields or the
+  // digital ones. Print never needs the UTM builder; the URL becomes an
+  // optional QR / landing address.
+  function mhApplyMedium(sel) {
+    var form = sel.closest('form'); if (!form) return;
+    var print = sel.value === 'print';
+    form.querySelectorAll('.js-print-only').forEach(function (el) { el.style.display = print ? '' : 'none'; });
+    form.querySelectorAll('.js-digital-only').forEach(function (el) { el.style.display = print ? 'none' : ''; });
+    if (print) form.querySelectorAll('.js-digital-builder').forEach(function (el) { el.style.display = 'none'; });
+  }
+  document.addEventListener('change', function (e) {
+    if (e.target && e.target.classList && e.target.classList.contains('js-medium')) mhApplyMedium(e.target);
+  });
+  document.querySelectorAll('.js-medium').forEach(mhApplyMedium);
+  // All / Digital / Print above the placements list.
+  var campFilter = document.getElementById('campFilter');
+  if (campFilter) campFilter.addEventListener('click', function (e) {
+    var b = e.target.closest('.camp-filter-btn'); if (!b) return;
+    campFilter.querySelectorAll('.camp-filter-btn').forEach(function (x) { x.classList.toggle('on', x === b); });
+    document.querySelectorAll('#tab-advertising .campaign-card').forEach(function (card) {
+      card.style.display = (!b.dataset.medium || card.dataset.medium === b.dataset.medium) ? '' : 'none';
+    });
+  });
 });
 
 // ── Task filter (Tasks tab) ───────────────────────────────────────────────────

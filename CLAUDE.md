@@ -199,6 +199,20 @@ and a fifth would need re-measuring first — see the `order_split.php` note bel
 for the same reasoning. A 26px icon beside the avatar does not move where the
 bar runs out of room, and it grows exactly one person's header.
 
+**Print advertising lives on the Advertising tab (2026-10-05).** A print ad
+is a placement (publication, run, recurring cost, creative, who pays), not a
+collateral order (vendor, order number, tracking), so it is a row in
+`marketing_campaigns` with `medium = 'print'` and an `ad_size`
+(sql/campaign_medium_v1.sql; `$has_medium` guards everything until it has
+run). The form's Medium select swaps the fields: print shows Ad size, hides
+the UTM builder and relabels Target URL as an optional QR / landing URL.
+Cards carry a Print / Digital chip and the list has an All / Digital / Print
+filter. medium and ad_size are written by a follow-up UPDATE after the
+INSERT (add and duplicate), deliberately not added to the hand-counted
+bind strings. Billing modes, Financials, Billing and the portal are
+unchanged. The tab names stay Collateral and Advertising (a rename to
+Printed Marketing / Digital Advertising was tried and reverted the same day).
+
 ## Advertising: how a placement reaches Financials
 
 `marketing_campaigns.billing_mode` decides how a placement is charged:
