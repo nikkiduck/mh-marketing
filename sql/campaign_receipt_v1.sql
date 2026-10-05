@@ -1,4 +1,4 @@
--- STATUS: not run
+-- STATUS: run
 --
 -- campaign_receipt_v1.sql — a receipt (the vendor's invoice) on an
 -- advertising placement (2026-10-05).
