@@ -1524,11 +1524,13 @@ wrapped.
   that is not a registry slug. A new board is therefore one entry on the
   site; this portal follows within the hour.
 - Boards in Anyprop today: agsmls (aspen), ppmls (elevate), tridemls
-  (telluride), vbor (vail), summit (altitude), recolorado (live 2026-10-05),
-  cren (test data). REcolorado comes through the IRES data share, so its
-  member ids carry an IRE prefix (IRE55048397, not 55048397); the six
-  digits-only REcolorado ids entered by hand before the board was live match
-  no listing and were for Nikki to remove. The sync searches every board for a "Mont Haus" office each run and adds
+  (telluride), vbor (vail), summit (altitude), ccbr_idx (recolorado, live
+  2026-10-05), cren (test data). REcolorado's member ids are the plain
+  numbers (55061958); its Mont Haus office is `MHAUS`. For three hours that
+  day Anyprop served the WRONG feed (the IRES data share, OSN `recolorado`),
+  whose ids carried an `IRE` prefix: seven such identities were attached and
+  are removed by sql/agent_mls_ids_recolorado_ire_cleanup.sql. An `IRE…` id
+  is never right. The sync searches every board for a "Mont Haus" office each run and adds
   `ANYPROP_MH_OFFICE_IDS` on top, so a newly live board needs no config.
   CREN: Anyprop has no Mont Haus office there and neither configured member
   id (13985 Jonathan Boxer, 13986 Jackson Horn, from the Constellation era)
