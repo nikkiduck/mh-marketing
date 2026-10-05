@@ -215,23 +215,42 @@ Printed Marketing / Digital Advertising was tried and reverted the same day).
 
 **Sharing a placement among agents (2026-10-05).** "Share" on a placement
 (`share_campaign` in agent.php; sql/campaign_share_v1.sql) divides one ad
-among several agents: this agent's placement is scaled to their percentage
-and each other agent (or team; never staff) gets a copy at theirs, with the
-creatives, and with budget, day rate, who-pays amounts and every entered
-month row divided. Shares are entered in DOLLARS of the placement's base
-figure (budget, or the day rate for per-day; Nikki found percentages
-"weird"), must add up to it to the cent, and "Split equally" divides the
-dollars; a placement with no figure yet falls back to percentages, and the
-form posts `share_unit` so a mismatch is refused. `inc/campaign_share.php`
-holds the arithmetic (largest-remainder in cents, shares as weights: parts
-always sum to the original, the base figure comes back exactly as typed,
-nobody below zero, NULL stays NULL) and `tests/test_campaign_share.php`
-(35 assertions) tests the real functions. **The copies are independent after the split**
-(Nikki: an agent may drop out or take a bigger part later): `split_group`
-only links them for the "Shared with" line, `split_pct` records the first
-division. Same principle as order_split.php: each agent's own record carries
-their own figure, so inc/financials.php is untouched. This is separate from
-Who Pays, which splits one agent's placement between that agent and Mont Haus.
+among several agents. Every agent (or team; never staff) has their own
+identical placement (outlet, run, billing mode, creatives) carrying their own
+amount, linked by `split_group`. The form is LINES, "Share with agent(s)": a
+fixed first line for this page's agent, then an agent dropdown and a dollar
+amount per line, "Add agent", "Split equally", and the full amount they must
+add up to, to the cent (Nikki: dollars, not percentages; lines, not a wall of
+checkboxes). Amounts are of the base figure: budget, or the day rate for
+per-day. No percentage mode: a placement with no figure gets its full amount
+typed into the form.
+
+- **Every copy shows the whole arrangement** (Nikki, 2026-10-05): the card
+  line "Shared placement: $3,000.00 in total" with each agent and amount
+  (others linked to their copy), and "share of $3,000.00" beside the budget.
+- **Share can be reopened from ANY copy** and its lines are everyone in the
+  group. Saving sets each copy to its agent's amount (its other figures
+  follow, new ÷ old), makes a copy from this page's placement for a new
+  agent, DELETES the copy of an agent left off the lines (the browser asks
+  first), and clears `split_group` when one agent is left. The full amount
+  itself may be changed there.
+- First share: this placement is scaled to its agent's amount and the others
+  get copies; entered months and who-pays amounts are divided by largest
+  remainder, so the parts sum to the original exactly.
+- It divides the WHOLE run. A change partway through a run is done by ending
+  the placement and starting a new one (Duplicate); the form says so on
+  recurring placements.
+- Editing a card directly (budget, a month) still changes only that copy.
+  That is deliberate (Nikki: "keep it local to the agent").
+- The form posts `share_seen` (each copy id and figure); if a copy changed
+  since the page loaded the save is refused.
+
+`inc/campaign_share.php` holds the arithmetic and
+`tests/test_campaign_share.php` (52 assertions) tests the real functions.
+`split_pct` is each copy's percentage of the whole, for the record only. Same
+principle as order_split.php: each agent's own record carries their own
+figure, so inc/financials.php is untouched. This is separate from Who Pays,
+which splits one agent's placement between that agent and Mont Haus.
 
 ## Advertising: how a placement reaches Financials
 
