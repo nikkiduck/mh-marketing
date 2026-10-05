@@ -166,7 +166,7 @@ function portal_money(float $v): string {
 function portal_platform_label(string $p): string {
     return [
         'vail_daily' => 'Vail Daily', 'aspen_daily' => 'Aspen Daily News',
-        'aspen_times' => 'Aspen Times', 'social_meta' => 'Meta (Facebook/Instagram)',
+        'aspen_times' => 'Aspen Times', 'vail_bc_mag' => 'Vail BC Mag', 'social_meta' => 'Meta (Facebook/Instagram)',
         'social_instagram' => 'Instagram', 'google' => 'Google', 'other' => 'Advertising',
     ][$p] ?? ucwords(str_replace('_', ' ', $p));
 }
