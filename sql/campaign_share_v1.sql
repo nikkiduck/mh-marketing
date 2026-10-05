@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- campaign_share_v1.sql — one advertising placement shared among several
 -- agents (2026-10-05).
