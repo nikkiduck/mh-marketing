@@ -55,7 +55,7 @@ const MK_BOARDS_FALLBACK = [
     'elevate'    => ['osn' => 'ppmls',      'label' => 'Elevate',    'status' => 'live',    'office' => 'colorado-springs', 'aliases' => [],
                      'towns' => ['colorado springs', 'monument', 'manitou springs', 'woodland park', 'fountain', 'peyton', 'falcon',
                                  'black forest', 'palmer lake']],
-    'cren'       => ['osn' => 'cren',       'label' => 'CREN',       'status' => 'pending', 'office' => 'aspen', 'aliases' => [], 'towns' => []],
+    'cren'       => ['osn' => 'cren',       'label' => 'CREN',       'status' => 'live',    'office' => 'aspen', 'aliases' => [], 'towns' => []],
     'recolorado' => ['osn' => 'ccbr_idx',   'label' => 'REColorado', 'status' => 'live',    'office' => 'aspen',
                      'aliases' => ['denver', 'remetrodenver'],
                      'towns' => ['denver', 'aurora', 'lakewood', 'littleton', 'centennial', 'englewood', 'arvada', 'westminster', 'thornton',

@@ -1525,28 +1525,27 @@ wrapped.
   site; this portal follows within the hour.
 - Boards in Anyprop today: agsmls (aspen), ppmls (elevate), tridemls
   (telluride), vbor (vail), summit (altitude), ccbr_idx (recolorado, live
-  2026-10-05), cren (test data). REcolorado's member ids are the plain
+  2026-10-05), cren (live 2026-10-05). REcolorado's member ids are the plain
   numbers (55061958); its Mont Haus office is `MHAUS`. For three hours that
   day Anyprop served the WRONG feed (the IRES data share, OSN `recolorado`),
   whose ids carried an `IRE` prefix: seven such identities were attached and
   are removed by sql/agent_mls_ids_recolorado_ire_cleanup.sql. An `IRE…` id
   is never right. The sync searches every board for a "Mont Haus" office each run and adds
   `ANYPROP_MH_OFFICE_IDS` on top, so a newly live board needs no config.
-  CREN: Anyprop has no Mont Haus office there and neither configured member
-  id (13985 Jonathan Boxer, 13986 Jackson Horn, from the Constellation era)
-  exists; their records are on agsmls only. Sierrah Smith's stored cren id
-  13679 is an agent at Mountain Rose Realty in Anyprop: check before trusting
-  it. Nothing on CREN is refreshed or deactivated until that is sorted.
+  CREN (approved and live 2026-10-05): Anyprop has a Mont Haus office there,
+  OfficeMlsId 4330, with three members (13985 Jonathan Boxer, 13986 Jackson
+  Horn, 13679 Sierrah Smith), all attached and refreshed hourly. CREN's
+  Member records carry NO name, email or status, only the id and office, so
+  a new CREN agent cannot be matched by email or name: attach the id by hand
+  on the profile and the sync keeps it fresh.
   Anyprop's Member/Office `$filter` whitelist is in its docs; `$select` is
   rejected, and MemberLastName is not filterable (use MemberEmail).
-  CREN in Anyprop is test data until the board's final approval (expected
-  early Oct 2026); then its Mont Haus office should be found by the search.
   Before the registry, Vail's and Altitude's identities were first stored
   under the raw OSN (vbor, summit) and renamed by
   sql/agent_mls_ids_vbor_cleanup.sql / agent_mls_ids_summit_cleanup.sql (both
   run); that cannot happen any more.
 - **Boards the feed will carry** (Nikki, 2026-10-01): Aspen, elevateMLS
-  (PPMLS), Telluride, Vail, Altitude and REColorado (2026-10-05) live; CREN to come.
+  (PPMLS), Telluride, Vail, Altitude, REColorado and CREN (both 2026-10-05): all seven live.
 - **New brokers arrive before their MLS identity, on every board, always.**
   Nikki adds a new agent for marketing onboarding as soon as they join, often
   before their license moves to Mont Haus in that MLS (any board, also after
