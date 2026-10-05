@@ -3665,7 +3665,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <label>Budget <input type="number" name="budget" class="form-input" placeholder="0.00" step="0.01" min="0"></label>
             <label>Billing
               <select name="billing_mode" class="form-input js-billing-mode">
-                <option value="one_time">One-time / single issue — whole amount in the start month</option>
+                <option value="one_time">One-time/single issue</option>
                 <option value="monthly_flat">Monthly — same amount, ongoing</option>
                 <option value="monthly">Monthly — a different amount each month</option>
                 <option value="per_unit">Per day — rate × days that month</option>
@@ -4085,7 +4085,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <label>Billing
                   <?php $_mode = $c['billing_mode'] ?: 'one_time'; ?>
                   <select name="billing_mode" class="form-input js-billing-mode">
-                    <option value="one_time" <?= $_mode === 'one_time' ? 'selected' : '' ?>>One-time / single issue — whole amount in the start month</option>
+                    <option value="one_time" <?= $_mode === 'one_time' ? 'selected' : '' ?>>One-time/single issue</option>
                     <option value="monthly_flat" <?= $_mode === 'monthly_flat' ? 'selected' : '' ?>>Monthly — same amount, ongoing</option>
                     <option value="monthly"  <?= $_mode === 'monthly'  ? 'selected' : '' ?>>Monthly — a different amount each month</option>
                     <option value="per_unit" <?= $_mode === 'per_unit' ? 'selected' : '' ?>>Per day — rate × days that month</option>
