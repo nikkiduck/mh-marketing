@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- campaign_medium_v1.sql — print advertising on the Advertising tab (2026-10-05)
 --
