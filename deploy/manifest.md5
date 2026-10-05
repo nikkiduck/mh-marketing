@@ -5,10 +5,10 @@
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-fd713fe7f1042d582ee86ef5d7558a2e  agent.php
+2870d38a9312ce4ae35cfe4326f46a2e  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
-9ba8eabe8607a34ef24b6424622d0455  api/roster.php
+0770cb67a12f1a8c41942c91b79b991a  api/roster.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 09d6404437f4d1582066c00c82756de2  assets/css/portal.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
@@ -52,7 +52,7 @@ c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-fd5206860c2cc10ec418badcd5576f0d  index.php
+5afa0310c1b90b39f304508a5791b953  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
 8bce1a103a42a7e017e711547c910e10  leadership.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php

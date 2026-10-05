@@ -421,7 +421,6 @@ $offices = [];
 foreach ($rows as $x) {
     if (isset($counts[$x['_status']])) $counts[$x['_status']]++;
     foreach ($x['_attn'] as $k) $attn_counts[$k]++;
-    if (!empty($x['office'])) $offices[$x['office']] = true;
 }
 ksort($offices);
 $all_boards = [];
@@ -690,12 +689,6 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
              the profile; typing alone still filters the list below. -->
         <div class="suggest" id="agentSuggest" role="listbox" hidden></div>
       </div>
-      <?php if ($offices): ?>
-      <select id="officeFilter" aria-label="Office">
-        <option value="">All offices</option>
-        <?php foreach (array_keys($offices) as $o): ?><option value="<?= e($o) ?>"><?= e(ucwords(str_replace('-', ' ', $o))) ?></option><?php endforeach; ?>
-      </select>
-      <?php endif; ?>
       <select id="boardFilter" aria-label="Board">
         <option value="">All boards</option>
         <?php foreach ($all_boards as $slug => $label): ?><option value="<?= e($slug) ?>"><?= e($label) ?></option><?php endforeach; ?>
@@ -723,7 +716,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
                . ' data-first="' . e($x['_first']) . '" data-last="' . e($x['_last']) . '"'
                . ' data-updated="' . e($x['updated_at'] ?? '') . '" data-start="' . e(($x['start_date'] ?: $x['intake_date']) ?: '9999-12-31') . '"'
                . ' data-complete="' . sprintf('%03d', $x['_total'] ? (int)round(100 * $x['_done'] / $x['_total']) : 0) . '"'
-               . ' data-office="' . e($x['office'] ?? '') . '" data-boards=" ' . e(implode(' ', array_keys($x['_boards']))) . ' "'
+               . ' data-boards=" ' . e(implode(' ', array_keys($x['_boards']))) . ' "'
                . ' data-attn=" ' . e(implode(' ', $x['_attn'])) . ' "';
       };
       $avatar = function (array $x): string {
@@ -901,7 +894,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
 <script>
 (function () {
   var views = { table: document.getElementById('viewTable'), cards: document.getElementById('viewCards') };
-  var state = { filter: 'active', attn: '', search: '', office: '', board: '', sort: 'first', dir: 'asc' };   // first name A-Z (Nikki, 2026-10-02; was last name)
+  var state = { filter: 'active', attn: '', search: '', board: '', sort: 'first', dir: 'asc' };   // first name A-Z (Nikki, 2026-10-02; was last name)
   var noResults = document.getElementById('noResults');
 
   // View choice is a per-browser convenience only; storage can be missing or
@@ -916,7 +909,6 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     if (state.attn) { if (d.attn.indexOf(' ' + state.attn + ' ') === -1) return false; }
     else if (state.filter !== 'all' && d.status !== state.filter) return false;
     if (state.search && d.search.indexOf(state.search) === -1) return false;
-    if (state.office && d.office !== state.office) return false;
     if (state.board && d.boards.indexOf(' ' + state.board + ' ') === -1) return false;
     return true;
   }
@@ -977,7 +969,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       a.className = 'suggest-item'; a.href = link.href; a.setAttribute('role', 'option');
       var name = document.createElement('span'); name.className = 's-name'; name.textContent = link.textContent;
       var meta = document.createElement('span'); meta.className = 's-meta' + (r.dataset.status === 'active' ? '' : ' off');
-      meta.textContent = r.dataset.status === 'active' ? (r.dataset.office || '').replace(/-/g, ' ') : r.dataset.status;
+      meta.textContent = r.dataset.status === 'active' ? '' : r.dataset.status;
       a.appendChild(name); a.appendChild(meta);
       a.addEventListener('mousedown', function (e) { e.preventDefault(); });   // keep focus so blur does not close it first
       suggest.appendChild(a);
@@ -999,8 +991,6 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
   search.addEventListener('focus', function () { renderSuggest(); });
   search.addEventListener('blur', function () { setTimeout(closeSuggest, 150); });
   document.addEventListener('click', function (e) { if (!e.target.closest('.search-wrap')) closeSuggest(); });
-  var of = document.getElementById('officeFilter');
-  if (of) of.addEventListener('change', function (e) { state.office = e.target.value; apply(); });
   document.getElementById('boardFilter').addEventListener('change', function (e) { state.board = e.target.value; apply(); });
   document.querySelectorAll('.view-toggle button').forEach(function (b) {
     b.addEventListener('click', function () {

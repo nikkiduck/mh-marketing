@@ -666,14 +666,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if ($err === '') {
             $sort   = (int)($_POST['sort_order'] ?? 0);
-            $office = trim((string)($_POST['office'] ?? '')) ?: null;
             $area   = trim((string)($_POST['service_area'] ?? '')) ?: null;
             $fub    = isset($_POST['in_fub']) ? 1 : 0;
-            $sql = "UPDATE marketing_intakes SET sort_order = ?, office = ?, service_area = ?, in_fub = ?"
+            // No Office (2026-10-05, Nikki): with agents on several boards it only
+            // confused. Service area alone decides the website's regional pages and
+            // which office address the public profile shows. The column stays.
+            $sql = "UPDATE marketing_intakes SET sort_order = ?, service_area = ?, in_fub = ?"
                  . ($slug !== '' ? ', slug = ?' : '') . " WHERE id = ?";
             $st = $conn->prepare($sql);
-            if ($slug !== '') { $st->bind_param('issisi', $sort, $office, $area, $fub, $slug, $id); }
-            else              { $st->bind_param('issii', $sort, $office, $area, $fub, $id); }
+            if ($slug !== '') { $st->bind_param('isisi', $sort, $area, $fub, $slug, $id); }
+            else              { $st->bind_param('isii', $sort, $area, $fub, $id); }
             $st->execute(); $st->close();
         }
         header("Location: agent.php?id={$id}&tab=profile" . ($err ? '&err=' . urlencode($err) : '&saved=1')); exit;
@@ -1053,12 +1055,6 @@ if (!$hosted($agent['headshot_url'] ?? ''))      $web_missing[] = 'a headshot we
 if (trim(strip_tags((string)($agent['bio_text'] ?? ''))) === '') $web_missing[] = 'a bio';
 if ($agent_slug === '')                          $web_missing[] = 'a web address';
 
-$office_options = ['aspen', 'vail'];
-$r_off = $conn->query("SELECT DISTINCT office FROM marketing_intakes WHERE office IS NOT NULL AND office <> ''");
-if ($r_off) while ($o = $r_off->fetch_row()) $office_options[] = strtolower(trim($o[0]));
-if (!empty($agent['office'])) $office_options[] = strtolower(trim((string)$agent['office']));
-$office_options = array_values(array_unique(array_filter($office_options)));
-sort($office_options);
 
 $identities = [];
 if (mk_table_exists($conn, 'agent_mls_ids')) {
@@ -2301,16 +2297,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               </label>
             </div>
             <div class="form-row">
-              <label class="grow">Office
-                <select name="office" class="form-input">
-                  <option value="">Not set</option>
-                  <?php foreach ($office_options as $o): ?>
-                    <option value="<?= e_attr($o) ?>" <?= ($agent['office'] ?? '') === $o ? 'selected' : '' ?>><?= htmlspecialchars(ucwords(str_replace('-', ' ', $o))) ?></option>
-                  <?php endforeach; ?>
-                </select>
-              </label>
               <label class="grow">Service area
-                <input type="text" name="service_area" class="form-input" value="<?= val($agent,'service_area') ?>" placeholder="Aspen and Snowmass">
+                <input type="text" name="service_area" class="form-input" value="<?= val($agent,'service_area') ?>" placeholder="Aspen and the Roaring Fork Valley">
+                <span style="display:block;font-size:12px;color:#6b7280;margin-top:4px;">Decides which regional pages they appear on (Aspen + Roaring Fork Valley, Vail Valley, Montrose + Western Slope, Front Range) and which office address their public profile shows. The area named first is their home region.</span>
               </label>
             </div>
             <label class="admin-check" style="display:flex;align-items:center;gap:8px;margin:4px 0 12px;">

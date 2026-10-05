@@ -145,7 +145,7 @@ foreach ($rows as $a) {
         ],
         'headshot_url'       => feed_photo($a['headshot_url']),
         'headshot_thumb_url' => feed_photo($a['headshot_face_url']),
-        'offices'            => ($a['office'] && $a['office'] !== 'other') ? [$a['office']] : [],
+        'offices'            => [],   // dropped 2026-10-05: the site derives region and office address from service_area
         'service_area'       => (string)$a['service_area'],
         'identities'         => $idents[(int)$a['id']] ?? [],
         'updated_at'         => $a['updated_at'] ? gmdate('Y-m-d\TH:i:s\Z', strtotime($a['updated_at'] . ' UTC')) : null,

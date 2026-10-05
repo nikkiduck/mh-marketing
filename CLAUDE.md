@@ -433,7 +433,14 @@ follow describe the old card layout; the optional card view keeps its spirit.
   (mk_photo_perm_hint() says so in the error).
 
 ### One place for agents (2026-09-23)
-- agent.php has a Profile tab: website status/slug/sort/office/service area/FUB,
+- **No per-agent Office (2026-10-05, Nikki).** The Office select on the agent
+  page, the roster's office filter and the feed's `offices` (now always [])
+  are gone: with agents on several boards it only confused. Service area is
+  the one concept: on the site it decides the regional pages and which office
+  address a profile shows (first region named; boards when blank). The
+  `marketing_intakes.office` column and the roster sync's default-office
+  write remain, unused.
+- agent.php has a Profile tab: website status/slug/sort/service area/FUB,
   headshot upload (inc/photos.php writes agent-photos/<slug>.jpg and
   -square.jpg, the URLs api/roster.php counts as hosted), the bio (moved from
   Assets), board identities (add/remove) and the Hot Sheet switch, which is the
