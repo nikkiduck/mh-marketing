@@ -18,6 +18,13 @@ Options -Indexes
 #    import/ bulk-profile inputs for cron/import_profiles.php (bios, CSV)
 RedirectMatch 404 ^/(inc|sql|tests|cron|vendor|deploy|docs|import)(/|$)
 
+# ── Nothing under assets/ is ever PHP ───────────────────────
+#    assets/ is the admin theme plus our css/js: static files only. The theme
+#    shipped a demo upload handler (assets/json/file-upload.php, no sign-in,
+#    no type check; deleted 2026-10-05), so a .php here is never ours.
+#    The (/|$) matters: without it /assets/x.php/anything still runs x.php.
+RedirectMatch 404 (?i)^/assets/.*\.(php[0-9]*|phtml|phar|pht)(/|$)
+
 # ── Sensitive file types anywhere ───────────────────────────
 # NOTE: json and md are deliberately NOT in this list. The app serves its own
 # i18n translations from /assets/json/locales/*.json and the theme ships

@@ -1081,6 +1081,17 @@ sudo rm /var/www/marketing.monthaus.com/inc/db.php
 
 403 is the only acceptable answer.
 
+### Nothing under assets/ is PHP (2026-10-05)
+
+`assets/` is the admin theme plus our css/js: static files only. The theme
+shipped `assets/json/file-upload.php`, a demo upload handler with no sign-in
+and no type check, which answered 200 on the live site until it was deleted
+(inert only because `assets/json/uploads/` did not exist). `.htaccess`
+(`RedirectMatch 404`) and the vhost (`<DirectoryMatch>` + `<FilesMatch>`,
+403) now refuse any .php / .phtml / .phar under `assets/`, so a theme update
+or a stray upload cannot bring one back. Never put a PHP file there; check
+after a theme update with `find assets -iname '*.ph*'`.
+
 ### PHP version: Apache and CLI must match
 
 The box carries PHP 5.6 through 8.5. Apache loads **8.4** (`mods-enabled/php8.4.load`)
