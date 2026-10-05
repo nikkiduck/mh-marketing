@@ -605,7 +605,7 @@ if ($schema_ready) {
                 if (abs($pool - (float)$inv['merch_subtotal']) >= 0.005) {
                     $orphan_note = sprintf(
                         'The lines below come to %s but this invoice was saved with a %s subtotal. '
-                      . 'An order was probably edited or deleted on a Printed Marketing tab since the split. '
+                      . 'An order was probably edited or deleted on a Collateral tab since the split. '
                       . 'Correct the lines and save again.',
                         os_money($pool), os_money((float)$inv['merch_subtotal'])
                     );

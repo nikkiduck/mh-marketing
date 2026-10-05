@@ -1304,19 +1304,18 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .tab-panel.active { display:block; }
 
     /* ── Tabs, on mobile ───────────────────────────────────────────────────
-       Seven tabs with icons and badges need roughly 1020px since two were
-       renamed Printed Marketing and Digital Advertising (2026-10-05; 900px
-       before). On a phone the strip ran off the right edge with the last three
+       Seven tabs with icons and badges need roughly 900px. On a phone the
+       strip ran off the right edge with Collateral, Advertising and Notes
        simply unreachable — there was no scroll affordance and no hint they
        existed.
 
-       So below 1040px the strip is replaced by a button that names the tab you
+       So below 860px the strip is replaced by a button that names the tab you
        are on and drops the full list beneath it. The list is BUILT FROM THE
        BUTTONS at runtime, not written out a second time in PHP, so the icons,
        the badge counts and any tab added later come along on their own. */
     .tab-bar-mobile { display:none; }
 
-    @media (max-width: 1040px) {
+    @media (max-width: 860px) {
       .tab-bar { display:none; }
       .tab-bar-mobile { display:block; position:relative; margin-bottom:18px; }
 
@@ -2062,9 +2061,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       <i class="ti ti-list-check"></i> Tasks
       <?php if ($open_tasks > 0): ?><span class="badge"><?= $open_tasks ?></span><?php endif; ?>
     </button>
-    <button class="tab-btn <?= $active_tab==='collateral'?'active':'' ?>" data-tab="collateral"><i class="ti ti-layout-cards"></i> Printed Marketing</button>
+    <button class="tab-btn <?= $active_tab==='collateral'?'active':'' ?>" data-tab="collateral"><i class="ti ti-layout-cards"></i> Collateral</button>
     <button class="tab-btn <?= $active_tab==='advertising'?'active':'' ?>"  data-tab="advertising">
-      <i class="ti ti-speakerphone"></i> Digital Advertising
+      <i class="ti ti-speakerphone"></i> Advertising
       <?php if ($campaigns): ?><span class="badge" style="background:#6b7280;"><?= count($campaigns) ?></span><?php endif; ?>
     </button>
     <button class="tab-btn <?= $active_tab==='notes'?'active':'' ?>"      data-tab="notes">
@@ -2079,7 +2078,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
   <?php // Mobile tab menu. Empty on purpose — the list is cloned from the
         // .tab-btn elements above by the script at the bottom of the page, so
         // there is exactly one definition of what the tabs are. Hidden above
-        // 1040px, where the strip fits. ?>
+        // 860px, where the strip fits. ?>
   <div class="tab-bar-mobile">
     <button type="button" class="tab-menu-btn" id="tabMenuBtn"
             aria-expanded="false" aria-controls="tabMenuPanel">
@@ -2673,7 +2672,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <label>Category
               <select name="category" class="form-input">
                 <option value="onboarding">Onboarding</option>
-                <option value="collateral">Printed Marketing</option>
+                <option value="collateral">Collateral</option>
                 <option value="digital">Digital</option>
                 <option value="photo">Photo</option>
                 <option value="other" selected>Other</option>
@@ -3459,7 +3458,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             // align-items beats any rule in a media query, so the mobile block
             // could not have stacked this row while it stayed on the element. ?>
       <div class="adv-head">
-        <div class="card-title" style="margin:0;">Digital Advertising Placements</div>
+        <div class="card-title" style="margin:0;">Advertising Placements</div>
         <button type="button" class="btn btn-primary btn-sm" onclick="toggleInline('add-campaign-panel')">
           <i class="ti ti-plus"></i> Add Placement
         </button>
@@ -3467,7 +3466,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
       <!-- ── Add Placement (collapsed until the button above is clicked) ── -->
       <div class="add-form" id="add-campaign-panel" style="display:none;margin-bottom:18px;">
-        <h4>Add Digital Advertising Placement</h4>
+        <h4>Add Advertising Placement</h4>
         <form method="POST" id="adForm">
           <input type="hidden" name="_action" value="add_campaign">
           <div class="form-row">
@@ -4167,7 +4166,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       <div class="card">
         <div class="card-title">Financial Summary</div>
         <p class="asset-empty">
-          Nothing to report yet. Printed marketing orders and digital advertising placements appear here
+          Nothing to report yet. Collateral orders and advertising placements appear here
           once they have a cost or budget.
         </p>
       </div>
@@ -4197,7 +4196,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           <p class="fin-note">
             <i class="ti ti-alert-triangle"></i>
             Amounts under “Unassigned” have no Who Pays set, so they are excluded from both
-            totals. Set Who Pays on those items in Printed Marketing or Digital Advertising to include them.
+            totals. Set Who Pays on those items in Collateral or Advertising to include them.
           </p>
         <?php endif; ?>
       </div>
@@ -4247,7 +4246,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <div class="fin-item-name">
                   <?php if ($ref): ?>
                     <a href="<?= htmlspecialchars($href) ?>" class="fin-item-link"
-                       title="Open in <?= $it['kind'] === 'Collateral' ? 'Printed Marketing' : 'Digital Advertising' ?>">
+                       title="Open in <?= $it['kind'] === 'Collateral' ? 'Collateral' : 'Advertising' ?>">
                       <?= htmlspecialchars($nm) ?>
                     </a>
                   <?php else: ?>
@@ -4325,7 +4324,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               </td>
               <td>
                 <span class="fin-kind <?= $it['kind'] === 'Collateral' ? 'coll' : 'adv' ?>">
-                  <?= $it['kind'] === 'Collateral' ? 'Printed Marketing' : 'Digital Advertising' /* tab names since 2026-10-05; the kind keys are unchanged */ ?>
+                  <?= $it['kind'] ?>
                 </span>
               </td>
               <td class="num"><?= !empty($it['billed_with']) ? '<span class="fin-flag">included</span>' : money2((float)$it['total']) ?></td>
@@ -4465,7 +4464,7 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 
 // ── The same tabs, as a menu, on a phone ─────────────────────────────────────
 //
-// Below 1040px the horizontal strip is hidden by CSS and this takes over. It
+// Below 860px the horizontal strip is hidden by CSS and this takes over. It
 // does NOT re-implement tab switching: each menu item forwards its click to the
 // real .tab-btn, so there is one code path and one source of truth for what a
 // tab does. The items are cloned from those buttons too, which is why the icons

@@ -63,7 +63,7 @@ if ($month):
   ?>
     <div class="pt-line">
       <div class="pt-line-h">
-        <span class="pt-kind"><?= $is_ad ? 'Digital Advertising' : 'Printed Marketing' ?></span>
+        <span class="pt-kind"><?= $is_ad ? 'Advertising' : 'Print' ?></span>
         <b><?= ph($title) ?></b>
         <?php if (!$is_ad && !empty($it['platform'])): ?><small><?= ph($it['platform']) ?></small><?php endif; ?>
       </div>
