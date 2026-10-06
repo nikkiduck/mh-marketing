@@ -2627,7 +2627,6 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <div class="form-row">
               <label class="grow">Service area
                 <input type="text" name="service_area" class="form-input" value="<?= val($agent,'service_area') ?>" placeholder="Aspen and the Roaring Fork Valley">
-                <span style="display:block;font-size:12px;color:#6b7280;margin-top:4px;">Decides which regional pages they appear on (Aspen + Roaring Fork Valley, Vail Valley, Montrose + Western Slope, Front Range) and which office address their public profile shows. The area named first is their home region.</span>
               </label>
             </div>
             <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save website details</button></div>
@@ -2638,7 +2637,10 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         <?php
           require_once __DIR__ . '/inc/boards.php';
           require_once __DIR__ . '/inc/fub.php';
-          $fub_areas_ok = mk_column_exists($conn, 'marketing_intakes', 'fub_areas');
+          // No database call here: $conn is closed before rendering (see CLAUDE.md
+          // "agent.php closes its connection early"). $agent is SELECT *, so the
+          // column's presence is read off the row.
+          $fub_areas_ok = array_key_exists('fub_areas', $agent);
           $fub_ticked   = $fub_areas_ok ? mk_fub_areas_decode($agent['fub_areas'] ?? null) : [];
           $fub_site     = mk_fub_site_status($agent_slug);
           $fub_me       = $fub_site['agent'];
