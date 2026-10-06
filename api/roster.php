@@ -49,11 +49,15 @@ if ($bearer === '' || !hash_equals((string)ROSTER_FEED_TOKEN, $bearer)) {
 
 $chk = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'web_status'");
 if (!$chk || !$chk->fetch_row()) feed_fail(503, 'roster migration not applied');
+// Service areas for FUB routing (sql/agent_fub_areas.sql, 2026-10-06). Before
+// the migration the key is absent, which the site reads as "keep what you have".
+$chk_fa = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'fub_areas'");
+$has_fub_areas = $chk_fa && $chk_fa->fetch_row();
 
 // ── Agents ───────────────────────────────────────────────────────────────────
 $res = $conn->query("
     SELECT id, slug, web_status, is_active, agent_name, mls_full_name, agent_title, bio_text,
-           mh_email, mls_email, cell_phone, mls_phone, sort_order, in_fub, office, service_area,
+           mh_email, mls_email, cell_phone, mls_phone, sort_order, in_fub, office, service_area," . ($has_fub_areas ? ' fub_areas,' : '') . "
            social_instagram, social_facebook, social_linkedin, social_tiktok, website_url,
            headshot_url, headshot_face_url, updated_at
       FROM marketing_intakes
@@ -125,7 +129,7 @@ foreach ($rows as $a) {
     $status = (int)$a['is_active'] === 0 ? 'inactive' : $a['web_status'];   // archived in marketing = off the site
     $name   = trim((string)$a['agent_name']) ?: trim((string)$a['mls_full_name']);
     if ($name === '') continue;
-    $agents[] = [
+    $entry = [
         'key'                => $a['slug'],
         'status'             => $status,
         'display_name'       => $name,
@@ -150,6 +154,11 @@ foreach ($rows as $a) {
         'identities'         => $idents[(int)$a['id']] ?? [],
         'updated_at'         => $a['updated_at'] ? gmdate('Y-m-d\TH:i:s\Z', strtotime($a['updated_at'] . ' UTC')) : null,
     ];
+    if ($has_fub_areas) {   // the Communities town keys ticked under Follow Up Boss > Service areas
+        $fa = json_decode((string)$a['fub_areas'], true);
+        $entry['fub_areas'] = is_array($fa) ? array_values(array_map('strval', $fa)) : [];
+    }
+    $agents[] = $entry;
 }
 
 $out = ['generated_at' => gmdate('Y-m-d\TH:i:s\Z'), 'count' => count($agents), 'agents' => $agents];

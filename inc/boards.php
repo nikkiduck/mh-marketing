@@ -133,10 +133,13 @@ function mk_boards_refresh(bool $write = true): array {
     if (is_string($boards)) return ['ok' => false, 'message' => "{$url}: {$boards}"];
 
     mk_board_registry($boards);   // this request uses the fresh copy
+    $areas = mk_areas_parse($d['areas'] ?? null);   // [] when the site is older than 2026-10-06
+    if ($areas) mk_areas($areas);
     $n = count($boards);
     if (!$write) return ['ok' => true, 'message' => "{$n} boards from the site (cache not written: dry run)"];
 
-    $json = json_encode(['fetched_at' => gmdate('Y-m-d\TH:i:s\Z'), 'generated_at' => $d['generated_at'] ?? null, 'boards' => $boards],
+    $json = json_encode(['fetched_at' => gmdate('Y-m-d\TH:i:s\Z'), 'generated_at' => $d['generated_at'] ?? null,
+                         'boards' => $boards, 'areas' => $areas],
                         JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     $tmp = BOARDS_CACHE_FILE . '.' . getmypid() . '.tmp';
     if (@file_put_contents($tmp, $json) === false || !@chmod($tmp, 0644) || !@rename($tmp, BOARDS_CACHE_FILE)) {
@@ -239,4 +242,66 @@ function mk_board_towns(): array {
 /** Labels of the boards with status live, for alert emails. */
 function mk_board_live_labels(): array {
     return array_values(array_map(fn($b) => $b['label'], array_filter(mk_board_registry(), fn($b) => $b['status'] === 'live')));
+}
+
+/* ── Service areas (2026-10-06) ──────────────────────────────────────────────
+ * The website's Communities list (its _communities.php), published by the
+ * same api/boards.php as `areas` and cached in the same file. agent.php's
+ * "Follow Up Boss" section renders it as the Service areas checkboxes; the
+ * ticked town keys are stored in marketing_intakes.fub_areas and sent in the
+ * roster feed, and the site gives a lead on another firm's listing to an
+ * agent who ticked its town. A town's key is its label slugged.
+ *
+ *   mk_areas()       [['area' => name, 'towns' => [['key', 'label'], …]], …]
+ *   mk_area_keys()   every town key, for validating a form post
+ *
+ * MK_AREAS_FALLBACK is the list as of 2026-10-06, used only while the cache
+ * carries no `areas` (before the first roster sync after that deploy). Edit
+ * the list on the website, not here.
+ */
+const MK_AREAS_FALLBACK = [
+    ['area' => 'Roaring Fork Valley', 'towns' => [['key' => 'aspen', 'label' => 'Aspen'], ['key' => 'snowmass-village', 'label' => 'Snowmass Village'], ['key' => 'old-snowmass', 'label' => 'Old Snowmass'], ['key' => 'woody-creek', 'label' => 'Woody Creek'], ['key' => 'basalt', 'label' => 'Basalt'], ['key' => 'carbondale', 'label' => 'Carbondale'], ['key' => 'glenwood-springs', 'label' => 'Glenwood Springs']]],
+    ['area' => 'Vail Valley',         'towns' => [['key' => 'vail', 'label' => 'Vail'], ['key' => 'beaver-creek', 'label' => 'Beaver Creek'], ['key' => 'avon', 'label' => 'Avon'], ['key' => 'edwards', 'label' => 'Edwards'], ['key' => 'minturn', 'label' => 'Minturn'], ['key' => 'eagle', 'label' => 'Eagle'], ['key' => 'gypsum', 'label' => 'Gypsum']]],
+    ['area' => 'Summit County',       'towns' => [['key' => 'breckenridge', 'label' => 'Breckenridge'], ['key' => 'keystone', 'label' => 'Keystone'], ['key' => 'copper-mountain', 'label' => 'Copper Mountain'], ['key' => 'frisco', 'label' => 'Frisco'], ['key' => 'dillon', 'label' => 'Dillon'], ['key' => 'silverthorne', 'label' => 'Silverthorne'], ['key' => 'steamboat-springs', 'label' => 'Steamboat Springs']]],
+    ['area' => 'Gunnison Valley',     'towns' => [['key' => 'crested-butte', 'label' => 'Crested Butte'], ['key' => 'gunnison', 'label' => 'Gunnison']]],
+    ['area' => 'Southwest Colorado',  'towns' => [['key' => 'telluride', 'label' => 'Telluride'], ['key' => 'mountain-village', 'label' => 'Mountain Village'], ['key' => 'ridgway', 'label' => 'Ridgway'], ['key' => 'ouray', 'label' => 'Ouray'], ['key' => 'montrose', 'label' => 'Montrose'], ['key' => 'durango', 'label' => 'Durango'], ['key' => 'pagosa-springs', 'label' => 'Pagosa Springs']]],
+    ['area' => 'Front Range',         'towns' => [['key' => 'greater-denver', 'label' => 'Greater Denver'], ['key' => 'boulder', 'label' => 'Boulder'], ['key' => 'evergreen', 'label' => 'Evergreen'], ['key' => 'colorado-springs', 'label' => 'Colorado Springs']]],
+];
+
+/** The site's `areas` → the list above, or [] when it is missing or malformed (never a half list). */
+function mk_areas_parse($v): array {
+    if (!is_array($v) || !$v) return [];
+    $out = [];
+    foreach ($v as $a) {
+        $name = trim((string)($a['area'] ?? ''));
+        if ($name === '' || !is_array($a['towns'] ?? null) || !$a['towns']) return [];
+        $towns = [];
+        foreach ($a['towns'] as $t) {
+            $key = (string)($t['key'] ?? ''); $label = trim((string)($t['label'] ?? ''));
+            if (!preg_match('/^[a-z0-9-]{1,60}$/', $key) || $label === '') return [];
+            $towns[] = ['key' => $key, 'label' => $label];
+        }
+        $out[] = ['area' => $name, 'towns' => $towns];
+    }
+    return $out;
+}
+
+/** The area list: the cache when it carries one, else the built-in copy. Pass $set to replace it for this request. */
+function mk_areas(?array $set = null): array {
+    static $areas = null;
+    if ($set !== null) { $areas = $set; return $areas; }
+    if ($areas !== null) return $areas;
+    if (is_readable(BOARDS_CACHE_FILE)) {
+        $d = json_decode((string)file_get_contents(BOARDS_CACHE_FILE), true);
+        $parsed = mk_areas_parse(is_array($d) ? ($d['areas'] ?? null) : null);
+        if ($parsed) return $areas = $parsed;
+    }
+    return $areas = MK_AREAS_FALLBACK;
+}
+
+/** Every town key the list knows. */
+function mk_area_keys(): array {
+    $keys = [];
+    foreach (mk_areas() as $a) foreach ($a['towns'] as $t) $keys[] = $t['key'];
+    return $keys;
 }

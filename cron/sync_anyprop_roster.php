@@ -99,6 +99,11 @@ if (!$chk || !$chk->fetch_row()) {
 if (!$fixture) {
     $bs = mk_boards_refresh(!$dry);
     out(($bs['ok'] ? '  boards: ' : '  ! boards: ') . $bs['message'] . ($bs['ok'] ? '' : ' (using the ' . mk_boards_source() . ')'));
+    // Each agent's Follow Up Boss standing (inc/fub.php): cached here for the
+    // profile page's fallback when the site cannot be reached live.
+    require_once __DIR__ . '/../inc/fub.php';
+    $fs = mk_fub_refresh(!$dry);
+    out(($fs['ok'] ? '  fub: ' : '  ! fub: ') . $fs['message']);
 }
 
 // ── Anyprop HTTP ─────────────────────────────────────────────────────────────

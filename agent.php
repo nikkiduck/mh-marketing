@@ -908,18 +908,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($err === '') {
             $sort   = (int)($_POST['sort_order'] ?? 0);
             $area   = trim((string)($_POST['service_area'] ?? '')) ?: null;
-            $fub    = isset($_POST['in_fub']) ? 1 : 0;
             // No Office (2026-10-05, Nikki): with agents on several boards it only
             // confused. Service area alone decides the website's regional pages and
             // which office address the public profile shows. The column stays.
-            $sql = "UPDATE marketing_intakes SET sort_order = ?, service_area = ?, in_fub = ?"
+            // The FUB opt-in moved to its own section (update_fub, 2026-10-06).
+            $sql = "UPDATE marketing_intakes SET sort_order = ?, service_area = ?"
                  . ($slug !== '' ? ', slug = ?' : '') . " WHERE id = ?";
             $st = $conn->prepare($sql);
-            if ($slug !== '') { $st->bind_param('isisi', $sort, $area, $fub, $slug, $id); }
-            else              { $st->bind_param('isii', $sort, $area, $fub, $id); }
+            if ($slug !== '') { $st->bind_param('issi', $sort, $area, $slug, $id); }
+            else              { $st->bind_param('isi', $sort, $area, $id); }
             $st->execute(); $st->close();
         }
         header("Location: agent.php?id={$id}&tab=profile" . ($err ? '&err=' . urlencode($err) : '&saved=1')); exit;
+    }
+
+    /* Follow Up Boss (2026-10-06, Nikki): the opt-in and the service areas,
+       the Communities town keys the website's api/boards.php publishes
+       (inc/boards.php caches them). Only keys the list knows are stored. The
+       website reads both from the roster feed and gives a lead on another
+       firm's listing to an opted-in, Active FUB user who ticked its town. */
+    if ($action === 'update_fub') {
+        $fub = isset($_POST['in_fub']) ? 1 : 0;
+        if (mk_column_exists($conn, 'marketing_intakes', 'fub_areas')) {
+            require_once __DIR__ . '/inc/boards.php';
+            $keys = array_values(array_intersect(mk_area_keys(), array_map('strval', (array)($_POST['fub_areas'] ?? []))));
+            sort($keys);
+            $json = json_encode($keys);
+            $st = $conn->prepare("UPDATE marketing_intakes SET in_fub = ?, fub_areas = ? WHERE id = ?");
+            $st->bind_param('isi', $fub, $json, $id);
+        } else {
+            $st = $conn->prepare("UPDATE marketing_intakes SET in_fub = ? WHERE id = ?");
+            $st->bind_param('ii', $fub, $id);
+        }
+        $st->execute(); $st->close();
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
     }
 
     // Headshots, stored here and served from this portal, which is what the
@@ -2608,12 +2630,100 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <span style="display:block;font-size:12px;color:#6b7280;margin-top:4px;">Decides which regional pages they appear on (Aspen + Roaring Fork Valley, Vail Valley, Montrose + Western Slope, Front Range) and which office address their public profile shows. The area named first is their home region.</span>
               </label>
             </div>
-            <label class="admin-check" style="display:flex;align-items:center;gap:8px;margin:4px 0 12px;">
-              <input type="checkbox" name="in_fub" value="1" <?= !empty($agent['in_fub']) ? 'checked' : '' ?>> In the FUB lead rotation
-            </label>
             <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save website details</button></div>
           </form>
         </div>
+
+        <!-- ── Follow Up Boss (2026-10-06) ──────────────────────────────── -->
+        <?php
+          require_once __DIR__ . '/inc/boards.php';
+          require_once __DIR__ . '/inc/fub.php';
+          $fub_areas_ok = mk_column_exists($conn, 'marketing_intakes', 'fub_areas');
+          $fub_ticked   = $fub_areas_ok ? mk_fub_areas_decode($agent['fub_areas'] ?? null) : [];
+          $fub_site     = mk_fub_site_status($agent_slug);
+          $fub_me       = $fub_site['agent'];
+          $fub_email    = strtolower(trim((string)($agent['mh_email'] ?: $agent['mls_email'])));
+          $fub_checked  = $fub_site['checked_at'] ? date('M j, g:i a', strtotime($fub_site['checked_at'])) : null;
+        ?>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-arrows-shuffle" style="margin-right:6px;"></i> Follow Up Boss</div>
+
+          <div class="fld" style="align-items:center;">
+            <span class="fld-label">FUB account</span>
+            <?php if ($fub_me === null): ?>
+              <span class="pill w-inactive">Unknown</span>
+              <span class="hint" style="margin-left:8px;"><?= htmlspecialchars((string)($fub_site['error'] ?: 'The website has not checked yet.')) ?></span>
+            <?php elseif ($fub_me['fub_user_id'] > 0 && $fub_me['status'] === 'Active'): ?>
+              <span class="pill w-approved">Active</span>
+              <span class="hint" style="margin-left:8px;">Invitation accepted, as <?= htmlspecialchars($fub_me['email']) ?>.</span>
+            <?php elseif ($fub_me['fub_user_id'] > 0): ?>
+              <span class="pill w-pending"><?= htmlspecialchars($fub_me['status'] ?: 'Invited') ?></span>
+              <span class="hint" style="margin-left:8px;">Added in FUB as <?= htmlspecialchars($fub_me['email']) ?>, but the invitation has not been accepted. Leads cannot be assigned to them until it is.</span>
+            <?php else: ?>
+              <span class="pill w-inactive">Not a FUB user</span>
+              <span class="hint" style="margin-left:8px;">No FUB user has <?= htmlspecialchars($fub_email ?: 'an email on this profile') ?>. Add them in Follow Up Boss with that email, then they accept the invitation.</span>
+            <?php endif; ?>
+          </div>
+          <p class="hint" style="margin:4px 0 12px;">
+            <?= $fub_checked ? 'Checked by the website ' . htmlspecialchars($fub_checked) . ($fub_site['source'] === 'cache' ? ' (from the hourly copy; the website did not answer just now)' : '') . '; it checks every hour.' : 'The website checks Follow Up Boss every hour.' ?>
+            FUB bills per user, so only agents who will work website leads are added there.
+          </p>
+
+          <form method="POST">
+            <input type="hidden" name="_action" value="update_fub">
+            <label class="admin-check" style="display:flex;align-items:center;gap:8px;margin:4px 0 4px;">
+              <input type="checkbox" name="in_fub" value="1" <?= !empty($agent['in_fub']) ? 'checked' : '' ?>> In the FUB lead rotation
+            </label>
+            <p class="hint" style="margin:0 0 12px;">Opted in and Active in FUB: inquiries on their own listings are assigned to them in FUB, and they take leads on other brokerages' listings in the areas ticked below. Opted out: inquiries on their listings reach them by email and FUB never sees them.</p>
+
+            <?php if ($fub_areas_ok): ?>
+              <?php $fub_area_list = mk_areas(); ?>
+              <div class="fld-label" style="margin-bottom:6px;">Service areas</div>
+              <p class="hint" style="margin:0 0 10px;">Which towns they take leads in on other brokerages' listings. Tick an area name to tick all of its towns; an agent with a WHOLE area ticked also gets that area's smaller towns the list does not name. The list is edited on the website (its Communities menu).</p>
+              <div id="fubAreas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px 22px;margin-bottom:14px;">
+                <?php foreach ($fub_area_list as $ai => $area): $akeys = array_column($area['towns'], 'key'); $all_on = $akeys && !array_diff($akeys, $fub_ticked); ?>
+                  <div>
+                    <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:6px;">
+                      <input type="checkbox" class="fub-area-head" data-area="<?= $ai ?>" <?= $all_on ? 'checked' : '' ?>> <?= htmlspecialchars($area['area']) ?>
+                    </label>
+                    <?php foreach ($area['towns'] as $t): ?>
+                      <label style="display:flex;align-items:center;gap:8px;margin:2px 0 2px 22px;font-weight:400;">
+                        <input type="checkbox" name="fub_areas[]" class="fub-town" data-area="<?= $ai ?>" value="<?= e_attr($t['key']) ?>" <?= in_array($t['key'], $fub_ticked, true) ? 'checked' : '' ?>> <?= htmlspecialchars($t['label']) ?>
+                      </label>
+                    <?php endforeach; ?>
+                  </div>
+                <?php endforeach; ?>
+              </div>
+            <?php else: ?>
+              <p class="hint" style="margin:0 0 12px;">Service areas appear here once sql/agent_fub_areas.sql has been run.</p>
+            <?php endif; ?>
+            <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save Follow Up Boss</button></div>
+          </form>
+        </div>
+        <script>
+        (function () {
+          var box = document.getElementById('fubAreas');
+          if (!box) return;
+          function towns(a) { return box.querySelectorAll('.fub-town[data-area="' + a + '"]'); }
+          function syncHead(a) {
+            var ts = towns(a), on = 0;
+            ts.forEach(function (t) { if (t.checked) on++; });
+            var h = box.querySelector('.fub-area-head[data-area="' + a + '"]');
+            h.checked = ts.length > 0 && on === ts.length;
+            h.indeterminate = on > 0 && on < ts.length;
+          }
+          box.querySelectorAll('.fub-area-head').forEach(function (h) {
+            h.addEventListener('change', function () {
+              towns(h.dataset.area).forEach(function (t) { t.checked = h.checked; });
+              h.indeterminate = false;
+            });
+            syncHead(h.dataset.area);
+          });
+          box.querySelectorAll('.fub-town').forEach(function (t) {
+            t.addEventListener('change', function () { syncHead(t.dataset.area); });
+          });
+        })();
+        </script>
 
         <?php endif; /* staff: no social or website */ ?>
 
@@ -2801,7 +2911,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <span class="fld-label">FUB rotation</span>
             <span class="pill <?= !empty($agent['in_fub']) ? 'w-approved' : 'w-inactive' ?>"><?= !empty($agent['in_fub']) ? 'In rotation' : 'Not in rotation' ?></span>
             <span style="flex:1;"></span>
-            <span class="hint">Set it under Website</span>
+            <span class="hint">Set it under Follow Up Boss</span>
           </div>
         </div>
 

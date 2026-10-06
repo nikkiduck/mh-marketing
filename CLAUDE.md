@@ -1928,3 +1928,32 @@ Two consequences worth remembering:
 
 If you add a new include-only file, put it in `inc/`. If you add a page, it
 goes at the docroot and is reachable — check whether it should be.
+
+## Follow Up Boss on the agent profile (2026-10-06)
+
+The public site is the only system that talks to Follow Up Boss (its key,
+its sync, its lead push). This portal holds no FUB key and no FUB ids. The
+"Follow Up Boss" card on the Profile tab (agent.php, action `update_fub`) has:
+
+- **In the FUB lead rotation** (`marketing_intakes.in_fub`), moved out of the
+  Website form. Opted out = inquiries on their listings reach them by email
+  and FUB never sees them.
+- **FUB account**, read-only, from the site's `api/fub_users.php` through
+  `inc/fub.php` (live, 6 s; falls back to `/var/log/mh-marketing/fub_users.json`,
+  which cron/sync_anyprop_roster.php refreshes hourly, since Apache cannot
+  write that folder): Active / Invited (not accepted) / Not a FUB user, with
+  the email the site matched and when it last checked. The site matches FUB
+  users to agents by the profile email, then the MLS email; an agent is only
+  usable for leads when ticked AND Active. FUB bills per user, so only agents
+  who work website leads are added there (Nikki).
+- **Service areas** (`marketing_intakes.fub_areas`, JSON list of town keys,
+  sql/agent_fub_areas.sql): the website's Communities list, which the site
+  publishes as `areas` in the same api/boards.php this portal already caches
+  (inc/boards.php: `mk_areas()`, `mk_area_keys()`; MK_AREAS_FALLBACK only
+  until the first fetch). An area header ticks all its towns. The roster feed
+  (api/roster.php) sends `fub_areas` once the column exists; the site gives a
+  lead on another brokerage's listing to an opted-in, Active agent who ticked
+  its town, and a town the list does not name to agents with the whole area
+  ticked. The free-text Service area field stays for the public regional
+  pages and office address; it no longer routes leads. Edit the town list on
+  the site (its `_communities.php`), never here.
