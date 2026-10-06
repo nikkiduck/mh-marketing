@@ -1,14 +1,14 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-02 21:59 from the Mont Haus Master folder.
+# Generated 2026-10-06 11:42 from the Mont Haus Master folder.
 # Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
 # and assets/js/mh-qr.js, portal/*.php, assets/css/portal.css.
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-1fb9078c133dae993670d0788149b66f  agent.php
+a9d5742a0493381224767375ab6dad45  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
-0770cb67a12f1a8c41942c91b79b991a  api/roster.php
+c4984ee573dd0128324b9897d5565ed3  api/roster.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 09d6404437f4d1582066c00c82756de2  assets/css/portal.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
@@ -23,7 +23,7 @@ f0cb50b5d5895138a6ef1db662c6aa67  cron/merge_agents.php
 3aabe4d159f1e1fe113f18e9a06008dc  cron/parse_pipeline_events.php
 a9191e8f282c3df451ef6868883597a5  cron/send_hot_sheet.php
 4e14395dff4a22eb66c4d0b771d0312a  cron/split_team.php
-058adfa2d13f1f403a390057f2d39b95  cron/sync_anyprop_roster.php
+6b686e4deb45eb42a8fe534cc2c36b44  cron/sync_anyprop_roster.php
 bdb3bb0d824c203a13887e8dc04d0a96  cron/sync_hot_sheet_listings.php
 dc625ba4ad1cfcb4c13d0067bc8fe4ce  cron/sync_mh_brokers.php
 d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php
@@ -35,10 +35,11 @@ dfb28c4e16681b9f76c7e592fbaf96ed  forgot-password.php
 435c467f99844fff6b204159975058bf  inc/agent_lifecycle.php
 adee107afca49bf84fe4181ed0aff97b  inc/agent_roster.php
 93b8e3978a2e7d86ecb6b99b0f40b5a8  inc/auth.php
-fb592cfd7a52f76d4ffe99075faa62c2  inc/boards.php
+fb640a636392afa7911f1538ba830499  inc/boards.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 a2609a3b3de8ed8764acd862db2a0245  inc/config.php
 0f2ccd665f7cf6ebef2b916bff6ea510  inc/financials.php
+1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
 1b4401f5942f2be10a7ac65cf1b072c3  inc/hs_data.php
 e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 98ca55f6491ad80b3d49d1c6ad78a9a5  inc/hs_mail.php
