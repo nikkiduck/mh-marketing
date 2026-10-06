@@ -1,11 +1,11 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-06 11:42 from the Mont Haus Master folder.
+# Generated 2026-10-06 11:46 from the Mont Haus Master folder.
 # Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
 # and assets/js/mh-qr.js, portal/*.php, assets/css/portal.css.
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-a9d5742a0493381224767375ab6dad45  agent.php
+3436513d3dcab89e79e1b4a4e6d7b12c  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 c4984ee573dd0128324b9897d5565ed3  api/roster.php
@@ -55,7 +55,7 @@ c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-5afa0310c1b90b39f304508a5791b953  index.php
+11a39880e2f8369b63f960c0071c781f  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
 8bce1a103a42a7e017e711547c910e10  leadership.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php
