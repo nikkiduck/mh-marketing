@@ -9,7 +9,7 @@ sql/creatives_v1.sql, inc/creatives.php, upload fields on agent.php's
 Advertising creatives and Collateral orders, creative.php for admins,
 portal/asset.php for agents) and the Phase 3 Advertising and Print orders
 pages (portal/advertising.php, portal/orders.php, home cards, nav).
-tests/render_portal.php: 112 assertions. Pilot (Nikki, 2026-10-06): Weber
+tests/render_portal.php: 106 assertions. Pilot (Nikki, 2026-10-06): Weber
 Boxer Group (Jonathan, Scott, Sara), Bryan Cournoyer, Jackson Horn.
 Still to build: Hot Sheet choices (Phase 4), the marketing menu and
 requests inbox (Phase 5; the sample content is compiled with Nikki first).

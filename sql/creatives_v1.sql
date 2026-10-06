@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- creatives_v1.sql — creative shown on the agent portal (2026-10-06).
 -- docs/AGENT_PORTAL_PLAN.md, section 5 (Nikki, 2026-09-08: creative is

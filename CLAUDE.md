@@ -1804,7 +1804,7 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
   Pilot (Nikki, 2026-10-06): Weber Boxer Group (Jonathan, Scott, Sara,
   all -> team row 8), Bryan Cournoyer, Jackson Horn.
-- Tests: `tests/render_portal.php` (112 assertions: isolation between
+- Tests: `tests/render_portal.php` (106 assertions: isolation between
   accounts on every page and on asset.php, someone else's code or id refused
   on GET and POST, preview rules, refusals, the creatives query asked for
   the account's campaign ids only). Proven to catch a leak by breaking the
