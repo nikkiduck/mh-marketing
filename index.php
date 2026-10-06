@@ -649,8 +649,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
         <a class="btn btn-outline btn-sm" href="qr_codes.php"><i class="ti ti-qrcode"></i> QR Codes</a>
         <a class="btn btn-outline btn-sm" href="website_order.php"><i class="ti ti-arrows-sort"></i> Website Order</a>
         <a class="btn btn-outline btn-sm" href="leadership.php"><i class="ti ti-crown"></i> Leadership &amp; Staff</a>
-        <a class="btn btn-outline btn-sm" href="anyprop_debug.php" title="What the MLS feed says about a member or office"><i class="ti ti-api"></i> Anyprop Feed</a>
-        <a class="btn btn-outline btn-sm" href="spark_debug.php" title="A board's own Spark feed, for comparison"><i class="ti ti-bolt"></i> Spark Feed</a>
+        <?php // Anyprop Feed / Spark Feed buttons removed 2026-10-06 (Nikki); the
+              // probe pages anyprop_debug.php and spark_debug.php still answer by URL. ?>
         <?php if (defined('SITE_AGENT_SYNC_URL') && SITE_AGENT_SYNC_URL !== ''): ?>
         <!-- Pushes every profile to the public site now. Safe to press twice:
              the website only writes what actually differs. -->
