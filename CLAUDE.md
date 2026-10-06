@@ -1045,6 +1045,7 @@ ssh user   admin
 web root   /var/www/marketing.monthaus.com   (pages only)
 includes   /var/www/marketing.monthaus.com/inc/   (db.php, sso_config.php)
 receipts   /var/www/receipts              (RECEIPTS_DIR — outside the web root)
+creatives  /var/www/creatives             (CREATIVES_DIR — outside the web root)
 cron logs  /var/log/mh-marketing/
 services   systemctl (apache2)
 ```
@@ -1745,7 +1746,8 @@ the site). Migration `sql/leadership_v1.sql`.
 
 ## Agent portal (portal/, 2026-10-01)
 
-Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phase 0 + 1.
+Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
+(creative uploads, 2026-10-06) and the Advertising / Print orders pages.
 - `inc/portal.php` `portal_context()` is the ONLY way a portal page learns
   whose data to show: `users.intake_id` read from the database on every
   request (not the session), refused with a 403 that names the gate (no link,
@@ -1776,10 +1778,37 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phase 0 + 1.
   "Review + Edit ›" when they do, plus "Need another QR code?" on the list.
   The destination is the exact URL pasted from the browser, held to
   `qr_dest_error()` (https, monthaus.com) like any QR destination.
+- **Creative on the portal (2026-10-06, sql/creatives_v1.sql).** Nikki
+  (2026-09-08): creative is UPLOADED, never a Dropbox link. An image or PDF
+  on each advertising creative (`marketing_campaign_assets.image_*`) and a
+  proof on each collateral order (`marketing_collateral_orders.proof_*`),
+  uploaded on agent.php's Add/Edit Creative and order forms, stored in
+  `CREATIVES_DIR` (/var/www/creatives, outside the web root, beside
+  receipts) by `inc/creatives.php` (`mk_store_creative`: JPG/PNG/GIF/PDF,
+  8 MB; a 720px JPEG thumbnail made ONCE at upload with GD, never on page
+  view; PDF thumbnails only when Imagick is present, otherwise a PDF tile).
+  Served by `creative.php` (admin, by id) and `portal/asset.php` (the owning
+  account only; a JOIN on `c.intake_id`), each with `?thumb=1` / `?dl=1`.
+  Shared or duplicated placements copy the files per copy
+  (`mk_own_asset_files`), like receipts; deleting a creative, order or
+  placement unlinks its files. The old `file_url` links stay as "Open
+  original". `$has_creatives` / `$has_proofs` are computed above agent.php's
+  early close; every handler guards with `mk_column_exists()`.
+- `portal/advertising.php` and `portal/orders.php`: cards (picture, title,
+  plain-word state, when, spend from the same `mh_agent_financials()` lines
+  by `ref_id`), `?id=` opens one; an id from another account is a 404 with
+  nothing in it (the detail is picked from the already-scoped list). Shown:
+  outlet, name, print/digital + ad size, dates, creatives, cost. NEVER
+  budget, notes, UTMs, vendor, order number, receipts or billing words.
+  Nav: Home, Advertising, Print orders, Spend, QR codes.
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
-- Tests: `tests/render_portal.php` (70 assertions: isolation between
-  accounts, someone else's code refused on GET and POST, preview rules,
-  refusals). Proven to catch a leak by breaking the ownership check.
+  Pilot (Nikki, 2026-10-06): Weber Boxer Group (Jonathan, Scott, Sara,
+  all -> team row 8), Bryan Cournoyer, Jackson Horn.
+- Tests: `tests/render_portal.php` (112 assertions: isolation between
+  accounts on every page and on asset.php, someone else's code or id refused
+  on GET and POST, preview rules, refusals, the creatives query asked for
+  the account's campaign ids only). Proven to catch a leak by breaking the
+  ownership check.
 
 ### Render harnesses: run them on a server
 The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`
@@ -1839,7 +1868,8 @@ point: a role change can't silently widen access during the build.
 or undefined disables the restriction and access falls back to role checks
 alone.
 
-Currently: nikki.boxer, jonathan.boxer, jm.drai, mary.lappe.
+Currently: nikki.boxer, jonathan.boxer, jm.drai, mary.lappe, and the portal
+pilot (2026-10-06): scott.weber, sara.perkowski, bryan.cournoyer, jackson.horn.
 
 ### Offboarding
 

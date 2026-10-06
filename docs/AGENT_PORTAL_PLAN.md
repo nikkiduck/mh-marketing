@@ -1,11 +1,18 @@
 # Agent Portal: build plan
 
-**Status (2026-10-01):** LIVE on the server: Phases 0 and 1 (roster.php guard,
+**Status (2026-10-06):** LIVE on the server: Phases 0 and 1 (roster.php guard,
 agents land in /portal/, users.php account picker, inc/portal.php, home + QR
 page) and the Spend page with receipts (portal/spend.php, portal/receipt.php).
-sql/portal_identity_v1.sql run. tests/render_portal.php: 49 assertions.
-Still to build: creative uploads (Phase 2), Campaigns and Orders pages,
-Hot Sheet choices, the marketing menu and requests.
+sql/portal_identity_v1.sql and marketing_requests_v1.sql run.
+BUILT 2026-10-06, awaiting deploy + migration: Phase 2 (creative uploads:
+sql/creatives_v1.sql, inc/creatives.php, upload fields on agent.php's
+Advertising creatives and Collateral orders, creative.php for admins,
+portal/asset.php for agents) and the Phase 3 Advertising and Print orders
+pages (portal/advertising.php, portal/orders.php, home cards, nav).
+tests/render_portal.php: 112 assertions. Pilot (Nikki, 2026-10-06): Weber
+Boxer Group (Jonathan, Scott, Sara), Bryan Cournoyer, Jackson Horn.
+Still to build: Hot Sheet choices (Phase 4), the marketing menu and
+requests inbox (Phase 5; the sample content is compiled with Nikki first).
 **Written:** 2026-09-08. **Revised:** 2026-10-01 with Nikki's decisions (below)
 and a fresh check of the code and live database.
 **Scope:** Mont Haus agents sign in with Microsoft to `marketing.monthaus.com` and
@@ -141,17 +148,17 @@ The audience is the least tech-savvy agent, often on a phone.
 ## 4. The portal pages
 
 ```
-portal/index.php       Home: what's running now, recent spend, anything waiting on them
+portal/index.php       Home: a card per section with a plain-word count
 portal/spend.php       Month by month: you paid / Mont Haus paid
-portal/campaigns.php   Cards: each ad placement, thumbnail of the creative
-portal/campaign.php    One placement: creative large, where/when it ran, its spend
-portal/orders.php      Cards: collateral orders, with proof thumbnail and status
-portal/order.php       One order: proof large, quantity, status, tracking link
+portal/advertising.php Cards: each ad placement, picture of the creative; ?id= opens one
+                       (creatives large, when it ran, its spend). Built 2026-10-06.
+portal/orders.php      Cards: print orders with the proof and status; ?id= opens one
+                       (proof large, quantity, where it is, tracking). Built 2026-10-06.
 portal/menu.php        Marketing menu: collateral to order + digital ad opportunities
 portal/ask.php         Ask a question / place an order (emails Nikki)
 portal/hotsheet.php    Their Hot Sheet: on/off, listings/rentals, how often, which areas
 portal/qr.php          Their QR codes: where each one goes, and change it
-portal/asset.php       Streams an image or file after an ownership check (by id only)
+portal/asset.php       Streams a creative or proof (or its thumbnail) after an ownership check (by id only). Built 2026-10-06.
 inc/portal.php         Shared helpers and renderers
 ```
 

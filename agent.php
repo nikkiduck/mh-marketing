@@ -14,6 +14,7 @@ require_once __DIR__ . '/inc/agent_roster.php';     // mk_slug_base() for the we
 require_once __DIR__ . '/inc/photos.php';           // headshots, and PHP's upload limits
 require_once __DIR__ . '/inc/qr.php';               // QR codes card on the Profile tab
 require_once __DIR__ . '/inc/receipts.php';         // receipt files: collateral orders and advertising placements
+require_once __DIR__ . '/inc/creatives.php';        // creative files shown on the agent portal (sql/creatives_v1.sql)
 require_login();
 require_role('admin');
 
@@ -330,14 +331,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ok  = false;
         if ($own) { $own->bind_param('ii', $cid, $id); $own->execute(); $ok = (bool)$own->get_result()->fetch_assoc(); $own->close(); }
         $turl = trim($_POST['target_url'] ?? '') ?: null;
-        if ($ok && ($furl !== '' || $turl !== null)) {
-            $s = $conn->prepare(
-                "INSERT INTO marketing_campaign_assets (campaign_id,label,file_url,target_url,file_type)
-                 VALUES (?,?,?,?,'file')"
-            );
-            if ($s) { $s->bind_param('isss', $cid, $label, $furl, $turl); $s->execute(); $s->close(); }
+        // The uploaded image or PDF (sql/creatives_v1.sql): what the agent portal shows.
+        $img = mk_column_exists($conn, 'marketing_campaign_assets', 'image_file') ? mk_store_creative('image') : null;
+        if ($img && isset($img['error'])) {
+            header("Location: agent.php?id={$id}&tab=advertising&err=" . rawurlencode($img['error']) . "#camp-{$cid}"); exit;
         }
-        header("Location: agent.php?id={$id}&tab=advertising&saved=1"); exit;
+        if ($ok && ($furl !== '' || $turl !== null || $img)) {
+            if ($img) {
+                $now = date('Y-m-d H:i:s');
+                $s = $conn->prepare(
+                    "INSERT INTO marketing_campaign_assets (campaign_id,label,file_url,target_url,file_type,image_file,image_orig_name,image_thumb,image_uploaded_at)
+                     VALUES (?,?,?,?,'file',?,?,?,?)"
+                );
+                // 8 placeholders: i s s s s s s s
+                if ($s) { $s->bind_param('isssssss', $cid, $label, $furl, $turl, $img['file'], $img['orig'], $img['thumb'], $now); $s->execute(); $s->close(); }
+            } else {
+                $s = $conn->prepare(
+                    "INSERT INTO marketing_campaign_assets (campaign_id,label,file_url,target_url,file_type)
+                     VALUES (?,?,?,?,'file')"
+                );
+                if ($s) { $s->bind_param('isss', $cid, $label, $furl, $turl); $s->execute(); $s->close(); }
+            }
+        } elseif ($img) {
+            mk_delete_creative_files($img['file'], $img['thumb']);   // not their placement: keep nothing
+        }
+        header("Location: agent.php?id={$id}&tab=advertising&saved=1#camp-{$cid}"); exit;
     }
 
     if ($action === 'update_campaign_asset') {
@@ -345,24 +363,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $label = trim($_POST['label']      ?? '') ?: null;
         $furl  = trim($_POST['file_url']   ?? '');
         $turl  = trim($_POST['target_url'] ?? '') ?: null;
-        $s = $conn->prepare(
-            "UPDATE marketing_campaign_assets a
-               JOIN marketing_campaigns c ON c.id = a.campaign_id
-                SET a.label = ?, a.file_url = ?, a.target_url = ?
-              WHERE a.id = ? AND c.intake_id = ?"
-        );
-        if ($s) { $s->bind_param('sssii', $label, $furl, $turl, $aid, $id); $s->execute(); $s->close(); }
+        // A new upload replaces the old files; no upload leaves them untouched.
+        $img = mk_column_exists($conn, 'marketing_campaign_assets', 'image_file') ? mk_store_creative('image') : null;
+        if ($img && isset($img['error'])) {
+            header("Location: agent.php?id={$id}&tab=advertising&err=" . rawurlencode($img['error'])); exit;
+        }
+        if ($img) {
+            $old = null;
+            $g = $conn->prepare("SELECT a.image_file, a.image_thumb FROM marketing_campaign_assets a
+                                   JOIN marketing_campaigns c ON c.id = a.campaign_id WHERE a.id = ? AND c.intake_id = ? LIMIT 1");
+            if ($g) { $g->bind_param('ii', $aid, $id); $g->execute(); $old = $g->get_result()->fetch_assoc(); $g->close(); }
+            if (!$old) {
+                mk_delete_creative_files($img['file'], $img['thumb']);   // not their creative: keep nothing
+                header("Location: agent.php?id={$id}&tab=advertising"); exit;
+            }
+            $now = date('Y-m-d H:i:s');
+            $s = $conn->prepare(
+                "UPDATE marketing_campaign_assets a
+                   JOIN marketing_campaigns c ON c.id = a.campaign_id
+                    SET a.label = ?, a.file_url = ?, a.target_url = ?,
+                        a.image_file = ?, a.image_orig_name = ?, a.image_thumb = ?, a.image_uploaded_at = ?
+                  WHERE a.id = ? AND c.intake_id = ?"
+            );
+            // 9 placeholders: s s s s s s s i i
+            if ($s) { $s->bind_param('sssssssii', $label, $furl, $turl, $img['file'], $img['orig'], $img['thumb'], $now, $aid, $id); $s->execute(); $s->close(); }
+            mk_delete_creative_files($old['image_file'] ?? null, $old['image_thumb'] ?? null);
+        } else {
+            $s = $conn->prepare(
+                "UPDATE marketing_campaign_assets a
+                   JOIN marketing_campaigns c ON c.id = a.campaign_id
+                    SET a.label = ?, a.file_url = ?, a.target_url = ?
+                  WHERE a.id = ? AND c.intake_id = ?"
+            );
+            if ($s) { $s->bind_param('sssii', $label, $furl, $turl, $aid, $id); $s->execute(); $s->close(); }
+        }
         header("Location: agent.php?id={$id}&tab=advertising&saved=1"); exit;
     }
 
     if ($action === 'delete_campaign_asset') {
         $aid = (int)($_POST['asset_id'] ?? 0);
+        // Its uploaded files go with it (looked up with the same ownership check as the delete).
+        $old = null;
+        if (mk_column_exists($conn, 'marketing_campaign_assets', 'image_file')) {
+            $g = $conn->prepare("SELECT a.image_file, a.image_thumb FROM marketing_campaign_assets a
+                                   JOIN marketing_campaigns c ON c.id = a.campaign_id WHERE a.id = ? AND c.intake_id = ? LIMIT 1");
+            if ($g) { $g->bind_param('ii', $aid, $id); $g->execute(); $old = $g->get_result()->fetch_assoc(); $g->close(); }
+        }
         $s = $conn->prepare(
             "DELETE a FROM marketing_campaign_assets a
                JOIN marketing_campaigns c ON c.id = a.campaign_id
               WHERE a.id = ? AND c.intake_id = ?"
         );
         if ($s) { $s->bind_param('ii', $aid, $id); $s->execute(); $s->close(); }
+        if ($old) mk_delete_creative_files($old['image_file'] ?? null, $old['image_thumb'] ?? null);
         header("Location: agent.php?id={$id}&tab=advertising"); exit;
     }
 
@@ -476,14 +529,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Every creative comes along with its own file and target URL —
             // that is most of the value of duplicating at all.
             if ($new_cid) {
+                // The uploaded image comes along too (sql/creatives_v1.sql), as a copy of its own.
+                $has_img  = mk_column_exists($conn, 'marketing_campaign_assets', 'image_file');
+                $img_cols = $has_img ? ', image_file, image_orig_name, image_thumb, image_uploaded_at' : '';
                 $a = $conn->prepare(
-                    "INSERT INTO marketing_campaign_assets (campaign_id,label,file_url,target_url,file_type)
-                     SELECT ?, label, file_url, target_url, file_type
+                    "INSERT INTO marketing_campaign_assets (campaign_id,label,file_url,target_url,file_type{$img_cols})
+                     SELECT ?, label, file_url, target_url, file_type{$img_cols}
                        FROM marketing_campaign_assets
                       WHERE campaign_id = ?
                       ORDER BY id"
                 );
                 if ($a) { $a->bind_param('ii', $new_cid, $cid); $a->execute(); $a->close(); }
+                if ($has_img) mk_own_asset_files($conn, $new_cid);
             }
         }
 
@@ -604,6 +661,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // so the ones made here are removed again if the save fails.
         $has_rcpt = array_key_exists('receipt_file', $src);
         $made_files = [];
+        // Creatives' uploaded images (sql/creatives_v1.sql) carry over the same
+        // way, one physical copy per copy. A copy being removed loses its
+        // files: its creative rows cascade with the placement, so they are
+        // listed now and unlinked after the commit.
+        $has_img = mk_column_exists($conn, 'marketing_campaign_assets', 'image_file');
+        $img_cols = $has_img ? ', image_file, image_orig_name, image_thumb, image_uploaded_at' : '';
+        $made_creatives = [];
+        $gone_creatives = [];
+        if ($has_img) {
+            foreach ($remove as $iid) {
+                $r = $conn->query("SELECT image_file, image_thumb FROM marketing_campaign_assets WHERE campaign_id = " . (int)$members[$iid]['id']);
+                foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $a) $gone_creatives[] = [$a['image_file'], $a['image_thumb']];
+            }
+        }
 
         $conn->begin_transaction();
         try {
@@ -619,8 +690,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $ins_m = $conn->prepare("INSERT INTO marketing_campaign_months (campaign_id, ym, amount, units, unit_rate, paid_by, paid_broker_amount, paid_mh_amount, note)
                                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $upd_m = $conn->prepare("UPDATE marketing_campaign_months SET amount = ?, unit_rate = ?, paid_broker_amount = ?, paid_mh_amount = ? WHERE id = ?");
-            $ins_a = $conn->prepare("INSERT INTO marketing_campaign_assets (campaign_id, label, file_url, target_url, file_type)
-                                     SELECT ?, label, file_url, target_url, file_type FROM marketing_campaign_assets WHERE campaign_id = ? ORDER BY id");
+            $ins_a = $conn->prepare("INSERT INTO marketing_campaign_assets (campaign_id, label, file_url, target_url, file_type{$img_cols})
+                                     SELECT ?, label, file_url, target_url, file_type{$img_cols} FROM marketing_campaign_assets WHERE campaign_id = ? ORDER BY id");
             $upd_c = $conn->prepare("UPDATE marketing_campaigns SET budget = ?, unit_rate = ?, paid_broker_amount = ?, paid_mh_amount = ?,
                                             split_group = ?, split_pct = ? WHERE id = ?");
             $del_c = $conn->prepare("DELETE FROM marketing_campaigns WHERE id = ? AND split_group = ?");
@@ -636,6 +707,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $ncid = (int)$conn->insert_id;
                 $ins_a->bind_param('ii', $ncid, $cid);
                 $ins_a->execute();
+                if ($has_img) foreach (mk_own_asset_files($conn, $ncid) as $mf) $made_creatives[] = $mf;
                 if ($has_rcpt && !empty($src['receipt_file']) && ($rcopy = mk_copy_receipt_file($src['receipt_file']))) {
                     $made_files[] = $rcopy;
                     $ro = $src['receipt_orig_name']; $ra = $src['receipt_uploaded_at'];
@@ -673,11 +745,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (Throwable $e) {
             $conn->rollback();
             foreach ($made_files as $mf) mk_delete_receipt_file($mf);
+            foreach ($made_creatives as $mf) mk_delete_creative_files($mf, null);
             error_log('share_campaign: ' . $e->getMessage());
             $fail('The shares could not be saved; nothing was changed.');
         }
         // Their placement is gone; so is its receipt file.
         foreach ($remove as $iid) mk_delete_receipt_file($members[$iid]['receipt_file'] ?? null);
+        foreach ($gone_creatives as [$gf, $gt]) mk_delete_creative_files($gf, $gt);
         $total = '$' . number_format(array_sum($shares), 2);
         $n     = count($shares);
         if ($alone)        $note = 'This placement is no longer shared.';
@@ -749,9 +823,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $g = $conn->prepare("SELECT receipt_file FROM marketing_campaigns WHERE id=? AND intake_id=? LIMIT 1");
             $g->bind_param('ii', $cid, $id); $g->execute(); $rfile = $g->get_result()->fetch_assoc()['receipt_file'] ?? null; $g->close();
         }
+        // Its creatives' uploaded files too: the rows cascade, the files do not.
+        $gone = [];
+        if (mk_column_exists($conn, 'marketing_campaign_assets', 'image_file')) {
+            $g = $conn->prepare("SELECT a.image_file, a.image_thumb FROM marketing_campaign_assets a
+                                   JOIN marketing_campaigns c ON c.id = a.campaign_id WHERE c.id = ? AND c.intake_id = ?");
+            if ($g) { $g->bind_param('ii', $cid, $id); $g->execute(); $gone = $g->get_result()->fetch_all(MYSQLI_ASSOC); $g->close(); }
+        }
         $s   = $conn->prepare("DELETE FROM marketing_campaigns WHERE id=? AND intake_id=?");
         $s->bind_param('ii', $cid, $id); $s->execute(); $s->close();
         mk_delete_receipt_file($rfile);
+        foreach ($gone as $a) mk_delete_creative_files($a['image_file'] ?? null, $a['image_thumb'] ?? null);
         header("Location: agent.php?id={$id}&tab=advertising"); exit;
     }
 
@@ -765,9 +847,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $type = trim($_POST['type'] ?? '');
         $err  = '';
         if (in_array($type, $valid_coll_types)) {
-            $rec = mk_store_receipt();
+            $rec   = mk_store_receipt();
+            $proof = mk_column_exists($conn, 'marketing_collateral_orders', 'proof_file') ? mk_store_creative('proof') : null;   // sql/creatives_v1.sql
             if ($rec && isset($rec['error'])) {
                 $err = $rec['error'];
+            } elseif ($proof && isset($proof['error'])) {
+                $err = $proof['error'];
             } else {
                 $cols = ['intake_id','type']; $vals = [$id, $type]; $types = 'is'; $phs = ['?','?'];
                 foreach ($coll_order_fields as $f) {
@@ -781,10 +866,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $cols[] = "`{$c}`"; $phs[] = '?'; $vals[] = $v; $types .= 's';
                     }
                 }
+                if ($proof) {
+                    foreach ([['proof_file', $proof['file']], ['proof_orig_name', $proof['orig']], ['proof_thumb', $proof['thumb']],
+                              ['proof_uploaded_at', date('Y-m-d H:i:s')]] as [$c, $v]) {
+                        $cols[] = "`{$c}`"; $phs[] = '?'; $vals[] = $v; $types .= 's';
+                    }
+                }
                 $sql = "INSERT INTO marketing_collateral_orders (" . implode(',', $cols) . ") VALUES (" . implode(',', $phs) . ")";
                 $s   = $conn->prepare($sql);
                 if ($s) { $s->bind_param($types, ...$vals); $s->execute(); $s->close(); }
             }
+            if ($err && $proof && !isset($proof['error'])) mk_delete_creative_files($proof['file'], $proof['thumb']);   // the order was not saved
         }
         $q = $err ? '&err=' . rawurlencode($err) : '&saved=1';
         header("Location: agent.php?id={$id}&tab=collateral{$q}"); exit;
@@ -819,13 +911,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // The proof (sql/creatives_v1.sql), the same way: a new upload replaces the old files.
+        $old_proof = null;
+        $proof = !$err && mk_column_exists($conn, 'marketing_collateral_orders', 'proof_file') ? mk_store_creative('proof') : null;
+        if ($proof && isset($proof['error'])) {
+            $err = $proof['error'];
+        } elseif ($proof) {
+            $old = $conn->prepare("SELECT proof_file, proof_thumb FROM marketing_collateral_orders WHERE id=? AND intake_id=? LIMIT 1");
+            if ($old) { $old->bind_param('ii', $oid, $id); $old->execute(); $old_proof = $old->get_result()->fetch_assoc(); $old->close(); }
+            foreach ([['proof_file', $proof['file']], ['proof_orig_name', $proof['orig']], ['proof_thumb', $proof['thumb']],
+                      ['proof_uploaded_at', date('Y-m-d H:i:s')]] as [$c, $v]) {
+                $sets[] = "`{$c}` = ?"; $vals[] = $v; $types .= 's';
+            }
+        }
+
         if (!$err) {
             $vals[] = $oid; $vals[] = $id; $types .= 'ii';
             $s = $conn->prepare("UPDATE marketing_collateral_orders SET " . implode(', ', $sets) . " WHERE id=? AND intake_id=?");
             if ($s) { $s->bind_param($types, ...$vals); $s->execute(); $s->close(); }
+            if ($old_proof) mk_delete_creative_files($old_proof['proof_file'] ?? null, $old_proof['proof_thumb'] ?? null);
+        } elseif ($proof && !isset($proof['error'])) {
+            mk_delete_creative_files($proof['file'], $proof['thumb']);   // nothing was saved
         }
         $q = $err ? '&err=' . rawurlencode($err) : '&saved=1';
         header("Location: agent.php?id={$id}&tab=collateral{$q}"); exit;
+    }
+
+    if ($action === 'delete_collateral_proof' && mk_column_exists($conn, 'marketing_collateral_orders', 'proof_file')) {
+        $oid = (int)($_POST['order_id'] ?? 0);
+        $g = $conn->prepare("SELECT proof_file, proof_thumb FROM marketing_collateral_orders WHERE id=? AND intake_id=? LIMIT 1");
+        $grow = null;
+        if ($g) { $g->bind_param('ii', $oid, $id); $g->execute(); $grow = $g->get_result()->fetch_assoc(); $g->close(); }
+        $s = $conn->prepare(
+            "UPDATE marketing_collateral_orders
+                SET proof_file=NULL, proof_orig_name=NULL, proof_thumb=NULL, proof_uploaded_at=NULL
+              WHERE id=? AND intake_id=?"
+        );
+        if ($s) { $s->bind_param('ii', $oid, $id); $s->execute(); $s->close(); }
+        if ($grow) mk_delete_creative_files($grow['proof_file'] ?? null, $grow['proof_thumb'] ?? null);
+        header("Location: agent.php?id={$id}&tab=collateral#order-{$oid}"); exit;
     }
 
     if ($action === 'delete_collateral_receipt') {
@@ -849,8 +973,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete_collateral_order') {
         $oid = (int)($_POST['order_id'] ?? 0);
+        $grow = null;   // its proof files go with it
+        if (mk_column_exists($conn, 'marketing_collateral_orders', 'proof_file')) {
+            $g = $conn->prepare("SELECT proof_file, proof_thumb FROM marketing_collateral_orders WHERE id=? AND intake_id=? LIMIT 1");
+            if ($g) { $g->bind_param('ii', $oid, $id); $g->execute(); $grow = $g->get_result()->fetch_assoc(); $g->close(); }
+        }
         $s   = $conn->prepare("DELETE FROM marketing_collateral_orders WHERE id=? AND intake_id=?");
         $s->bind_param('ii', $oid, $id); $s->execute(); $s->close();
+        if ($grow) mk_delete_creative_files($grow['proof_file'] ?? null, $grow['proof_thumb'] ?? null);
         header("Location: agent.php?id={$id}&tab=collateral"); exit;
     }
 
@@ -1258,6 +1388,11 @@ if ($r) {
 // copy in the group (this page's too) with its figure, so each card can show
 // the full amount and who pays what.
 $has_receipt = mk_column_exists($conn, 'marketing_campaigns', 'receipt_file');   // sql/campaign_receipt_v1.sql
+// Creative shown on the agent portal (sql/creatives_v1.sql): the upload fields
+// appear once the columns exist. Both flags are read while rendering, so they
+// are computed here, above the early close.
+$has_creatives = mk_column_exists($conn, 'marketing_campaign_assets', 'image_file');
+$has_proofs    = mk_column_exists($conn, 'marketing_collateral_orders', 'proof_file');
 $has_share = mk_column_exists($conn, 'marketing_campaigns', 'split_group');
 if ($has_share) require_once __DIR__ . '/inc/campaign_share.php';
 $share_agents = []; $share_groups = [];
@@ -2122,6 +2257,13 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
     /* Each ad/creative inside a placement */
     .ad-item { padding:6px 0; border-bottom:1px solid #f1f2f4; }
+    /* The uploaded creative / proof, as the agent portal shows it (sql/creatives_v1.sql) */
+    .ad-thumb { flex:none; width:56px; height:56px; border:1px solid #e5e7eb; border-radius:4px; background:#fff;
+                display:flex; align-items:center; justify-content:center; overflow:hidden; color:#6b7280; font-size:22px; }
+    .ad-thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+    .order-proof { display:block; margin:0 0 10px; }
+    .order-proof img { max-width:180px; max-height:130px; border:1px solid #e5e7eb; border-radius:4px; display:block; }
+    .order-proof-pdf { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#6b7280; }
     .ad-item:last-of-type { border-bottom:none; }
     /* Divider before a creative's own landing-page buttons, on the same row.
        The URL itself is never printed — Open and Copy are the whole interface. */
@@ -3130,6 +3272,12 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         $eid = 'edit-ord-' . $o['id'];
       ?>
       <div class="order-card" id="order-<?= (int)$o['id'] ?>">
+        <?php if (!empty($o['proof_file'])): // the proof the agent sees on the portal (sql/creatives_v1.sql) ?>
+          <a class="order-proof" href="creative.php?order=<?= (int)$o['id'] ?>" target="_blank" title="Open the proof">
+            <?php if (!empty($o['proof_thumb'])): ?><img src="creative.php?order=<?= (int)$o['id'] ?>&amp;thumb=1" alt="">
+            <?php else: ?><span class="order-proof-pdf"><i class="ti ti-file-type-pdf"></i> <?= htmlspecialchars($o['proof_orig_name'] ?: 'Proof (PDF)') ?></span><?php endif; ?>
+          </a>
+        <?php endif; ?>
         <div class="order-card-header">
           <div style="flex:1;min-width:0;">
             <div class="order-label"><?= $o['label'] ? htmlspecialchars($o['label']) : htmlspecialchars(ucwords(str_replace('_',' ',$type))) ?></div>
@@ -3156,6 +3304,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           <?php if ($o['file_url']): ?>
             <a class="order-link" href="<?= htmlspecialchars($o['file_url']) ?>" target="_blank"><i class="ti ti-file" style="font-size:10px;"></i> Final Files</a>
           <?php endif; ?>
+          <?php if (!empty($o['proof_file'])): ?>
+            <a class="order-link" href="creative.php?order=<?= (int)$o['id'] ?>&amp;dl=1"><i class="ti ti-download" style="font-size:10px;"></i> Proof</a>
+          <?php endif; ?>
           <?php if (!empty($o['receipt_file'])): ?>
             <a class="order-link" href="receipt.php?order_id=<?= (int)$o['id'] ?>" target="_blank"><i class="ti ti-receipt" style="font-size:10px;"></i> Receipt</a>
             <a class="order-link" href="receipt.php?order_id=<?= (int)$o['id'] ?>&amp;dl=1"><i class="ti ti-download" style="font-size:10px;"></i> Download</a>
@@ -3174,6 +3325,13 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               <button type="submit" class="btn btn-outline btn-xs" title="Remove receipt">
                 <i class="ti ti-receipt-off"></i> Remove Receipt
               </button>
+            </form>
+          <?php endif; ?>
+          <?php if (!empty($o['proof_file'])): ?>
+            <form method="POST" style="margin:0;" onsubmit="return confirm('Remove the proof from this order? The agent will no longer see it on the portal.')">
+              <input type="hidden" name="_action" value="delete_collateral_proof">
+              <input type="hidden" name="order_id" value="<?= (int)$o['id'] ?>">
+              <button type="submit" class="btn btn-outline btn-xs" title="Remove proof"><i class="ti ti-photo-off"></i> Remove Proof</button>
             </form>
           <?php endif; ?>
           <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this order?')">
@@ -3578,6 +3736,25 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     <?php endif; ?>
 
     <?php mk_who_pays_fields($o, 'ord' . $oid_ref); ?>
+
+    <?php global $has_proofs; if ($has_proofs): // sql/creatives_v1.sql ?>
+    <div class="form-row">
+      <label class="grow">Proof / final design <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 8 MB max)</small>
+        <input type="file" name="proof" class="form-input" accept="image/jpeg,image/png,image/gif,application/pdf">
+      </label>
+      <?php if (!empty($o['proof_file'])): ?>
+        <label style="flex-shrink:0;">
+          <span style="display:block;font-size:12px;font-weight:600;color:#6b7280;
+                       text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">Current</span>
+          <a class="order-link" href="creative.php?order=<?= $oid_ref ?>" target="_blank">
+            <i class="ti ti-photo" style="font-size:10px;"></i>
+            <?= htmlspecialchars($o['proof_orig_name'] ?: 'View proof') ?>
+          </a>
+          <span style="font-size:11px;color:#9ca3af;">— uploading a new file replaces it</span>
+        </label>
+      <?php endif; ?>
+    </div>
+    <?php endif; ?>
 
     <div class="form-row">
       <label class="grow">Receipt <small style="font-weight:400;color:#9ca3af;">(PDF, JPG or PNG — max 10 MB)</small>
@@ -4028,7 +4205,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           $ad_files = [];
           if (!empty($c['ad_file_url'])) {
               $ad_files[] = ['id' => null, 'label' => 'Ad file', 'url' => $c['ad_file_url'],
-                             'target' => '', 'legacy' => true];
+                             'target' => '', 'image' => '', 'thumb' => '', 'iname' => '', 'legacy' => true];
           }
           foreach (($c['assets'] ?? []) as $as) {
               // target_url is null-coalesced so the page still renders if
@@ -4037,6 +4214,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                              'label'  => $as['label'] ?: 'Ad file',
                              'url'    => $as['file_url'] ?? '',
                              'target' => $as['target_url'] ?? '',
+                             'image'  => $as['image_file'] ?? '',        // the uploaded file (sql/creatives_v1.sql)
+                             'thumb'  => $as['image_thumb'] ?? '',
+                             'iname'  => $as['image_orig_name'] ?? '',
                              'legacy' => false];
           }
         ?>
@@ -4171,6 +4351,12 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               <?php foreach ($ad_files as $ci => $af): ?>
                 <div class="ad-item">
                   <div class="link-row">
+                    <?php if ($af['image'] !== ''): // the uploaded creative: thumbnail (or a PDF tile), opening the file ?>
+                      <a class="ad-thumb" href="creative.php?asset=<?= (int)$af['id'] ?>" target="_blank" title="Open the uploaded creative">
+                        <?php if ($af['thumb'] !== ''): ?><img src="creative.php?asset=<?= (int)$af['id'] ?>&amp;thumb=1" alt="">
+                        <?php else: ?><i class="ti ti-file-type-pdf"></i><?php endif; ?>
+                      </a>
+                    <?php endif; ?>
                     <span class="link-row-label">
                       <i class="ti ti-photo"></i> Creative <?= $ci + 1 ?>
                       <?php
@@ -4187,8 +4373,13 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                          title="Open the ad file"><i class="ti ti-external-link"></i> Open</a>
                       <button type="button" class="btn btn-outline btn-xs copy-btn" title="Copy the ad file link"
                               data-copy="<?= htmlspecialchars($af['url']) ?>"><i class="ti ti-copy"></i> Copy</button>
-                    <?php else: ?>
+                    <?php elseif ($af['image'] === ''): ?>
                       <span class="asset-none">no file</span>
+                    <?php endif; ?>
+                    <?php if ($af['image'] !== ''): ?>
+                      <a class="btn btn-outline btn-xs" href="creative.php?asset=<?= (int)$af['id'] ?>&amp;dl=1" title="Download the uploaded creative"><i class="ti ti-download"></i></a>
+                    <?php elseif ($has_creatives && !$af['legacy']): ?>
+                      <span class="asset-none" title="Upload an image under Edit so the agent sees it on the portal">no image for the portal</span>
                     <?php endif; ?>
 
                     <?php // The creative's own landing page, when it has one.
@@ -4221,9 +4412,23 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
                   <?php if (!$af['legacy']): ?>
                   <div id="edit-asset-<?= $af['id'] ?>" style="display:none;" class="inline-edit-form">
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                       <input type="hidden" name="_action" value="update_campaign_asset">
                       <input type="hidden" name="asset_id" value="<?= $af['id'] ?>">
+                      <?php if ($has_creatives): ?>
+                      <div class="form-row">
+                        <label class="grow">Image or PDF <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 8 MB max)</small>
+                          <input type="file" name="image" class="form-input" accept="image/jpeg,image/png,image/gif,application/pdf">
+                        </label>
+                        <?php if ($af['image'] !== ''): ?>
+                          <label style="flex-shrink:0;">
+                            <span style="display:block;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">Current</span>
+                            <a class="order-link" href="creative.php?asset=<?= (int)$af['id'] ?>" target="_blank"><i class="ti ti-photo" style="font-size:10px;"></i> <?= htmlspecialchars($af['iname'] ?: 'View') ?></a>
+                            <span style="font-size:11px;color:#9ca3af;">— uploading a new file replaces it</span>
+                          </label>
+                        <?php endif; ?>
+                      </div>
+                      <?php endif; ?>
                       <div class="form-row">
                         <label style="max-width:190px;">Label
                           <input type="text" name="label" class="form-input" value="<?= htmlspecialchars($af['label'] === 'Ad file' ? '' : $af['label']) ?>" placeholder="e.g. Half page">
@@ -4254,9 +4459,16 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               <i class="ti ti-plus"></i> Add Creative
             </button>
             <div id="add-creative-<?= $c['id'] ?>" style="display:none;" class="inline-edit-form">
-              <form method="POST">
+              <form method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="_action" value="add_campaign_asset">
                 <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
+                <?php if ($has_creatives): ?>
+                <div class="form-row">
+                  <label class="grow">Image or PDF <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 8 MB max)</small>
+                    <input type="file" name="image" class="form-input" accept="image/jpeg,image/png,image/gif,application/pdf">
+                  </label>
+                </div>
+                <?php endif; ?>
                 <div class="form-row">
                   <label style="max-width:190px;">Label <small style="font-weight:400;color:#9ca3af;">(optional)</small>
                     <input type="text" name="label" class="form-input" placeholder="e.g. Half page">

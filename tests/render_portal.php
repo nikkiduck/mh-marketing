@@ -41,8 +41,8 @@ if (stripos((string)shell_exec('php -n -m 2>/dev/null'), 'mysqli') !== false) {
 $SB = sys_get_temp_dir() . '/pt_render_' . bin2hex(random_bytes(4));
 mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
-foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'inc/portal.php', 'inc/qr.php',
-          'inc/schema.php', 'inc/config.php', 'inc/financials.php'] as $f) {
+foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php',
+          'portal/asset.php', 'inc/portal.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php', 'inc/creatives.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
 }
@@ -134,6 +134,18 @@ class mysqli {
             }
             return self::s($rows);
         }
+        // Creatives (sql/creatives_v1.sql): the portal asks for them by the campaign ids its
+        // scoped list gave it; the ids asked for are logged so the test can check the list.
+        if (preg_match('/FROM marketing_campaign_assets WHERE campaign_id IN \(([0-9, ]+)\)/', $sql, $m)) {
+            $in = array_map('intval', explode(',', $m[1]));
+            $this->write('assets_in', $in);
+            return self::s(array_values(array_filter($D['assets'], fn($a) => in_array((int)$a['campaign_id'], $in, true))));
+        }
+        if (preg_match('/FROM marketing_campaign_assets a\s+JOIN marketing_campaigns c ON c\.id = a\.campaign_id\s+WHERE a\.id = \? AND c\.intake_id = \?/', $sql)) {
+            $camps = array_column($D['campaigns'], null, 'id');
+            return self::s(array_values(array_filter($D['assets'], fn($a) => (int)$a['id'] === (int)$p[0]
+                && (int)($camps[$a['campaign_id']]['intake_id'] ?? 0) === (int)$p[1])));
+        }
         if (preg_match('/FROM marketing_collateral_orders WHERE id = \? AND intake_id = \?/', $sql)) {
             return self::s(array_values(array_filter($D['orders'], fn($o) => (int)$o['id'] === (int)$p[0] && (int)$o['intake_id'] === (int)$p[1])));
         }
@@ -189,14 +201,36 @@ function scenario(array $over = []): array {
             ],
             'teams' => ['8' => [21, 23, 30]],
             'orders' => [
-                ['id' => 11, 'intake_id' => 6, 'type' => 'business_cards', 'label' => 'JH cards', 'vendor' => 'Oakley', 'cost' => 250, 'ordered_at' => '2026-09-02', 'created_at' => '2026-09-02 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => 'JHRECEIPT.pdf', 'receipt_orig_name' => 'jh-cards.pdf', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
-                ['id' => 12, 'intake_id' => 6, 'type' => 'other', 'label' => 'JH flyers', 'vendor' => 'Local', 'cost' => 99.5, 'ordered_at' => '2026-09-10', 'created_at' => '2026-09-10 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => null, 'receipt_orig_name' => null, 'paid_by' => '', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
-                ['id' => 13, 'intake_id' => 7, 'type' => 'postcards', 'label' => 'KC postcards', 'vendor' => 'Oakley', 'cost' => 7777, 'ordered_at' => '2026-09-05', 'created_at' => '2026-09-05 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => 'KCRECEIPT.pdf', 'receipt_orig_name' => 'kc.pdf', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
-                ['id' => 14, 'intake_id' => 8, 'type' => 'yard_signs', 'label' => 'WB signs', 'vendor' => 'Oakley', 'cost' => 4321, 'ordered_at' => '2026-08-20', 'created_at' => '2026-08-20 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => null, 'receipt_orig_name' => null, 'paid_by' => 'split', 'paid_broker_amount' => 3000, 'paid_mh_amount' => 1321],
+                ['id' => 11, 'intake_id' => 6, 'type' => 'business_cards', 'label' => 'JH cards', 'vendor' => 'Oakley', 'cost' => 250, 'ordered_at' => '2026-09-02', 'created_at' => '2026-09-02 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => 'JHRECEIPT.pdf', 'receipt_orig_name' => 'jh-cards.pdf', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'shipped', 'qty' => '500', 'tracking_number' => '1Z999JH', 'tracking_url' => 'https://www.ups.com/track?t=1Z999JH', 'delivered_at' => null, 'file_url' => 'https://www.dropbox.com/jh-cards-final',
+                 'proof_file' => 'JHPROOF.png', 'proof_orig_name' => 'jh-cards-proof.png', 'proof_thumb' => 'JHPROOF_thumb.jpg', 'proof_uploaded_at' => '2026-09-01 10:00:00'],
+                ['id' => 12, 'intake_id' => 6, 'type' => 'other', 'label' => 'JH flyers', 'vendor' => 'Local', 'cost' => 99.5, 'ordered_at' => '2026-09-10', 'created_at' => '2026-09-10 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => null, 'receipt_orig_name' => null, 'paid_by' => '', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'delivered', 'qty' => null, 'tracking_number' => null, 'tracking_url' => null, 'delivered_at' => '2026-09-20', 'file_url' => null,
+                 'proof_file' => null, 'proof_orig_name' => null, 'proof_thumb' => null, 'proof_uploaded_at' => null],
+                ['id' => 13, 'intake_id' => 7, 'type' => 'postcards', 'label' => 'KC postcards', 'vendor' => 'Oakley', 'cost' => 7777, 'ordered_at' => '2026-09-05', 'created_at' => '2026-09-05 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => 'KCRECEIPT.pdf', 'receipt_orig_name' => 'kc.pdf', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'in_production', 'qty' => '250', 'tracking_number' => 'KCTRACK', 'tracking_url' => null, 'delivered_at' => null, 'file_url' => null,
+                 'proof_file' => 'KCPROOF.png', 'proof_orig_name' => 'kc-secret-proof.png', 'proof_thumb' => 'KCPROOF_thumb.jpg', 'proof_uploaded_at' => '2026-09-01 10:00:00'],
+                ['id' => 14, 'intake_id' => 8, 'type' => 'yard_signs', 'label' => 'WB signs', 'vendor' => 'Oakley', 'cost' => 4321, 'ordered_at' => '2026-08-20', 'created_at' => '2026-08-20 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => null, 'receipt_orig_name' => null, 'paid_by' => 'split', 'paid_broker_amount' => 3000, 'paid_mh_amount' => 1321,
+                 'status' => 'ordered', 'qty' => '6', 'tracking_number' => null, 'tracking_url' => null, 'delivered_at' => null, 'file_url' => null,
+                 'proof_file' => null, 'proof_orig_name' => null, 'proof_thumb' => null, 'proof_uploaded_at' => null],
             ],
             'campaigns' => [
-                ['id' => 21, 'intake_id' => 6, 'platform' => 'aspen_times', 'name' => 'JH Ad', 'budget' => 1234, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => '2026-03-05', 'end_date' => null, 'created_at' => '2026-03-01 10:00:00', 'paid_by' => 'mont_haus', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
-                ['id' => 22, 'intake_id' => 7, 'platform' => 'vail_daily', 'name' => 'KC Ad', 'budget' => 8888, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => '2026-03-05', 'end_date' => null, 'created_at' => '2026-03-01 10:00:00', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null],
+                ['id' => 21, 'intake_id' => 6, 'platform' => 'aspen_times', 'name' => 'JH Ad', 'budget' => 1234, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => '2026-03-05', 'end_date' => null, 'created_at' => '2026-03-01 10:00:00', 'paid_by' => 'mont_haus', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'active', 'medium' => 'print', 'ad_size' => 'Half page', 'split_group' => null, 'notes' => 'JH SECRET NOTE', 'sent' => 1],
+                ['id' => 22, 'intake_id' => 7, 'platform' => 'vail_daily', 'name' => 'KC Ad', 'budget' => 8888, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => '2026-03-05', 'end_date' => null, 'created_at' => '2026-03-01 10:00:00', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'active', 'medium' => 'digital', 'ad_size' => null, 'split_group' => null, 'notes' => 'KC SECRET NOTE', 'sent' => 1],
+                ['id' => 23, 'intake_id' => 8, 'platform' => 'vail_daily', 'name' => 'WB Ad', 'budget' => null, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => null, 'end_date' => null, 'created_at' => '2026-09-01 10:00:00', 'paid_by' => null, 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'planned', 'medium' => 'digital', 'ad_size' => null, 'split_group' => null, 'notes' => '', 'sent' => 0],
+            ],
+            // Creatives on the placements (sql/creatives_v1.sql): an uploaded image with a
+            // thumbnail, a PDF without one, and Kim's, which must never show for anyone else.
+            'assets' => [
+                ['id' => 31, 'campaign_id' => 21, 'label' => 'Half page', 'file_url' => 'https://www.dropbox.com/jh-ad-original', 'target_url' => null, 'file_type' => 'file', 'uploaded_at' => '2026-03-01 10:00:00',
+                 'image_file' => 'JHAD.jpg', 'image_orig_name' => 'jh-ad.jpg', 'image_thumb' => 'JHAD_thumb.jpg', 'image_uploaded_at' => '2026-03-01 10:00:00'],
+                ['id' => 33, 'campaign_id' => 21, 'label' => '', 'file_url' => '', 'target_url' => null, 'file_type' => 'file', 'uploaded_at' => '2026-03-02 10:00:00',
+                 'image_file' => 'JHAD2.pdf', 'image_orig_name' => 'jh-ad-2.pdf', 'image_thumb' => null, 'image_uploaded_at' => '2026-03-02 10:00:00'],
+                ['id' => 32, 'campaign_id' => 22, 'label' => 'KC Secret Creative', 'file_url' => 'https://www.dropbox.com/kc-ad-original', 'target_url' => null, 'file_type' => 'file', 'uploaded_at' => '2026-03-01 10:00:00',
+                 'image_file' => 'KCAD.jpg', 'image_orig_name' => 'kc-ad.jpg', 'image_thumb' => 'KCAD_thumb.jpg', 'image_uploaded_at' => '2026-03-01 10:00:00'],
             ],
             'qr' => [
                 ['id' => 1, 'code' => 'jhorn-yard', 'intake_id' => 6,  'label' => 'JH Yard Sign',     'dest_type' => 'profile', 'dest_url' => null, 'is_active' => 1, 'scan_count' => 4],
@@ -376,6 +410,80 @@ ok('Kim\'s receipt is not found for Jackson', $c === 404 && !has($b, 'KIM-RECEIP
 ok('…nor for Weber Boxer', $c === 404 && !has($b, 'JACKSON'), "{$c} {$b}");
 @unlink($rdir . 'JHRECEIPT.pdf'); @unlink($rdir . 'KCRECEIPT.pdf');
 
+echo "\nADVERTISING\n";
+[$c, , $b] = req('jackson', '/portal/advertising.php');
+ok('Jackson: advertising renders', $c === 200 && no_fatal($b), $b);
+ok('his placement, in plain words: outlet, print, size, running now', has($b, 'Aspen Times: JH Ad') && has($b, 'Print, Half page') && has($b, 'Running now') && has($b, 'From 5 March 2026'), $b);
+ok('the card pictures his creative by its thumbnail', has($b, 'asset.php?asset=31&amp;thumb=1'), $b);
+ok('NOTHING of Kim\'s or Weber Boxer\'s advertising', !has($b, 'KC Ad') && !has($b, 'asset=32') && !has($b, 'KC Secret') && !has($b, 'WB Ad'), $b);
+ok('the creatives were asked for by HIS campaign ids only', (writes()[0][0] ?? '') === 'assets_in' && (writes()[0][1] ?? []) === [21], json_encode(writes()));
+ok('no budget, notes or billing words', !has($b, 'SECRET NOTE') && !has($b, '1,234.00') && !preg_match('/invoic|billed|overdue|balance|unpaid|budget/i', strip_tags($b)), $b);
+[$c, , $b] = req('jackson', '/portal/advertising.php?id=21');
+ok('his placement opens with every creative', $c === 200 && no_fatal($b) && has($b, 'Half page') && has($b, 'asset.php?asset=31&amp;thumb=1') && has($b, 'asset.php?asset=31&amp;dl=1'), $b);
+ok('…the PDF creative gets a PDF tile and Open PDF, not a broken picture', has($b, '>PDF<') && has($b, 'Open PDF') && !has($b, 'asset=33&amp;thumb=1'), $b);
+ok('…the Dropbox original is a secondary link', has($b, 'https://www.dropbox.com/jh-ad-original') && has($b, 'Open original'), $b);
+ok('…what it cost, in the spend words', has($b, 'Mont Haus paid') && has($b, '$1,234') && !has($b, 'SECRET NOTE'), $b);
+[$c, , $b] = req('jackson', '/portal/advertising.php?id=22');
+ok('Kim\'s placement id is not found for Jackson, with none of her data', $c === 404 && has($b, 'could not be found') && !has($b, 'KC Ad') && !has($b, 'asset=32') && !has($b, 'SECRET'), "{$c} {$b}");
+[$c, , $b] = req('jon', '/portal/advertising.php');
+ok('Weber Boxer sees the team\'s placement and nothing of Jackson\'s', has($b, 'Vail Daily: WB Ad') && has($b, 'Dates to be confirmed') && !has($b, 'JH Ad') && !has($b, 'asset=31'), $b);
+[, , $b] = req('nikki', '/portal/advertising.php?preview=6');
+ok('an admin previews Jackson\'s advertising, and links keep the preview', has($b, 'Preview:') && has($b, 'JH Ad') && has($b, 'advertising.php?preview=6&amp;id=21'), $b);
+
+echo "\nPRINT ORDERS\n";
+[$c, , $b] = req('jackson', '/portal/orders.php');
+ok('Jackson: orders render', $c === 200 && no_fatal($b), $b);
+ok('his orders in plain words: what, how many, where it is', has($b, 'Business Cards: JH cards') && has($b, 'On its way') && has($b, 'Quantity 500') && has($b, 'JH flyers') && has($b, 'Delivered 20 September 2026'), $b);
+ok('the card pictures the proof by its thumbnail', has($b, 'asset.php?order=11&amp;thumb=1'), $b);
+ok('NOTHING of Kim\'s or Weber Boxer\'s orders', !has($b, 'KC postcards') && !has($b, 'order=13') && !has($b, 'WB signs') && !has($b, 'Oakley'), $b);
+ok('no vendor, order number or billing words', !preg_match('/invoic|billed|overdue|balance|unpaid|vendor/i', strip_tags($b)), $b);
+[$c, , $b] = req('jackson', '/portal/orders.php?id=11');
+ok('his order opens with the proof, tracking and cost', $c === 200 && no_fatal($b) && has($b, 'asset.php?order=11&amp;thumb=1') && has($b, 'Track the shipment') && has($b, 'https://www.ups.com/track?t=1Z999JH') && has($b, 'You paid') && has($b, '$250'), $b);
+ok('…and the original files as a secondary link', has($b, 'https://www.dropbox.com/jh-cards-final') && has($b, 'Open original files'), $b);
+[$c, , $b] = req('jackson', '/portal/orders.php?id=12');
+ok('an order with no proof says so rather than showing a broken picture', $c === 200 && has($b, 'not on the portal yet') && !has($b, 'order=12&amp;thumb=1'), $b);
+[$c, , $b] = req('jackson', '/portal/orders.php?id=13');
+ok('Kim\'s order id is not found for Jackson, with none of her data', $c === 404 && has($b, 'could not be found') && !has($b, 'KC postcards') && !has($b, 'KCTRACK'), "{$c} {$b}");
+[, , $b] = req('jon', '/portal/orders.php');
+ok('Weber Boxer sees the team\'s order only', has($b, 'Yard Signs: WB signs') && has($b, 'Ordered') && !has($b, 'JH cards') && !has($b, 'order=11'), $b);
+
+echo "\nCREATIVE FILES\n";
+$cdir = dirname($SB) . '/creatives/';
+@mkdir($cdir, 0777, true);
+foreach (['JHAD.jpg' => 'JACKSON-AD-BYTES', 'JHAD_thumb.jpg' => 'JACKSON-AD-THUMB', 'JHAD2.pdf' => 'JACKSON-PDF-BYTES', 'KCAD.jpg' => 'KIM-AD-BYTES',
+          'KCAD_thumb.jpg' => 'KIM-AD-THUMB', 'JHPROOF.png' => 'JACKSON-PROOF-BYTES', 'JHPROOF_thumb.jpg' => 'JACKSON-PROOF-THUMB', 'KCPROOF.png' => 'KIM-PROOF-BYTES'] as $f => $bytes) {
+    file_put_contents($cdir . $f, $bytes);
+}
+[$c, , $b] = req('jackson', '/portal/asset.php?asset=31');
+ok('Jackson opens his own creative', $c === 200 && $b === 'JACKSON-AD-BYTES', "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?asset=31&thumb=1');
+ok('…and its thumbnail', $c === 200 && $b === 'JACKSON-AD-THUMB', "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?asset=33&thumb=1');
+ok('a creative with no thumbnail: 404 for the thumbnail, the file still opens', $c === 404 && req('jackson', '/portal/asset.php?asset=33')[2] === 'JACKSON-PDF-BYTES', "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?asset=32');
+ok('Kim\'s creative is not found for Jackson', $c === 404 && !has($b, 'KIM'), "{$c} {$b}");
+[$c, , $b] = req('jon', '/portal/asset.php?asset=31');
+ok('…nor Jackson\'s for Weber Boxer', $c === 404 && !has($b, 'JACKSON'), "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?order=11');
+ok('Jackson opens his own proof', $c === 200 && $b === 'JACKSON-PROOF-BYTES', "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?order=11&thumb=1');
+ok('…and its thumbnail', $c === 200 && $b === 'JACKSON-PROOF-THUMB', "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?order=13');
+ok('Kim\'s proof is not found for Jackson', $c === 404 && !has($b, 'KIM'), "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?order=12');
+ok('an order without a proof: 404', $c === 404, "{$c}");
+[$c, , $b] = req('jackson', '/portal/asset.php');
+ok('no id at all: 404, nothing served', $c === 404 && !has($b, 'BYTES'), "{$c} {$b}");
+foreach (array_keys(['JHAD.jpg' => 1, 'JHAD_thumb.jpg' => 1, 'JHAD2.pdf' => 1, 'KCAD.jpg' => 1, 'KCAD_thumb.jpg' => 1, 'JHPROOF.png' => 1, 'JHPROOF_thumb.jpg' => 1, 'KCPROOF.png' => 1]) as $f) @unlink($cdir . $f);
+
+echo "\nHOME CARDS\n";
+[, , $b] = req('jackson', '/portal/');
+ok('home counts his advertising and orders in plain words', has($b, 'You have 1 ad running now') && has($b, 'You have 1 order on the way, and 1 delivered'), $b);
+[, , $b] = req('jon', '/portal/');
+ok('team home: a placement on record, an order on the way', has($b, 'You have 1 ad placement on record') && has($b, 'You have 1 order on the way.'), $b);
+[, , $b] = req('sierrah', '/portal/');
+ok('nothing yet: the cards say so, no dead ends', has($b, 'No ad placements yet.') && has($b, 'No print orders yet.'), $b);
+
 echo "\nPREVIEW AND REFUSALS\n";
 [, , $b] = req('jackson', '/portal/qr.php?preview=8');
 ok('an agent\'s ?preview= is ignored', has($b, 'jhorn-yard') && !has($b, 'wb-office') && !has($b, 'Preview:'), $b);
@@ -401,7 +509,10 @@ if ($snap = getenv('PORTAL_SNAPSHOTS')) {
               'refused-nolink' => ['nolink', '/portal/'], 'spend-jackson' => ['jackson', '/portal/spend.php'],
               'spend-month-jackson' => ['jackson', '/portal/spend.php?m=2026-09'], 'spend-wb' => ['jon', '/portal/spend.php'],
               'home-sierrah' => ['sierrah', '/portal/'], 'qr-request' => ['sierrah', '/portal/qr.php?request=1'],
-              'qr-sent' => ['sierrah', '/portal/qr.php?sent=1']] as $name => [$who, $path]) {
+              'qr-sent' => ['sierrah', '/portal/qr.php?sent=1'],
+              'ads-jackson' => ['jackson', '/portal/advertising.php'], 'ad-jackson' => ['jackson', '/portal/advertising.php?id=21'],
+              'orders-jackson' => ['jackson', '/portal/orders.php'], 'order-jackson' => ['jackson', '/portal/orders.php?id=11'],
+              'ads-wb' => ['jon', '/portal/advertising.php'], 'orders-wb' => ['jon', '/portal/orders.php']] as $name => [$who, $path]) {
         file_put_contents("{$snap}/{$name}.html", req($who, $path)[2]);
     }
     echo "  (snapshots saved to {$snap})\n";

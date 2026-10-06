@@ -21,6 +21,12 @@ define('HUB_URL', 'https://monthausint.com/');
 // constant exists to avoid.
 define('RECEIPTS_DIR', __DIR__ . '/../../receipts/');
 
+// Creative shown on the agent portal: ad images and collateral proofs
+// (sql/creatives_v1.sql, inc/creatives.php). Same two-levels-up reasoning as
+// RECEIPTS_DIR: /var/www/creatives, outside the web root, served only through
+// creative.php (admin) and portal/asset.php (the owning agent).
+define('CREATIVES_DIR', __DIR__ . '/../../creatives/');
+
 /**
  * ACCESS_ALLOWLIST — temporary limited rollout.
  *
@@ -40,7 +46,11 @@ define('RECEIPTS_DIR', __DIR__ . '/../../receipts/');
  * An empty or undefined value disables the restriction entirely and access
  * falls back to the normal role checks.
  */
-define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com,jm.drai@monthaus.com,mary.lappe@monthaus.com');
+// Agent portal pilot (Nikki, 2026-10-06): Weber Boxer Group (Jonathan, Scott,
+// Sara), Bryan Cournoyer, Jackson Horn. Each also needs role `agent` and
+// users.intake_id set on users.php (docs/AGENT_PORTAL_PLAN.md, section 2).
+define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com,jm.drai@monthaus.com,mary.lappe@monthaus.com,'
+    . 'scott.weber@monthaus.com,sara.perkowski@monthaus.com,bryan.cournoyer@monthaus.com,jackson.horn@monthaus.com');
 
 /**
  * ADVERTISING_SHEET_URL — the working digital-advertising spreadsheet.

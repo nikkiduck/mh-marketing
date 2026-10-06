@@ -171,6 +171,110 @@ function portal_platform_label(string $p): string {
     ][$p] ?? ucwords(str_replace('_', ' ', $p));
 }
 
+/** "5 March 2026", or '' for no date. */
+function portal_date(?string $d): string {
+    $d = trim((string)$d);
+    if ($d === '' || $d === '0000-00-00') return '';
+    $t = strtotime($d);
+    return $t ? date('j F Y', $t) : '';
+}
+
+/**
+ * When a placement ran, in plain words: "March 2026", "5 March to 30 April
+ * 2026", "From 5 March 2026", or "Dates to be confirmed".
+ */
+function portal_run_words(?string $start, ?string $end): string {
+    $s = ($start ?? '') !== '' && $start !== '0000-00-00' ? strtotime($start) : false;
+    $e = ($end ?? '') !== '' && $end !== '0000-00-00' ? strtotime($end) : false;
+    if (!$s && !$e) return 'Dates to be confirmed';
+    if ($s && !$e)  return 'From ' . date('j F Y', $s);
+    if (!$s && $e)  return 'Until ' . date('j F Y', $e);
+    if (date('Y-m', $s) === date('Y-m', $e)) return date('j', $s) === date('j', $e) ? date('j F Y', $s) : date('j', $s) . ' to ' . date('j F Y', $e);
+    if (date('Y', $s) === date('Y', $e)) return date('j F', $s) . ' to ' . date('j F Y', $e);
+    return date('j F Y', $s) . ' to ' . date('j F Y', $e);
+}
+
+/** A placement's state in the agent's words: Running now / Starts 5 March 2026 / Planned / Ended. */
+function portal_campaign_state(array $c): string {
+    $today  = date('Y-m-d');
+    $status = (string)($c['status'] ?? 'planned');
+    $start  = (string)($c['start_date'] ?? ''); $end = (string)($c['end_date'] ?? '');
+    if ($status === 'ended' || ($end !== '' && $end !== '0000-00-00' && $end < $today)) return 'Ended';
+    if ($start !== '' && $start !== '0000-00-00' && $start > $today) return 'Starts ' . portal_date($start);
+    if ($status === 'active' || ($start !== '' && $start !== '0000-00-00')) return 'Running now';
+    return 'Planned';
+}
+
+/** An order's status in the agent's words (agent.php's statuses, reworded). */
+function portal_order_state(array $o): string {
+    return [
+        'pending'       => 'Being prepared',
+        'ordered'       => 'Ordered',
+        'in_production' => 'Being printed',
+        'shipped'       => 'On its way',
+        'delivered'     => 'Delivered',
+    ][(string)($o['status'] ?? 'pending')] ?? ucwords(str_replace('_', ' ', (string)$o['status']));
+}
+
+/** Collateral type in plain words (mk_coll_type_label from inc/financials.php, when loaded). */
+function portal_order_kind(string $type): string {
+    if (function_exists('mk_coll_type_label')) return mk_coll_type_label($type);
+    return ['business_cards' => 'Business Cards', 'yard_signs' => 'Yard Signs', 'oh_signs' => 'Open House Signs',
+            'postcards' => 'Postcards', 'brochures' => 'Brochures', 'other' => 'Other'][$type] ?? ucwords(str_replace('_', ' ', $type));
+}
+
+/**
+ * What one placement or order cost, from the same mh_agent_financials() pass
+ * the Spend page shows: every line whose ref_id is this item, summed.
+ * Returns broker / mh / unassigned, 'lines' (how many months carried it),
+ * 'pending' (a line still awaiting its figure) and 'billed_with' (a print
+ * order included in another order's cost). Spend only, never billing state.
+ */
+function portal_item_spend(array $fin, string $kind, int $ref_id): array {
+    $r = ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0, 'lines' => 0, 'pending' => false, 'billed_with' => ''];
+    foreach ($fin['months'] as $m) {
+        foreach ($m['items'] as $it) {
+            if (($it['kind'] ?? '') !== $kind || (int)($it['ref_id'] ?? 0) !== $ref_id) continue;
+            $r['lines']++;
+            foreach (['broker', 'mh', 'unassigned'] as $f) $r[$f] += (float)($it[$f] ?? 0);
+            if ($kind === 'Advertising' && empty($it['set']) && (float)($it['total'] ?? 0) == 0.0) $r['pending'] = true;
+            if (!empty($it['billed_with'])) $r['billed_with'] = (string)$it['billed_with'];
+        }
+    }
+    return $r;
+}
+
+/** The three spend figures for one item, as a short line; nothing when there is no spend yet. */
+function portal_item_spend_html(array $sp): string {
+    if ($sp['billed_with'] !== '') return '<span class="muted">Included in ' . ph($sp['billed_with']) . '</span>';
+    $out = [];
+    if ($sp['broker'] > 0)     $out[] = 'You paid <b>' . ph(portal_money($sp['broker'])) . '</b>';
+    if ($sp['mh'] > 0)         $out[] = 'Mont Haus paid <b>' . ph(portal_money($sp['mh'])) . '</b>';
+    if ($sp['unassigned'] > 0) $out[] = '<span class="tbd">Being finalised <b>' . ph(portal_money($sp['unassigned'])) . '</b></span>';
+    if (!$out && $sp['pending']) $out[] = '<span class="tbd">Amount being finalised</span>';
+    if (!$out && $sp['lines'] > 0) $out[] = '<span class="muted">No charge</span>';
+    return implode('<span class="pt-sep"></span>', $out);
+}
+
+/**
+ * The picture on a card or page: the thumbnail made at upload, a PDF tile
+ * when the file is a PDF (or too big for a thumbnail), or a plain tile with
+ * a word on it when nothing has been uploaded. $src is the portal/asset.php
+ * query for this item (['asset' => id] or ['order' => id]).
+ */
+function portal_picture(array $ctx, array $src, ?string $file, ?string $thumb, string $word, bool $large = false): string {
+    $cls = 'pt-pic' . ($large ? ' large' : '');
+    if (($thumb ?? '') !== '') {
+        $url = portal_url($ctx, '/portal/asset.php', $src + ['thumb' => 1]);
+        return '<span class="' . $cls . '"><img src="' . ph($url) . '" alt="" loading="lazy"></span>';
+    }
+    if (($file ?? '') !== '') {
+        $pdf = strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'pdf';
+        return '<span class="' . $cls . ' tile"><span>' . ($pdf ? 'PDF' : 'Image') . '</span></span>';
+    }
+    return '<span class="' . $cls . ' tile empty"><span>' . ph($word) . '</span></span>';
+}
+
 /** First name for the greeting; a team shows its own name. */
 function portal_greeting_name(array $ctx): string {
     if (($ctx['acct']['entity_type'] ?? 'agent') === 'team') return (string)$ctx['acct']['agent_name'];
@@ -185,9 +289,11 @@ function portal_greeting_name(array $ctx): string {
  */
 function portal_header(array $ctx, string $title, string $active): void {
     $nav = [
-        'home'  => ['Home', '/portal/'],
-        'spend' => ['Spend', '/portal/spend.php'],
-        'qr'    => ['QR codes', '/portal/qr.php'],
+        'home'   => ['Home', '/portal/'],
+        'ads'    => ['Advertising', '/portal/advertising.php'],
+        'orders' => ['Print orders', '/portal/orders.php'],
+        'spend'  => ['Spend', '/portal/spend.php'],
+        'qr'     => ['QR codes', '/portal/qr.php'],
     ];
     ?>
 <!DOCTYPE html>
