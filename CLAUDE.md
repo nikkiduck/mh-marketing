@@ -1896,6 +1896,12 @@ between rewriting scenario.json and the next request; rerun before chasing it.
 - **Agent portal**: `docs/AGENT_PORTAL_PLAN.md` (revised 2026-10-01 with Nikki's
   decisions: dummy-proof cards, creative shown on the portal, spend without
   invoiced/paid, a marketing menu, Weber Boxer Group as one account).
+- **Client Hot Sheets (Phase 2, proposed 2026-10-07):** an agent sends a
+  client only the listings matching filters that work like the website
+  search, with an unsubscribe link. The site runs it (matcher, sender,
+  unsubscribe, API); this portal is the agent's form. Plan:
+  site.monthaus.com/docs/HANDOFF-client-hot-sheets.md. Supersedes the
+  "Custom Hot Sheets" note below.
 - **Custom Hot Sheets with filters**: agents' own Hot Sheets searching ALL
   listings, not just Mont Haus's. Deliberately separate from the portal and
   big: needs a market-wide listings source, saved searches, and each board's
