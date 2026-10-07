@@ -275,9 +275,15 @@ function render_hot_sheet_email(array $a, string $unsubscribe_url = ''): string 
     // so the heading and the rows under it can never disagree.
     $since_date = (string)($a['since_label'] ?? '');
 
+    // One banner per area (Nikki's headers, 2026-10-07: "Internal Hot Sheet ·
+    // ROARING FORK VALLEY" on a photo, 1200 px wide for 600 px at 2x), named
+    // header_hotsheet-{area key}.jpg in assets/hotsheet/. A new area without a
+    // banner yet falls back to the old generic one.
     $base_url   = HOT_SHEET_ASSET_BASE;
-    $banner_url = $base_url . 'header_hotsheet-listings.png';
-    $banner_alt = 'Mont Haus International Realty: Hot Sheet';
+    $area_key   = (string)($a['area_key'] ?? '');
+    $banner_url = $base_url . ($area_key !== '' && is_file(__DIR__ . '/../assets/hotsheet/header_hotsheet-' . $area_key . '.jpg')
+                               ? 'header_hotsheet-' . $area_key . '.jpg' : 'header_hotsheet-listings.png');
+    $banner_alt = 'Mont Haus International Realty: Internal Hot Sheet' . ($area_name !== '' ? ', ' . $area_name : '');
 
     // Jump menu — only lists sections that actually have content.
     $jump = [['mls-listings', 'MLS Listings']];
@@ -355,16 +361,7 @@ function render_hot_sheet_email(array $a, string $unsubscribe_url = ''): string 
           <td style="padding:8px 20px 30px 20px;">
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
 
-              <?php if ($area_name !== ''): ?>
-              <!-- Area -->
-              <tr>
-                <td style="padding:22px 0 0 0; font-family:Georgia, 'Times New Roman', serif; color:#1a1a1a;">
-                  <div class="m-area" style="font-size:28px; line-height:1.15;"><?= mh_e($area_name) ?></div>
-                  <div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#6b7280; margin-top:4px; letter-spacing:.4px; text-transform:uppercase;">Mont Haus Hot Sheet</div>
-                </td>
-              </tr>
-              <?php endif; ?>
-
+              <?php // The area's name is in the banner now (2026-10-07); no text heading. ?>
               <?php if (count($jump) > 1): ?>
               <tr>
                 <td style="padding:18px 0 0 0;">
