@@ -1,6 +1,6 @@
 -- ============================================================================
 -- hot_sheets_v4_areas.sql — Hot Sheets by area (Phase 1, 2026-10-07)
--- STATUS: not yet run
+-- STATUS: run
 --
 -- Run ONCE in TablePlus as the master user, after hot_sheets_v1/v2/v3.
 -- Statements are in the order they must run. Nothing here is destructive.
