@@ -80,16 +80,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if ($sid && $action === 'frequency') {
-        $freq = $pick_freq((string)($_POST['frequency'] ?? ''));
-        $conn->query("UPDATE hs_subscribers SET frequency = '{$freq}' WHERE id = {$sid}");
-        $flash = ['ok', 'Frequency changed.'];
-    }
-    if ($sid && $action === 'areas' && $has_areas) {
-        $areas = $pick_areas((array)($_POST['areas'] ?? []));
-        $ajson = $conn->real_escape_string(json_encode($areas));
-        $conn->query("UPDATE hs_subscribers SET areas = '{$ajson}' WHERE id = {$sid}");
-        $flash = ['ok', $areas ? 'Areas saved: ' . implode(', ', array_map('mk_area_name', $areas)) . '.' : 'Areas saved: none, so nothing will be sent to them.'];
+    // One Save all for the whole list (Nikki, 2026-10-07): every row's
+    // frequency and area boxes post together. A row with no box ticked is
+    // saved as no areas, which the list then flags.
+    if ($action === 'save_all') {
+        $freqs = (array)($_POST['freq'] ?? []);
+        $areas_in = (array)($_POST['areas'] ?? []);
+        $st = $conn->prepare($has_areas ? "UPDATE hs_subscribers SET frequency = ?, areas = ? WHERE id = ? AND unsubscribed_at IS NULL"
+                                        : "UPDATE hs_subscribers SET frequency = ? WHERE id = ? AND unsubscribed_at IS NULL");
+        $n = 0; $empty = 0;
+        foreach ($freqs as $rid => $fv) {
+            $rid = (int)$rid; if ($rid <= 0) continue;
+            $freq = $pick_freq((string)$fv);
+            if ($has_areas) {
+                $areas = $pick_areas((array)($areas_in[$rid] ?? []));
+                if (!$areas) $empty++;
+                $ajson = json_encode($areas);
+                $st->bind_param('ssi', $freq, $ajson, $rid);
+            } else {
+                $st->bind_param('si', $freq, $rid);
+            }
+            $st->execute(); $n++;
+        }
+        $st->close();
+        $flash = ['ok', "Saved {$n} subscriber" . ($n === 1 ? '' : 's') . '.' . ($empty ? " {$empty} " . ($empty === 1 ? 'has' : 'have') . ' no areas, so nothing is sent to them.' : '')];
     }
     if ($sid && ($action === 'pause' || $action === 'resume')) {
         $on = $action === 'resume' ? 1 : 0;
@@ -284,7 +298,18 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     </div>
 
     <div class="card">
-      <div class="card-title">Everyone on the list</div>
+      <!-- The frequency selects and area boxes in the table belong to this
+           form (their form="saveAll"), so one button saves every row without
+           nesting forms inside the per-row Pause / Remove forms. -->
+      <form method="POST" id="saveAll" style="margin:0;">
+        <input type="hidden" name="_action" value="save_all">
+        <input type="hidden" name="q" value="<?= e($q) ?>">
+      </form>
+      <div class="card-title" style="display:flex;align-items:center;gap:12px;">
+        <span>Everyone on the list</span>
+        <span style="flex:1;"></span>
+        <button type="submit" form="saveAll" class="btn btn-primary btn-sm">Save all changes</button>
+      </div>
       <table class="sub-table">
         <thead><tr><th>Email</th><th>Agent</th><th>How often</th><?php if ($has_areas): ?><th>Areas</th><?php endif; ?><th>Status</th><th></th></tr></thead>
         <tbody>
@@ -303,35 +328,24 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
             </td>
             <td>
               <?php if ($state !== 'off'): ?>
-                <form method="POST" style="margin:0;">
-                  <input type="hidden" name="_action" value="frequency">
-                  <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-                  <input type="hidden" name="q" value="<?= e($q) ?>">
-                  <select name="frequency" class="form-input" style="padding:4px 8px;font-size:13px;" onchange="this.form.submit()">
-                    <?php if ($has_areas): ?>
-                      <option value="twice_weekly" <?= $r['frequency'] !== 'daily' ? 'selected' : '' ?>>Twice a week</option>
-                    <?php else: ?>
-                      <option value="weekly" <?= $r['frequency'] === 'weekly' ? 'selected' : '' ?>>Weekly</option>
-                    <?php endif; ?>
-                    <option value="daily"  <?= $r['frequency'] === 'daily'  ? 'selected' : '' ?>>Daily</option>
-                  </select>
-                </form>
+                <select name="freq[<?= (int)$r['id'] ?>]" form="saveAll" class="form-input" style="padding:4px 8px;font-size:13px;">
+                  <?php if ($has_areas): ?>
+                    <option value="twice_weekly" <?= $r['frequency'] !== 'daily' ? 'selected' : '' ?>>Twice a week</option>
+                  <?php else: ?>
+                    <option value="weekly" <?= $r['frequency'] === 'weekly' ? 'selected' : '' ?>>Weekly</option>
+                  <?php endif; ?>
+                  <option value="daily"  <?= $r['frequency'] === 'daily'  ? 'selected' : '' ?>>Daily</option>
+                </select>
               <?php else: ?><span class="hint">&middot;</span><?php endif; ?>
             </td>
             <?php if ($has_areas): ?>
             <td>
               <?php if ($state !== 'off'): ?>
-                <form method="POST" class="area-form" style="margin:0;">
-                  <input type="hidden" name="_action" value="areas">
-                  <input type="hidden" name="id" value="<?= (int)$r['id'] ?>">
-                  <input type="hidden" name="q" value="<?= e($q) ?>">
-                  <div class="area-grid">
-                    <?php foreach ($area_names as $ak => $an): ?>
-                      <label><input type="checkbox" name="areas[]" value="<?= e($ak) ?>" <?= in_array($ak, $ticked, true) ? 'checked' : '' ?>> <?= e($an) ?></label>
-                    <?php endforeach; ?>
-                  </div>
-                  <button class="btn btn-outline btn-xs" type="submit">Save</button>
-                </form>
+                <div class="area-grid">
+                  <?php foreach ($area_names as $ak => $an): ?>
+                    <label><input type="checkbox" name="areas[<?= (int)$r['id'] ?>][]" form="saveAll" value="<?= e($ak) ?>" <?= in_array($ak, $ticked, true) ? 'checked' : '' ?>> <?= e($an) ?></label>
+                  <?php endforeach; ?>
+                </div>
                 <?php if ($state === 'on' && !$ticked): ?><span class="pill warn" style="margin-top:6px;">No areas: nothing is sent</span><?php endif; ?>
               <?php else: ?><span class="hint">&middot;</span><?php endif; ?>
             </td>
@@ -365,9 +379,13 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
         <?php if (!$rows): ?><tr><td colspan="6" class="hint">Nobody is subscribed yet.</td></tr><?php endif; ?>
         </tbody>
       </table>
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+        <button type="submit" form="saveAll" class="btn btn-primary btn-sm">Save all changes</button>
+      </div>
       <p class="hint" style="margin:14px 0 0;">
-        Pause keeps the record and stops the email. Unsubscribed is the person's own choice from the email
-        footer, and cannot be undone here: they have to subscribe again themselves.
+        Save all changes writes every row's frequency and areas at once. Pause keeps the record and stops the
+        email. Unsubscribed is the person's own choice from the email footer, and cannot be undone here: they
+        have to subscribe again themselves (or on the agent portal).
       </p>
     </div>
 

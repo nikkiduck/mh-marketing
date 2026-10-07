@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-07 11:45 from the Mont Haus Master folder.
+# Generated 2026-10-07 11:55 from the Mont Haus Master folder.
 # Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
 # and assets/js/mh-qr.js, portal/*.php, assets/css/portal.css.
 # Not listed, because the server's copies are meant to differ or are made there:
@@ -29,7 +29,7 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 cc53d974b2ea12ac47bb365dc8eb73cc  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 a42b13cfa61eb0ba3b0e26baac3d969e  spark_debug.php
-ec95540fb00b9aaa8aa48dc58446d834  subscribers.php
+6ec252a282247f271cce5f619792f53c  subscribers.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 9bf1eb8b77a42637743d0d974eba5205  users.php
 90750ac4905fdab022c241560911f5ba  website_order.php
