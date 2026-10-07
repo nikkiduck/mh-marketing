@@ -1,6 +1,6 @@
 -- ============================================================================
 -- hot_sheets_v5_fell_through.sql — "Fell Through" on pocket listings and buyer reps
--- STATUS: not yet run
+-- STATUS: run
 --
 -- Run ONCE in TablePlus as the master user, after hot_sheets_v4_areas.sql.
 --
