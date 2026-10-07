@@ -251,8 +251,9 @@ function hs_manual_row(array $ml, array $addr_idx, array $by_name, ?array $badge
 }
 
 function hs_manual_badge(string $status): ?array {
-    if ($status === 'Pending') return ['Pending', 'blue'];
-    if ($status === 'Closed')  return ['Closed', 'orange'];
+    if ($status === 'Pending')      return ['Pending', 'blue'];
+    if ($status === 'Closed')       return ['Closed', 'orange'];
+    if ($status === 'Fell Through') return ['Fell Through', 'gray'];   // Latest Updates only; never in a section
     return null;
 }
 

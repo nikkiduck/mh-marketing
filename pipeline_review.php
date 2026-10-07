@@ -510,7 +510,9 @@ sort($mh_cities);
     <?php if ($status === null): ?>
       <div class="warn"><strong>Not publishable.</strong> Paperless reports
         "<?= h($t['status_label'] ?: $t['status_category'] ?: 'no status') ?>", which is not active, pending or closed.
-        <?= $is_repromote ? 'It is still on the hot sheet: use Dismiss &amp; remove to take it off.' : 'Dismiss it, or wait for a status that can be published.' ?></div>
+        <?= $is_repromote
+            ? 'It is still on the hot sheet. The parser marks a promoted deal Fell Through by itself once sql/hot_sheets_v5_fell_through.sql has run (it then shows as FELL THROUGH in Latest Updates and leaves the sections); until then, use Dismiss &amp; remove to take it off.'
+            : 'Dismiss it, or wait for a status that can be published.' ?></div>
     <?php endif; ?>
 
     <?php if (!empty($t['unmatched_agents'])): ?>

@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-07 08:17 from the Mont Haus Master folder.
+# Generated 2026-10-07 09:35 from the Mont Haus Master folder.
 # Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
 # and assets/js/mh-qr.js, portal/*.php, assets/css/portal.css.
 # Not listed, because the server's copies are meant to differ or are made there:
@@ -21,7 +21,7 @@ bb73a2b0b1ccb8ca4b160bb7a05ff140  logout.php
 f3327ec6854ed5362ede027a9b198064  oauth_start.php
 210a1c8334cfa292107df4eac8d2fa85  order_split.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
-dc8dbd875f04725c74706270aaf17cf4  pipeline_review.php
+57c4ad13bdfb33cfd964731ae89387ac  pipeline_review.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 8e6d7d7742f6c9589b47c7a0e28b4d0d  qr_codes.php
 e154338096723d27e76e2b7dc979fe70  receipt.php
@@ -45,7 +45,7 @@ b8e198e7cc0617a6128cf965b5c1cdc0  inc/boards.php
 91bafdaaf32f0ea6a557d2f403525a6b  inc/creatives.php
 0f2ccd665f7cf6ebef2b916bff6ea510  inc/financials.php
 1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
-e10830c49d024267fff5912b9471affc  inc/hs_data.php
+ef0c14279cdbaef87219fc1ba01931ea  inc/hs_data.php
 e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 98ca55f6491ad80b3d49d1c6ad78a9a5  inc/hs_mail.php
 8c8608a66cbc5d9df470773b5cf0c5d8  inc/hs_template.php
@@ -68,7 +68,7 @@ efc4b5fd1029c3045894dc0c265855f0  cron/import_hot_sheets.php
 e5a792ea57ea1800be069453deabcf43  cron/import_profiles.php
 e0d27d34f0d680969bd96950b29d1473  cron/import_site_agents.php
 f0cb50b5d5895138a6ef1db662c6aa67  cron/merge_agents.php
-3aabe4d159f1e1fe113f18e9a06008dc  cron/parse_pipeline_events.php
+84f704ab1bcc7f39878f64af93a70fe6  cron/parse_pipeline_events.php
 666ac19e6c9d4f8bc5e0090daf17d0d7  cron/send_hot_sheet.php
 4e14395dff4a22eb66c4d0b771d0312a  cron/split_team.php
 6b686e4deb45eb42a8fe534cc2c36b44  cron/sync_anyprop_roster.php

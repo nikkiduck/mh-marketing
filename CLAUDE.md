@@ -1631,6 +1631,20 @@ Representation, Rentals. **An area with nothing in it is not sent at all**
   Weber Boxer Group's three logins each have their own; saving creates the
   row, and a self-unsubscribed person may start again there). The
   "Hot Sheets: Subscribe" checklist item follows via `mk_hs_sync_task()`.
+- **Paperless statuses (2026-10-07).** The Zap fired only on Pending and
+  Closed, so 263 Klitowya Trail fell through unseen; Nikki cleared the
+  trigger's status filter and it now fires on every status. The parser
+  (cron/parse_pipeline_events.php) therefore: IGNORES a new listing-side
+  deal that is on the MLS (Paperless MLS number or an exact address match
+  with the site's feed; the IDX feed already shows it; parse_status
+  `ignored`), and marks a PROMOTED deal whose new status is not publishable
+  (fell through, expired, withdrawn, cancelled) `Fell Through` on
+  hs_manual_listings with a status change row, so Latest Updates says FELL
+  THROUGH until the window passes and the entry never returns to a section;
+  the transaction stays `promoted`, nothing goes back to review. Needs
+  sql/hot_sheets_v5_fell_through.sql (the enum value); until it has run the
+  deal is queued as before. A buyer-side deal on an MLS listing is still
+  queued: that is a buyer rep.
 - Preview: hot_sheet_preview.php lists every area with counts and whether
   it would be sent today; `?area=key` renders that email. Send:
   `send_hot_sheet.php --to=ADDR [--area=key]`. check_health.php now watches

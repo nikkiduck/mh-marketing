@@ -9,6 +9,21 @@
  * A deal that was promoted and later changes status (pending → closed) goes
  * back to the queue, because closing is when the sale price becomes publishable.
  *
+ * Since 2026-10-07 the Zap fires on EVERY Paperless status, not only Pending
+ * and Closed (263 Klitowya Trail fell through and nobody heard), so two rules
+ * were added (Nikki):
+ *   · A listing-side deal that is on the MLS (Paperless gave an MLS number,
+ *     or the address exactly matches a listing in the site's feed) is IGNORED
+ *     before it reaches the queue: the IDX feed already carries it, and the
+ *     Hot Sheet would list it twice. A deal already in the queue keeps
+ *     flowing whatever its match, and a fuzzy address match is still queued
+ *     with the review page's warning.
+ *   · A promoted deal whose new status is not publishable (fell through,
+ *     expired, withdrawn, cancelled) is marked 'Fell Through' on the Hot
+ *     Sheet at once, with a status change row, so Latest Updates says so
+ *     until the window passes; nothing is sent back to review. Needs
+ *     sql/hot_sheets_v5_fell_through.sql; until then it is queued as before.
+ *
  * Changed from the hub:
  *   · agents resolve against the roster (marketing_intakes), not mh_brokers;
  *   · --reparse no longer sends promoted deals back to review. Replaying old
@@ -80,8 +95,22 @@ $up   = $conn->prepare("
         mls_match_number = VALUES(mls_match_number), match_confidence = VALUES(match_confidence)");
 if (!$mark || !$up) { out('✗ prepare failed: ' . $conn->error); exit(1); }
 
+// Deals already in the queue (any outcome): a listing-side MLS deal that is
+// already known keeps flowing, only a NEW one is ignored.
+$known = [];
+$r = $conn->query("SELECT pipeline_txn_id, review_status, manual_listing_id FROM hs_pipeline_transactions");
+if ($r) foreach ($r->fetch_all(MYSQLI_ASSOC) as $x) $known[$x['pipeline_txn_id']] = $x;
+
+// Can hs_manual_listings hold 'Fell Through' yet (sql/hot_sheets_v5_fell_through.sql)?
+$sc = $conn->query("SHOW COLUMNS FROM hs_manual_listings LIKE 'status'")->fetch_assoc();
+$fell_ok = $sc && str_contains((string)$sc['Type'], 'Fell Through');
+$fell_st  = $conn->prepare("UPDATE hs_manual_listings SET status = 'Fell Through', updated_at = ? WHERE id = ? AND status <> 'Fell Through'");
+$fell_log = $conn->prepare("INSERT INTO hs_manual_listing_changes (manual_listing_id, change_type, old_value, new_value, detected_at) VALUES (?, 'status', ?, 'Fell Through', ?)");
+$fell_txn = $conn->prepare("UPDATE hs_pipeline_transactions SET review_status = 'promoted', reviewed_at = ? WHERE pipeline_txn_id = ?");
+$ml_status = $conn->prepare("SELECT status FROM hs_manual_listings WHERE id = ? AND is_active = 1");
+
 $reopen = $reparse ? 0 : 1;
-$parsed = 0; $errors = 0;
+$parsed = 0; $errors = 0; $ignored = 0; $fell = 0;
 foreach ($rows as $ev) {
     $eid = (int)$ev['id'];
     $p = json_decode($ev['payload'], true);
@@ -119,6 +148,18 @@ foreach ($rows as $ev) {
     $mm = $hit['market'] ?? null; $mk = $hit['listing_key'] ?? null; $mn = $hit['mls_id'] ?? null;
     if ($mls) { $mn = $mls; $conf = 'exact'; }   // a Paperless MLS number beats an address guess
 
+    // On the MLS and on the listing side: the IDX feed has it, so the Hot
+    // Sheet already shows it. Ignore it unless the deal is already in the queue.
+    if ($etype === 'pocket_listing' && $conf === 'exact' && !isset($known[$txn])) {
+        $st = 'ignored';
+        $n  = "txn {$txn}: {$address} [{$cat}] {$side} is on the MLS (" . ($mls ? "Paperless MLS {$mls}" : 'exact address match, MLS ' . ($mn ?: '?'))
+            . '): the IDX feed carries it, not queued';
+        $mark->bind_param('ssi', $st, $n, $eid); $mark->execute();
+        $ignored++;
+        echo "    ~ {$n}\n";
+        continue;
+    }
+
     $up->bind_param('isssssssssssssssssssi',
         $eid, $txn, $address, $postal, $ptype, $mls, $side, $cat, $label, $changed, $accept, $closing, $price,
         $agents, $unmatched, $etype, $mm, $mk, $mn, $conf, $reopen);
@@ -127,12 +168,34 @@ foreach ($rows as $ev) {
     }
     $hint = $conf === 'none' ? 'no MLS match' : 'matches MLS ' . ($mn ?: '?') . " ({$conf})";
     $n  = "txn {$txn}: {$address} [{$cat}] {$side} → " . ($etype ?? '?') . " | {$hint}" . ($unmatched ? " | unmatched agents: {$unmatched}" : '');
+
+    // A promoted deal that fell through (or expired, was withdrawn, cancelled):
+    // say so on the Hot Sheet now rather than wait for a review that could
+    // only remove it. The upsert above reopened it; close it again.
+    $ml_id = (int)($known[$txn]['manual_listing_id'] ?? 0);
+    if ($reopen && $ml_id > 0 && pl_map_status($cat, $label) === null) {
+        if ($fell_ok) {
+            $ml_status->bind_param('i', $ml_id); $ml_status->execute();
+            $prev = (string)($ml_status->get_result()->fetch_assoc()['status'] ?? '');
+            if ($prev !== '' && $prev !== 'Fell Through') {
+                $fell_st->bind_param('si', $now, $ml_id);   $fell_st->execute();
+                $fell_log->bind_param('iss', $ml_id, $prev, $now); $fell_log->execute();
+                $fell++;
+            }
+            $fell_txn->bind_param('ss', $now, $txn); $fell_txn->execute();
+            $n .= $prev === 'Fell Through' ? ' | already Fell Through on the Hot Sheet' : " | FELL THROUGH on the Hot Sheet ({$prev} → Fell Through, in Latest Updates until the window passes)";
+        } else {
+            $n .= ' | fell through, left in the review queue: run sql/hot_sheets_v5_fell_through.sql so the parser can mark it';
+        }
+    }
+    $known[$txn] = ['pipeline_txn_id' => $txn, 'review_status' => 'pending', 'manual_listing_id' => $ml_id];
+
     $st = 'parsed';
     $mark->bind_param('ssi', $st, $n, $eid); $mark->execute();
     $parsed++;
     echo "    + {$n}\n";
 }
-out("Done: {$parsed} parsed, {$errors} errors.");
+out("Done: {$parsed} parsed, {$errors} errors" . ($ignored ? ", {$ignored} on the MLS ignored" : '') . ($fell ? ", {$fell} marked Fell Through" : '') . '.');
 
 // ── Tell someone when there is something to review ──────────────────────────
 // Only when this run produced new staged rows, so an hourly cron does not
