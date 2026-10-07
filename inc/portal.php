@@ -288,13 +288,15 @@ function portal_greeting_name(array $ctx): string {
  * $active is the nav key of the current page.
  */
 function portal_header(array $ctx, string $title, string $active): void {
+    // Hot Sheets first (Nikki, 2026-10-07); "Internal" because a Client Hot
+    // Sheets section (Phase 2) will sit beside it.
     $nav = [
         'home'      => ['Home', '/portal/'],
+        'hotsheets' => ['Internal Hot Sheets', '/portal/hotsheets.php'],
         'ads'       => ['Advertising', '/portal/advertising.php'],
         'orders'    => ['Print orders', '/portal/orders.php'],
         'spend'     => ['Spend', '/portal/spend.php'],
         'qr'        => ['QR codes', '/portal/qr.php'],
-        'hotsheets' => ['Hot Sheets', '/portal/hotsheets.php'],
     ];
     ?>
 <!DOCTYPE html>

@@ -311,7 +311,7 @@ ok('plain words for a profile destination', has($b, 'Your profile page on montha
 
 [$c, , $b] = req('jackson', '/portal/');
 ok('Jackson home renders and counts only his codes', $c === 200 && no_fatal($b) && has($b, 'You have 2 QR codes'), $b);
-ok('home offers Hot Sheets', has($b, 'Choose areas + how often'), $b);
+ok('home offers Hot Sheets', has($b, 'Internal Hot Sheets') && has($b, 'Customize'), $b);
 
 // Hot Sheets (2026-10-07): the page is the signed-in person's own subscription, never an id from the request.
 [$c, , $b] = req('jackson', '/portal/hotsheets.php');

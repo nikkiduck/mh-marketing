@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-07 09:35 from the Mont Haus Master folder.
+# Generated 2026-10-07 11:45 from the Mont Haus Master folder.
 # Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
 # and assets/js/mh-qr.js, portal/*.php, assets/css/portal.css.
 # Not listed, because the server's copies are meant to differ or are made there:
@@ -12,7 +12,7 @@ f76d4556e5309670d33806d0b4c71885  change_password.php
 abe5a0e74decb1e1ef7273468ad83837  creative.php
 dfb28c4e16681b9f76c7e592fbaf96ed  forgot-password.php
 01298acc7f29e749cccf13f3dc872edc  hot_sheet_preview.php
-fb2c2e21f9a402f32313e51760c3ffbf  index.php
+5cab6ba30cece5e76185a0715882d650  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
 8bce1a103a42a7e017e711547c910e10  leadership.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php
@@ -53,7 +53,7 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
-bd7513e5876ad07b5026805e1113aefd  inc/portal.php
+08704af2c04d27b3d7605d34bbd0e533  inc/portal.php
 c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
@@ -77,8 +77,8 @@ dc625ba4ad1cfcb4c13d0067bc8fe4ce  cron/sync_mh_brokers.php
 d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php
 519e98a5069b72bef3c2f85cf7cd428f  portal/advertising.php
 bcfdaa5a0ec0e20e92c223d53a5f2b5a  portal/asset.php
-5384da86ece5a3f192966bfeae408488  portal/hotsheets.php
-fd90406b655503c7ca33212c0a6ab3d4  portal/index.php
+ff15685886801aeda0a6cbe5e9ef3e1b  portal/hotsheets.php
+152f002934800d643135b251dbfe103d  portal/index.php
 c5793343b2e2582efbb6869063ae8c17  portal/orders.php
 84273aef9c89d39ca274bda11d5a3ce0  portal/qr.php
 e416e60cc675ccc3853652ef106913c9  portal/receipt.php

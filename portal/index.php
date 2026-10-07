@@ -58,6 +58,23 @@ portal_header($ctx, 'Home', 'home');
   </div>
 
   <div class="pt-cards">
+    <?php if ($hs !== null || mk_table_exists($conn, 'hs_subscribers')): // first (Nikki, 2026-10-07) ?>
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/hotsheets.php')) ?>">
+      <h2 class="pt-card-h">Internal Hot Sheets</h2>
+      <p class="pt-card-sub"><?php
+        $hs_areas = $hs ? mk_areas_decode($hs['areas']) : [];
+        if ($hs && (int)$hs['is_active'] && !$hs['unsubscribed_at'] && $hs_areas) {
+            echo 'You get the ' . ph(implode(', ', array_map('mk_area_name', $hs_areas))) . ' Hot Sheet' . (count($hs_areas) === 1 ? '' : 's')
+               . ' ' . ($hs['frequency'] === 'daily' ? 'every day' : 'twice a week') . '.';
+        } elseif ($hs && (int)$hs['is_active'] && !$hs['unsubscribed_at']) {
+            echo 'You are subscribed but have not chosen any areas yet, so nothing is being sent.';
+        } else {
+            echo 'Emailed Mont Haus listings, pocket listings, buyer reps and rentals, for the areas you choose.';
+        }
+      ?></p>
+      <span class="pt-card-go">Customize ›</span>
+    </a>
+    <?php endif; ?>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/advertising.php')) ?>">
       <h2 class="pt-card-h">Advertising</h2>
       <p class="pt-card-sub"><?php
@@ -93,22 +110,5 @@ portal_header($ctx, 'Home', 'home');
                          : "You have {$qr_n} QR codes. See where each one goes, or change it.") ?></p>
       <span class="pt-card-go"><?= $qr_n === 0 ? 'Request ›' : 'Review + Edit ›' ?></span>
     </a>
-    <?php if ($hs !== null || mk_table_exists($conn, 'hs_subscribers')): ?>
-    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/hotsheets.php')) ?>">
-      <h2 class="pt-card-h">Hot Sheets</h2>
-      <p class="pt-card-sub"><?php
-        $hs_areas = $hs ? mk_areas_decode($hs['areas']) : [];
-        if ($hs && (int)$hs['is_active'] && !$hs['unsubscribed_at'] && $hs_areas) {
-            echo 'You get the ' . ph(implode(', ', array_map('mk_area_name', $hs_areas))) . ' Hot Sheet' . (count($hs_areas) === 1 ? '' : 's')
-               . ' ' . ($hs['frequency'] === 'daily' ? 'every day' : 'twice a week') . '.';
-        } elseif ($hs && (int)$hs['is_active'] && !$hs['unsubscribed_at']) {
-            echo 'You are subscribed but have not chosen any areas yet, so nothing is being sent.';
-        } else {
-            echo 'Mont Haus listings, pocket listings, buyer reps and rentals in the areas you choose, by email.';
-        }
-      ?></p>
-      <span class="pt-card-go">Choose areas + how often ›</span>
-    </a>
-    <?php endif; ?>
   </div>
 <?php portal_footer();

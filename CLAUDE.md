@@ -1857,9 +1857,14 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   nothing in it (the detail is picked from the already-scoped list). Shown:
   outlet, name, print/digital + ad size, dates, creatives, cost. NEVER
   budget, notes, UTMs, vendor, order number, receipts or billing words.
-  Nav: Home, Advertising, Print orders, Spend, QR codes, Hot Sheets
-  (portal/hotsheets.php, 2026-10-07: their own areas and frequency; see
-  "Hot Sheets" above).
+  Nav: Home, Internal Hot Sheets, Advertising, Print orders, Spend, QR
+  codes. Hot Sheets come first in the nav and the home cards and are
+  called "Internal" (Nikki, 2026-10-07) because a Client Hot Sheets
+  section (Phase 2) will sit beside them; portal/hotsheets.php is their
+  own areas and frequency (see "Hot Sheets" above). The roster list
+  (index.php) has an eye icon per agent that opens their portal as an
+  admin preview; the checklist count, Profile meter and Subs marks left
+  the list the same day (the agent page has them).
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
   Pilot (Nikki, 2026-10-06): Weber Boxer Group (Jonathan, Scott, Sara,
   all -> team row 8), Bryan Cournoyer, Jackson Horn.

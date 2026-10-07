@@ -714,7 +714,6 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
                . ' data-search="' . e(strtolower($x['_name'] . ' ' . ($x['mh_email'] ?? '') . ' ' . ($x['mls_email'] ?? ''))) . '"'
                . ' data-first="' . e($x['_first']) . '" data-last="' . e($x['_last']) . '"'
                . ' data-updated="' . e($x['updated_at'] ?? '') . '" data-start="' . e(($x['start_date'] ?: $x['intake_date']) ?: '9999-12-31') . '"'
-               . ' data-complete="' . sprintf('%03d', $x['_total'] ? (int)round(100 * $x['_done'] / $x['_total']) : 0) . '"'
                . ' data-boards=" ' . e(implode(' ', array_keys($x['_boards']))) . ' "'
                . ' data-attn=" ' . e(implode(' ', $x['_attn'])) . ' "';
       };
@@ -776,19 +775,9 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
                  . '<input type="hidden" name="_action" value="' . $act . '"><input type="hidden" name="id" value="' . $x['_iid'] . '">'
                  . '<button type="submit" class="pill pill-btn s-' . e($x['_status']) . '" title="' . e($tip) . '">' . $label . '</button></form>';
           }
-          if ($x['_onb']) {
-              $h .= ' <a class="ck" href="agent.php?id=' . $x['_iid'] . '&tab=tasks" title="Marketing checklist: '
-                  . $x['_ck_open'] . ' open">' . ($x['_ck_total'] - $x['_ck_open']) . '/' . $x['_ck_total'] . '</a>';
-          }
+          // The checklist count, the Profile meter and the Subs marks left the
+          // list on 2026-10-07 (Nikki): the agent page has them.
           return $h;
-      };
-      $meter_html = function (array $x): string {
-          if ($x['_roster_only'] || $x['_team'] || !$x['_total']) return '<span class="muted">·</span>';
-          $pct  = (int)round(100 * $x['_done'] / $x['_total']);
-          $tip  = $x['_missing'] ? 'Missing: ' . implode(', ', $x['_missing']) : 'Complete';
-          $full = $x['_done'] === $x['_total'];
-          return '<a class="meter' . ($full ? ' full' : '') . '" href="agent.php?id=' . $x['_iid'] . '&tab=overview" title="' . e($tip) . '">'
-               . '<span class="meter-bar"><i style="width:' . $pct . '%"></i></span>' . $x['_done'] . '/' . $x['_total'] . '</a>';
       };
       $actions_html = function (array $x): string {
           if ($x['_roster_only']) {
@@ -796,7 +785,10 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
                    . '<input type="hidden" name="roster_id" value="' . (int)($x['roster_id'] ?? 0) . '">'
                    . '<button type="submit" class="btn btn-outline btn-sm" title="In the MLS roster but not set up here yet"><i class="ti ti-user-plus"></i> Add</button></form>';
           }
-          $keep = '';
+          // Their portal, seen as they see it (admin preview; Nikki, 2026-10-07).
+          $keep = $x['_status'] !== 'archived'
+              ? '<a class="btn-ghost" href="/portal/?preview=' . $x['_iid'] . '" target="_blank" rel="noopener" title="View their agent portal"><i class="ti ti-eye"></i></a>'
+              : '';
           if ($x['_onb']) {
               $keep .= '<form method="POST" style="margin:0;" onsubmit="return confirm(\'Mark the rest of ' . e(addslashes($x['_name'])) . '\\\'s marketing checklist done? (Hot Sheets: Subscribe stays open unless they already get them.)\');">'
                     . '<input type="hidden" name="_action" value="complete_checklist"><input type="hidden" name="id" value="' . $x['_iid'] . '">'
@@ -824,10 +816,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
         <th>Boards</th>
         <th style="text-align:center;" title="On the website">Web</th>
         <th>Status</th>
-        <th data-sort="complete">Profile <i class="ti ti-selector"></i></th>
         <th>Tasks</th>
         <th title="Balance due">$</th>
-        <th title="Hot Sheet · FUB">Subs</th>
         <th data-sort="updated">Updated <i class="ti ti-selector"></i></th>
         <th></th>
       </tr></thead>
@@ -838,12 +828,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
           <td class="c-hide-sm"><?= $boards_html($x) ?></td>
           <td style="text-align:center;"><?= $web_html($x) ?></td>
           <td class="c-hide-sm"><?= $status_html($x) ?></td>
-          <td><?= $meter_html($x) ?></td>
           <td class="c-hide-sm"><?= (int)$x['open_tasks'] > 0 ? '<a class="tasks-badge" href="agent.php?id=' . $x['_iid'] . '&tab=tasks" style="text-decoration:none;"><i class="ti ti-list-check"></i> ' . (int)$x['open_tasks'] . '</a>' : '<span class="muted">·</span>' ?></td>
           <td><?= $x['_bal'] > 0 ? '<a class="balance-badge" href="billing.php" title="Outstanding ' . e('$' . number_format($x['_bal'], 2)) . ': open Billing">$</a>' : '' ?></td>
-          <td class="c-hide-sm"><span class="marks">
-              <i class="ti ti-mail mark<?= $x['_hs'] ? ' on' : '' ?>" title="<?= $x['_hs'] ? 'Gets the Hot Sheet' : 'Not on the Hot Sheet' ?>"></i>
-              <i class="ti ti-arrows-shuffle mark<?= !empty($x['in_fub']) ? ' on' : '' ?>" title="<?= !empty($x['in_fub']) ? 'In FUB lead rotation' : 'Not in FUB rotation' ?>"></i></span></td>
           <td class="c-hide-sm" style="color:#9ca3af;font-size:12px;white-space:nowrap;"><?= $x['updated_at'] ? e(date('M j', strtotime($x['updated_at']))) : '' ?></td>
           <td><div class="row-actions"><?= $actions_html($x) ?></div></td>
         </tr>
@@ -859,13 +845,11 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
           <div><?= $boards_html($x) ?></div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
             <?= $x['_web'] ? $web_html($x) : '' ?>
-            <?= $meter_html($x) ?>
             <?= $x['_status'] !== 'active' || $x['_onb'] ? $status_html($x) : '' ?>
           </div>
           <div class="card-foot">
             <?= (int)$x['open_tasks'] > 0 ? '<span class="tasks-badge"><i class="ti ti-list-check"></i> ' . (int)$x['open_tasks'] . '</span>' : '' ?>
             <?= $x['_bal'] > 0 ? '<a class="balance-badge" href="billing.php" title="Outstanding ' . e('$' . number_format($x['_bal'], 2)) . '">$</a>' : '' ?>
-            <span class="marks"><i class="ti ti-mail mark<?= $x['_hs'] ? ' on' : '' ?>"></i><i class="ti ti-arrows-shuffle mark<?= !empty($x['in_fub']) ? ' on' : '' ?>"></i></span>
             <span class="spacer"></span>
             <?= $actions_html($x) ?>
           </div>

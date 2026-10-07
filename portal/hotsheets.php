@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['pt_hs_flash'] = ['ok', $chosen
             ? 'Saved. You will get the ' . implode(', ', array_map('mk_area_name', $chosen)) . ' Hot Sheet' . (count($chosen) === 1 ? '' : 's')
               . ' ' . ($freq === 'daily' ? 'every day' : 'on Mondays and Thursdays') . ', on days there is something to show.'
-            : 'Saved, but no areas are ticked, so nothing will be sent until you tick one.'];
+            : 'Saved, but no areas are selected, so nothing will be sent until you tick one.'];
     } elseif ($action === 'pause' && $sub) {
         $conn->query("UPDATE hs_subscribers SET is_active = 0 WHERE id = " . (int)$sub['id']);
         mk_hs_sync_task($conn, $intake_id);
@@ -92,10 +92,10 @@ $ticked  = $sub ? mk_areas_decode($sub['areas']) : [];
 $freq    = $sub ? (string)$sub['frequency'] : 'twice_weekly';
 if ($freq === 'weekly') $freq = 'twice_weekly';
 
-portal_header($ctx, 'Hot Sheets', 'hotsheets');
+portal_header($ctx, 'Internal Hot Sheets', 'hotsheets');
 ?>
-  <h1 class="pt-h1">Hot Sheets</h1>
-  <p class="pt-lead">Mont Haus listings, pocket listings, buyer reps and rentals, by email, for the areas you work.
+  <h1 class="pt-h1">Internal Hot Sheets</h1>
+  <p class="pt-lead">Emailed Mont Haus listings, pocket listings, buyer reps and rentals, for the areas you work.
     One email per area, with the latest activity at the top.</p>
 
   <?php if ($flash): ?>
@@ -135,7 +135,7 @@ portal_header($ctx, 'Hot Sheets', 'hotsheets');
       <?php endforeach; ?>
     </div>
     <div class="pt-note">An area's email only goes out on days it has something to show. If an area has no Mont Haus
-      listings or rentals right now, nothing is sent for it, so a quiet day is not a missing email.</div>
+      listings or rentals right now, nothing is sent.</div>
 
     <h2 class="pt-h2">How often</h2>
     <label class="pt-choice">
