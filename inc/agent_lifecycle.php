@@ -193,8 +193,9 @@ function mk_hs_save_prefs(mysqli $conn, int $sub_id, string $frequency, array $a
 function mk_hs_sync_task(mysqli $conn, int $id): void {
     if ($id <= 0 || !mk_table_exists($conn, 'marketing_tasks')) return;
     $done = mk_hs_subscribed($conn, $id) ? 'done' : 'open';
-    $conn->query("UPDATE marketing_tasks SET status = '{$done}', completed_at = " . ($done === 'done' ? 'NOW()' : 'NULL')
-               . " WHERE intake_id = " . (int)$id . " AND category = 'onboarding' AND title = '" . $conn->real_escape_string(MK_HS_TASK) . "'");
+    $s = $conn->prepare("UPDATE marketing_tasks SET status = ?, completed_at = " . ($done === 'done' ? 'NOW()' : 'NULL')
+                      . " WHERE intake_id = ? AND category = 'onboarding' AND title = ?");
+    if ($s) { $title = MK_HS_TASK; $s->bind_param('sis', $done, $id, $title); $s->execute(); $s->close(); }
 }
 
 /** The checklist item was un-ticked: stop the emails (not an "unsubscribe"). */
