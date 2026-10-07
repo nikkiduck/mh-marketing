@@ -20,13 +20,36 @@
  *   · Brokers come from MLS identities, not name strings: a list / co-list
  *     agent whose board id is on agent_mls_ids shows under their roster name
  *     with a mailto link, a team alias expanding to every member.
+ *
+ * Areas (2026-10-07, Nikki: one Hot Sheet per area, "no reason why our CO
+ * Springs team would want to get Aspen listings"). Every row carries
+ * `area_key`, one of the website's Communities areas (inc/boards.php,
+ * mk_area_names()): MLS rows from the feed's stamp (hs_listing_state.area_key,
+ * sql/hot_sheets_v4_areas.sql), else from the city through the board's towns;
+ * manual rows from the area chosen on pipeline_review.php. build_hs_data()
+ * still builds everything once; hs_area_data() slices it for one area and
+ * hs_areas_with_content() says which areas have anything to send.
  */
 
 require_once __DIR__ . '/hs_helpers.php';
 require_once __DIR__ . '/agent_roster.php';   // mk_agents_only_sql(): teams are not people
+require_once __DIR__ . '/boards.php';         // areas, board towns
 
 const HS_SOLD_WINDOW_DAYS = 14;
 const HS_ACTIVE_STATUSES  = ['Active', 'Active Under Contract', 'Pending', 'Coming Soon'];
+
+/**
+ * The Hot Sheet area of a listing row: the feed's stamp when the row has one,
+ * else the board the city belongs to (the registry's towns), else the
+ * listing's own board, each mapped to its area. '' when nothing places it.
+ */
+function hs_listing_area(array $l): string {
+    $k = trim((string)($l['area_key'] ?? ''));
+    if ($k !== '') return $k;
+    $city  = strtolower(trim((string)($l['city'] ?? '')));
+    $board = ($city !== '' ? (mk_board_towns()[$city] ?? null) : null) ?? (string)($l['market'] ?? '');
+    return $board !== '' ? (string)(mk_board_area($board) ?? '') : '';
+}
 
 /**
  * [utc_start 'Y-m-d H:i:s', label 'n/j/Y'] for Latest Updates.
@@ -163,6 +186,8 @@ function hs_badge_for_change(string $type, string $new): array {
 function hs_mls_row(mysqli $conn, array $l): array {
     [$names, $emails] = hs_brokers($conn, $l);
     return [
+        'area_key'          => hs_listing_area($l),
+        'is_rental'         => (bool)(int)($l['is_rental'] ?? 0),
         'address'           => $l['address'],
         'city'              => $l['city'],
         'state_abbr'        => 'CO',
@@ -195,7 +220,15 @@ function hs_manual_row(array $ml, array $addr_idx, array $by_name, ?array $badge
     $url   = $ml['entry_type'] === 'pocket_listing' ? '' : trim((string)$ml['listing_url']);
     if ($url === '' && $ml['entry_type'] === 'buyer_rep' && $match) $url = (string)$match['url'];
     $buyer = $ml['entry_type'] === 'buyer_rep';
+    // The area chosen at promotion; a row from before the column existed, or
+    // one never given an area, is placed by its city when it has one, else
+    // by nothing: it appears in no area's email, and the preview page says so.
+    $area = trim((string)($ml['area_key'] ?? ''));
+    if ($area === '') $area = hs_listing_area(['area_key' => '', 'city' => trim((string)$ml['city']) ?: (string)($match['city'] ?? ''), 'market' => (string)($ml['market'] ?? '')]);
     return [
+        'area_key'          => $area,
+        'is_rental'         => false,
+        'manual_id'         => (int)$ml['id'],
         'address'           => (string)$ml['address'],
         'city'              => trim((string)$ml['city']) ?: (string)($match['city'] ?? ''),
         'state_abbr'        => (string)($ml['state_abbr'] ?: 'CO'),
@@ -252,7 +285,9 @@ function build_hs_data(mysqli $conn, ?DateTimeImmutable $now = null): array {
         if ((int)$c['is_rental'] && $c['change_type'] !== 'new_listing') continue;   // rentals: new only, as on the hub
         $row = hs_mls_row($conn, $c);
         [$row['badge_label'], $row['badge_color']] = hs_badge_for_change($c['change_type'], (string)$c['new_value']);
+        if ((int)$c['is_rental']) $row['badge_label'] = 'New Rental';   // in the area email's Latest Updates, beside the sales
         if ($c['change_type'] === 'price') { $row['price_color'] = 'blue'; $price_changed[$k] = true; }
+        $row['detected_at'] = (string)$c['detected_at'];
         $badge_by_key[$k] = [$row['badge_label'], $row['badge_color']];
         if ((int)$c['is_rental']) $rental_updates[] = $row; else $sale_updates[] = $row;
     }
@@ -300,7 +335,7 @@ function build_hs_data(mysqli $conn, ?DateTimeImmutable $now = null): array {
     }
     $by_name = hs_roster($conn)['by_name'];
 
-    $s = $conn->prepare("SELECT c.change_type, c.new_value, m.* FROM hs_manual_listing_changes c
+    $s = $conn->prepare("SELECT c.change_type, c.new_value, c.detected_at, m.* FROM hs_manual_listing_changes c
                            JOIN hs_manual_listings m ON m.id = c.manual_listing_id
                           WHERE c.detected_at >= ? AND m.is_active = 1
                           ORDER BY c.detected_at DESC, c.id DESC");
@@ -316,7 +351,9 @@ function build_hs_data(mysqli $conn, ?DateTimeImmutable $now = null): array {
     foreach ($mbest as $c) {
         // Buyer representation is announced only once under contract, as on the hub.
         if ($c['entry_type'] === 'buyer_rep' && $c['status'] === 'Active') continue;
-        $sale_updates[] = hs_manual_row($c, $addr_idx, $by_name, hs_manual_badge($c['status']));
+        $row = hs_manual_row($c, $addr_idx, $by_name, hs_manual_badge($c['status']));
+        $row['detected_at'] = (string)$c['detected_at'];
+        $sale_updates[] = $row;
     }
 
     $s = $conn->prepare("SELECT m.* FROM hs_manual_listings m
@@ -347,4 +384,49 @@ function build_hs_data(mysqli $conn, ?DateTimeImmutable $now = null): array {
         'pocket_listings' => $pocket,
         'buyer_rep'       => $buyer,
     ];
+}
+
+/**
+ * One area's slice of build_hs_data(): what render_hot_sheet_email() renders.
+ * Latest Updates merges the sale and rental changes, newest first.
+ */
+function hs_area_data(array $data, string $area_key): array {
+    $pick = fn(array $rows) => array_values(array_filter($rows, fn($r) => ($r['area_key'] ?? '') === $area_key));
+    $updates = $pick(array_merge($data['sale_updates'], $data['rental_updates']));
+    usort($updates, fn($a, $b) => strcmp((string)($b['detected_at'] ?? ''), (string)($a['detected_at'] ?? '')));
+    return [
+        'area_key'        => $area_key,
+        'area_name'       => mk_area_name($area_key),
+        'since_label'     => $data['since_label'],
+        'updates'         => $updates,
+        'mls_listings'    => $pick($data['mls_listings']),
+        'pocket_listings' => $pick($data['pocket_listings']),
+        'buyer_rep'       => $pick($data['buyer_rep']),
+        'rentals'         => $pick($data['rental_listings']),
+    ];
+}
+
+/** Nikki, 2026-10-07: an area with nothing in it sends no email at all. */
+function hs_area_has_content(array $a): bool {
+    return (bool)($a['updates'] || $a['mls_listings'] || $a['pocket_listings'] || $a['buyer_rep'] || $a['rentals']);
+}
+
+/** [area key => hs_area_data()] for every area, in the list's order; `has_content` says whether it would be sent. */
+function hs_all_areas(array $data): array {
+    $out = [];
+    foreach (array_keys(mk_area_names()) as $k) {
+        $a = hs_area_data($data, $k);
+        $a['has_content'] = hs_area_has_content($a);
+        $out[$k] = $a;
+    }
+    return $out;
+}
+
+/** Rows that belong to no area (a pocket listing or buyer rep promoted without one), so the preview can say so. */
+function hs_rows_without_area(array $data): array {
+    $out = [];
+    foreach (['sale_updates', 'rental_updates', 'mls_listings', 'rental_listings', 'pocket_listings', 'buyer_rep'] as $k) {
+        foreach ($data[$k] as $r) if (($r['area_key'] ?? '') === '') $out[$r['address'] . '|' . ($r['manual_id'] ?? '')] = $r;
+    }
+    return array_values($out);
 }

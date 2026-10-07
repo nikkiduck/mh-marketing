@@ -94,6 +94,19 @@ a.pt-card:hover { border-color: var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,.
 .pt-choice input[type=url]:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
 .pt-help { color: var(--muted); font-size: 15px; }
 
+/* ── Hot Sheets (2026-10-07): big tick boxes, one per area ──────────────── */
+.pt-checks { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 0 0 18px; }
+@media (min-width: 640px) { .pt-checks { grid-template-columns: 1fr 1fr; } }
+.pt-check { display: flex; align-items: center; gap: 14px; background: var(--card); border: 2px solid var(--line); border-radius: 12px;
+            padding: 14px 16px; cursor: pointer; font-size: 17px; margin: 0; }
+.pt-check input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--ink); flex: none; margin: 0; }
+.pt-check:has(input:checked) { border-color: var(--ink); }
+.pt-check small { display: block; color: var(--muted); font-size: 13px; }
+.pt-note { background: #fdf3e2; color: var(--warn); border-radius: 10px; padding: 12px 16px; font-size: 15px; margin: 0 0 18px; }
+.pt-status { display: inline-block; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; font-weight: 500;
+             padding: 3px 12px; border-radius: 999px; background: #e8f3ec; color: var(--ok); }
+.pt-status.off { background: #efe9dd; color: var(--warn); }
+
 /* ── Spend ──────────────────────────────────────────────────────────────── */
 .pt-h2 { font-family: var(--serif); font-weight: 500; font-size: 28px; margin: 0 0 12px; }
 .pt-back { margin: 0 0 8px; font-size: 15px; }

@@ -42,7 +42,8 @@ $SB = sys_get_temp_dir() . '/pt_render_' . bin2hex(random_bytes(4));
 mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
 foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php',
-          'portal/asset.php', 'inc/portal.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php', 'inc/creatives.php'] as $f) {
+          'portal/asset.php', 'portal/hotsheets.php', 'inc/portal.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
+          'inc/creatives.php', 'inc/boards.php', 'inc/agent_lifecycle.php', 'inc/_onboarding.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
 }
@@ -163,6 +164,17 @@ class mysqli {
         if (preg_match('/UPDATE marketing_requests SET email_status/', $sql)) { $this->write('request_email', $p); return []; }
         if (preg_match('/^\s*UPDATE qr_codes SET dest_type/', $sql)) { $this->write('update_qr', $p); return []; }
         if (preg_match('/INSERT INTO qr_code_changes/', $sql))       { $this->write('log_change', $p); return []; }
+        // Hot Sheets (portal/hotsheets.php, home card): the person's own row by sign-in address; nobody in the fixture has one.
+        if (preg_match('/FROM hs_subscribers WHERE email = \?/', $sql)) return [];
+        if (preg_match('/FROM hs_subscribers WHERE intake_id = \?/', $sql)) return [];
+        if (preg_match('/FROM marketing_intakes WHERE is_active = 1 AND \(LOWER\(mh_email\) = \?/', $sql)) return [];
+        if (preg_match('/SELECT 1 FROM hs_subscribers WHERE is_active = 1/', $sql)) return [];   // mk_hs_subscribed(), for the checklist
+        if (preg_match('/SELECT mh_email, mls_email FROM marketing_intakes WHERE id = (\d+)/', $sql, $m)) {
+            return self::s(array_values(array_filter($D['intakes'], fn($a) => (int)$a['id'] === (int)$m[1])));
+        }
+        if (preg_match('/INSERT INTO hs_subscribers/', $sql)) { $this->insert_id = 601; $this->write('hs_subscribe', $p); return []; }
+        if (preg_match('/UPDATE hs_subscribers SET/', $sql))  { $this->write('hs_update', $p); return []; }
+        if (preg_match('/UPDATE marketing_tasks SET/', $sql)) { return []; }
         throw new RuntimeException("stub mysqli: no fixture for SQL:\n" . trim($sql));
     }
     public function query(string $sql) { return new mh_result($this->run($sql, [])); }
@@ -299,6 +311,19 @@ ok('plain words for a profile destination', has($b, 'Your profile page on montha
 
 [$c, , $b] = req('jackson', '/portal/');
 ok('Jackson home renders and counts only his codes', $c === 200 && no_fatal($b) && has($b, 'You have 2 QR codes'), $b);
+ok('home offers Hot Sheets', has($b, 'Choose areas + how often'), $b);
+
+// Hot Sheets (2026-10-07): the page is the signed-in person's own subscription, never an id from the request.
+[$c, , $b] = req('jackson', '/portal/hotsheets.php');
+ok('Jackson: Hot Sheets renders, not subscribed, every area offered', $c === 200 && no_fatal($b) && has($b, 'Not subscribed')
+   && has($b, 'Roaring Fork Valley') && has($b, 'Front Range') && has($b, 'Twice a week'), $b);
+[$c, $loc, ] = req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'tok', 'action' => 'save', 'frequency' => 'daily', 'areas' => ['vail-valley', 'bogus']]);
+$w = writes();
+ok('saving creates his row and keeps only real areas', ($w[0][0] ?? '') === 'hs_subscribe' && ($w[1][0] ?? '') === 'hs_update'
+   && ($w[1][1] ?? []) === ['daily', '["vail-valley"]', 601], json_encode($w));
+ok('…then back to the page', $c === 302 && $loc === '/portal/hotsheets.php', "{$c} {$loc}");
+req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'bad', 'action' => 'save', 'areas' => ['vail-valley']]);
+ok('a bad form token saves nothing', writes() === [], json_encode(writes()));
 
 [$c, , $b] = req('jon', '/portal/qr.php');
 ok('Weber Boxer: team code and member code shown', has($b, 'wb-office') && has($b, 'jboxer-yard'), $b);

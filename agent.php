@@ -1202,6 +1202,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: agent.php?id={$id}&tab=profile" . ($ok ? '&saved=1' : '&err=' . urlencode((string)$msg))); exit;
     }
 
+    // Hot Sheets (2026-10-07): how often, and which areas, on their own subscription row.
+    if ($action === 'hs_prefs') {
+        $sub = mk_hs_areas_ready($conn) ? mk_hs_subscription($conn, $id) : null;
+        if ($sub) {
+            mk_hs_save_prefs($conn, (int)$sub['id'], (string)($_POST['frequency'] ?? ''), array_map('strval', (array)($_POST['hs_areas'] ?? [])));
+            header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+        }
+        header("Location: agent.php?id={$id}&tab=profile&err=" . urlencode('No Hot Sheet subscription to change: subscribe first.')); exit;
+    }
+
     /* --- Inline field updates (contact, social, bio, collateral) --- */
     if ($action === 'update_intake_fields') {
         $allowed = [
@@ -1486,6 +1496,10 @@ if (mk_table_exists($conn, 'agent_mls_ids')) {
 }
 $hs_on = mk_hs_subscribed($conn, $id);
 $hs_email = mk_agent_email($agent);
+// Per-area Hot Sheets (2026-10-07): the row, for the frequency and area
+// controls on the Subscriptions card. Read here, before the connection closes.
+$hs_ready = mk_hs_areas_ready($conn);
+$hs_sub   = $hs_ready && $hs_on ? mk_hs_subscription($conn, $id) : null;
 
 // QR codes (qr_codes.php). Read here because the connection closes just below.
 $qr_rows = [];
@@ -3036,9 +3050,15 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         <!-- ── Subscriptions ────────────────────────────────────────────── -->
         <div class="card">
           <div class="card-title"><i class="ti ti-mail" style="margin-right:6px;"></i> Subscriptions</div>
+          <?php
+            require_once __DIR__ . '/inc/boards.php';
+            $hs_ticked = $hs_sub ? mk_areas_decode($hs_sub['areas'] ?? null) : [];
+            $hs_pill   = !$hs_on ? 'Not subscribed'
+                       : ($hs_sub ? mk_hs_frequency_label((string)$hs_sub['frequency']) . ($hs_ticked ? '' : ', no areas') : 'Subscribed');
+          ?>
           <div class="fld">
             <span class="fld-label">Hot Sheets</span>
-            <span class="pill <?= $hs_on ? 'w-approved' : 'w-inactive' ?>"><?= $hs_on ? 'Weekly' : 'Not subscribed' ?></span>
+            <span class="pill <?= $hs_on && ($hs_ticked || !$hs_sub) ? 'w-approved' : ($hs_on ? 'w-pending' : 'w-inactive') ?>"><?= htmlspecialchars($hs_pill) ?></span>
             <span style="flex:1;"></span>
             <?php if ($hs_on): ?>
               <a class="btn btn-outline btn-xs" href="subscribers.php?q=<?= urlencode($hs_email) ?>">Manage</a>
@@ -3050,7 +3070,32 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               </form>
             <?php endif; ?>
           </div>
-          <p class="hint" style="margin:6px 0 0;">Subscribing here ticks the "<?= htmlspecialchars(MK_HS_TASK) ?>" item on their checklist. Manage opens the Hot Sheet subscriber list, where frequency, pausing and unsubscribing live.</p>
+          <?php if ($hs_sub): ?>
+            <form method="POST" style="margin:10px 0 0;">
+              <input type="hidden" name="_action" value="hs_prefs">
+              <div class="fld" style="align-items:center;">
+                <span class="fld-label">How often</span>
+                <select name="frequency" class="form-input" style="padding:4px 8px;font-size:13px;">
+                  <option value="twice_weekly" <?= $hs_sub['frequency'] !== 'daily' ? 'selected' : '' ?>>Twice a week (Mon + Thu)</option>
+                  <option value="daily" <?= $hs_sub['frequency'] === 'daily' ? 'selected' : '' ?>>Daily</option>
+                </select>
+              </div>
+              <div class="fld-label" style="margin:10px 0 6px;">Areas</div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:6px 22px;margin-bottom:10px;">
+                <?php foreach (mk_area_names() as $ak => $an): ?>
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:0;">
+                    <input type="checkbox" name="hs_areas[]" value="<?= e_attr($ak) ?>" <?= in_array($ak, $hs_ticked, true) ? 'checked' : '' ?>> <?= htmlspecialchars($an) ?>
+                  </label>
+                <?php endforeach; ?>
+              </div>
+              <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save Hot Sheets</button></div>
+            </form>
+            <p class="hint" style="margin:8px 0 0;">One email per ticked area, going to <?= htmlspecialchars($hs_email) ?>. An area with nothing to show is not sent that day. They can change this themselves on the agent portal.</p>
+          <?php elseif ($hs_on && !$hs_ready): ?>
+            <p class="hint" style="margin:6px 0 0;">Areas and twice-weekly sending appear here once sql/hot_sheets_v4_areas.sql has been run.</p>
+          <?php else: ?>
+            <p class="hint" style="margin:6px 0 0;">Subscribing here ticks the "<?= htmlspecialchars(MK_HS_TASK) ?>" item on their checklist and starts them twice a week in the areas their profile suggests. Manage opens the Hot Sheet subscriber list, where pausing and unsubscribing live.</p>
+          <?php endif; ?>
           <div class="fld" style="margin-top:12px;">
             <span class="fld-label">FUB rotation</span>
             <span class="pill <?= !empty($agent['in_fub']) ? 'w-approved' : 'w-inactive' ?>"><?= !empty($agent['in_fub']) ? 'In rotation' : 'Not in rotation' ?></span>

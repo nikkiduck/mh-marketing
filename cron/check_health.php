@@ -112,6 +112,17 @@ if ($b = bad_lines($s['text'])) {
     $issues['listings'] = trim(($issues['listings'] ?? '') . "\nThe last listing sync reported:\n  " . implode("\n  ", $b));
 }
 
+// The Hot Sheet send (daily 13:00 UTC; one email per area since 2026-10-07).
+// A missing migration or a SendGrid failure writes a ✗ line; a day without
+// its closing ✓ means the cron did not finish.
+$s = log_state(LOG_DIR . '/hot_sheet_send.log', '/✓ (Done|DRY RUN):/u');
+if ($s['done_at'] && $now - $s['done_at'] > 26 * 3600) {
+    $issues['hotsheets'] = 'The Hot Sheet send has not completed since ' . $ago($s['done_at']) . '.';
+}
+if ($b = bad_lines($s['text'])) {
+    $issues['hotsheets'] = trim(($issues['hotsheets'] ?? '') . "\nThe last Hot Sheet send reported:\n  " . implode("\n  ", $b));
+}
+
 $s = log_state(LOG_DIR . '/pipeline_parse.log', '/\] Done: \d+ parsed, \d+ errors/u');
 if (!$s['done_at'] || $now - $s['done_at'] > 45 * 60) {
     $issues['pipeline'] = 'The Paperless Pipeline parser has not run since ' . $ago($s['done_at']) . '.';

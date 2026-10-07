@@ -53,11 +53,14 @@ try {
                                    is_active = IF(unsubscribed_at IS NULL, ?, 0), hub_subscriber_id = ?
                              WHERE id = ?");
     $n = ['sub_new' => 0, 'sub_upd' => 0];
+    $fc = $conn->query("SHOW COLUMNS FROM hs_subscribers LIKE 'frequency'")->fetch_assoc();
+    $twice_weekly_ok = $fc && str_contains((string)$fc['Type'], 'twice_weekly');
     foreach ($d['subscribers'] as $s) {
         $email = strtolower(trim((string)$s['email']));
         if ($email === '') continue;
         $rl = (int)$s['receives_listings']; $rr = (int)$s['receives_rentals'];
-        $fq = in_array($s['frequency'] ?? 'daily', ['daily', 'weekly'], true) ? $s['frequency'] : 'daily';
+        // The hub's weekly is this system's twice a week (Monday + Thursday) once sql/hot_sheets_v4_areas.sql has run.
+        $fq = ($s['frequency'] ?? 'daily') === 'weekly' ? ($twice_weekly_ok ? 'twice_weekly' : 'weekly') : 'daily';
         $ac = (int)$s['is_active']; $hid = (int)$s['id'];
         $find->bind_param('s', $email); $find->execute();
         $cur = $find->get_result()->fetch_assoc();

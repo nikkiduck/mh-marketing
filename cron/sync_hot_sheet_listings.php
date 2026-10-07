@@ -88,13 +88,21 @@ const HS_ACTIVE = ['Active', 'Active Under Contract', 'Pending', 'Coming Soon'];
 function is_closed(string $s): bool { return in_array(strtolower($s), ['closed', 'sold', 'leased'], true); }
 function money($v): string { return $v === null ? '' : number_format((float)$v, 2, '.', ''); }
 
+// The Hot Sheet area (sql/hot_sheets_v4_areas.sql, 2026-10-07): the feed
+// stamps every listing with the Communities area its town or board belongs
+// to; stored as sent. Until the migration has run the columns are absent and
+// hs_data.php derives the area from the city instead.
+$chk = $conn->query("SHOW COLUMNS FROM hs_listing_state LIKE 'area_key'");
+$has_area = $chk && $chk->fetch_row();
+if (!$has_area) out('~ hs_listing_state has no area_key column yet (sql/hot_sheets_v4_areas.sql): areas not stored this run.');
+
 $up = $conn->prepare("
     INSERT INTO hs_listing_state
         (market, listing_key, mls_id, status, is_rental, property_type, address, city, subdivision,
          list_price, close_price, close_date, beds, baths, sqft, primary_photo, url,
          list_agent_mls_id, list_agent_name, colist_agent_mls_id, colist_agent_name, list_office_name,
-         in_feed, first_seen_at, last_seen_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?)
+         in_feed, first_seen_at, last_seen_at" . ($has_area ? ', area_key, area' : '') . ")
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1,?,?" . ($has_area ? ',?,?' : '') . ")
     ON DUPLICATE KEY UPDATE
         mls_id=VALUES(mls_id), status=VALUES(status), is_rental=VALUES(is_rental), property_type=VALUES(property_type),
         address=VALUES(address), city=VALUES(city), subdivision=VALUES(subdivision),
@@ -102,7 +110,8 @@ $up = $conn->prepare("
         beds=VALUES(beds), baths=VALUES(baths), sqft=VALUES(sqft), primary_photo=VALUES(primary_photo), url=VALUES(url),
         list_agent_mls_id=VALUES(list_agent_mls_id), list_agent_name=VALUES(list_agent_name),
         colist_agent_mls_id=VALUES(colist_agent_mls_id), colist_agent_name=VALUES(colist_agent_name),
-        list_office_name=VALUES(list_office_name), in_feed=1, last_seen_at=VALUES(last_seen_at)");
+        list_office_name=VALUES(list_office_name), in_feed=1, last_seen_at=VALUES(last_seen_at)"
+        . ($has_area ? ', area_key=VALUES(area_key), area=VALUES(area)' : ''));
 $log = $conn->prepare("INSERT INTO hs_listing_changes (market, listing_key, change_type, old_value, new_value, detected_at)
                        VALUES (?,?,?,?,?,?)");
 if (!$up || !$log) { out('✗ prepare failed: ' . $conn->error); exit(1); }
@@ -164,10 +173,18 @@ try {
         $ca = (string)($l['colist_agent_mls_id'] ?? ''); $cn = (string)($l['colist_agent_name'] ?? '');
         $of = (string)($l['list_office_name'] ?? '');
         $first = $old['first_seen_at'] ?? $now;
-        // 24 values: 4 s, rental i, 4 s, 5 numeric-or-null as s, sqft i, 9 s. Count them.
-        $up->bind_param('ssss' . 'i' . 'ssss' . 'sssss' . 'i' . 'sssssssss',
-            $mk, $key, $mls, $st, $rent, $pt, $ad, $ci, $sd, $lp, $cp, $cd, $bd, $ba, $sq, $ph, $url,
-            $la, $ln, $ca, $cn, $of, $first, $now);
+        if ($has_area) {
+            $ak = (string)($l['area_key'] ?? ''); $an = (string)($l['area'] ?? '');
+            // 26 values: 4 s, rental i, 4 s, 5 numeric-or-null as s, sqft i, 9 s, area 2 s. Count them.
+            $up->bind_param('ssss' . 'i' . 'ssss' . 'sssss' . 'i' . 'sssssssss' . 'ss',
+                $mk, $key, $mls, $st, $rent, $pt, $ad, $ci, $sd, $lp, $cp, $cd, $bd, $ba, $sq, $ph, $url,
+                $la, $ln, $ca, $cn, $of, $first, $now, $ak, $an);
+        } else {
+            // 24 values: 4 s, rental i, 4 s, 5 numeric-or-null as s, sqft i, 9 s. Count them.
+            $up->bind_param('ssss' . 'i' . 'ssss' . 'sssss' . 'i' . 'sssssssss',
+                $mk, $key, $mls, $st, $rent, $pt, $ad, $ci, $sd, $lp, $cp, $cd, $bd, $ba, $sq, $ph, $url,
+                $la, $ln, $ca, $cn, $of, $first, $now);
+        }
         $up->execute();
     }
 

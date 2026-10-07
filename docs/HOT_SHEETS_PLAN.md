@@ -5,6 +5,8 @@ tracking on site.monthaus.com; `hot_sheets_v1.sql` + `cron/sync_hot_sheet_listin
 here). Emails, subscribers and the hub import BUILT the same day
 (`hot_sheets_v2.sql`, send cron, preview, unsubscribe). Paperless Pipeline
 BUILT 2026-09-21 (`hot_sheets_v3_pipeline.sql`); Zapier still points at the hub.
+**Phase 1, one Hot Sheet per area, BUILT 2026-10-07** (`hot_sheets_v4_areas.sql`;
+see the section at the end).
 **Written:** 2026-09-21.
 **Source system:** `monthausint.com/hot-sheets` (about 6,500 lines of PHP), which
 keeps running on Spark until the new site is fully live.
@@ -238,3 +240,75 @@ sent); `--reparse` left the promoted row promoted; review page: promote
 closed (close price + status change logged), promote new buyer rep (photo,
 MLS #, site link from the lookup), cancelled refused, dismiss.
 
+
+## Phase 1: one Hot Sheet per area (built 2026-10-07)
+
+Nikki, 2026-10-07: "no reason why our CO Springs team would want to get
+Aspen listings." The two Mont Haus emails (Listings, Rentals) became one
+email per area, with a sub-menu (MLS Listings | Pocket Listings | Buyer's
+Rep | Rentals), the latest activity at the top including new rentals, a
+frequency per agent (daily or twice a week) and the agent's own choice of
+areas, set by marketing on the portal and by the agent themselves. An area
+with nothing in it sends no email. Phase 2 (custom Hot Sheets with filters
+across all listings) is separate and comes after this.
+
+### Decisions
+
+- **Areas = the website's Communities list**, the same six areas FUB lead
+  routing and the site's Communities menu use (Roaring Fork Valley, Vail
+  Valley, Summit County, Gunnison Valley, Southwest Colorado, Front Range).
+  One list to maintain, on the site; the keys are published by api/boards.php.
+  Front Range is one area (Denver + Colorado Springs) because the list is;
+  splitting it is an edit to the site's `_communities.php`.
+- **One email per area**, not one email with sections per area: the empty
+  rule applies per area, the subject names the area, and an agent with two
+  areas gets two emails only on days both have something.
+- **Frequency:** daily, or twice a week (Monday + Thursday, Mountain time).
+  Every hub-imported weekly subscriber became twice weekly.
+- **Latest Updates** is unchanged: the computed window since Monday 00:00
+  Mountain, the most telling change per listing; rentals appear in it when
+  new ("New Rental"), as on the hub.
+- **Which area a listing is in** is decided on the site (`listing_area()` in
+  `_communities.php`, the town's Communities area, else the board's) and sent
+  in the feed as `area_key` + `area`. Pocket listings and buyer reps get
+  theirs on pipeline_review.php when promoted (pre-selected from the MLS
+  match's area) and can be changed under Recently reviewed.
+- **Starting areas** for a subscription (`mk_hs_default_areas()`): the areas
+  of the towns ticked under Follow Up Boss on the profile; else what the
+  free-text Service area says; else the boards they hold. Shown as
+  checkboxes and changed freely.
+- The old `receives_listings` / `receives_rentals` flags are no longer read.
+
+### Files
+
+- Site: `webroot/_communities.php` (`community_area_key()`, `listing_area()`,
+  `key` per area in `communities_for_api()`), `webroot/api/boards.php` (`area`
+  per board), `webroot/api/listings.php` (`area_key`, `area` per listing).
+- Marketing: `sql/hot_sheets_v4_areas.sql`; `inc/boards.php` (area keys,
+  `mk_area_names()`, `mk_areas_decode()`, `mk_town_area()`, `mk_board_area()`);
+  `cron/sync_hot_sheet_listings.php` (stores the stamp); `inc/hs_data.php`
+  (`hs_listing_area()`, `hs_area_data()`, `hs_all_areas()`,
+  `hs_rows_without_area()`); `inc/hs_template.php` (one area email);
+  `cron/send_hot_sheet.php`; `hot_sheet_preview.php` (index + `?area=`);
+  `subscribers.php`; `agent.php` (Subscriptions card, action `hs_prefs`);
+  `inc/agent_lifecycle.php` (`mk_hs_subscription()`, `mk_hs_default_areas()`,
+  `mk_hs_save_prefs()`, `mk_hs_sync_task()`); `pipeline_review.php` (Area
+  field, `set_area`); `inc/pipeline.php` (`area_key` from the lookup);
+  `portal/hotsheets.php` + nav + home card; `cron/check_health.php` (send log);
+  `cron/import_hot_sheets.php` (weekly → twice_weekly).
+
+### Runbook
+
+1. Deploy the site files (the feed starts stamping areas at once).
+2. Run `sql/hot_sheets_v4_areas.sql` in TablePlus. Deploy the marketing files.
+3. The next listing sync (:40) stores every listing's area; until then
+   `hs_listing_area()` derives it from the city.
+4. Set the area on the pocket listings and buyer reps the migration could not
+   place (Pipeline Review > Recently reviewed > Hot Sheet area).
+5. `hot_sheet_preview.php`: every area, counts, "Would be sent" or "Nothing
+   to show"; open each. Check subscribers.php: areas per subscriber.
+6. `php cron/send_hot_sheet.php --dry-run`, then
+   `--to=nikki.boxer@monthaus.com` (every area with content, or `--area=vail-valley`).
+7. The cron line is unchanged (daily 13:00 UTC); the script decides who is
+   due. `HOT_SHEET_ALLOWED_RECIPIENTS` still limits sends to Nikki until
+   go-live.

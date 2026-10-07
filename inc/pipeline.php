@@ -137,7 +137,7 @@ function pl_match_listing(array $idx, string $address): array {
  */
 function pl_enrich_address(string $address): array {
     $out = ['mls_number' => null, 'photo' => null, 'city' => null, 'postal_code' => null,
-            'url' => null, 'market' => null, 'status' => null, 'error' => null];
+            'url' => null, 'market' => null, 'status' => null, 'area_key' => null, 'error' => null];
     $needle = trim($address);
     if (preg_match('/^\s*(\d+\s+[^,#]+)/', $needle, $m)) $needle = trim($m[1]);
     $needle = trim(preg_replace('/\s+\b(unit|apt|apartment|suite|ste)\b.*$/i', '', $needle));
@@ -173,5 +173,6 @@ function pl_enrich_address(string $address): array {
     $out['url']         = $best['url'] ?: null;
     $out['market']      = $best['market'] ?: null;
     $out['status']      = $best['status'] ?: null;
+    $out['area_key']    = ($best['area_key'] ?? '') ?: null;   // the Hot Sheet area (site, 2026-10-07)
     return $out;
 }

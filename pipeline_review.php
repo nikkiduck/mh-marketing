@@ -23,6 +23,8 @@ require_once __DIR__ . '/inc/db.php';
 require_login();
 require_role('admin');
 require_once __DIR__ . '/inc/pipeline.php';
+require_once __DIR__ . '/inc/boards.php';
+require_once __DIR__ . '/inc/schema.php';
 
 $now = date('Y-m-d H:i:s');
 $uid = (int)($_SESSION['user_id'] ?? 0);
@@ -34,10 +36,27 @@ if (!$chk || !$chk->fetch_row()) {
     exit('Paperless Pipeline is not set up yet: run sql/hot_sheets_v3_pipeline.sql.');
 }
 
+// Hot Sheet areas (2026-10-07, sql/hot_sheets_v4_areas.sql): a pocket listing
+// or buyer rep belongs to ONE area's email, chosen here when promoted
+// (defaulted from the MLS match) and changeable under Recently reviewed.
+$has_area   = mk_column_exists($conn, 'hs_manual_listings', 'area_key');
+$area_names = mk_area_names();
+$pick_area  = fn($v) => isset($area_names[(string)$v]) ? (string)$v : null;
+
 // ── POST ─────────────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['_action'] ?? '';
     $tid    = (int)($_POST['txn_row_id'] ?? 0);
+
+    if ($action === 'set_area' && $has_area) {
+        $ml_id = (int)($_POST['manual_listing_id'] ?? 0);
+        $ak    = $pick_area($_POST['area_key'] ?? '');
+        $s = $conn->prepare("UPDATE hs_manual_listings SET area_key = ?, updated_at = ? WHERE id = ?");
+        if ($s && $ml_id) {
+            $s->bind_param('ssi', $ak, $now, $ml_id); $s->execute(); $s->close();
+            $success = $ak ? 'Area set to ' . $area_names[$ak] . '.' : 'Area cleared: this entry is in no Hot Sheet until one is chosen.';
+        }
+    }
 
     if ($action === 'reject' && $tid) {
         // Dismissing used to touch only the review queue, which left an
@@ -111,6 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $agents     = trim($_POST['agent_names'] ?? '') ?: null;
             $status     = pl_map_status($row['status_category'], $row['status_label']);
             $notes      = trim($_POST['notes'] ?? '') ?: null;
+            $area_key   = $pick_area($_POST['area_key'] ?? '');   // blank = take the MLS match's area below
             $success_extra = '';   // appended to the flash by the branches below
 
             // Price rules: a pending deal publishes no figure — the contract
@@ -138,6 +158,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $photo = $enr['photo'] ?: null;
                 $lurl  = ($entry_type === 'buyer_rep') ? ($enr['url'] ?: null) : null;
                 if ($city === null && !empty($enr['city'])) $city = $enr['city'];
+                if ($area_key === null) $area_key = $pick_area($enr['area_key'] ?? '');
+                if ($area_key === null && $city !== null) {
+                    // A typed city with no MLS match: the board the town belongs to, then its area.
+                    $b = mk_board_towns()[strtolower(trim($city))] ?? null;
+                    if ($b !== null) $area_key = $pick_area(mk_board_area($b) ?? '');
+                }
                 $manual_url = trim($_POST['listing_url'] ?? '');
                 if ($manual_url !== '' && $entry_type === 'buyer_rep') $lurl = $manual_url;   // typed URL wins
 
@@ -178,6 +204,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $s->execute(); $s->close();
                     }
                     $ml_id = $existing_id;
+                    if ($has_area && $area_key !== null) {
+                        // A re-promote keeps the area already chosen unless the form named one or the match now gives one.
+                        $u = $conn->prepare("UPDATE hs_manual_listings SET area_key = ? WHERE id = ?");
+                        if ($u) { $u->bind_param('si', $area_key, $ml_id); $u->execute(); $u->close(); }
+                    }
 
                     // Only log a change when the status genuinely moved. Without
                     // this, correcting a photo re-announced the listing in Latest
@@ -216,6 +247,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $s->execute();
                         $ml_id = (int)$conn->insert_id;
                         $s->close();
+                        if ($has_area && $area_key !== null) {
+                            $u = $conn->prepare("UPDATE hs_manual_listings SET area_key = ? WHERE id = ?");
+                            if ($u) { $u->bind_param('si', $area_key, $ml_id); $u->execute(); $u->close(); }
+                        }
 
                         $c = $conn->prepare(
                             "INSERT INTO hs_manual_listing_changes (manual_listing_id, change_type, old_value, new_value, detected_at)
@@ -238,6 +273,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $bits = [];
                     $bits[] = $enr['photo'] ? 'photo from the MLS' : 'no MLS photo, using placeholder';
                     $bits[] = $enr['mls_number'] ? ('MLS ' . $enr['mls_number']) : 'no MLS match';
+                    if ($has_area) $bits[] = $area_key !== null ? 'Hot Sheet area: ' . $area_names[$area_key] : 'NO AREA, so in no Hot Sheet: set it under Recently reviewed';
                     if ($enr['error']) $bits[] = 'lookup: ' . $enr['error'];
                     if ($entry_type === 'buyer_rep') {
                         if ($lurl && $manual_url !== '') $bits[] = 'listing link set manually';
@@ -301,13 +337,26 @@ function pr_conditional_hint(?string $payload, array $conditional): ?array {
 
 $done = [];
 $r = $conn->query("
-    SELECT pt.*, ml.address AS ml_address
+    SELECT pt.*, ml.address AS ml_address, ml.id AS ml_id, ml.is_active AS ml_active" . ($has_area ? ', ml.area_key AS ml_area' : '') . "
       FROM hs_pipeline_transactions pt
       LEFT JOIN hs_manual_listings ml ON ml.id = pt.manual_listing_id
      WHERE pt.review_status <> 'pending'
      ORDER BY pt.reviewed_at DESC LIMIT 40
 ");
 if ($r) $done = $r->fetch_all(MYSQLI_ASSOC);
+
+// The area the parser's MLS match sits in, to pre-select on the promote form.
+$match_area = [];
+if ($has_area && mk_column_exists($conn, 'hs_listing_state', 'area_key')) {
+    foreach ($pending as $t) {
+        if (($t['mls_match_key'] ?? '') === '' || ($t['mls_match_market'] ?? '') === '') continue;
+        $s = $conn->prepare("SELECT area_key FROM hs_listing_state WHERE market = ? AND listing_key = ?");
+        if (!$s) break;
+        $s->bind_param('ss', $t['mls_match_market'], $t['mls_match_key']); $s->execute();
+        $match_area[(int)$t['id']] = (string)($s->get_result()->fetch_assoc()['area_key'] ?? '');
+        $s->close();
+    }
+}
 
 function h($v): string { return htmlspecialchars((string)$v); }
 function money0(?string $v): string {
@@ -376,8 +425,7 @@ function money0(?string $v): string {
 <div class="topbar">
   <span class="title">Mont Haus Hot Sheet: Pipeline Review</span>
   <a href="index.php">Roster</a>
-  <a href="hot_sheet_preview.php">Preview: Listings</a>
-  <a href="hot_sheet_preview.php?type=rentals">Rentals</a>
+  <a href="hot_sheet_preview.php">Preview the Hot Sheets</a>
   <a href="pipeline_events.php">Raw payloads</a>
   <a href="logout.php">Log out</a>
 </div>
@@ -506,6 +554,18 @@ sort($mh_cities);
             <option value="buyer_rep"      <?= $type==='buyer_rep'?'selected':'' ?>>Buyer Representation</option>
             <option value="pocket_listing" <?= $type==='pocket_listing'?'selected':'' ?>>Pocket Listing (off-market)</option>
           </select></div>
+        <?php if ($has_area): $pre = $match_area[(int)$t['id']] ?? ''; ?>
+        <div class="f1"><label>Hot Sheet area</label>
+          <select name="area_key">
+            <option value="">From the MLS match / city</option>
+            <?php foreach ($area_names as $ak => $an): ?>
+              <option value="<?= h($ak) ?>" <?= $ak === $pre ? 'selected' : '' ?>><?= h($an) ?></option>
+            <?php endforeach; ?>
+          </select>
+          <div style="font-size:11px;color:#9ca3af;margin-top:4px;">
+            Which area's email carries it. Leave as is and the MLS match (or the city) decides; pick one when it cannot.
+          </div></div>
+        <?php endif; ?>
       </div>
       <div class="row">
         <div class="f1"><label>Agents</label>
@@ -562,13 +622,29 @@ sort($mh_cities);
   <?php if ($done): ?>
     <h2>Recently reviewed</h2>
     <table>
-      <tr><th>Address</th><th>Outcome</th><th>Status</th><th>When</th><th></th></tr>
+      <tr><th>Address</th><th>Outcome</th><?php if ($has_area): ?><th>Hot Sheet area</th><?php endif; ?><th>Status</th><th>When</th><th></th></tr>
       <?php foreach ($done as $d): ?>
       <tr>
         <td><?= h($d['address']) ?></td>
         <td><?= $d['review_status'] === 'promoted'
                 ? 'Added' . ($d['ml_address'] ? '' : ' <span style="color:#9ca3af;">(entry since removed)</span>')
                 : 'Dismissed' ?></td>
+        <?php if ($has_area): ?>
+        <td>
+          <?php if ($d['review_status'] === 'promoted' && !empty($d['ml_id']) && (int)$d['ml_active'] === 1): ?>
+            <form method="POST" style="margin:0;display:flex;gap:6px;align-items:center;">
+              <input type="hidden" name="_action" value="set_area">
+              <input type="hidden" name="manual_listing_id" value="<?= (int)$d['ml_id'] ?>">
+              <select name="area_key" style="width:auto;padding:4px 6px;font-size:12px;<?= ($d['ml_area'] ?? '') === '' || $d['ml_area'] === null ? 'border-color:#fdba74;background:#fff7ed;' : '' ?>" onchange="this.form.submit()">
+                <option value="">No area (in no email)</option>
+                <?php foreach ($area_names as $ak => $an): ?>
+                  <option value="<?= h($ak) ?>" <?= ($d['ml_area'] ?? '') === $ak ? 'selected' : '' ?>><?= h($an) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </form>
+          <?php else: ?>—<?php endif; ?>
+        </td>
+        <?php endif; ?>
         <td><?= h($d['status_label'] ?: '—') ?></td>
         <td><?= h($d['reviewed_at'] ?: '—') ?></td>
         <td>

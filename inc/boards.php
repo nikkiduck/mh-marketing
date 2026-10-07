@@ -40,23 +40,23 @@ if (!defined('BOARDS_CACHE_FILE')) {
 }
 
 const MK_BOARDS_FALLBACK = [
-    'aspen'      => ['osn' => 'agsmls',     'label' => 'Aspen',      'status' => 'live',    'office' => 'aspen', 'aliases' => [],
+    'aspen'      => ['osn' => 'agsmls',     'label' => 'Aspen',      'status' => 'live',    'office' => 'aspen', 'aliases' => [], 'area' => 'roaring-fork-valley',
                      'towns' => ['aspen', 'snowmass village', 'old snowmass', 'woody creek', 'basalt', 'carbondale', 'redstone', 'marble',
                                  'glenwood springs', 'new castle', 'silt', 'rifle', 'parachute', 'battlement mesa']],
-    'vail'       => ['osn' => 'vbor',       'label' => 'Vail',       'status' => 'live',    'office' => 'vail', 'aliases' => [],
+    'vail'       => ['osn' => 'vbor',       'label' => 'Vail',       'status' => 'live',    'office' => 'vail', 'aliases' => [], 'area' => 'vail-valley',
                      'towns' => ['vail', 'avon', 'beaver creek', 'bachelor gulch', 'arrowhead', 'edwards', 'singletree', 'cordillera', 'eagle',
                                  'eagle-vail', 'gypsum', 'minturn', 'red cliff', 'wolcott', 'mccoy', 'bond']],
-    'telluride'  => ['osn' => 'tridemls',   'label' => 'Telluride',  'status' => 'live',    'office' => null, 'aliases' => [],
+    'telluride'  => ['osn' => 'tridemls',   'label' => 'Telluride',  'status' => 'live',    'office' => null, 'aliases' => [], 'area' => 'southwest-colorado',
                      'towns' => ['telluride', 'mountain village', 'ophir', 'placerville', 'sawpit', 'norwood', 'rico']],
-    'altitude'   => ['osn' => 'summit',     'label' => 'Altitude',   'status' => 'live',    'office' => null, 'aliases' => [],
+    'altitude'   => ['osn' => 'summit',     'label' => 'Altitude',   'status' => 'live',    'office' => null, 'aliases' => [], 'area' => 'summit-county',
                      'towns' => ['breckenridge', 'blue river', 'frisco', 'dillon', 'silverthorne', 'keystone', 'copper mountain', 'heeney',
                                  'steamboat springs', 'oak creek', 'hayden', 'clark', 'yampa', 'craig', 'maybell',
                                  'fairplay', 'alma', 'como', 'jefferson', 'hartsel']],
-    'elevate'    => ['osn' => 'ppmls',      'label' => 'Elevate',    'status' => 'live',    'office' => 'colorado-springs', 'aliases' => [],
+    'elevate'    => ['osn' => 'ppmls',      'label' => 'Elevate',    'status' => 'live',    'office' => 'colorado-springs', 'aliases' => [], 'area' => 'front-range',
                      'towns' => ['colorado springs', 'monument', 'manitou springs', 'woodland park', 'fountain', 'peyton', 'falcon',
                                  'black forest', 'palmer lake']],
-    'cren'       => ['osn' => 'cren',       'label' => 'CREN',       'status' => 'live',    'office' => 'aspen', 'aliases' => [], 'towns' => []],
-    'recolorado' => ['osn' => 'ccbr_idx',   'label' => 'REColorado', 'status' => 'live',    'office' => 'aspen',
+    'cren'       => ['osn' => 'cren',       'label' => 'CREN',       'status' => 'live',    'office' => 'aspen', 'aliases' => [], 'area' => 'southwest-colorado', 'towns' => []],
+    'recolorado' => ['osn' => 'ccbr_idx',   'label' => 'REColorado', 'status' => 'live',    'office' => 'aspen', 'area' => 'front-range',
                      'aliases' => ['denver', 'remetrodenver'],
                      'towns' => ['denver', 'aurora', 'lakewood', 'littleton', 'centennial', 'englewood', 'arvada', 'westminster', 'thornton',
                                  'northglenn', 'broomfield', 'golden', 'wheat ridge', 'commerce city', 'brighton', 'parker', 'castle rock',
@@ -92,6 +92,11 @@ function mk_boards_parse(?array $d): array|string {
             if (!is_array($b[$k] ?? null)) return "board {$slug} has no {$k} list";
             foreach ($b[$k] as $v) if (!is_string($v)) return "board {$slug}: {$k} must be strings";
         }
+        // `area` (2026-10-07): the Hot Sheet area an unlisted town of this
+        // board falls into (the site's COMMUNITY_BOARD_AREA). Optional: a site
+        // older than that day sends none, and the fallback below carries it.
+        $area = $b['area'] ?? null;
+        if ($area !== null && (!is_string($area) || !preg_match('/^[a-z0-9-]{0,60}$/', $area))) return "board {$slug} has a bad area";
         $out[$slug] = [
             'osn'     => strtolower(trim((string)($b['osn'] ?? $slug))),
             'label'   => $label,
@@ -99,6 +104,7 @@ function mk_boards_parse(?array $d): array|string {
             'office'  => $office === null || $office === '' ? null : $office,
             'aliases' => array_values(array_map('strval', $b['aliases'])),
             'towns'   => array_values(array_map(fn($t) => strtolower(trim($t)), $b['towns'])),
+            'area'    => $area === null || $area === '' ? null : $area,
         ];
     }
     return $out;
@@ -244,6 +250,16 @@ function mk_board_live_labels(): array {
     return array_values(array_map(fn($b) => $b['label'], array_filter(mk_board_registry(), fn($b) => $b['status'] === 'live')));
 }
 
+/**
+ * The Hot Sheet area key a board's listings fall into when their town is not
+ * in the Communities list, or null. A cache written before the site sent
+ * `area` (2026-10-07) has none, so the built-in copy fills in until the next
+ * roster sync rewrites it.
+ */
+function mk_board_area(string $slug): ?string {
+    return mk_board_registry()[$slug]['area'] ?? MK_BOARDS_FALLBACK[$slug]['area'] ?? null;
+}
+
 /* ── Service areas (2026-10-06) ──────────────────────────────────────────────
  * The website's Communities list (its _communities.php), published by the
  * same api/boards.php as `areas` and cached in the same file. agent.php's
@@ -252,21 +268,34 @@ function mk_board_live_labels(): array {
  * roster feed, and the site gives a lead on another firm's listing to an
  * agent who ticked its town. A town's key is its label slugged.
  *
- *   mk_areas()       [['area' => name, 'towns' => [['key', 'label'], …]], …]
+ *   mk_areas()       [['key' => area key, 'area' => name, 'towns' => [['key', 'label'], …]], …]
  *   mk_area_keys()   every town key, for validating a form post
+ *
+ * The Hot Sheets (2026-10-07) are one email per AREA of this same list, so
+ * each area carries a key too (its name slugged, as the site makes it):
+ *
+ *   mk_area_names()        [area key => name], in the list's order
+ *   mk_area_name($key)     "Vail Valley"
+ *   mk_areas_decode($json) the area keys a stored JSON list holds that the list knows
+ *   mk_town_area($town)    the area key a Communities town key belongs to
  *
  * MK_AREAS_FALLBACK is the list as of 2026-10-06, used only while the cache
  * carries no `areas` (before the first roster sync after that deploy). Edit
  * the list on the website, not here.
  */
 const MK_AREAS_FALLBACK = [
-    ['area' => 'Roaring Fork Valley', 'towns' => [['key' => 'aspen', 'label' => 'Aspen'], ['key' => 'snowmass-village', 'label' => 'Snowmass Village'], ['key' => 'old-snowmass', 'label' => 'Old Snowmass'], ['key' => 'woody-creek', 'label' => 'Woody Creek'], ['key' => 'basalt', 'label' => 'Basalt'], ['key' => 'carbondale', 'label' => 'Carbondale'], ['key' => 'glenwood-springs', 'label' => 'Glenwood Springs']]],
-    ['area' => 'Vail Valley',         'towns' => [['key' => 'vail', 'label' => 'Vail'], ['key' => 'beaver-creek', 'label' => 'Beaver Creek'], ['key' => 'avon', 'label' => 'Avon'], ['key' => 'edwards', 'label' => 'Edwards'], ['key' => 'minturn', 'label' => 'Minturn'], ['key' => 'eagle', 'label' => 'Eagle'], ['key' => 'gypsum', 'label' => 'Gypsum']]],
-    ['area' => 'Summit County',       'towns' => [['key' => 'breckenridge', 'label' => 'Breckenridge'], ['key' => 'keystone', 'label' => 'Keystone'], ['key' => 'copper-mountain', 'label' => 'Copper Mountain'], ['key' => 'frisco', 'label' => 'Frisco'], ['key' => 'dillon', 'label' => 'Dillon'], ['key' => 'silverthorne', 'label' => 'Silverthorne'], ['key' => 'steamboat-springs', 'label' => 'Steamboat Springs']]],
-    ['area' => 'Gunnison Valley',     'towns' => [['key' => 'crested-butte', 'label' => 'Crested Butte'], ['key' => 'gunnison', 'label' => 'Gunnison']]],
-    ['area' => 'Southwest Colorado',  'towns' => [['key' => 'telluride', 'label' => 'Telluride'], ['key' => 'mountain-village', 'label' => 'Mountain Village'], ['key' => 'ridgway', 'label' => 'Ridgway'], ['key' => 'ouray', 'label' => 'Ouray'], ['key' => 'montrose', 'label' => 'Montrose'], ['key' => 'durango', 'label' => 'Durango'], ['key' => 'pagosa-springs', 'label' => 'Pagosa Springs']]],
-    ['area' => 'Front Range',         'towns' => [['key' => 'greater-denver', 'label' => 'Greater Denver'], ['key' => 'boulder', 'label' => 'Boulder'], ['key' => 'evergreen', 'label' => 'Evergreen'], ['key' => 'colorado-springs', 'label' => 'Colorado Springs']]],
+    ['key' => 'roaring-fork-valley', 'area' => 'Roaring Fork Valley', 'towns' => [['key' => 'aspen', 'label' => 'Aspen'], ['key' => 'snowmass-village', 'label' => 'Snowmass Village'], ['key' => 'old-snowmass', 'label' => 'Old Snowmass'], ['key' => 'woody-creek', 'label' => 'Woody Creek'], ['key' => 'basalt', 'label' => 'Basalt'], ['key' => 'carbondale', 'label' => 'Carbondale'], ['key' => 'glenwood-springs', 'label' => 'Glenwood Springs']]],
+    ['key' => 'vail-valley',         'area' => 'Vail Valley',         'towns' => [['key' => 'vail', 'label' => 'Vail'], ['key' => 'beaver-creek', 'label' => 'Beaver Creek'], ['key' => 'avon', 'label' => 'Avon'], ['key' => 'edwards', 'label' => 'Edwards'], ['key' => 'minturn', 'label' => 'Minturn'], ['key' => 'eagle', 'label' => 'Eagle'], ['key' => 'gypsum', 'label' => 'Gypsum']]],
+    ['key' => 'summit-county',       'area' => 'Summit County',       'towns' => [['key' => 'breckenridge', 'label' => 'Breckenridge'], ['key' => 'keystone', 'label' => 'Keystone'], ['key' => 'copper-mountain', 'label' => 'Copper Mountain'], ['key' => 'frisco', 'label' => 'Frisco'], ['key' => 'dillon', 'label' => 'Dillon'], ['key' => 'silverthorne', 'label' => 'Silverthorne'], ['key' => 'steamboat-springs', 'label' => 'Steamboat Springs']]],
+    ['key' => 'gunnison-valley',     'area' => 'Gunnison Valley',     'towns' => [['key' => 'crested-butte', 'label' => 'Crested Butte'], ['key' => 'gunnison', 'label' => 'Gunnison']]],
+    ['key' => 'southwest-colorado',  'area' => 'Southwest Colorado',  'towns' => [['key' => 'telluride', 'label' => 'Telluride'], ['key' => 'mountain-village', 'label' => 'Mountain Village'], ['key' => 'ridgway', 'label' => 'Ridgway'], ['key' => 'ouray', 'label' => 'Ouray'], ['key' => 'montrose', 'label' => 'Montrose'], ['key' => 'durango', 'label' => 'Durango'], ['key' => 'pagosa-springs', 'label' => 'Pagosa Springs']]],
+    ['key' => 'front-range',         'area' => 'Front Range',         'towns' => [['key' => 'greater-denver', 'label' => 'Greater Denver'], ['key' => 'boulder', 'label' => 'Boulder'], ['key' => 'evergreen', 'label' => 'Evergreen'], ['key' => 'colorado-springs', 'label' => 'Colorado Springs']]],
 ];
+
+/** An area name slugged the way the site keys it ('Roaring Fork Valley' → 'roaring-fork-valley'). */
+function mk_area_slug(string $name): string {
+    return trim(preg_replace('/[^a-z0-9]+/', '-', strtolower($name)), '-');
+}
 
 /** The site's `areas` → the list above, or [] when it is missing or malformed (never a half list). */
 function mk_areas_parse($v): array {
@@ -275,13 +304,16 @@ function mk_areas_parse($v): array {
     foreach ($v as $a) {
         $name = trim((string)($a['area'] ?? ''));
         if ($name === '' || !is_array($a['towns'] ?? null) || !$a['towns']) return [];
+        // The area key arrived with the 2026-10-07 site; an older payload gets the slug of the name, which is the same thing.
+        $akey = (string)($a['key'] ?? mk_area_slug($name));
+        if (!preg_match('/^[a-z0-9-]{1,60}$/', $akey)) return [];
         $towns = [];
         foreach ($a['towns'] as $t) {
             $key = (string)($t['key'] ?? ''); $label = trim((string)($t['label'] ?? ''));
             if (!preg_match('/^[a-z0-9-]{1,60}$/', $key) || $label === '') return [];
             $towns[] = ['key' => $key, 'label' => $label];
         }
-        $out[] = ['area' => $name, 'towns' => $towns];
+        $out[] = ['key' => $akey, 'area' => $name, 'towns' => $towns];
     }
     return $out;
 }
@@ -304,4 +336,30 @@ function mk_area_keys(): array {
     $keys = [];
     foreach (mk_areas() as $a) foreach ($a['towns'] as $t) $keys[] = $t['key'];
     return $keys;
+}
+
+/** [area key => area name], in the list's order: the Hot Sheet areas. */
+function mk_area_names(): array {
+    $out = [];
+    foreach (mk_areas() as $a) $out[$a['key']] = $a['area'];
+    return $out;
+}
+
+/** "Vail Valley" for 'vail-valley'; an unknown key is shown as words. */
+function mk_area_name(string $key): string {
+    return mk_area_names()[$key] ?? ucwords(str_replace('-', ' ', $key));
+}
+
+/** The area keys a stored JSON list holds, in the list's order, dropping any the list no longer knows. */
+function mk_areas_decode(?string $json): array {
+    $v = json_decode((string)$json, true);
+    if (!is_array($v)) return [];
+    $have = array_map('strval', $v);
+    return array_values(array_filter(array_keys(mk_area_names()), fn($k) => in_array($k, $have, true)));
+}
+
+/** The area key a Communities town key ('beaver-creek') belongs to, or null. */
+function mk_town_area(string $town_key): ?string {
+    foreach (mk_areas() as $a) foreach ($a['towns'] as $t) if ($t['key'] === $town_key) return $a['key'];
+    return null;
 }

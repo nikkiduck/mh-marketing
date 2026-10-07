@@ -289,11 +289,12 @@ function portal_greeting_name(array $ctx): string {
  */
 function portal_header(array $ctx, string $title, string $active): void {
     $nav = [
-        'home'   => ['Home', '/portal/'],
-        'ads'    => ['Advertising', '/portal/advertising.php'],
-        'orders' => ['Print orders', '/portal/orders.php'],
-        'spend'  => ['Spend', '/portal/spend.php'],
-        'qr'     => ['QR codes', '/portal/qr.php'],
+        'home'      => ['Home', '/portal/'],
+        'ads'       => ['Advertising', '/portal/advertising.php'],
+        'orders'    => ['Print orders', '/portal/orders.php'],
+        'spend'     => ['Spend', '/portal/spend.php'],
+        'qr'        => ['QR codes', '/portal/qr.php'],
+        'hotsheets' => ['Hot Sheets', '/portal/hotsheets.php'],
     ];
     ?>
 <!DOCTYPE html>

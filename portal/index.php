@@ -32,6 +32,18 @@ $fin = mh_agent_financials($conn, $acct);
 $yr = ['broker' => 0.0, 'mh' => 0.0];
 foreach ($fin['months'] as $k => $m) if (substr($k, 0, 4) === date('Y')) { $yr['broker'] += $m['broker']; $yr['mh'] += $m['mh']; }
 
+// Hot Sheets (2026-10-07): the signed-in person's own subscription, by their address.
+$hs = null;
+if (mk_table_exists($conn, 'hs_subscribers') && mk_column_exists($conn, 'hs_subscribers', 'areas')) {
+    require_once __DIR__ . '/../inc/boards.php';
+    require_once __DIR__ . '/../inc/agent_lifecycle.php';
+    $st = $conn->prepare("SELECT frequency, areas, is_active, unsubscribed_at FROM hs_subscribers WHERE email = ? LIMIT 1");
+    $em = strtolower(trim((string)$ctx['user']['email']));
+    $st->bind_param('s', $em); $st->execute();
+    $hs = $st->get_result()->fetch_assoc() ?: null;
+    $st->close();
+}
+
 $photo = trim((string)($ctx['acct']['headshot_face_url'] ?? '')) ?: trim((string)($ctx['acct']['headshot_url'] ?? ''));
 $is_team = ($ctx['acct']['entity_type'] ?? 'agent') === 'team';
 
@@ -81,5 +93,22 @@ portal_header($ctx, 'Home', 'home');
                          : "You have {$qr_n} QR codes. See where each one goes, or change it.") ?></p>
       <span class="pt-card-go"><?= $qr_n === 0 ? 'Request ›' : 'Review + Edit ›' ?></span>
     </a>
+    <?php if ($hs !== null || mk_table_exists($conn, 'hs_subscribers')): ?>
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/hotsheets.php')) ?>">
+      <h2 class="pt-card-h">Hot Sheets</h2>
+      <p class="pt-card-sub"><?php
+        $hs_areas = $hs ? mk_areas_decode($hs['areas']) : [];
+        if ($hs && (int)$hs['is_active'] && !$hs['unsubscribed_at'] && $hs_areas) {
+            echo 'You get the ' . ph(implode(', ', array_map('mk_area_name', $hs_areas))) . ' Hot Sheet' . (count($hs_areas) === 1 ? '' : 's')
+               . ' ' . ($hs['frequency'] === 'daily' ? 'every day' : 'twice a week') . '.';
+        } elseif ($hs && (int)$hs['is_active'] && !$hs['unsubscribed_at']) {
+            echo 'You are subscribed but have not chosen any areas yet, so nothing is being sent.';
+        } else {
+            echo 'Mont Haus listings, pocket listings, buyer reps and rentals in the areas you choose, by email.';
+        }
+      ?></p>
+      <span class="pt-card-go">Choose areas + how often ›</span>
+    </a>
+    <?php endif; ?>
   </div>
 <?php portal_footer();

@@ -1595,6 +1595,49 @@ wrapped.
 
 ## Hot Sheets (in progress)
 
+**One email per area since 2026-10-07 (Phase 1; Nikki: "no reason why our
+CO Springs team would want to get Aspen listings").** The Listings and
+Rentals emails are gone. The areas are the website's Communities areas
+(the same list FUB routing and the site's Communities menu use), published
+by the site's api/boards.php with a `key` each and cached by inc/boards.php
+(`mk_area_names()`): roaring-fork-valley, vail-valley, summit-county,
+gunnison-valley, southwest-colorado, front-range. Front Range is one area
+(Denver + Colorado Springs) because the list is; to split it, edit the
+site's `_communities.php` and everything follows. Each area email: area
+name, jump menu (MLS Listings | Pocket Listings | Buyer's Rep | Rentals,
+only sections with content), Latest Updates (sale changes AND new rentals
+since Monday, newest first), MLS Listings, Pocket Listings, Buyer
+Representation, Rentals. **An area with nothing in it is not sent at all**
+(`hs_area_has_content()`); subscribers.php and the portal say so.
+- A listing's area comes stamped from the site's feed (`area_key`, `area`:
+  `listing_area()` there, the town's Communities area else the board's),
+  stored on `hs_listing_state` by the sync; `hs_listing_area()` falls back to
+  the city through the board's towns when a row has no stamp. A pocket
+  listing or buyer rep has `hs_manual_listings.area_key`, chosen on
+  pipeline_review.php when promoted (pre-selected from the MLS match) and
+  changeable under Recently reviewed; one with no area is in no email and
+  the preview page lists it.
+- `hs_subscribers.areas` is a JSON list of area keys (NULL/[] = nothing
+  sent, flagged on subscribers.php); `frequency` is `daily` or
+  `twice_weekly` (Monday + Thursday, Mountain; `weekly` is legacy, Mondays).
+  `hs_sends.area_key` dedupes per area per day. All in
+  sql/hot_sheets_v4_areas.sql, which also starts every roster subscriber
+  off with areas from their profile and links the hub-imported rows to their
+  agent. `mk_hs_default_areas()`: FUB service-area towns, else the Service
+  area text, else their boards (`area` per board in the registry).
+- Where it is set: the Subscriptions card on agent.php (frequency + area
+  boxes, action `hs_prefs`), subscribers.php (per row, and the add form),
+  and the agent's own portal/hotsheets.php (by their sign-in address, so
+  Weber Boxer Group's three logins each have their own; saving creates the
+  row, and a self-unsubscribed person may start again there). The
+  "Hot Sheets: Subscribe" checklist item follows via `mk_hs_sync_task()`.
+- Preview: hot_sheet_preview.php lists every area with counts and whether
+  it would be sent today; `?area=key` renders that email. Send:
+  `send_hot_sheet.php --to=ADDR [--area=key]`. check_health.php now watches
+  hot_sheet_send.log too. Phase 2 (custom Hot Sheets with filters across
+  all listings) is a separate project; the per-area tagging is what it
+  will filter on.
+
 `docs/HOT_SHEETS_PLAN.md` (plan + runbook). Built so far: `hs_listing_state` /
 `hs_listing_changes` (`sql/hot_sheets_v1.sql`) filled by
 `cron/sync_hot_sheet_listings.php`, which logs EVERY transition (except a
@@ -1800,7 +1843,9 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   nothing in it (the detail is picked from the already-scoped list). Shown:
   outlet, name, print/digital + ad size, dates, creatives, cost. NEVER
   budget, notes, UTMs, vendor, order number, receipts or billing words.
-  Nav: Home, Advertising, Print orders, Spend, QR codes.
+  Nav: Home, Advertising, Print orders, Spend, QR codes, Hot Sheets
+  (portal/hotsheets.php, 2026-10-07: their own areas and frequency; see
+  "Hot Sheets" above).
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
   Pilot (Nikki, 2026-10-06): Weber Boxer Group (Jonathan, Scott, Sara,
   all -> team row 8), Bryan Cournoyer, Jackson Horn.

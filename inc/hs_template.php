@@ -1,39 +1,56 @@
 <?php
 /**
- * inc/hs_template.php — renders a Hot Sheet email, Sale Listings or Rentals.
+ * inc/hs_template.php — renders one Hot Sheet email: one AREA (2026-10-07).
  *
- * Ported from monthausint.com/hot-sheets/templates/hot_sheet_template.php.
- * Changes: rows carry their own `url` (site.monthaus.com listing pages, no
- * Lofty lookup); images come from HOT_SHEET_ASSET_BASE; the "since" date is
- * passed in by the data builder instead of computed here; a footer carries the
- * unsubscribe link. Everything else, including the markup, is as it was.
+ * Ported from monthausint.com/hot-sheets/templates/hot_sheet_template.php and
+ * reshaped for the per-area Hot Sheets (Nikki, 2026-10-07): the Sale Listings
+ * and Rentals emails became one email per area, laid out as
  *
- * Pass $type = 'listings' (default) or 'rentals' to render_hot_sheet_email().
+ *   banner · area name
+ *   MLS Listings | Pocket Listings | Buyer's Rep | Rentals   (jump menu; only sections with content)
+ *   Latest Updates   sale changes AND new rentals since Monday, newest first
+ *   MLS Listings     on market: active, pending, recently sold
+ *   Pocket Listings  off market                              (when any)
+ *   Buyer Representation                                     (when any)
+ *   Rentals          every rental in the area                (when any)
  *
- * This file only renders. All "what counts as an update, what color is this
- * status" business logic lives in hot_sheet_preview.php (and eventually the
- * send script) — keeps this a dumb function of its input.
+ * The card markup is the hub's, unchanged. Rows carry their own `url`
+ * (site.monthaus.com listing pages); images come from HOT_SHEET_ASSET_BASE;
+ * the "since" date is passed in by the data builder; the footer carries the
+ * unsubscribe link.
  *
- * Expected $data shape passed to render_hot_sheet_email():
+ * This file only renders. What counts as an update, which area a row is in
+ * and what colour a status gets is inc/hs_data.php's business: this stays a
+ * dumb function of its input.
+ *
+ * $a is hs_area_data():
  *   [
- *     'sale_updates'    => [ <row>, ... ],
- *     'sale_listings'   => [ <row>, ... ],
- *     'rental_updates'  => [ <row>, ... ],
- *     'rental_listings' => [ <row>, ... ],
+ *     'area_name'       => 'Vail Valley',
+ *     'since_label'     => '10/6/2026',
+ *     'updates'         => [ <row>, ... ],
+ *     'mls_listings'    => [ <row>, ... ],
+ *     'pocket_listings' => [ <row>, ... ],
+ *     'buyer_rep'       => [ <row>, ... ],
+ *     'rentals'         => [ <row>, ... ],
  *   ]
  *
  * Each <row>:
  *   [
- *     'address'           => 'Street, City',
+ *     'address'           => 'Street',
+ *     'city'              => 'Aspen', 'state_abbr' => 'CO', 'postal_code' => '',
+ *     'is_rental'         => bool,                    // a rental card shows no status line (unless badged) and no price
  *     'price'             => float|null,
+ *     'close_price'       => float|null,
  *     'status'            => string,                  // raw MlsStatus, e.g. 'Pending'
  *     'status_color'      => 'blue'|'green'|null,     // null = default black
  *     'price_color'       => 'orange'|'green'|null,   // null = default black
  *     'brokers'           => string[],                // any number, MH-first order
+ *     'broker_emails'     => [name => email],
  *     'primary_photo_url' => string|null,
  *     'url'               => string|null,             // public listing page
- *     'badge_label'       => string|null,             // ribbon text: 'New','Pending','Closed','Price Change'
+ *     'badge_label'       => string|null,             // 'New Listing', 'New Rental', 'Pending', 'Closed', 'New Price'
  *     'badge_color'       => 'blue'|'green'|'orange'|null,
+ *     'type_badge_label'  => 'Buyer Rep'|'Pocket Listing'|null,
  *   ]
  */
 
@@ -41,10 +58,11 @@ require_once __DIR__ . '/hs_helpers.php';
 
 /**
  * One listing card: photo + ribbon on the left, details in the middle,
- * "VIEW FULL LISTING" button on the right.
+ * "VIEW LISTING" button on the right.
  */
-function render_hot_sheet_card(array $row, bool $is_rental, bool $divider = false): string {
+function render_hot_sheet_card(array $row, bool $divider = false): string {
     $colors = mh_hot_sheet_colors();
+    $is_rental = !empty($row['is_rental']);
 
     $photo       = $row['primary_photo_url'] ?: mh_photo_placeholder_url();
     $address     = mh_e(mh_abbreviate_address($row['address'] ?? ''));
@@ -115,9 +133,10 @@ function render_hot_sheet_card(array $row, bool $is_rental, bool $divider = fals
               </td></tr>
             </table>
           <?php endif; ?>
-          <?php if (!$is_rental):
-            // Status line: use badge label (New Listing, New Price, Closed, etc.)
-            // when set; fall back to raw MlsStatus for regular listing cards.
+          <?php if (!$is_rental || $badge_label):
+            // Status line: use badge label (New Listing, New Rental, New Price,
+            // Closed, etc.) when set; fall back to raw MlsStatus for regular
+            // sale cards. A rental card in a section shows no status at all.
             $status_text = $badge_label
                 ? strtoupper($badge_label)
                 : mh_status_label($row['status'] ?? '');
@@ -222,7 +241,7 @@ function render_hot_sheet_subhead(string $text): string {
          . 'font-style:italic; font-size:16px; color:#1a1a1a;">' . mh_e($text) . '</td></tr>';
 }
 
-function render_hot_sheet_cards(array $rows, bool $is_rental): string {
+function render_hot_sheet_cards(array $rows): string {
     if (empty($rows)) {
         return '<tr><td style="font-family:Arial, Helvetica, sans-serif; font-size:13px; color:#999999; padding:4px 0 18px;">'
              . 'Nothing to show right now.</td></tr>';
@@ -233,39 +252,38 @@ function render_hot_sheet_cards(array $rows, bool $is_rental): string {
         // No divider under the final card — the section heading that follows
         // already separates it.
         $html .= '<tr><td style="padding:0;">'
-               . render_hot_sheet_card($row, $is_rental, $i < $last)
+               . render_hot_sheet_card($row, $i < $last)
                . '</td></tr>';
     }
     return $html;
 }
 
 /**
- * Builds the full HTML email document.
+ * Builds the full HTML email document for one area.
  *
- * @param array  $data  Keys: sale_updates, sale_listings, rental_updates, rental_listings
- * @param string $type  'listings' (Sale Listings email) or 'rentals' (Rentals email)
+ * @param array $a  hs_area_data(): area_name, since_label, updates, mls_listings, pocket_listings, buyer_rep, rentals
  */
-function render_hot_sheet_email(array $data, string $type = 'listings', string $unsubscribe_url = ''): string {
-    $is_rental = ($type === 'rentals');
-
-    $sale_updates    = $data['sale_updates']    ?? [];
-    $sale_listings   = $data['sale_listings']   ?? [];
-    $rental_updates  = $data['rental_updates']  ?? [];
-    $rental_listings = $data['rental_listings'] ?? [];
-
-    $updates  = $is_rental ? $rental_updates  : $sale_updates;
-    $listings = $is_rental ? $rental_listings : $sale_listings;
+function render_hot_sheet_email(array $a, string $unsubscribe_url = ''): string {
+    $area_name   = (string)($a['area_name'] ?? '');
+    $updates     = $a['updates']         ?? [];
+    $mls_rows    = $a['mls_listings']    ?? [];
+    $pocket_rows = $a['pocket_listings'] ?? [];
+    $buyer_rows  = $a['buyer_rep']       ?? [];
+    $rental_rows = $a['rentals']         ?? [];
 
     // The window start is decided by the data builder (hs_update_window()),
     // so the heading and the rows under it can never disagree.
-    $since_date = (string)($data['since_label'] ?? '');
+    $since_date = (string)($a['since_label'] ?? '');
 
     $base_url   = HOT_SHEET_ASSET_BASE;
-    $banner_img = $is_rental ? 'header_hotsheet-rentals.png' : 'header_hotsheet-listings.png';
-    $banner_url = $base_url . $banner_img;
-    $banner_alt = $is_rental
-        ? 'Mont Haus International Realty: Rentals Hot Sheet'
-        : 'Mont Haus International Realty: Listings Hot Sheet';
+    $banner_url = $base_url . 'header_hotsheet-listings.png';
+    $banner_alt = 'Mont Haus International Realty: Hot Sheet';
+
+    // Jump menu — only lists sections that actually have content.
+    $jump = [['mls-listings', 'MLS Listings']];
+    if ($pocket_rows) $jump[] = ['pocket-listings', 'Pocket Listings'];
+    if ($buyer_rows)  $jump[] = ['buyer-rep',       "Buyer's Rep"];
+    if ($rental_rows) $jump[] = ['rentals',         'Rentals'];
 
     ob_start();
     ?>
@@ -277,7 +295,7 @@ function render_hot_sheet_email(array $data, string $type = 'listings', string $
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="format-detection" content="telephone=no, date=no, address=no, email=no" />
-  <title>Mont Haus | Hot Sheet</title>
+  <title>Mont Haus | Hot Sheet<?= $area_name !== '' ? ' | ' . mh_e($area_name) : '' ?></title>
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
@@ -307,6 +325,7 @@ function render_hot_sheet_email(array $data, string $type = 'listings', string $
       .m-loc    { font-size:14px !important; }
       .m-price  { font-size:16px !important; }
       .m-broker { font-size:14px !important; }
+      .m-area   { font-size:24px !important; }
     }
   </style>
 </head>
@@ -336,66 +355,55 @@ function render_hot_sheet_email(array $data, string $type = 'listings', string $
           <td style="padding:8px 20px 30px 20px;">
             <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
 
-              <?php if ($is_rental): ?>
+              <?php if ($area_name !== ''): ?>
+              <!-- Area -->
+              <tr>
+                <td style="padding:22px 0 0 0; font-family:Georgia, 'Times New Roman', serif; color:#1a1a1a;">
+                  <div class="m-area" style="font-size:28px; line-height:1.15;"><?= mh_e($area_name) ?></div>
+                  <div style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#6b7280; margin-top:4px; letter-spacing:.4px; text-transform:uppercase;">Mont Haus Hot Sheet</div>
+                </td>
+              </tr>
+              <?php endif; ?>
 
-                <?= render_hot_sheet_section_title('New Rentals', '28px 0 16px 0', $since_date !== '' ? 'added since ' . $since_date : null) ?>
-                <?= render_hot_sheet_cards($updates, $is_rental) ?>
+              <?php if (count($jump) > 1): ?>
+              <tr>
+                <td style="padding:18px 0 0 0;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                    <tr>
+                      <?php foreach ($jump as $ji => $item): ?>
+                        <?php if ($ji > 0): ?>
+                        <td style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#d1d5db; padding:0 8px;">|</td>
+                        <?php endif; ?>
+                        <td style="font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:.4px;
+                                   text-transform:uppercase; font-weight:bold; white-space:nowrap;">
+                          <a href="#<?= mh_e($item[0]) ?>" style="color:#0184BB; text-decoration:none;"><?= mh_e($item[1]) ?></a>
+                        </td>
+                      <?php endforeach; ?>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <?php endif; ?>
 
-                <?= render_hot_sheet_section_title('All Rentals', '10px 0 18px 0') ?>
-                <?= render_hot_sheet_cards($listings, $is_rental) ?>
+              <?= render_hot_sheet_section_title('Latest Updates', '28px 0 16px 0', $since_date !== '' ? 'since ' . $since_date : null) ?>
+              <?= render_hot_sheet_cards($updates) ?>
 
-              <?php else: ?>
-                <?php
-                // Sectioned layout, organised by how Mont Haus is involved.
-                // Latest Updates repeats items that also appear in a section
-                // below — same as the previous New Activity / All Listings split.
-                $mls_rows    = $data['mls_listings']    ?? $listings;
-                $pocket_rows = $data['pocket_listings'] ?? [];
-                $buyer_rows  = $data['buyer_rep']       ?? [];
-                ?>
+              <?= render_hot_sheet_section_title('MLS Listings', '10px 0 18px 0', 'On-Market: active, pending, recently sold', 'mls-listings') ?>
+              <?= render_hot_sheet_cards($mls_rows) ?>
 
-                <?php
-                // Jump menu — only lists sections that actually have content.
-                $jump = [['mls-listings', 'MLS Listings']];
-                if ($pocket_rows) $jump[] = ['pocket-listings', 'Pocket Listings'];
-                if ($buyer_rows)  $jump[] = ['buyer-rep',       "Buyer's Rep"];
-                ?>
-                <?php if (count($jump) > 1): ?>
-                <tr>
-                  <td style="padding:18px 0 0 0;">
-                    <table role="presentation" border="0" cellpadding="0" cellspacing="0">
-                      <tr>
-                        <?php foreach ($jump as $ji => $item): ?>
-                          <?php if ($ji > 0): ?>
-                          <td style="font-family:Arial, Helvetica, sans-serif; font-size:11px; color:#d1d5db; padding:0 8px;">|</td>
-                          <?php endif; ?>
-                          <td style="font-family:Arial, Helvetica, sans-serif; font-size:11px; letter-spacing:.4px;
-                                     text-transform:uppercase; font-weight:bold; white-space:nowrap;">
-                            <a href="#<?= mh_e($item[0]) ?>" style="color:#0184BB; text-decoration:none;"><?= mh_e($item[1]) ?></a>
-                          </td>
-                        <?php endforeach; ?>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-                <?php endif; ?>
+              <?php if ($pocket_rows): ?>
+                <?= render_hot_sheet_section_title('Pocket Listings', '10px 0 18px 0', 'Off-Market: Not listed on the MLS', 'pocket-listings') ?>
+                <?= render_hot_sheet_cards($pocket_rows) ?>
+              <?php endif; ?>
 
-                <?= render_hot_sheet_section_title('Latest Updates', '28px 0 16px 0', $since_date !== '' ? 'since ' . $since_date : null) ?>
-                <?= render_hot_sheet_cards($updates, false) ?>
+              <?php if ($buyer_rows): ?>
+                <?= render_hot_sheet_section_title('Buyer Representation', '10px 0 18px 0', 'Mont Haus represents the buyer', 'buyer-rep') ?>
+                <?= render_hot_sheet_cards($buyer_rows) ?>
+              <?php endif; ?>
 
-                <?= render_hot_sheet_section_title('MLS Listings', '10px 0 18px 0', 'On-Market: active, pending, recently sold', 'mls-listings') ?>
-                <?= render_hot_sheet_cards($mls_rows, false) ?>
-
-                <?php if ($pocket_rows): ?>
-                  <?= render_hot_sheet_section_title('Pocket Listings', '10px 0 18px 0', 'Off-Market: Not listed on the MLS', 'pocket-listings') ?>
-                  <?= render_hot_sheet_cards($pocket_rows, false) ?>
-                <?php endif; ?>
-
-                <?php if ($buyer_rows): ?>
-                  <?= render_hot_sheet_section_title('Buyer Representation', '10px 0 18px 0', 'Mont Haus represents the buyer', 'buyer-rep') ?>
-                  <?= render_hot_sheet_cards($buyer_rows, false) ?>
-                <?php endif; ?>
-
+              <?php if ($rental_rows): ?>
+                <?= render_hot_sheet_section_title('Rentals', '10px 0 18px 0', $area_name !== '' ? 'Mont Haus rentals in ' . $area_name : 'Mont Haus rentals', 'rentals') ?>
+                <?= render_hot_sheet_cards($rental_rows) ?>
               <?php endif; ?>
 
             </table>
