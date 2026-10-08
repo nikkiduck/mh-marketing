@@ -51,6 +51,7 @@ require_once __DIR__ . '/../inc/hs_mail.php';
 $args  = array_slice($argv, 1);
 $dry   = in_array('--dry-run', $args, true);
 $force = in_array('--force', $args, true);
+$include_empty = in_array('--include-empty', $args, true);   // test sends only: areas with nothing to show go out too
 $to    = null; $only_area = null;
 foreach ($args as $a) {
     if (preg_match('/^--to=(.+)$/', $a, $m))   $to = strtolower(trim($m[1]));
@@ -130,7 +131,7 @@ foreach ($recipients as $sub) {
 
     foreach ($wanted as $k) {
         $a = $areas[$k];
-        if (!$a['has_content']) { $tally['empty']++; echo "    · {$email} {$k}: nothing to show, no email\n"; continue; }
+        if (!$a['has_content'] && !($include_empty && $to)) { $tally['empty']++; echo "    · {$email} {$k}: nothing to show, no email\n"; continue; }
         if (!$force && !$dry) {
             $already->bind_param('sss', $send_date, $email, $k); $already->execute();
             if ($already->get_result()->fetch_row()) { $tally['skipped']++; echo "    · {$email} {$k}: already sent today\n"; continue; }

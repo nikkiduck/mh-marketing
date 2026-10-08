@@ -69,7 +69,7 @@ e5a792ea57ea1800be069453deabcf43  cron/import_profiles.php
 e0d27d34f0d680969bd96950b29d1473  cron/import_site_agents.php
 f0cb50b5d5895138a6ef1db662c6aa67  cron/merge_agents.php
 84f704ab1bcc7f39878f64af93a70fe6  cron/parse_pipeline_events.php
-93d3f4948dee1414316eb809652afe03  cron/send_hot_sheet.php
+da62007ac84d4e02444e4aa252bb3ca3  cron/send_hot_sheet.php
 4e14395dff4a22eb66c4d0b771d0312a  cron/split_team.php
 6b686e4deb45eb42a8fe534cc2c36b44  cron/sync_anyprop_roster.php
 9dddab8687cd2f97f513702b9a7f0a7d  cron/sync_hot_sheet_listings.php
