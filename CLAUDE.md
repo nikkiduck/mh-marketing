@@ -127,6 +127,9 @@ that password is the only way back in.
 
 ## Accounts and roles — users.php
 
+Reached from the roster page's header buttons ("Users", super admins only,
+2026-10-08); before that it answered only by URL.
+
 The only surface that creates a `users` row or writes `users.role`.
 `require_role('super_admin')`, and reachable from the gear beside your name in
 the header.

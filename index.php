@@ -648,6 +648,9 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
         <a class="btn btn-outline btn-sm" href="qr_codes.php"><i class="ti ti-qrcode"></i> QR Codes</a>
         <a class="btn btn-outline btn-sm" href="website_order.php"><i class="ti ti-arrows-sort"></i> Website Order</a>
         <a class="btn btn-outline btn-sm" href="leadership.php"><i class="ti ti-crown"></i> Leadership &amp; Staff</a>
+        <?php if (is_super_admin()): // users.php admits super admins only; until 2026-10-08 nothing linked to it ?>
+        <a class="btn btn-outline btn-sm" href="users.php" title="Portal logins: who may sign in, their role, and which marketing account they see"><i class="ti ti-key"></i> Users</a>
+        <?php endif; ?>
         <?php // Anyprop Feed / Spark Feed buttons removed 2026-10-06 (Nikki); the
               // probe pages anyprop_debug.php and spark_debug.php still answer by URL. ?>
         <?php if (defined('SITE_AGENT_SYNC_URL') && SITE_AGENT_SYNC_URL !== ''): ?>
