@@ -24,13 +24,14 @@
  *
  * Usage:
  *   php /var/www/marketing.monthaus.com/cron/send_hot_sheet.php --dry-run
- *   php /var/www/marketing.monthaus.com/cron/send_hot_sheet.php --to=nikki.boxer@monthaus.com [--area=vail-valley]
+ *   php /var/www/marketing.monthaus.com/cron/send_hot_sheet.php --to=nikki.boxer@monthaus.com [--area=vail-valley] [--include-empty]
  *   php /var/www/marketing.monthaus.com/cron/send_hot_sheet.php
  *
  * --to=ADDR sends every area that has content (or the one --area) to ADDR
  * only, whatever hs_subscribers says, and still only if ADDR is on the
- * allowlist. That is the test send. --area=KEY with no --to limits the real
- * run to one area.
+ * allowlist. That is the test send; --include-empty also sends the areas that
+ * have nothing to show, to check their banners. --area=KEY with no --to limits
+ * the real run to one area.
  *
  * Cron (unchanged since 2026-09-21): minute 0, hour 13 UTC, every day. The
  * script decides the weekday in America/Denver itself, so the UTC hour only
