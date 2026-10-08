@@ -9,7 +9,7 @@ sql/creatives_v1.sql, inc/creatives.php, upload fields on agent.php's
 Advertising creatives and Collateral orders, creative.php for admins,
 portal/asset.php for agents) and the Phase 3 Advertising and Print orders
 pages (portal/advertising.php, portal/orders.php, home cards, nav).
-tests/render_portal.php: 108 assertions. Pilot (Nikki, 2026-10-06): Weber
+tests/render_portal.php: 113 assertions. Pilot (Nikki, 2026-10-06): Weber
 Boxer Group (Jonathan, Scott, Sara), Bryan Cournoyer, Jackson Horn.
 **Access check 2026-10-08:** no pilot agent can sign in yet. The server's
 inc/config.php is the pre-a28cd18 copy (allowlist = the four admins, no
