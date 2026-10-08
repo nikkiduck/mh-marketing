@@ -666,7 +666,10 @@ function ago(?string $dt): string {
         $role     = (string)$u['role'];
         $linked   = $has_entra && !empty($u['entra_object_id']);
         $on_list  = in_array(strtolower((string)$u['email']), $allowed_emails, true);
-        $expanded = $focus_id === $uid;
+        // Open the edit form only when the save FAILED, so the mistake can be fixed in place.
+        // After a successful save the row stays closed (the page still scrolls to it and the
+        // green flash says what changed): an edit box left open read as "did that save?" (Nikki, 2026-10-08).
+        $expanded = $focus_id === $uid && $msg_kind === 'err';
         $is_last_sa = $role === 'super_admin' && $active;
       ?>
         <tr id="u-<?= $uid ?>" class="<?= $active ? '' : 'inactive' ?> <?= $is_you ? 'is-you' : '' ?>">
