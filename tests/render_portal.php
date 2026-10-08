@@ -117,6 +117,12 @@ class mysqli {
         if (preg_match('/FROM team_members WHERE team_id = \?/', $sql)) {
             return self::s(array_map(fn($m) => ['member_id' => $m], $D['teams'][(string)$p[0]] ?? []));
         }
+        // The teams a person belongs to (portal_context, 2026-10-08): each is a section on their portal.
+        if (preg_match('/FROM team_members tm JOIN marketing_intakes t ON t\.id = tm\.team_id\s+WHERE tm\.member_id = \?/', $sql)) {
+            $by = array_column($D['intakes'], null, 'id'); $rows = [];
+            foreach ($D['teams'] as $tid => $members) if (in_array((int)$p[0], $members, true)) $rows[] = ['id' => (int)$tid, 'agent_name' => $by[$tid]['agent_name'] ?? ''];
+            return self::s($rows);
+        }
         if (preg_match('/SELECT COUNT\(\*\) FROM qr_codes WHERE intake_id IN/', $sql)) {
             $in = self::in_list($sql);
             return [[ (string)count(array_filter($D['qr'], fn($q) => in_array((int)$q['intake_id'], $in, true))) ]];
@@ -142,13 +148,16 @@ class mysqli {
             $this->write('assets_in', $in);
             return self::s(array_values(array_filter($D['assets'], fn($a) => in_array((int)$a['campaign_id'], $in, true))));
         }
-        if (preg_match('/FROM marketing_campaign_assets a\s+JOIN marketing_campaigns c ON c\.id = a\.campaign_id\s+WHERE a\.id = \? AND c\.intake_id = \?/', $sql)) {
+        // Files (asset.php, receipt.php): the id from the request, the owners from the context (the person and their teams).
+        if (preg_match('/FROM marketing_campaign_assets a\s+JOIN marketing_campaigns c ON c\.id = a\.campaign_id\s+WHERE a\.id = \? AND c\.intake_id IN \(([0-9, ]+)\)/', $sql, $m)) {
+            $in = array_map('intval', explode(',', $m[1]));
             $camps = array_column($D['campaigns'], null, 'id');
             return self::s(array_values(array_filter($D['assets'], fn($a) => (int)$a['id'] === (int)$p[0]
-                && (int)($camps[$a['campaign_id']]['intake_id'] ?? 0) === (int)$p[1])));
+                && in_array((int)($camps[$a['campaign_id']]['intake_id'] ?? 0), $in, true))));
         }
-        if (preg_match('/FROM marketing_collateral_orders WHERE id = \? AND intake_id = \?/', $sql)) {
-            return self::s(array_values(array_filter($D['orders'], fn($o) => (int)$o['id'] === (int)$p[0] && (int)$o['intake_id'] === (int)$p[1])));
+        if (preg_match('/FROM marketing_collateral_orders WHERE id = \? AND intake_id IN \(([0-9, ]+)\)/', $sql, $m)) {
+            $in = array_map('intval', explode(',', $m[1]));
+            return self::s(array_values(array_filter($D['orders'], fn($o) => (int)$o['id'] === (int)$p[0] && in_array((int)$o['intake_id'], $in, true))));
         }
         if (preg_match('/FROM marketing_collateral_orders\s+WHERE intake_id = (\d+)/', $sql, $m)) {
             return self::s(array_values(array_filter($D['orders'], fn($o) => (int)$o['intake_id'] === (int)$m[1])));
@@ -207,12 +216,14 @@ function scenario(array $over = []): array {
             'nolink'  => ['id' => 103, 'email' => 'new.agent@monthaus.com', 'role' => 'agent'],
             'nikki'   => ['id' => 1,   'email' => 'nikki.boxer@monthaus.com', 'role' => 'super_admin'],
             'sierrah' => ['id' => 105, 'email' => 'sierrah.smith@monthaus.com', 'role' => 'agent'],
+            'teamlink' => ['id' => 106, 'email' => 'scott.weber@monthaus.com', 'role' => 'agent'],
         ],
         'db' => [
             'migrated' => true,
             'users' => [
                 ['id' => 101, 'first_name' => 'Jackson', 'last_name' => 'Horn', 'email' => 'jackson.horn@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => 6],
-                ['id' => 102, 'first_name' => 'Jonathan', 'last_name' => 'Boxer', 'email' => 'jonathan.boxer@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => 8],
+                ['id' => 102, 'first_name' => 'Jonathan', 'last_name' => 'Boxer', 'email' => 'jonathan.boxer@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => 30],
+                ['id' => 106, 'first_name' => 'Scott', 'last_name' => 'Weber', 'email' => 'scott.weber@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => 8],
                 ['id' => 103, 'first_name' => 'New', 'last_name' => 'Agent', 'email' => 'new.agent@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => null],
                 ['id' => 105, 'first_name' => 'Sierrah', 'last_name' => 'Smith', 'email' => 'sierrah.smith@monthaus.com', 'role' => 'agent', 'is_active' => 1, 'intake_id' => 40],
                 ['id' => 1,   'first_name' => 'Nikki', 'last_name' => 'Boxer', 'email' => 'nikki.boxer@monthaus.com', 'role' => 'super_admin', 'is_active' => 1, 'intake_id' => null],
@@ -338,12 +349,18 @@ ok('…then back to the page', $c === 302 && $loc === '/portal/hotsheets.php', "
 req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'bad', 'action' => 'save', 'areas' => ['vail-valley']]);
 ok('a bad form token saves nothing', writes() === [], json_encode(writes()));
 
+// 2026-10-08 (Nikki): a login is the PERSON's; the team's marketing is a section on each member's portal.
 [$c, , $b] = req('jon', '/portal/qr.php');
-ok('Weber Boxer: team code and member code shown', has($b, 'wb-office') && has($b, 'jboxer-yard'), $b);
-ok('Weber Boxer: member code names its owner', has($b, 'Jonathan Boxer'));
-ok('Weber Boxer sees NOTHING of Jackson\'s or Kim\'s', !has($b, 'jhorn') && !has($b, 'kcoates'));
+ok('Jonathan: his own code and the team\'s code shown', has($b, 'wb-office') && has($b, 'jboxer-yard'), $b);
+ok('Jonathan: his own code is "Your profile page"', has($b, 'Your profile page on monthaus.com'), $b);
+ok('Jonathan sees NOTHING of Jackson\'s or Kim\'s', !has($b, 'jhorn') && !has($b, 'kcoates'));
 [, , $b] = req('jon', '/portal/');
-ok('team home greets the team', has($b, 'Hello, Weber Boxer Group') && has($b, 'You have 2 QR codes'), $b);
+ok('Jonathan\'s home greets HIM and counts both codes', has($b, 'Hello, Jonathan') && !has($b, 'Hello, Weber') && has($b, 'You have 2 QR codes'), $b);
+ok('…with a Weber Boxer Group section of its own', has($b, 'pt-team') && has($b, 'Weber Boxer Group') && has($b, 'Every member of Weber Boxer Group sees the same'), $b);
+[$c, , $b] = req('teamlink', '/portal/');
+ok('a login pointed at the team row is refused with the reason', $c === 403 && has($b, 'linked to the team account') && has($b, 'Weber Boxer Group'), "{$c} {$b}");
+[, , $b] = req('nikki', '/portal/?preview=8');
+ok('an admin previewing the team row sees the team alone, no team section', has($b, 'Hello, Weber Boxer Group') && !has($b, 'pt-team'), $b);
 
 echo "\nSOMEONE ELSE'S CODE\n";
 [$c, , $b] = req('jackson', '/portal/qr.php?edit=4');
@@ -369,7 +386,9 @@ ok('a paused code cannot be changed', writes() === [], json_encode(writes()));
 req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest_type' => 'profile']);
 ok('a team code cannot point at a profile it does not have', writes() === [], json_encode(writes()));
 req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 3, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/jb']);
-ok('a team member\'s code can be changed from the team account', (writes()[0][1][2] ?? 0) === 3, json_encode(writes()));
+ok('a member\'s own code can be changed from his portal', (writes()[0][1][2] ?? 0) === 3, json_encode(writes()));
+req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/wb2']);
+ok('…and so can the team\'s code', (writes()[0][1][2] ?? 0) === 2, json_encode(writes()));
 req('jackson', '/portal/qr.php', ['csrf_token' => 'nope', 'id' => 1, 'dest_type' => 'profile']);
 ok('a bad form token writes nothing', writes() === [], json_encode(writes()));
 [, , $b] = req('jackson', '/portal/qr.php?edit=1');
@@ -393,7 +412,15 @@ ok('advertising lines name the outlet', has($b, 'Aspen Times: JH Ad') && has($b,
 [$c, , $b] = req('jackson', '/portal/spend.php?m=../../x');
 ok('a nonsense month falls back to the overview', $c === 200 && has($b, 'By month'), "{$c}");
 [, , $b] = req('jon', '/portal/spend.php');
-ok('Weber Boxer sees the team\'s split: $3,000 and $1,321', has($b, '$3,000') && has($b, '$1,321') && !has($b, '$250') && !has($b, '7,777'), $b);
+ok('Jonathan: no spend of his own, the team\'s split in its section: $3,000 and $1,321', has($b, 'No marketing spend yet.') && has($b, 'pt-team')
+   && has($b, '$3,000') && has($b, '$1,321') && has($b, 'The team paid') && !has($b, '$250') && !has($b, '7,777'), $b);
+ok('…the team\'s months link with the team id', has($b, 'spend.php?m=2026-08&amp;team=8'), $b);
+[$c, , $b] = req('jon', '/portal/spend.php?m=2026-08&team=8');
+ok('the team\'s month opens, named as the team\'s', $c === 200 && has($b, 'August 2026 · Weber Boxer Group') && has($b, 'WB signs') && has($b, 'The team paid'), $b);
+[$c, , $b] = req('jon', '/portal/spend.php?m=2026-08');
+ok('…but not as his own month', $c === 200 && !has($b, 'WB signs'), $b);
+[$c, , $b] = req('jon', '/portal/spend.php?m=2026-09&team=7');
+ok('a team id that is not his is ignored: nothing of Kim\'s', $c === 200 && !has($b, 'KC postcards') && !has($b, '7,777'), $b);
 [, , $b] = req('jackson', '/portal/');
 ok('home shows this year\'s spend in the new words', has($b, 'This year you&#039;ve spent $250 and Mont Haus $1,234, for a total of $1,484 on marketing and advertising.') || has($b, "This year you've spent \$250 and Mont Haus \$1,234, for a total of \$1,484 on marketing and advertising."), $b);
 ok('…linked as See details', has($b, 'See details ›'));
@@ -464,7 +491,11 @@ ok('…what it cost, in the spend words', has($b, 'Mont Haus paid') && has($b, '
 [$c, , $b] = req('jackson', '/portal/advertising.php?id=22');
 ok('Kim\'s placement id is not found for Jackson, with none of her data', $c === 404 && has($b, 'could not be found') && !has($b, 'KC Ad') && !has($b, 'asset=32') && !has($b, 'SECRET'), "{$c} {$b}");
 [$c, , $b] = req('jon', '/portal/advertising.php');
-ok('Weber Boxer sees the team\'s placement and nothing of Jackson\'s', has($b, 'Vail Daily: WB Ad') && has($b, 'Dates to be confirmed') && !has($b, 'JH Ad') && !has($b, 'asset=31'), $b);
+ok('Jonathan: the team\'s placement in the team section, nothing of Jackson\'s', has($b, 'No advertising yet.') && has($b, 'pt-team') && has($b, 'Vail Daily: WB Ad') && has($b, 'Dates to be confirmed') && !has($b, 'JH Ad') && !has($b, 'asset=31'), $b);
+[$c, , $b] = req('jon', '/portal/advertising.php?id=23');
+ok('…and the team\'s placement opens, marked as the team\'s', $c === 200 && has($b, 'WB Ad') && has($b, 'Weber Boxer Group placement'), $b);
+[$c, , $b] = req('jon', '/portal/advertising.php?id=21');
+ok('…Jackson\'s placement is not found for him', $c === 404 && !has($b, 'JH Ad'), "{$c}");
 [, , $b] = req('nikki', '/portal/advertising.php?preview=6');
 ok('an admin previews Jackson\'s advertising, and links keep the preview', has($b, 'Preview:') && has($b, 'JH Ad') && has($b, 'advertising.php?preview=6&amp;id=21'), $b);
 
@@ -483,7 +514,9 @@ ok('an order with no proof says so rather than showing a broken picture', $c ===
 [$c, , $b] = req('jackson', '/portal/orders.php?id=13');
 ok('Kim\'s order id is not found for Jackson, with none of her data', $c === 404 && has($b, 'could not be found') && !has($b, 'KC postcards') && !has($b, 'KCTRACK'), "{$c} {$b}");
 [, , $b] = req('jon', '/portal/orders.php');
-ok('Weber Boxer sees the team\'s order only', has($b, 'Yard Signs: WB signs') && has($b, 'Ordered') && !has($b, 'JH cards') && !has($b, 'order=11'), $b);
+ok('Jonathan: the team\'s order in the team section only', has($b, 'No print orders yet.') && has($b, 'pt-team') && has($b, 'Yard Signs: WB signs') && has($b, 'Ordered') && !has($b, 'JH cards') && !has($b, 'order=11'), $b);
+[$c, , $b] = req('jon', '/portal/orders.php?id=14');
+ok('…and the team\'s order opens with the team\'s figures', $c === 200 && has($b, 'WB signs') && has($b, 'The team paid') && has($b, '$3,000'), $b);
 
 echo "\nCREATIVE FILES\n";
 $cdir = dirname($SB) . '/creatives/';
@@ -518,7 +551,7 @@ echo "\nHOME CARDS\n";
 [, , $b] = req('jackson', '/portal/');
 ok('home counts his advertising and orders in plain words', has($b, 'You have 1 ad running now') && has($b, 'You have 1 order on the way, and 1 delivered'), $b);
 [, , $b] = req('jon', '/portal/');
-ok('team home: a placement on record, an order on the way', has($b, 'You have 1 ad placement on record') && has($b, 'You have 1 order on the way.'), $b);
+ok('Jonathan\'s home: nothing of his own, the team\'s placement and order in the team section', has($b, 'No ad placements yet.') && has($b, 'The team has 1 ad placement on record') && has($b, 'The team has 1 order on the way.'), $b);
 [, , $b] = req('sierrah', '/portal/');
 ok('nothing yet: the cards say so, no dead ends', has($b, 'No ad placements yet.') && has($b, 'No print orders yet.'), $b);
 

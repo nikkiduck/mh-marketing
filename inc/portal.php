@@ -129,8 +129,33 @@ function portal_context(mysqli $conn): array {
     if (($acct['entity_type'] ?? 'agent') === 'staff') {
         portal_stop('No access', 'The agent portal is for agents.');
     }
+    // A login is linked to a PERSON (Nikki, 2026-10-08): team marketing is shown
+    // on each member's own portal, so a login pointed at a team row is a setup
+    // mistake, not a way in. An admin may still preview a team row (the roster's
+    // eye icon), which shows the team's own section alone.
+    if (($acct['entity_type'] ?? 'agent') === 'team' && !$preview) {
+        portal_stop('Almost there', 'Your sign-in is linked to the team account <strong>' . ph($acct['agent_name'])
+            . '</strong> rather than to you. The marketing team will point it at your own account; the team\'s '
+            . 'marketing then appears on your portal as its own section. Nothing you need to do.');
+    }
 
+    // The teams this person belongs to: each becomes a section on their portal
+    // (advertising, print orders, spend, QR codes), seen by every member alike.
+    $teams = [];
+    if (($acct['entity_type'] ?? 'agent') !== 'team' && mk_table_exists($conn, 'team_members')) {
+        $st = $conn->prepare("SELECT t.id, t.agent_name FROM team_members tm JOIN marketing_intakes t ON t.id = tm.team_id
+                               WHERE tm.member_id = ? AND t.is_active = 1 AND t.status <> 'archived' ORDER BY t.agent_name, t.id");
+        $mid = (int)$acct['id'];
+        $st->bind_param('i', $mid);
+        $st->execute();
+        foreach ($st->get_result()->fetch_all(MYSQLI_ASSOC) as $t) $teams[] = ['id' => (int)$t['id'], 'name' => (string)$t['agent_name']];
+        $st->close();
+    }
+
+    // ids: whose QR codes this portal lists. A person: their own and their teams'.
+    // A team (preview only): the team's and its members'.
     $ids = [(int)$acct['id']];
+    foreach ($teams as $t) $ids[] = $t['id'];
     if (($acct['entity_type'] ?? 'agent') === 'team' && mk_table_exists($conn, 'team_members')) {
         $st = $conn->prepare("SELECT member_id FROM team_members WHERE team_id = ?");
         $tid = (int)$acct['id'];
@@ -140,8 +165,39 @@ function portal_context(mysqli $conn): array {
         $st->close();
     }
 
+    // scopes: the accounts whose advertising, orders, spend and files this
+    // portal shows, the person first, then each team. Every page scopes its
+    // queries to these ids and nothing else.
+    $scopes = [['id' => (int)$acct['id'], 'name' => (string)$acct['agent_name'], 'team' => false]];
+    foreach ($teams as $t) $scopes[] = ['id' => $t['id'], 'name' => $t['name'], 'team' => true];
+
     if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    return ['user' => $user, 'acct' => $acct, 'ids' => array_values(array_unique($ids)), 'preview' => $preview];
+    return ['user' => $user, 'acct' => $acct, 'ids' => array_values(array_unique($ids)), 'preview' => $preview,
+            'teams' => $teams, 'scopes' => $scopes];
+}
+
+/** The account ids whose items this portal may show (the person and their teams), as a SQL IN list. Ints from the context only. */
+function portal_scope_in(array $ctx): string {
+    return implode(',', array_map(fn($s) => (int)$s['id'], $ctx['scopes']));
+}
+
+/**
+ * The scope a page is asked for: ?team=<id> when it is one of the person's
+ * teams, else the person's own account. Never an id the context did not list.
+ */
+function portal_scope(array $ctx, int $team_id): array {
+    foreach ($ctx['scopes'] as $s) if ($s['team'] && $s['id'] === $team_id) return $s;
+    return $ctx['scopes'][0];
+}
+
+/** "Weber Boxer Group" for a team scope, '' for the person's own. */
+function portal_scope_name(array $scope): string {
+    return $scope['team'] ? (string)$scope['name'] : '';
+}
+
+/** Who the broker-side figure belongs to, in the spend words: "You" or "The team". */
+function portal_scope_you(array $scope): string {
+    return $scope['team'] ? 'The team' : 'You';
 }
 
 /** Link inside the portal, keeping an admin's ?preview= on it. */
@@ -245,10 +301,10 @@ function portal_item_spend(array $fin, string $kind, int $ref_id): array {
 }
 
 /** The three spend figures for one item, as a short line; nothing when there is no spend yet. */
-function portal_item_spend_html(array $sp): string {
+function portal_item_spend_html(array $sp, string $you = 'You'): string {
     if ($sp['billed_with'] !== '') return '<span class="muted">Included in ' . ph($sp['billed_with']) . '</span>';
     $out = [];
-    if ($sp['broker'] > 0)     $out[] = 'You paid <b>' . ph(portal_money($sp['broker'])) . '</b>';
+    if ($sp['broker'] > 0)     $out[] = ph($you) . ' paid <b>' . ph(portal_money($sp['broker'])) . '</b>';
     if ($sp['mh'] > 0)         $out[] = 'Mont Haus paid <b>' . ph(portal_money($sp['mh'])) . '</b>';
     if ($sp['unassigned'] > 0) $out[] = '<span class="tbd">Being finalised <b>' . ph(portal_money($sp['unassigned'])) . '</b></span>';
     if (!$out && $sp['pending']) $out[] = '<span class="tbd">Amount being finalised</span>';
@@ -316,6 +372,8 @@ function portal_header(array $ctx, string $title, string $active): void {
 <?php if ($ctx['preview']): ?>
   <div class="pt-preview">Preview: you are seeing <strong><?= ph($ctx['acct']['agent_name']) ?></strong>'s portal as they see it.
     <a href="/agent.php?id=<?= (int)$ctx['acct']['id'] ?>">Back to their page</a></div>
+<?php elseif (is_elevated_admin()): // an admin on their OWN portal (Nikki, 2026-10-08: admins have both) ?>
+  <div class="pt-preview">This is your own agent portal. <a href="/">Back to the admin pages</a></div>
 <?php endif; ?>
 <header class="pt-top">
   <div class="pt-top-in">

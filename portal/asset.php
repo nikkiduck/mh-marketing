@@ -8,8 +8,8 @@
  *   asset.php?order=42[&thumb=1|&dl=1]   the proof on one of THEIR orders
  *
  * Takes an id only (never a path or a file name). The query itself is scoped
- * to the portal account, so an id belonging to someone else finds no row and
- * is a 404 with nothing in it. The admin creative.php asks "is this an
+ * to the portal's scopes (the person and their teams, 2026-10-08), so an id
+ * belonging to someone else finds no row and is a 404 with nothing in it. The admin creative.php asks "is this an
  * admin" instead; the two questions stay in two files on purpose, exactly as
  * receipt.php and portal/receipt.php do. Streaming (basename(), MIME
  * allowlist, nosniff, no-store) is mk_send_creative().
@@ -18,7 +18,7 @@ require_once __DIR__ . '/../inc/portal.php';
 require_once __DIR__ . '/../inc/creatives.php';
 
 $ctx  = portal_context($conn);
-$acct = (int)$ctx['acct']['id'];
+$in   = portal_scope_in($ctx);   // ints from the context, never the request
 $aid  = (int)($_GET['asset'] ?? 0);
 $oid  = (int)($_GET['order'] ?? 0);
 
@@ -27,15 +27,15 @@ if ($aid > 0 && mk_column_exists($conn, 'marketing_campaign_assets', 'image_file
     $st = $conn->prepare("SELECT a.image_file, a.image_orig_name, a.image_thumb
                             FROM marketing_campaign_assets a
                             JOIN marketing_campaigns c ON c.id = a.campaign_id
-                           WHERE a.id = ? AND c.intake_id = ? LIMIT 1");
-    $st->bind_param('ii', $aid, $acct);
+                           WHERE a.id = ? AND c.intake_id IN ({$in}) LIMIT 1");
+    $st->bind_param('i', $aid);
     $st->execute();
     $row = $st->get_result()->fetch_assoc();
     $st->close();
 } elseif ($oid > 0 && mk_column_exists($conn, 'marketing_collateral_orders', 'proof_file')) {
     $st = $conn->prepare("SELECT proof_file, proof_orig_name, proof_thumb
-                            FROM marketing_collateral_orders WHERE id = ? AND intake_id = ? LIMIT 1");
-    $st->bind_param('ii', $oid, $acct);
+                            FROM marketing_collateral_orders WHERE id = ? AND intake_id IN ({$in}) LIMIT 1");
+    $st->bind_param('i', $oid);
     $st->execute();
     $row = $st->get_result()->fetch_assoc();
     $st->close();

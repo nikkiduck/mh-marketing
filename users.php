@@ -96,7 +96,7 @@ if ($has_portal) {
     $res = $conn->query("SELECT id, agent_name" . ($has_et ? ', entity_type' : '') . "
                            FROM marketing_intakes
                           WHERE is_active = 1 AND status <> 'archived'"
-                        . ($has_et ? " AND entity_type <> 'staff'" : '') . "
+                        . ($has_et ? " AND entity_type <> 'staff' AND entity_type <> 'team'" : '') . "
                           ORDER BY agent_name");
     if ($res) {
         while ($a = $res->fetch_assoc()) {
@@ -634,7 +634,8 @@ function ago(?string $dt): string {
         <p class="us-edit-hint" style="margin:12px 0 0">
           The email must be the address on their Microsoft account. It is matched
           once, at their first sign-in, and the account is linked by Microsoft's
-          own object id from then on.
+          own object id from then on. The portal account is the person's own:
+          a team's marketing appears on each member's portal by itself.
         </p>
       </form>
     </div>

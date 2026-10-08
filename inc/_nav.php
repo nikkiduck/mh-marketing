@@ -177,6 +177,25 @@ $mh_active = $nav_active ?? 'marketing';
         <div class="mh-user">
           <span class="mh-user-avatar" aria-hidden="true"><?= htmlspecialchars($mh_initials) ?></span>
           <span class="mh-user-name" title="<?= htmlspecialchars($mh_user['email'] ?? '') ?>"><?= htmlspecialchars($mh_name) ?></span>
+          <?php // My portal (Nikki, 2026-10-08): an admin whose login is linked to a
+                // marketing account on users.php has the agent portal too. Guarded so a
+                // page (or a test stub) without a real connection shows nothing.
+            $mh_portal = false;
+            if (isset($conn) && $conn instanceof mysqli && function_exists('is_elevated_admin') && is_elevated_admin()
+                && function_exists('mk_column_exists')) {
+                try {
+                    if (mk_column_exists($conn, 'users', 'intake_id')) {
+                        $mh_st  = $conn->prepare("SELECT intake_id FROM users WHERE id = ? LIMIT 1");
+                        $mh_uid = (int)($mh_user['id'] ?? 0);
+                        $mh_st->bind_param('i', $mh_uid); $mh_st->execute();
+                        $mh_portal = (int)(($mh_st->get_result()->fetch_assoc() ?: [])['intake_id'] ?? 0) > 0;
+                        $mh_st->close();
+                    }
+                } catch (Throwable $e) { $mh_portal = false; }
+            }
+            if ($mh_portal): ?>
+            <a class="mh-user-cog" href="/portal/" title="My portal" aria-label="My portal"><i class="ti ti-user-circle" aria-hidden="true"></i></a>
+          <?php endif; ?>
           <?php // Users is icon-only, and inside .mh-user rather than in the run of
                 // .mh-nav-link anchors above. The 820px breakpoint was measured
                 // against those links and a fifth labelled one would need

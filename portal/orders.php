@@ -5,9 +5,10 @@
  * large, the quantity, where it is, and a tracking link.
  * docs/AGENT_PORTAL_PLAN.md sections 3 to 5 (2026-10-06).
  *
- * Scope: the portal account only, like Spend and Advertising. The detail
- * view is picked out of the already-scoped list, so an id from the address
- * bar can never reach another account's order.
+ * Scope: the portal's scopes, like Advertising: the person's own orders, then
+ * each team they belong to as its own section (2026-10-08). The detail view
+ * is picked out of the already-scoped list, so an id from the address bar
+ * can never reach another account's order.
  *
  * Shown: what, how many, status in plain words, when it was ordered and
  * delivered, tracking, the proof, and what it cost (from mh_agent_financials,
@@ -18,13 +19,16 @@ require_once __DIR__ . '/../inc/portal.php';
 require_once __DIR__ . '/../inc/financials.php';
 
 $ctx  = portal_context($conn);
-$acct = (int)$ctx['acct']['id'];
 
-$orders = [];
-$r = $conn->query("SELECT * FROM marketing_collateral_orders WHERE intake_id = {$acct} ORDER BY COALESCE(ordered_at, created_at) DESC, id DESC");
-foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $o) $orders[(int)$o['id']] = $o;
+$orders = [];   // each row carries its scope ('_scope')
+foreach ($ctx['scopes'] as $scope) {
+    $sid = (int)$scope['id'];
+    $r = $conn->query("SELECT * FROM marketing_collateral_orders WHERE intake_id = {$sid} ORDER BY COALESCE(ordered_at, created_at) DESC, id DESC");
+    foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $o) $orders[(int)$o['id']] = $o + ['_scope' => $scope];
+}
 
-$fin = mh_agent_financials($conn, $acct);
+$fins = [];
+foreach ($ctx['scopes'] as $scope) $fins[(int)$scope['id']] = mh_agent_financials($conn, (int)$scope['id']);
 
 $want = (int)($_GET['id'] ?? 0);
 $one  = $want > 0 && isset($orders[$want]) ? $orders[$want] : null;
@@ -57,6 +61,8 @@ if ($want > 0 && !$one):
 
 <?php elseif ($one):
     $o   = $one;
+    $scope = $o['_scope'];
+    $fin = $fins[(int)$scope['id']];
     $sp  = portal_item_spend($fin, 'Collateral', (int)$o['id']);
     $img = (string)($o['proof_file'] ?? '');
     $is_pdf = $img !== '' && strtolower(pathinfo($img, PATHINFO_EXTENSION)) === 'pdf';
@@ -67,6 +73,7 @@ if ($want > 0 && !$one):
   <h1 class="pt-h1"><?= ph(portal_order_title($o)) ?></h1>
   <p class="pt-lead" style="margin-bottom:18px">
     <span class="pt-state"><?= ph(portal_order_state($o)) ?></span>
+    <?php if ($scope['team']): ?><span class="pt-state"><?= ph($scope['name']) ?></span><?php endif; ?>
     <?php if (trim((string)($o['qty'] ?? '')) !== ''): ?>Quantity <?= ph($o['qty']) ?><?php endif; ?>
   </p>
 
@@ -109,24 +116,37 @@ if ($want > 0 && !$one):
     <div class="pt-card">
       <h2 class="pt-card-h">What it cost</h2>
       <?php if ($sp['lines'] === 0): ?>
-        <p class="pt-card-sub" style="margin:0">Nothing for this order on your spend yet.</p>
+        <p class="pt-card-sub" style="margin:0">Nothing for this order on <?= $scope['team'] ? 'the team\'s' : 'your' ?> spend yet.</p>
       <?php else: ?>
-        <p class="pt-line-f" style="margin:0"><?= portal_item_spend_html($sp) ?></p>
-        <p class="pt-card-sub" style="margin-top:8px">The month it falls in is on your <a href="<?= ph(portal_url($ctx, '/portal/spend.php')) ?>">Spend</a> page.</p>
+        <p class="pt-line-f" style="margin:0"><?= portal_item_spend_html($sp, portal_scope_you($scope)) ?></p>
+        <p class="pt-card-sub" style="margin-top:8px">The month it falls in is on <?= $scope['team'] ? 'the team\'s' : 'your' ?> <a href="<?= ph(portal_url($ctx, '/portal/spend.php', $scope['team'] ? ['team' => (int)$scope['id']] : [])) ?>">Spend</a> page.</p>
+      <?php endif; ?>
+      <?php if ($scope['team']): ?>
+        <p class="pt-card-sub" style="margin-top:8px">This is a <?= ph($scope['name']) ?> order. The amounts are the team's shared spend.</p>
       <?php endif; ?>
     </div>
   </div>
   <p class="pt-help" style="margin-top:20px">Need more, or something changed? Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>?subject=<?= rawurlencode('Print order: ' . portal_order_title($o)) ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p>
 
 <?php else: ?>
+  <?php foreach ($ctx['scopes'] as $scope):
+      $sid  = (int)$scope['id'];
+      $fin  = $fins[$sid];
+      $list = array_filter($orders, fn($o) => (int)$o['_scope']['id'] === $sid);
+      if ($scope['team']): ?>
+  <section class="pt-team" id="team-<?= $sid ?>">
+  <h2 class="pt-h2"><?= ph($scope['name']) ?></h2>
+  <p class="pt-lead">The team's print orders, shared by every member of <?= ph($scope['name']) ?>.</p>
+  <?php else: ?>
   <h1 class="pt-h1">Your print orders</h1>
   <p class="pt-lead">Business cards, signs, postcards and brochures Mont Haus has ordered for you. Tap one to see the proof and where it is.</p>
+  <?php endif; ?>
 
-  <?php if (!$orders): ?>
-    <div class="pt-card"><p class="pt-card-sub" style="margin:0">No print orders yet. When Mont Haus orders something for you it will appear here.</p></div>
+  <?php if (!$list): ?>
+    <div class="pt-card"><p class="pt-card-sub" style="margin:0"><?= $scope['team'] ? 'No print orders for the team yet.' : 'No print orders yet. When Mont Haus orders something for you it will appear here.' ?></p></div>
   <?php else: ?>
     <div class="pt-cards">
-    <?php foreach ($orders as $o):
+    <?php foreach ($list as $o):
         $sp = portal_item_spend($fin, 'Collateral', (int)$o['id']);
         $qty = trim((string)($o['qty'] ?? ''));
         $when = portal_date($o['delivered_at'] ?? null) !== '' ? 'Delivered ' . portal_date($o['delivered_at'])
@@ -138,12 +158,14 @@ if ($want > 0 && !$one):
           <span class="pt-state"><?= ph(portal_order_state($o)) ?></span>
           <h2 class="pt-card-h"><?= ph(portal_order_title($o)) ?></h2>
           <p class="pt-card-sub"><?= $qty !== '' ? 'Quantity ' . ph($qty) : '' ?><?= $qty !== '' && $when !== '' ? ' · ' : '' ?><?= ph($when) ?></p>
-          <?php if ($sp['lines'] > 0): ?><p class="pt-card-sub pt-line-f" style="margin-top:6px"><?= portal_item_spend_html($sp) ?></p><?php endif; ?>
+          <?php if ($sp['lines'] > 0): ?><p class="pt-card-sub pt-line-f" style="margin-top:6px"><?= portal_item_spend_html($sp, portal_scope_you($scope)) ?></p><?php endif; ?>
           <span class="pt-card-go">See it ›</span>
         </span>
       </a>
     <?php endforeach; ?>
     </div>
   <?php endif; ?>
+  <?php if ($scope['team']): ?></section><?php endif; ?>
+  <?php endforeach; ?>
 <?php endif;
 portal_footer();

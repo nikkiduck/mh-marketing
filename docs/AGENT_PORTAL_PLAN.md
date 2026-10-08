@@ -16,10 +16,15 @@ inc/config.php is the pre-a28cd18 copy (allowlist = the four admins, no
 CREATIVES_DIR; /var/www/creatives does not exist), no `users.intake_id` is
 set for anyone, and Jackson Horn has no `users` row at all (SSO denies an
 unknown address by design; the row is created on users.php). To open the
-pilot: deploy inc/config.php + .htaccess, create /var/www/creatives, then
-on users.php link Bryan -> 5, Jackson (new row, role agent) -> 6, Scott and
-Sara -> 8 (the team row; Jonathan -> 8 too if he should see it as an
-agent rather than through preview).
+pilot: deploy inc/config.php + .htaccess, create /var/www/creatives (all
+done 2026-10-08), then on users.php link Bryan -> 5, Jackson (new row,
+role agent) -> 6, Scott -> 21, Sara -> 23, Jonathan (admin) -> 30.
+**Teams (Nikki, 2026-10-08):** a login is the person's; the team row is
+never linked. Weber Boxer Group's advertising, orders, spend and QR codes
+appear as a section on each member's portal (every member sees the full
+team spend); Hot Sheets and FUB stay per person. Admins keep the admin
+pages and get their own portal through the same link (decision 5 is
+superseded). Team rows can still be previewed from the roster.
 Still to build: Hot Sheet choices (Phase 4), the marketing menu and
 requests inbox (Phase 5; the sample content is compiled with Nikki first).
 **Written:** 2026-09-08. **Revised:** 2026-10-01 with Nikki's decisions (below)

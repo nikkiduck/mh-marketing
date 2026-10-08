@@ -1816,8 +1816,24 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   checking it belongs to `ctx['ids']` (account + a team's members).
 - Admins preview any account with `?preview=<intake id>` (banner shown;
   `portal_url()` keeps it on links). An agent's `?preview=` is ignored.
-- `users.php` sets the account (several logins may share one: Weber Boxer
-  Group). `index.php` sends role `agent` to `/portal/`. `roster.php` now calls
+- `users.php` sets the account: **a login links to a PERSON, never a team
+  row (Nikki, 2026-10-08)**; the picker leaves teams out and portal_context()
+  refuses a login pointed at one (403 naming the team). A team's marketing
+  is shown on each member's own portal as its own section: `ctx['teams']`
+  (from `team_members`) and `ctx['scopes']` (the person first, then each
+  team) drive home, advertising, orders and spend; each page loops the
+  scopes and labels a team's section with its name, "The team paid" in
+  place of "You paid", and a detail page carries the team's name. Every
+  member sees the team's full spend (Nikki). asset.php and receipt.php
+  check `intake_id IN (scopes)`; QR lists the person's and their teams'
+  codes. Hot Sheets stay personal (by sign-in address). Spend's month view
+  is per scope (`?m=&team=`; a team id that is not theirs falls back to
+  their own). An admin previewing a team row (roster eye icon) sees the
+  team's own section alone. **Admins have both** (Nikki, 2026-10-08): an
+  admin whose login is linked to their own account opens `/portal/` for
+  their portal (a banner links back to the admin pages) and `_nav.php`
+  shows a "My portal" icon beside the Users cog for them. `index.php` sends
+  role `agent` to `/portal/`. `roster.php` now calls
   `require_role('admin')` (a blank role used to pass its own check).
 - `portal/qr.php`: agents change their codes' destination only (profile page
   or a monthaus.com page via `qr_dest_error()`), logged in `qr_code_changes`.
@@ -1872,10 +1888,12 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   (index.php) has an eye icon per agent that opens their portal as an
   admin preview; the checklist count, Profile meter and Subs marks left
   the list the same day (the agent page has them).
-- Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
-  Pilot (Nikki, 2026-10-06): Weber Boxer Group (Jonathan, Scott, Sara,
-  all -> team row 8), Bryan Cournoyer, Jackson Horn.
-- Tests: `tests/render_portal.php` (113 assertions: isolation between
+- Pilot access = ACCESS_ALLOWLIST entry + role `agent` (or admin) +
+  `users.intake_id`. Pilot (Nikki, 2026-10-06): Weber Boxer Group
+  (Jonathan -> 30, Scott -> 21, Sara -> 23; the team row 8 is their
+  section), Bryan Cournoyer -> 5, Jackson Horn -> 6. Admins (Jonathan,
+  Jean-Michel) keep role admin and link to their own account.
+- Tests: `tests/render_portal.php` (124 assertions: isolation between
   accounts on every page and on asset.php, someone else's code or id refused
   on GET and POST, preview rules, refusals, the creatives query asked for
   the account's campaign ids only). Proven to catch a leak by breaking the

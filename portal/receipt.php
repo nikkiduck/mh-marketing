@@ -7,19 +7,20 @@
  * the wrong branch ever running.
  *
  * Takes an order id only (never a path or file name), checks the order's
- * intake_id is the portal account, then streams the file with receipt.php's
+ * intake_id is the portal account or one of the person's teams (2026-10-08),
+ * then streams the file with receipt.php's
  * hardening: basename() on the stored name, a MIME allowlist, nosniff, no-store.
  */
 require_once __DIR__ . '/../inc/portal.php';
 
 $ctx = portal_context($conn);
 $oid = (int)($_GET['order'] ?? 0);
-$acct = (int)$ctx['acct']['id'];
+$in  = portal_scope_in($ctx);   // ints from the context, never the request
 
 $row = null;
 if ($oid > 0) {
-    $st = $conn->prepare("SELECT receipt_file, receipt_orig_name FROM marketing_collateral_orders WHERE id = ? AND intake_id = ? LIMIT 1");
-    $st->bind_param('ii', $oid, $acct);
+    $st = $conn->prepare("SELECT receipt_file, receipt_orig_name FROM marketing_collateral_orders WHERE id = ? AND intake_id IN ({$in}) LIMIT 1");
+    $st->bind_param('i', $oid);
     $st->execute();
     $row = $st->get_result()->fetch_assoc();
     $st->close();

@@ -4,9 +4,10 @@
  * with a picture of the creative, and ?id= opens one placement with every
  * creative shown large. docs/AGENT_PORTAL_PLAN.md sections 3 to 5 (2026-10-06).
  *
- * Scope: the portal account only (portal_context()['acct']['id']), the same
- * as Spend: for Weber Boxer Group the team's placements. Every query here
- * carries that id, and the detail view is picked out of the already-scoped
+ * Scope: the portal's scopes (portal_context()['scopes']): the person's own
+ * placements, then each team they belong to as its own section (2026-10-08;
+ * a team's marketing is shown on every member's portal). Every query carries
+ * one of those ids, and the detail view is picked out of the already-scoped
  * list, so an id from the address bar can never reach another account's row.
  *
  * Shown: outlet, name, print or digital (and the ad size), when it ran, its
@@ -19,16 +20,19 @@ require_once __DIR__ . '/../inc/portal.php';
 require_once __DIR__ . '/../inc/financials.php';
 
 $ctx  = portal_context($conn);
-$acct = (int)$ctx['acct']['id'];
 
 $has_img   = mk_column_exists($conn, 'marketing_campaign_assets', 'image_file');   // sql/creatives_v1.sql
 $has_med   = mk_column_exists($conn, 'marketing_campaigns', 'medium');
 $has_share = mk_column_exists($conn, 'marketing_campaigns', 'split_group');
 
 // Newest run first; a placement with no dates yet sorts by when it was set up.
+// Each row carries its scope ('_scope'), so the detail view knows whose it is.
 $campaigns = [];
-$r = $conn->query("SELECT * FROM marketing_campaigns WHERE intake_id = {$acct} ORDER BY COALESCE(start_date, created_at) DESC, id DESC");
-foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $c) $campaigns[(int)$c['id']] = $c + ['assets' => []];
+foreach ($ctx['scopes'] as $scope) {
+    $sid = (int)$scope['id'];
+    $r = $conn->query("SELECT * FROM marketing_campaigns WHERE intake_id = {$sid} ORDER BY COALESCE(start_date, created_at) DESC, id DESC");
+    foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $c) $campaigns[(int)$c['id']] = $c + ['assets' => [], '_scope' => $scope];
+}
 
 // Their creatives, in one query over the ids the scoped list gave us.
 if ($campaigns) {
@@ -40,7 +44,8 @@ if ($campaigns) {
     }
 }
 
-$fin = mh_agent_financials($conn, $acct);
+$fins = [];
+foreach ($ctx['scopes'] as $scope) $fins[(int)$scope['id']] = mh_agent_financials($conn, (int)$scope['id']);
 
 $want = (int)($_GET['id'] ?? 0);
 $one  = $want > 0 && isset($campaigns[$want]) ? $campaigns[$want] : null;
@@ -76,6 +81,8 @@ if ($want > 0 && !$one):
 
 <?php elseif ($one):
     $c  = $one;
+    $scope = $c['_scope'];
+    $fin = $fins[(int)$scope['id']];
     $sp = portal_item_spend($fin, 'Advertising', (int)$c['id']);
     $medium = portal_campaign_medium($c, $has_med);
 ?>
@@ -83,6 +90,7 @@ if ($want > 0 && !$one):
   <h1 class="pt-h1"><?= ph(portal_campaign_title($c)) ?></h1>
   <p class="pt-lead" style="margin-bottom:18px">
     <span class="pt-state"><?= ph(portal_campaign_state($c)) ?></span>
+    <?php if ($scope['team']): ?><span class="pt-state"><?= ph($scope['name']) ?></span><?php endif; ?>
     <?= ph(portal_run_words($c['start_date'] ?? null, $c['end_date'] ?? null)) ?><?= $medium !== '' ? ' · ' . ph($medium) : '' ?>
   </p>
 
@@ -125,10 +133,13 @@ if ($want > 0 && !$one):
   <div class="pt-card">
     <h2 class="pt-card-h">What it cost</h2>
     <?php if ($sp['lines'] === 0): ?>
-      <p class="pt-card-sub" style="margin:0">Nothing for this placement on your spend yet.</p>
+      <p class="pt-card-sub" style="margin:0">Nothing for this placement on <?= $scope['team'] ? 'the team\'s' : 'your' ?> spend yet.</p>
     <?php else: ?>
-      <p class="pt-line-f" style="margin:0"><?= portal_item_spend_html($sp) ?></p>
-      <?php if ($sp['lines'] > 1): ?><p class="pt-card-sub" style="margin-top:8px">Across <?= (int)$sp['lines'] ?> months. Each month is on your <a href="<?= ph(portal_url($ctx, '/portal/spend.php')) ?>">Spend</a> page.</p><?php endif; ?>
+      <p class="pt-line-f" style="margin:0"><?= portal_item_spend_html($sp, portal_scope_you($scope)) ?></p>
+      <?php if ($sp['lines'] > 1): ?><p class="pt-card-sub" style="margin-top:8px">Across <?= (int)$sp['lines'] ?> months. Each month is on <?= $scope['team'] ? 'the team\'s' : 'your' ?> <a href="<?= ph(portal_url($ctx, '/portal/spend.php', $scope['team'] ? ['team' => (int)$scope['id']] : [])) ?>">Spend</a> page.</p><?php endif; ?>
+    <?php endif; ?>
+    <?php if ($scope['team']): ?>
+      <p class="pt-card-sub" style="margin-top:8px">This is a <?= ph($scope['name']) ?> placement. The amounts are the team's shared spend.</p>
     <?php endif; ?>
     <?php if ($has_share && !empty($c['split_group'])): ?>
       <p class="pt-card-sub" style="margin-top:8px">This placement is shared with other agents. The amounts here are your share.</p>
@@ -137,14 +148,24 @@ if ($want > 0 && !$one):
   <p class="pt-help" style="margin-top:20px">Questions about this placement? Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>?subject=<?= rawurlencode('Advertising: ' . portal_campaign_title($c)) ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p>
 
 <?php else: ?>
+  <?php foreach ($ctx['scopes'] as $scope):
+      $sid  = (int)$scope['id'];
+      $fin  = $fins[$sid];
+      $list = array_filter($campaigns, fn($c) => (int)$c['_scope']['id'] === $sid);
+      if ($scope['team']): ?>
+  <section class="pt-team" id="team-<?= $sid ?>">
+  <h2 class="pt-h2"><?= ph($scope['name']) ?></h2>
+  <p class="pt-lead">The team's ad placements, shared by every member of <?= ph($scope['name']) ?>.</p>
+  <?php else: ?>
   <h1 class="pt-h1">Your advertising</h1>
   <p class="pt-lead">Every ad placement Mont Haus has run or is running for you, with its creative. Tap one to see it in full.</p>
+  <?php endif; ?>
 
-  <?php if (!$campaigns): ?>
-    <div class="pt-card"><p class="pt-card-sub" style="margin:0">No advertising yet. When Mont Haus places an ad for you it will appear here.</p></div>
+  <?php if (!$list): ?>
+    <div class="pt-card"><p class="pt-card-sub" style="margin:0"><?= $scope['team'] ? 'No advertising for the team yet.' : 'No advertising yet. When Mont Haus places an ad for you it will appear here.' ?></p></div>
   <?php else: ?>
     <div class="pt-cards">
-    <?php foreach ($campaigns as $c):
+    <?php foreach ($list as $c):
         $lead   = portal_lead_asset($c);
         $sp     = portal_item_spend($fin, 'Advertising', (int)$c['id']);
         $medium = portal_campaign_medium($c, $has_med);
@@ -157,12 +178,14 @@ if ($want > 0 && !$one):
           <span class="pt-state"><?= ph(portal_campaign_state($c)) ?></span>
           <h2 class="pt-card-h"><?= ph(portal_campaign_title($c)) ?></h2>
           <p class="pt-card-sub"><?= ph(portal_run_words($c['start_date'] ?? null, $c['end_date'] ?? null)) ?><?= $medium !== '' ? ' · ' . ph($medium) : '' ?><?= $n > 1 ? " · {$n} creatives" : '' ?></p>
-          <?php if ($sp['lines'] > 0): ?><p class="pt-card-sub pt-line-f" style="margin-top:6px"><?= portal_item_spend_html($sp) ?></p><?php endif; ?>
+          <?php if ($sp['lines'] > 0): ?><p class="pt-card-sub pt-line-f" style="margin-top:6px"><?= portal_item_spend_html($sp, portal_scope_you($scope)) ?></p><?php endif; ?>
           <span class="pt-card-go">See it ›</span>
         </span>
       </a>
     <?php endforeach; ?>
     </div>
   <?php endif; ?>
+  <?php if ($scope['team']): ?></section><?php endif; ?>
+  <?php endforeach; ?>
 <?php endif;
 portal_footer();
