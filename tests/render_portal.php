@@ -164,9 +164,22 @@ class mysqli {
         if (preg_match('/UPDATE marketing_requests SET email_status/', $sql)) { $this->write('request_email', $p); return []; }
         if (preg_match('/^\s*UPDATE qr_codes SET dest_type/', $sql)) { $this->write('update_qr', $p); return []; }
         if (preg_match('/INSERT INTO qr_code_changes/', $sql))       { $this->write('log_change', $p); return []; }
-        // Hot Sheets (portal/hotsheets.php, home card): the person's own row by sign-in address; nobody in the fixture has one.
-        if (preg_match('/FROM hs_subscribers WHERE email = \?/', $sql)) return [];
-        if (preg_match('/FROM hs_subscribers WHERE intake_id = \?/', $sql)) return [];
+        // Hot Sheets (portal/hotsheets.php, home card): the person's own row by sign-in address. Only Nikki (the
+        // admin) has one, every area, so a preview that read the ADMIN's row would list every area (the 2026-10-08 bug);
+        // Jackson's row is found by intake id (mk_hs_subscription), which is how a preview must look it up.
+        if (preg_match('/FROM hs_subscribers WHERE email = \?/', $sql)) {
+            return ($p[0] ?? '') === 'nikki.boxer@monthaus.com'
+                ? self::s([['id' => 603, 'email' => 'nikki.boxer@monthaus.com', 'intake_id' => 36, 'frequency' => 'daily',
+                            'areas' => '["roaring-fork-valley","vail-valley","summit-county","gunnison-valley","southwest-colorado","front-range"]',
+                            'is_active' => 1, 'unsubscribed_at' => null, 'unsubscribe_token' => 'nt']])
+                : [];
+        }
+        if (preg_match('/FROM hs_subscribers WHERE intake_id = \?/', $sql)) {
+            return (int)($p[0] ?? 0) === 6
+                ? self::s([['id' => 606, 'email' => 'jackson.horn@monthaus.com', 'intake_id' => 6, 'frequency' => 'twice_weekly',
+                            'areas' => '["vail-valley"]', 'is_active' => 1, 'unsubscribed_at' => null, 'unsubscribe_token' => 'jt']])
+                : [];
+        }
         if (preg_match('/FROM marketing_intakes WHERE is_active = 1 AND \(LOWER\(mh_email\) = \?/', $sql)) return [];
         if (preg_match('/SELECT 1 FROM hs_subscribers WHERE is_active = 1/', $sql)) return [];   // mk_hs_subscribed(), for the checklist
         if (preg_match('/SELECT mh_email, mls_email FROM marketing_intakes WHERE id = (\d+)/', $sql, $m)) {
@@ -517,6 +530,12 @@ ok('an admin previews Jackson with a banner', has($b, 'Preview:') && has($b, 'jh
 ok('…and links keep the preview', has($b, 'preview=6'));
 [$c, , $b] = req('nikki', '/portal/');
 ok('an admin without a preview gets a 403 that explains', $c === 403 && has($b, 'preview'), "{$c}");
+// 2026-10-08: the home card showed the ADMIN's own Hot Sheet areas on every preview (Bryan's preview listed all six).
+[, , $b] = req('nikki', '/portal/?preview=6');
+ok('an admin previewing Jackson\'s home sees HIS Hot Sheet areas, not their own',
+   has($b, 'Preview:') && has($b, 'You get the Vail Valley Hot Sheet twice a week.') && !has($b, 'Summit County'), $b);
+[, , $b] = req('nikki', '/portal/hotsheets.php?preview=6');
+ok('…and the Hot Sheets tab agrees', has($b, 'Preview:') && has($b, 'value="vail-valley" checked') && !has($b, 'value="summit-county" checked'), $b);
 [$c, , $b] = req('nolink', '/portal/');
 ok('an unlinked agent gets a friendly 403', $c === 403 && has($b, 'not connected to your marketing'), "{$c} {$b}");
 [$c, , $b] = req('jackson', '/portal/', null, ['db' => ['migrated' => false]]);

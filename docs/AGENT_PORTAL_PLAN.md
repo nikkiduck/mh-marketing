@@ -9,8 +9,17 @@ sql/creatives_v1.sql, inc/creatives.php, upload fields on agent.php's
 Advertising creatives and Collateral orders, creative.php for admins,
 portal/asset.php for agents) and the Phase 3 Advertising and Print orders
 pages (portal/advertising.php, portal/orders.php, home cards, nav).
-tests/render_portal.php: 106 assertions. Pilot (Nikki, 2026-10-06): Weber
+tests/render_portal.php: 108 assertions. Pilot (Nikki, 2026-10-06): Weber
 Boxer Group (Jonathan, Scott, Sara), Bryan Cournoyer, Jackson Horn.
+**Access check 2026-10-08:** no pilot agent can sign in yet. The server's
+inc/config.php is the pre-a28cd18 copy (allowlist = the four admins, no
+CREATIVES_DIR; /var/www/creatives does not exist), no `users.intake_id` is
+set for anyone, and Jackson Horn has no `users` row at all (SSO denies an
+unknown address by design; the row is created on users.php). To open the
+pilot: deploy inc/config.php + .htaccess, create /var/www/creatives, then
+on users.php link Bryan -> 5, Jackson (new row, role agent) -> 6, Scott and
+Sara -> 8 (the team row; Jonathan -> 8 too if he should see it as an
+agent rather than through preview).
 Still to build: Hot Sheet choices (Phase 4), the marketing menu and
 requests inbox (Phase 5; the sample content is compiled with Nikki first).
 **Written:** 2026-09-08. **Revised:** 2026-10-01 with Nikki's decisions (below)

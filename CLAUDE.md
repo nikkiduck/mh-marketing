@@ -1861,14 +1861,18 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   codes. Hot Sheets come first in the nav and the home cards and are
   called "Internal" (Nikki, 2026-10-07) because a Client Hot Sheets
   section (Phase 2) will sit beside them; portal/hotsheets.php is their
-  own areas and frequency (see "Hot Sheets" above). The roster list
+  own areas and frequency (see "Hot Sheets" above). **In an admin preview
+  every page shows the ACCOUNT's subscription** (`mk_hs_subscription()` by
+  intake id), never the admin's own row by sign-in address: until
+  2026-10-08 the home card read the admin's row, so Bryan's preview said
+  "You get ..." every area (Nikki's own six). The roster list
   (index.php) has an eye icon per agent that opens their portal as an
   admin preview; the checklist count, Profile meter and Subs marks left
   the list the same day (the agent page has them).
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` + `users.intake_id`.
   Pilot (Nikki, 2026-10-06): Weber Boxer Group (Jonathan, Scott, Sara,
   all -> team row 8), Bryan Cournoyer, Jackson Horn.
-- Tests: `tests/render_portal.php` (106 assertions: isolation between
+- Tests: `tests/render_portal.php` (108 assertions: isolation between
   accounts on every page and on asset.php, someone else's code or id refused
   on GET and POST, preview rules, refusals, the creatives query asked for
   the account's campaign ids only). Proven to catch a leak by breaking the

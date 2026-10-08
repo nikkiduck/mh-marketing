@@ -33,15 +33,21 @@ $yr = ['broker' => 0.0, 'mh' => 0.0];
 foreach ($fin['months'] as $k => $m) if (substr($k, 0, 4) === date('Y')) { $yr['broker'] += $m['broker']; $yr['mh'] += $m['mh']; }
 
 // Hot Sheets (2026-10-07): the signed-in person's own subscription, by their address.
+// An admin previewing sees the ACCOUNT's subscription (same rule as portal/hotsheets.php);
+// until 2026-10-08 the card read the admin's own row, so every preview listed the admin's areas.
 $hs = null;
 if (mk_table_exists($conn, 'hs_subscribers') && mk_column_exists($conn, 'hs_subscribers', 'areas')) {
     require_once __DIR__ . '/../inc/boards.php';
     require_once __DIR__ . '/../inc/agent_lifecycle.php';
-    $st = $conn->prepare("SELECT frequency, areas, is_active, unsubscribed_at FROM hs_subscribers WHERE email = ? LIMIT 1");
-    $em = strtolower(trim((string)$ctx['user']['email']));
-    $st->bind_param('s', $em); $st->execute();
-    $hs = $st->get_result()->fetch_assoc() ?: null;
-    $st->close();
+    if ($ctx['preview']) {
+        $hs = mk_hs_subscription($conn, (int)$ctx['acct']['id']);
+    } else {
+        $st = $conn->prepare("SELECT frequency, areas, is_active, unsubscribed_at FROM hs_subscribers WHERE email = ? LIMIT 1");
+        $em = strtolower(trim((string)$ctx['user']['email']));
+        $st->bind_param('s', $em); $st->execute();
+        $hs = $st->get_result()->fetch_assoc() ?: null;
+        $st->close();
+    }
 }
 
 $photo = trim((string)($ctx['acct']['headshot_face_url'] ?? '')) ?: trim((string)($ctx['acct']['headshot_url'] ?? ''));
