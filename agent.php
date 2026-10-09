@@ -3784,7 +3784,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
     <?php global $has_proofs; if ($has_proofs): // sql/creatives_v1.sql ?>
     <div class="form-row">
-      <label class="grow">Proof / final design <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 8 MB max)</small>
+      <label class="grow">Proof / final design <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 16 MB max)</small>
         <input type="file" name="proof" class="form-input" accept="image/jpeg,image/png,image/gif,application/pdf">
       </label>
       <?php if (!empty($o['proof_file'])): ?>
@@ -4462,7 +4462,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                       <input type="hidden" name="asset_id" value="<?= $af['id'] ?>">
                       <?php if ($has_creatives): ?>
                       <div class="form-row">
-                        <label class="grow">Image or PDF <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 8 MB max)</small>
+                        <label class="grow">Image or PDF <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 16 MB max)</small>
                           <input type="file" name="image" class="form-input" accept="image/jpeg,image/png,image/gif,application/pdf">
                         </label>
                         <?php if ($af['image'] !== ''): ?>
@@ -4509,7 +4509,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
                 <?php if ($has_creatives): ?>
                 <div class="form-row">
-                  <label class="grow">Image or PDF <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 8 MB max)</small>
+                  <label class="grow">Image or PDF <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 16 MB max)</small>
                     <input type="file" name="image" class="form-input" accept="image/jpeg,image/png,image/gif,application/pdf">
                   </label>
                 </div>

@@ -1861,8 +1861,13 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   uploaded on agent.php's Add/Edit Creative and order forms, stored in
   `CREATIVES_DIR` (/var/www/creatives, outside the web root, beside
   receipts) by `inc/creatives.php` (`mk_store_creative`: JPG/PNG/GIF/PDF,
-  8 MB; a 720px JPEG thumbnail made ONCE at upload with GD, never on page
-  view; PDF thumbnails only when Imagick is present, otherwise a PDF tile).
+  16 MB since 2026-10-09, was 8; a 720px JPEG thumbnail made ONCE at upload
+  with GD, never on page view; a PDF's first page via Imagick, else Ghostscript
+  directly, since Debian's ImageMagick policy refuses PDF; else a PDF tile).
+  `cron/import_dropbox_creatives.php` (2026-10-09) fetched the Dropbox-linked
+  creatives and proofs onto the portal through the same store function
+  (`mk_store_creative_from_path()`); `--rethumb` makes missing thumbnails;
+  folder links cannot be fetched and are uploaded by hand.
   Served by `creative.php` (admin, by id) and `portal/asset.php` (the owning
   account only; a JOIN on `c.intake_id`), each with `?thumb=1` / `?dl=1`.
   Shared or duplicated placements copy the files per copy

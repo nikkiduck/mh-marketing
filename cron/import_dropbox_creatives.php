@@ -10,13 +10,14 @@
  *   php cron/import_dropbox_creatives.php --asset=5          one advertising creative (marketing_campaign_assets.id)
  *   php cron/import_dropbox_creatives.php --order=2          one print order's proof (marketing_collateral_orders.id)
  *   php cron/import_dropbox_creatives.php --all              every creative and proof still without a file
+ *   php cron/import_dropbox_creatives.php --rethumb          make the thumbnail for every stored file that has none (PDFs, after the gs fallback)
  *
  * Rules: a row that already has a file is never touched; the Dropbox link is
  * kept (the portal still offers "Open original"). Only single-file share
  * links (dropbox.com/scl/fi/... or /s/...) can be fetched: a folder link
  * (/scl/fo/...) is reported and skipped. A link that is not a public share
- * comes back as a Dropbox web page, which is reported as such. Over 8 MB,
- * or not a JPG/PNG/GIF/PDF, is reported and skipped (the same limits as the
+ * comes back as a Dropbox web page, which is reported as such. Over the
+ * upload limit (MK_CREATIVE_MAX_MB), or not a JPG/PNG/GIF/PDF, is reported and skipped (the same limits as the
  * upload form). Nothing is deleted. Exit code 1 when any row was skipped.
  */
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
@@ -25,15 +26,40 @@ require_once __DIR__ . '/../inc/db.php';
 require_once __DIR__ . '/../inc/schema.php';
 require_once __DIR__ . '/../inc/creatives.php';
 
-$opt = getopt('', ['dry-run', 'all', 'asset:', 'order:']);
+$opt = getopt('', ['dry-run', 'all', 'asset:', 'order:', 'rethumb']);
 $dry = isset($opt['dry-run']);
-if (!$dry && !isset($opt['all']) && !isset($opt['asset']) && !isset($opt['order'])) {
-    fwrite(STDERR, "Say what to import: --dry-run, --all, --asset=ID or --order=ID\n");
+if (!$dry && !isset($opt['all']) && !isset($opt['asset']) && !isset($opt['order']) && !isset($opt['rethumb'])) {
+    fwrite(STDERR, "Say what to import: --dry-run, --all, --asset=ID, --order=ID, or --rethumb\n");
     exit(2);
 }
 if (!mk_column_exists($conn, 'marketing_campaign_assets', 'image_file') || !mk_column_exists($conn, 'marketing_collateral_orders', 'proof_file')) {
     fwrite(STDERR, "sql/creatives_v1.sql has not run here.\n");
     exit(2);
+}
+
+// ── --rethumb: stored files with no thumbnail get one now ───────────────────
+if (isset($opt['rethumb'])) {
+    $made = $failed = 0;
+    foreach ([['marketing_campaign_assets', 'image_file', 'image_thumb'], ['marketing_collateral_orders', 'proof_file', 'proof_thumb']] as [$table, $fcol, $tcol]) {
+        $r = $conn->query("SELECT id, {$fcol} AS f FROM {$table} WHERE {$fcol} IS NOT NULL AND {$fcol} <> '' AND ({$tcol} IS NULL OR {$tcol} = '') ORDER BY id");
+        foreach ($r->fetch_all(MYSQLI_ASSOC) as $row) {
+            $stored = basename((string)$row['f']);
+            $path   = CREATIVES_DIR . $stored;
+            $tag    = sprintf('%-5s %-3d %s', $table === 'marketing_campaign_assets' ? 'asset' : 'order', (int)$row['id'], $stored);
+            if (!is_file($path)) { echo "  ⚠   {$tag}: file missing on disk\n"; $failed++; continue; }
+            $base = preg_replace('/\.[a-z0-9]+$/i', '', $stored);
+            $thumb = strtolower(pathinfo($stored, PATHINFO_EXTENSION)) === 'pdf'
+                ? mk_creative_pdf_thumb($path, CREATIVES_DIR . $base . '_thumb.jpg')
+                : mk_creative_image_thumb($path, CREATIVES_DIR . $base . '_thumb.jpg');
+            if ($thumb === null) { echo "  ⚠   {$tag}: no thumbnail could be made (see the error log)\n"; $failed++; continue; }
+            @chgrp(CREATIVES_DIR . $thumb, filegroup(CREATIVES_DIR));
+            $st = $conn->prepare("UPDATE {$table} SET {$tcol} = ? WHERE id = ? AND ({$tcol} IS NULL OR {$tcol} = '')");
+            $st->bind_param('si', $thumb, $row['id']); $st->execute(); $st->close();
+            echo "  ✓   {$tag}: thumbnail made\n"; $made++;
+        }
+    }
+    echo "\n{$made} thumbnails made, {$failed} not.\n";
+    exit($failed > 0 ? 1 : 0);
 }
 
 /** A Dropbox share link as a direct download, or '' when it cannot be one (a folder, another host). */
@@ -82,10 +108,10 @@ function dbx_fetch(string $direct): array {
     curl_close($ch);
     fclose($fh);
     $bytes = (int)@filesize($tmp);
-    if (!$ok && stripos($err, 'exceed') !== false)  { @unlink($tmp); return ['error' => 'over 8 MB, the upload limit']; }
+    if (!$ok && stripos($err, 'exceed') !== false)  { @unlink($tmp); return ['error' => 'over ' . MK_CREATIVE_MAX_MB . ' MB, the upload limit']; }
     if (!$ok)                                         { @unlink($tmp); return ['error' => 'download failed: ' . $err]; }
     if ($code !== 200)                                { @unlink($tmp); return ['error' => "Dropbox answered HTTP {$code}" . ($code === 404 ? ' (link removed or not shared)' : '')]; }
-    if ($bytes > MK_CREATIVE_MAX_BYTES)               { @unlink($tmp); return ['error' => 'over 8 MB, the upload limit']; }
+    if ($bytes > MK_CREATIVE_MAX_BYTES)               { @unlink($tmp); return ['error' => 'over ' . MK_CREATIVE_MAX_MB . ' MB, the upload limit']; }
     $mime = (string)mime_content_type($tmp);
     if ($mime === 'text/html')                        { @unlink($tmp); return ['error' => 'Dropbox returned a web page, not the file: the link is not a public share']; }
     return [$tmp, $name, $bytes, $mime];

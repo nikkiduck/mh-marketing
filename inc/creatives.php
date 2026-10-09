@@ -21,7 +21,8 @@ const MK_CREATIVE_TYPES = [
     'image/gif'       => 'gif',
     'application/pdf' => 'pdf',
 ];
-const MK_CREATIVE_MAX_BYTES = 8 * 1024 * 1024;   // 8 MB: plenty for a web-size ad or proof, kind to the box
+const MK_CREATIVE_MAX_MB    = 16;                               // raised from 8 on 2026-10-09: a full-page print PDF is about 10 MB
+const MK_CREATIVE_MAX_BYTES = MK_CREATIVE_MAX_MB * 1024 * 1024;   // php.ini allows 40M; the thumbnail step checks memory on its own
 const MK_CREATIVE_THUMB_PX  = 720;               // longest side of the thumbnail; fills a phone card at 2x
 
 /**
@@ -35,7 +36,7 @@ function mk_store_creative(string $field): ?array {
         // say) arrives with an error code and no tmp_name: say so rather than
         // saving the rest of the form as if nothing had been chosen.
         $code = (int)($_FILES[$field]['error'] ?? UPLOAD_ERR_NO_FILE);
-        if ($code === UPLOAD_ERR_INI_SIZE || $code === UPLOAD_ERR_FORM_SIZE) return ['error' => 'That file is too large (8 MB at most).'];
+        if ($code === UPLOAD_ERR_INI_SIZE || $code === UPLOAD_ERR_FORM_SIZE) return ['error' => 'That file is too large (' . MK_CREATIVE_MAX_MB . ' MB at most).'];
         if ($code !== UPLOAD_ERR_NO_FILE) return ['error' => 'The file did not upload. Please try again.'];
         return null;
     }
@@ -52,7 +53,7 @@ function mk_store_creative(string $field): ?array {
 function mk_store_creative_from_path(string $path, string $orig_name, bool $uploaded = false): array {
     $mime = function_exists('mime_content_type') ? (string)mime_content_type($path) : '';
     if (!isset(MK_CREATIVE_TYPES[$mime]))              return ['error' => 'The file must be a JPG, PNG, GIF or PDF.'];
-    if ((int)@filesize($path) > MK_CREATIVE_MAX_BYTES) return ['error' => 'That file is too large (8 MB at most).'];
+    if ((int)@filesize($path) > MK_CREATIVE_MAX_BYTES) return ['error' => 'That file is too large (' . MK_CREATIVE_MAX_MB . ' MB at most).'];
 
     $dir = CREATIVES_DIR;
     if (!is_dir($dir) && !@mkdir($dir, 02775, true)) return ['error' => 'Could not create the creatives folder on the server.'];
@@ -106,30 +107,46 @@ function mk_creative_image_thumb(string $src, string $dst): ?string {
 }
 
 /**
- * First page of a PDF as a JPEG, when Imagick (with Ghostscript behind it) is
- * on the server. Otherwise null, and the card shows a PDF tile: the portal
- * looks best with images uploaded, and the admin form says so.
+ * First page of a PDF as a JPEG. Imagick first; when it is absent or refuses
+ * (Debian's ImageMagick policy blocks PDF by default, found 2026-10-09), the
+ * page is rendered by Ghostscript itself (/usr/bin/gs, -dSAFER, 60 s cap) and
+ * scaled by the image thumbnailer. Null when neither works, and the card
+ * shows a PDF tile: the portal looks best with images uploaded, and the admin
+ * form says so.
  */
 function mk_creative_pdf_thumb(string $src, string $dst): ?string {
-    if (!class_exists('Imagick')) return null;
-    try {
-        $im = new Imagick();
-        $im->setResolution(72, 72);
-        $im->readImage($src . '[0]');
-        $im->setImageBackgroundColor('white');
-        $im = $im->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
-        $im->thumbnailImage(MK_CREATIVE_THUMB_PX, MK_CREATIVE_THUMB_PX, true);
-        $im->setImageFormat('jpeg');
-        $im->setImageCompressionQuality(84);
-        $ok = $im->writeImage($dst);
-        $im->clear();
-        if (!$ok) return null;
-        @chmod($dst, 0664);
-        return basename($dst);
-    } catch (Throwable $e) {
-        error_log('mk_creative_pdf_thumb: ' . $e->getMessage());
+    if (class_exists('Imagick')) {
+        try {
+            $im = new Imagick();
+            $im->setResolution(72, 72);
+            $im->readImage($src . '[0]');
+            $im->setImageBackgroundColor('white');
+            $im = $im->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+            $im->thumbnailImage(MK_CREATIVE_THUMB_PX, MK_CREATIVE_THUMB_PX, true);
+            $im->setImageFormat('jpeg');
+            $im->setImageCompressionQuality(84);
+            $ok = $im->writeImage($dst);
+            $im->clear();
+            if ($ok) { @chmod($dst, 0664); return basename($dst); }
+        } catch (Throwable $e) {
+            // Fall through to Ghostscript; only say so if that fails too.
+            $imagick_err = $e->getMessage();
+        }
+    }
+    $gs = '/usr/bin/gs';
+    if (!is_executable($gs) || !function_exists('exec')) {
+        error_log('mk_creative_pdf_thumb: ' . ($imagick_err ?? 'no Imagick') . '; no Ghostscript to fall back on');
         return null;
     }
+    $page = tempnam(sys_get_temp_dir(), 'pdfpg_') . '.jpg';
+    $cmd  = (is_executable('/usr/bin/timeout') ? '/usr/bin/timeout 60 ' : '') . escapeshellarg($gs)
+          . ' -q -dNOPAUSE -dBATCH -dSAFER -dFirstPage=1 -dLastPage=1 -dUseCropBox -sDEVICE=jpeg -dJPEGQ=90 -r96'
+          . ' -sOutputFile=' . escapeshellarg($page) . ' ' . escapeshellarg($src) . ' 2>&1';
+    exec($cmd, $out, $rc);
+    $thumb = ($rc === 0 && is_file($page) && filesize($page) > 0) ? mk_creative_image_thumb($page, $dst) : null;
+    @unlink($page);
+    if ($thumb === null) error_log('mk_creative_pdf_thumb: ' . ($imagick_err ?? 'no Imagick') . '; gs rc=' . $rc . ' ' . trim(implode(' ', $out)));
+    return $thumb;
 }
 
 /** Remove a creative and its thumbnail from disk. Silent if already gone. */

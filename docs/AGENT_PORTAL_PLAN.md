@@ -226,7 +226,7 @@ paused until Vail is in the feed (CLAUDE.md > Cron).
   `Cache-Control: private, no-store`. `receipt.php` stays admin-only.
 - Existing `file_url` links stay as "Open original"; nothing to backfill, but the
   portal looks best once current creative has images uploaded (Nikki's time).
-- The box has 1 GB RAM: cap uploads (~8 MB), JPEG/PNG/GIF/PDF only. A thumbnail
+- The box has 1 GB RAM: cap uploads (16 MB since 2026-10-09, was 8), JPEG/PNG/GIF/PDF only. A thumbnail
   per upload is worth it for card pages on phones, but generate it once at upload
   (GD, small) and never on page view.
 
