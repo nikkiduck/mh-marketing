@@ -39,10 +39,20 @@ function mk_store_creative(string $field): ?array {
         if ($code !== UPLOAD_ERR_NO_FILE) return ['error' => 'The file did not upload. Please try again.'];
         return null;
     }
-    $tmp  = $_FILES[$field]['tmp_name'];
-    $mime = function_exists('mime_content_type') ? (string)mime_content_type($tmp) : '';
-    if (!isset(MK_CREATIVE_TYPES[$mime]))                 return ['error' => 'The file must be a JPG, PNG, GIF or PDF.'];
-    if ((int)$_FILES[$field]['size'] > MK_CREATIVE_MAX_BYTES) return ['error' => 'That file is too large (8 MB at most).'];
+    return mk_store_creative_from_path($_FILES[$field]['tmp_name'], (string)($_FILES[$field]['name'] ?? ''), true);
+}
+
+/**
+ * Store a creative that is already on disk: the upload above, or a file a
+ * script fetched (cron/import_dropbox_creatives.php, 2026-10-09). Same
+ * checks, same names, same thumbnail; $uploaded says the path is a PHP
+ * upload (moved with move_uploaded_file) rather than an ordinary file
+ * (renamed). Returns ['file', 'orig', 'thumb'] or ['error' => ...].
+ */
+function mk_store_creative_from_path(string $path, string $orig_name, bool $uploaded = false): array {
+    $mime = function_exists('mime_content_type') ? (string)mime_content_type($path) : '';
+    if (!isset(MK_CREATIVE_TYPES[$mime]))              return ['error' => 'The file must be a JPG, PNG, GIF or PDF.'];
+    if ((int)@filesize($path) > MK_CREATIVE_MAX_BYTES) return ['error' => 'That file is too large (8 MB at most).'];
 
     $dir = CREATIVES_DIR;
     if (!is_dir($dir) && !@mkdir($dir, 02775, true)) return ['error' => 'Could not create the creatives folder on the server.'];
@@ -50,13 +60,14 @@ function mk_store_creative(string $field): ?array {
     $ext    = MK_CREATIVE_TYPES[$mime];
     $base   = 'creative_' . date('Ymd') . '_' . bin2hex(random_bytes(6));
     $stored = "{$base}.{$ext}";
-    if (!move_uploaded_file($tmp, $dir . $stored)) return ['error' => 'Failed to save the file.'];
+    $ok = $uploaded ? move_uploaded_file($path, $dir . $stored) : @rename($path, $dir . $stored);
+    if (!$ok) return ['error' => 'Failed to save the file.'];
     @chmod($dir . $stored, 0664);   // group-writable like every other file here (CLAUDE.md > Deploying files)
 
     $thumb = $mime === 'application/pdf' ? mk_creative_pdf_thumb($dir . $stored, $dir . $base . '_thumb.jpg')
                                          : mk_creative_image_thumb($dir . $stored, $dir . $base . '_thumb.jpg');
 
-    $orig = preg_replace('/[^A-Za-z0-9._ -]/', '_', (string)($_FILES[$field]['name'] ?? $stored));
+    $orig = preg_replace('/[^A-Za-z0-9._ -]/', '_', $orig_name !== '' ? $orig_name : $stored);
     return ['file' => $stored, 'orig' => $orig, 'thumb' => $thumb];
 }
 
