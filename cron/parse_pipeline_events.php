@@ -148,6 +148,17 @@ foreach ($rows as $ev) {
     $mm = $hit['market'] ?? null; $mk = $hit['listing_key'] ?? null; $mn = $hit['mls_id'] ?? null;
     if ($mls) { $mn = $mls; $conf = 'exact'; }   // a Paperless MLS number beats an address guess
 
+    // Leases are never announced (Nikki, 2026-10-08: no rental deals on the
+    // Hot Sheet, off-market or otherwise). Paperless labels them "Lease".
+    if (!isset($known[$txn]) && preg_match('/\b(lease|rental|tenant)\b/i', (string)$ptype)) {
+        $st = 'ignored';
+        $n  = "txn {$txn}: {$address} [{$cat}] {$side} is a {$ptype}: rentals are not announced, not queued";
+        $mark->bind_param('ssi', $st, $n, $eid); $mark->execute();
+        $ignored++;
+        echo "    ~ {$n}\n";
+        continue;
+    }
+
     // On the MLS and on the listing side: the IDX feed has it, so the Hot
     // Sheet already shows it. Ignore it unless the deal is already in the queue.
     if ($etype === 'pocket_listing' && $conf === 'exact' && !isset($known[$txn])) {
