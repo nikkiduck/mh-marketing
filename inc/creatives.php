@@ -63,6 +63,7 @@ function mk_store_creative_from_path(string $path, string $orig_name, bool $uplo
     $ok = $uploaded ? move_uploaded_file($path, $dir . $stored) : @rename($path, $dir . $stored);
     if (!$ok) return ['error' => 'Failed to save the file.'];
     @chmod($dir . $stored, 0664);   // group-writable like every other file here (CLAUDE.md > Deploying files)
+    if (!$uploaded) @chgrp($dir . $stored, filegroup($dir));   // a renamed temp file keeps its own group; the folder's is www-data
 
     $thumb = $mime === 'application/pdf' ? mk_creative_pdf_thumb($dir . $stored, $dir . $base . '_thumb.jpg')
                                          : mk_creative_image_thumb($dir . $stored, $dir . $base . '_thumb.jpg');
