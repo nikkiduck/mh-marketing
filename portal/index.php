@@ -56,14 +56,14 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
       <span class="pt-card-go">See advertising ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/orders.php', $q)) ?>">
-      <h2 class="pt-card-h">Print orders</h2>
+      <h2 class="pt-card-h">Collateral</h2>
       <p class="pt-card-sub"><?php
-        if ($ord['n'] === 0)         echo 'No print orders yet.';
+        if ($ord['n'] === 0)         echo 'No collateral yet.';
         elseif ($ord['moving'] === 1) echo "{$you} 1 order on the way" . ($ord['n'] > 1 ? ', and ' . ($ord['n'] - 1) . ' delivered' : '') . '. See the proof and where it is.';
         elseif ($ord['moving'] > 1)   echo "{$you} {$ord['moving']} orders on the way" . ($ord['n'] > $ord['moving'] ? ', and ' . ($ord['n'] - $ord['moving']) . ' delivered' : '') . '. See the proofs and where they are.';
-        else                          echo ($ord['n'] === 1 ? "{$you} 1 print order" : "{$you} {$ord['n']} print orders") . ', all delivered. See the proofs.';
+        else                          echo ($ord['n'] === 1 ? "{$you} 1 collateral order" : "{$you} {$ord['n']} collateral orders") . ', all delivered. See the proofs.';
       ?></p>
-      <span class="pt-card-go">See print orders ›</span>
+      <span class="pt-card-go">See collateral ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/spend.php', $q)) ?>">
       <h2 class="pt-card-h">Spend</h2>

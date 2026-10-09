@@ -478,7 +478,7 @@ ok('…nor for Weber Boxer', $c === 404 && !has($b, 'JACKSON'), "{$c} {$b}");
 echo "\nADVERTISING\n";
 [$c, , $b] = req('jackson', '/portal/advertising.php');
 ok('Jackson: advertising renders', $c === 200 && no_fatal($b), $b);
-ok('his placement, in plain words: outlet, print, size, running now', has($b, 'Aspen Times: JH Ad') && has($b, 'Print, Half page') && has($b, 'Running now') && has($b, 'From 5 March 2026'), $b);
+ok('his placement, in plain words: outlet, print, size, running now', has($b, 'Aspen Times: JH Ad') && has($b, 'Print, Half page') && has($b, 'Running now') && has($b, 'From March 5, 2026'), $b);
 ok('the card pictures his creative by its thumbnail', has($b, 'asset.php?asset=31&amp;thumb=1'), $b);
 ok('NOTHING of Kim\'s or Weber Boxer\'s advertising', !has($b, 'KC Ad') && !has($b, 'asset=32') && !has($b, 'KC Secret') && !has($b, 'WB Ad'), $b);
 ok('the creatives were asked for by HIS campaign ids only', (writes()[0][0] ?? '') === 'assets_in' && (writes()[0][1] ?? []) === [21], json_encode(writes()));
@@ -487,7 +487,9 @@ ok('no budget, notes or billing words', !has($b, 'SECRET NOTE') && !has($b, '1,2
 ok('his placement opens with every creative', $c === 200 && no_fatal($b) && has($b, 'Half page') && has($b, 'asset.php?asset=31&amp;thumb=1') && has($b, 'asset.php?asset=31&amp;dl=1'), $b);
 ok('…the PDF creative gets a PDF tile and Open PDF, not a broken picture', has($b, '>PDF<') && has($b, 'Open PDF') && !has($b, 'asset=33&amp;thumb=1'), $b);
 ok('…the Dropbox original is a secondary link', has($b, 'https://www.dropbox.com/jh-ad-original') && has($b, 'Open original'), $b);
-ok('…what it cost, in the spend words', has($b, 'Mont Haus paid') && has($b, '$1,234') && !has($b, 'SECRET NOTE'), $b);
+ok('…one line under the title: state, dates, medium, the figure spent; no cost card (Nikki, 2026-10-09)',
+   has($b, '<span class="pt-state">Running now</span>') && has($b, 'From March 5, 2026<span class="pt-sep"></span>Print, Half page<span class="pt-sep"></span>$1,234 spent')
+   && !has($b, 'What it cost') && !has($b, 'Mont Haus paid') && !has($b, 'SECRET NOTE'), $b);
 [$c, , $b] = req('jackson', '/portal/advertising.php?id=22');
 ok('Kim\'s placement id is not found for Jackson, with none of her data', $c === 404 && has($b, 'could not be found') && !has($b, 'KC Ad') && !has($b, 'asset=32') && !has($b, 'SECRET'), "{$c} {$b}");
 [$c, , $b] = req('jon', '/portal/advertising.php');
@@ -502,7 +504,7 @@ ok('an admin previews Jackson\'s advertising, and links keep the preview', has($
 echo "\nPRINT ORDERS\n";
 [$c, , $b] = req('jackson', '/portal/orders.php');
 ok('Jackson: orders render', $c === 200 && no_fatal($b), $b);
-ok('his orders in plain words: what, how many, where it is', has($b, 'Business Cards: JH cards') && has($b, 'On its way') && has($b, 'Quantity 500') && has($b, 'JH flyers') && has($b, 'Delivered 20 September 2026'), $b);
+ok('his orders in plain words: what, how many, where it is', has($b, 'Business Cards: JH cards') && has($b, 'On its way') && has($b, 'Quantity 500') && has($b, 'JH flyers') && has($b, 'Delivered September 20, 2026'), $b);
 ok('the card pictures the proof by its thumbnail', has($b, 'asset.php?order=11&amp;thumb=1'), $b);
 ok('NOTHING of Kim\'s or Weber Boxer\'s orders', !has($b, 'KC postcards') && !has($b, 'order=13') && !has($b, 'WB signs') && !has($b, 'Oakley'), $b);
 ok('no vendor, order number or billing words', !preg_match('/invoic|billed|overdue|balance|unpaid|vendor/i', strip_tags($b)), $b);
@@ -514,7 +516,7 @@ ok('an order with no proof says so rather than showing a broken picture', $c ===
 [$c, , $b] = req('jackson', '/portal/orders.php?id=13');
 ok('Kim\'s order id is not found for Jackson, with none of her data', $c === 404 && has($b, 'could not be found') && !has($b, 'KC postcards') && !has($b, 'KCTRACK'), "{$c} {$b}");
 [, , $b] = req('jon', '/portal/orders.php');
-ok('Jonathan: the team\'s order in the team section only', has($b, 'No print orders yet.') && has($b, 'pt-team') && has($b, 'Yard Signs: WB signs') && has($b, 'Ordered') && !has($b, 'JH cards') && !has($b, 'order=11'), $b);
+ok('Jonathan: the team\'s order in the team section only', has($b, 'No collateral yet.') && has($b, 'pt-team') && has($b, 'Yard Signs: WB signs') && has($b, 'Ordered') && !has($b, 'JH cards') && !has($b, 'order=11'), $b);
 [$c, , $b] = req('jon', '/portal/orders.php?id=14');
 ok('…and the team\'s order opens with the team\'s figures', $c === 200 && has($b, 'WB signs') && has($b, 'The team paid') && has($b, '$3,000'), $b);
 
@@ -553,7 +555,7 @@ ok('home counts his advertising and orders in plain words', has($b, 'You have 1 
 [, , $b] = req('jon', '/portal/');
 ok('Jonathan\'s home: nothing of his own, the team\'s placement and order in the team section', has($b, 'No ad placements yet.') && has($b, 'The team has 1 ad placement on record') && has($b, 'The team has 1 order on the way.'), $b);
 [, , $b] = req('sierrah', '/portal/');
-ok('nothing yet: the cards say so, no dead ends', has($b, 'No ad placements yet.') && has($b, 'No print orders yet.'), $b);
+ok('nothing yet: the cards say so, no dead ends', has($b, 'No ad placements yet.') && has($b, 'No collateral yet.'), $b);
 
 echo "\nPREVIEW AND REFUSALS\n";
 [, , $b] = req('jackson', '/portal/qr.php?preview=8');

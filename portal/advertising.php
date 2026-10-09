@@ -88,11 +88,21 @@ if ($want > 0 && !$one):
 ?>
   <p class="pt-back"><a href="<?= ph(portal_url($ctx, '/portal/advertising.php')) ?>">← All advertising</a></p>
   <h1 class="pt-h1"><?= ph(portal_campaign_title($c)) ?></h1>
+  <?php // One line under the title (Nikki, 2026-10-09): ENDED  August 13-31, 2026  Digital  $400 spent
+        $meta = [portal_run_words($c['start_date'] ?? null, $c['end_date'] ?? null)];
+        if ($medium !== '') $meta[] = $medium;
+        if (($spent = portal_spend_total_words($sp)) !== '') $meta[] = $spent;
+  ?>
   <p class="pt-lead" style="margin-bottom:18px">
     <span class="pt-state"><?= ph(portal_campaign_state($c)) ?></span>
     <?php if ($scope['team']): ?><span class="pt-state"><?= ph($scope['name']) ?></span><?php endif; ?>
-    <?= ph(portal_run_words($c['start_date'] ?? null, $c['end_date'] ?? null)) ?><?= $medium !== '' ? ' · ' . ph($medium) : '' ?>
+    <?= implode('<span class="pt-sep"></span>', array_map('ph', $meta)) ?>
   </p>
+  <?php if ($scope['team']): ?>
+    <p class="pt-help" style="margin:-8px 0 18px">This is a <?= ph($scope['name']) ?> placement. The amount is the team's shared spend.</p>
+  <?php elseif ($has_share && !empty($c['split_group'])): ?>
+    <p class="pt-help" style="margin:-8px 0 18px">This placement is shared with other agents. The amount is your share.</p>
+  <?php endif; ?>
 
   <?php if (!$c['assets']): ?>
     <div class="pt-card" style="margin-bottom:20px"><p class="pt-card-sub" style="margin:0">The creative for this placement is not on the portal yet.</p></div>
@@ -130,21 +140,8 @@ if ($want > 0 && !$one):
     </div>
   <?php endif; ?>
 
-  <div class="pt-card">
-    <h2 class="pt-card-h">What it cost</h2>
-    <?php if ($sp['lines'] === 0): ?>
-      <p class="pt-card-sub" style="margin:0">Nothing for this placement on <?= $scope['team'] ? 'the team\'s' : 'your' ?> spend yet.</p>
-    <?php else: ?>
-      <p class="pt-line-f" style="margin:0"><?= portal_item_spend_html($sp, portal_scope_you($scope)) ?></p>
-      <?php if ($sp['lines'] > 1): ?><p class="pt-card-sub" style="margin-top:8px">Across <?= (int)$sp['lines'] ?> months. Each month is on <?= $scope['team'] ? 'the team\'s' : 'your' ?> <a href="<?= ph(portal_url($ctx, '/portal/spend.php', $scope['team'] ? ['team' => (int)$scope['id']] : [])) ?>">Spend</a> page.</p><?php endif; ?>
-    <?php endif; ?>
-    <?php if ($scope['team']): ?>
-      <p class="pt-card-sub" style="margin-top:8px">This is a <?= ph($scope['name']) ?> placement. The amounts are the team's shared spend.</p>
-    <?php endif; ?>
-    <?php if ($has_share && !empty($c['split_group'])): ?>
-      <p class="pt-card-sub" style="margin-top:8px">This placement is shared with other agents. The amounts here are your share.</p>
-    <?php endif; ?>
-  </div>
+  <?php // The "What it cost" card is gone (Nikki, 2026-10-09): the figure sits in the line under the title;
+        // who paid what, month by month, stays on the Spend page. ?>
   <p class="pt-help" style="margin-top:20px">Questions about this placement? Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>?subject=<?= rawurlencode('Advertising: ' . portal_campaign_title($c)) ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p>
 
 <?php else: ?>

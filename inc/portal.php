@@ -227,27 +227,42 @@ function portal_platform_label(string $p): string {
     ][$p] ?? ucwords(str_replace('_', ' ', $p));
 }
 
-/** "5 March 2026", or '' for no date. */
+/** "March 5, 2026" (US order since 2026-10-09, Nikki), or '' for no date. */
 function portal_date(?string $d): string {
     $d = trim((string)$d);
     if ($d === '' || $d === '0000-00-00') return '';
     $t = strtotime($d);
-    return $t ? date('j F Y', $t) : '';
+    return $t ? date('F j, Y', $t) : '';
 }
 
 /**
- * When a placement ran, in plain words: "March 2026", "5 March to 30 April
- * 2026", "From 5 March 2026", or "Dates to be confirmed".
+ * When a placement ran, in plain words (US order, Nikki 2026-10-09):
+ * "August 13-31, 2026", "August 13 - September 2, 2026", "December 20, 2026 -
+ * January 5, 2027", "From March 5, 2026", or "Dates to be confirmed".
  */
 function portal_run_words(?string $start, ?string $end): string {
     $s = ($start ?? '') !== '' && $start !== '0000-00-00' ? strtotime($start) : false;
     $e = ($end ?? '') !== '' && $end !== '0000-00-00' ? strtotime($end) : false;
     if (!$s && !$e) return 'Dates to be confirmed';
-    if ($s && !$e)  return 'From ' . date('j F Y', $s);
-    if (!$s && $e)  return 'Until ' . date('j F Y', $e);
-    if (date('Y-m', $s) === date('Y-m', $e)) return date('j', $s) === date('j', $e) ? date('j F Y', $s) : date('j', $s) . ' to ' . date('j F Y', $e);
-    if (date('Y', $s) === date('Y', $e)) return date('j F', $s) . ' to ' . date('j F Y', $e);
-    return date('j F Y', $s) . ' to ' . date('j F Y', $e);
+    if ($s && !$e)  return 'From ' . date('F j, Y', $s);
+    if (!$s && $e)  return 'Until ' . date('F j, Y', $e);
+    if (date('Y-m', $s) === date('Y-m', $e)) return date('j', $s) === date('j', $e) ? date('F j, Y', $s) : date('F j', $s) . '-' . date('j, Y', $e);
+    if (date('Y', $s) === date('Y', $e)) return date('F j', $s) . ' - ' . date('F j, Y', $e);
+    return date('F j, Y', $s) . ' - ' . date('F j, Y', $e);
+}
+
+/**
+ * What an item cost, as one figure for the header line (Nikki, 2026-10-09:
+ * "$400 spent"): everything on the spend for it, whoever pays. "Amount being
+ * finalised" while the figure is not set; '' when there is nothing yet.
+ */
+function portal_spend_total_words(array $sp): string {
+    if ($sp['billed_with'] !== '') return 'Included in ' . $sp['billed_with'];
+    $total = (float)$sp['broker'] + (float)$sp['mh'] + (float)$sp['unassigned'];
+    if ($total > 0) return portal_money($total) . ' spent';
+    if ($sp['pending']) return 'Amount being finalised';
+    if ($sp['lines'] > 0) return 'No charge';
+    return '';
 }
 
 /** A placement's state in the agent's words: Running now / Starts 5 March 2026 / Planned / Ended. */
@@ -350,7 +365,7 @@ function portal_header(array $ctx, string $title, string $active): void {
         'home'      => ['Home', '/portal/'],
         'hotsheets' => ['Internal Hot Sheets', '/portal/hotsheets.php'],
         'ads'       => ['Advertising', '/portal/advertising.php'],
-        'orders'    => ['Print orders', '/portal/orders.php'],
+        'orders'    => ['Collateral', '/portal/orders.php'],   // "Collateral", not "Print orders" (Nikki, 2026-10-09)
         'spend'     => ['Spend', '/portal/spend.php'],
         'qr'        => ['QR codes', '/portal/qr.php'],
     ];

@@ -51,11 +51,11 @@ function portal_tracking_url(array $o): string {
 // Not theirs, or gone: a 404 that says so plainly and shows nothing else.
 // The status is set before any output, since the page is not buffered.
 if ($want > 0 && !$one) http_response_code(404);
-portal_header($ctx, 'Print orders', 'orders');
+portal_header($ctx, 'Collateral', 'orders');
 
 if ($want > 0 && !$one):
 ?>
-  <p class="pt-back"><a href="<?= ph(portal_url($ctx, '/portal/orders.php')) ?>">← All print orders</a></p>
+  <p class="pt-back"><a href="<?= ph(portal_url($ctx, '/portal/orders.php')) ?>">← All collateral</a></p>
   <h1 class="pt-h1">That order could not be found</h1>
   <p class="pt-lead">It may have been removed. If you expected to see it here, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p>
 
@@ -69,7 +69,7 @@ if ($want > 0 && !$one):
     $src = ['order' => (int)$o['id']];
     $track = portal_tracking_url($o);
 ?>
-  <p class="pt-back"><a href="<?= ph(portal_url($ctx, '/portal/orders.php')) ?>">← All print orders</a></p>
+  <p class="pt-back"><a href="<?= ph(portal_url($ctx, '/portal/orders.php')) ?>">← All collateral</a></p>
   <h1 class="pt-h1"><?= ph(portal_order_title($o)) ?></h1>
   <p class="pt-lead" style="margin-bottom:18px">
     <span class="pt-state"><?= ph(portal_order_state($o)) ?></span>
@@ -136,14 +136,14 @@ if ($want > 0 && !$one):
       if ($scope['team']): ?>
   <section class="pt-team" id="team-<?= $sid ?>">
   <h2 class="pt-h2"><?= ph($scope['name']) ?></h2>
-  <p class="pt-lead">The team's print orders, shared by every member of <?= ph($scope['name']) ?>.</p>
+  <p class="pt-lead">The team's collateral, shared by every member of <?= ph($scope['name']) ?>.</p>
   <?php else: ?>
-  <h1 class="pt-h1">Your print orders</h1>
+  <h1 class="pt-h1">Your collateral</h1>
   <p class="pt-lead">Business cards, signs, postcards and brochures Mont Haus has ordered for you. Tap one to see the proof and where it is.</p>
   <?php endif; ?>
 
   <?php if (!$list): ?>
-    <div class="pt-card"><p class="pt-card-sub" style="margin:0"><?= $scope['team'] ? 'No print orders for the team yet.' : 'No print orders yet. When Mont Haus orders something for you it will appear here.' ?></p></div>
+    <div class="pt-card"><p class="pt-card-sub" style="margin:0"><?= $scope['team'] ? 'No collateral for the team yet.' : 'No collateral yet. When Mont Haus orders something for you it will appear here.' ?></p></div>
   <?php else: ?>
     <div class="pt-cards">
     <?php foreach ($list as $o):
