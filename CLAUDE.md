@@ -1872,7 +1872,15 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   account only; a JOIN on `c.intake_id`), each with `?thumb=1` / `?dl=1`.
   Shared or duplicated placements copy the files per copy
   (`mk_own_asset_files`), like receipts; deleting a creative, order or
-  placement unlinks its files. The old `file_url` links stay as "Open
+  placement unlinks its files. **A creative added, changed or removed on
+  one copy of a shared placement follows to the other copies**
+  (`mk_mirror_asset_add/update/delete`, called by agent.php's three creative
+  handlers; siblings matched by label + link + target, NULL-safe; Nikki,
+  2026-10-09, after the shared Vail magazine page showed on one portal
+  only). `import_dropbox_creatives.php --mirror` repairs copies that missed
+  one. Nothing uploaded = no placeholder picture on the portal, the line
+  "Contact marketing@monthaus.com to see the creative." instead
+  (`portal_no_creative_html()`). The old `file_url` links stay as "Open
   original". `$has_creatives` / `$has_proofs` are computed above agent.php's
   early close; every handler guards with `mk_column_exists()`.
 - `portal/advertising.php` and `portal/orders.php`: cards (picture, title,
