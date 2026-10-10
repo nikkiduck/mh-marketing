@@ -135,6 +135,11 @@ portal_header($ctx, 'Home', 'home');
                          : "You have {$qr_n} QR codes. See where each one goes, or change it.") ?></p>
       <span class="pt-card-go"><?= $qr_n === 0 ? 'Request ›' : 'Review + Edit ›' ?></span>
     </a>
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/brand.php')) ?>">
+      <h2 class="pt-card-h">Brand & templates</h2>
+      <p class="pt-card-sub">The brand guidelines, with the logo files you can download and use, plus the business card and yard sign designs.</p>
+      <span class="pt-card-go">See the brand ›</span>
+    </a>
   </div>
 
   <?php foreach ($ctx['teams'] as $t): $scope = portal_scope($ctx, $t['id']); ?>

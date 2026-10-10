@@ -382,6 +382,7 @@ function portal_header(array $ctx, string $title, string $active): void {
         'orders'    => ['Collateral', '/portal/orders.php'],   // "Collateral", not "Print orders" (Nikki, 2026-10-09)
         'spend'     => ['Spend', '/portal/spend.php'],
         'qr'        => ['QR codes', '/portal/qr.php'],
+        'brand'     => ['Brand & templates', '/portal/brand.php'],   // 2026-10-10: guidelines + logo downloads, card and sign templates
     ];
     ?>
 <!DOCTYPE html>

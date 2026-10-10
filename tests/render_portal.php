@@ -42,7 +42,7 @@ $SB = sys_get_temp_dir() . '/pt_render_' . bin2hex(random_bytes(4));
 mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
 foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php',
-          'portal/asset.php', 'portal/hotsheets.php', 'inc/portal.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
+          'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'inc/portal.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
           'inc/creatives.php', 'inc/boards.php', 'inc/agent_lifecycle.php', 'inc/_onboarding.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
@@ -336,6 +336,11 @@ ok('plain words for a profile destination', has($b, 'Your profile page on montha
 [$c, , $b] = req('jackson', '/portal/');
 ok('Jackson home renders and counts only his codes', $c === 200 && no_fatal($b) && has($b, 'You have 2 QR codes'), $b);
 ok('home offers Hot Sheets', has($b, 'Internal Hot Sheets') && has($b, 'Customize'), $b);
+ok('home offers the brand and templates', has($b, 'Brand &amp; templates') && has($b, 'logo files you can download'), $b);
+[$c, , $b] = req('jackson', '/portal/brand.php');
+ok('Brand & templates: guidelines with the logo downloads, card and sign templates, each in a new tab (2026-10-10)', $c === 200 && no_fatal($b)
+   && has($b, 'href="/brand-guidelines/#logos"') && has($b, 'Download the logos') && has($b, 'href="/brand-guidelines/business-cards/"') && has($b, 'href="/brand-guidelines/yard-signs/"')
+   && substr_count($b, 'target="_blank"') >= 3, $b);
 
 // Hot Sheets (2026-10-07): the page is the signed-in person's own subscription, never an id from the request.
 [$c, , $b] = req('jackson', '/portal/hotsheets.php');

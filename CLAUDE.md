@@ -1889,8 +1889,16 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   nothing in it (the detail is picked from the already-scoped list). Shown:
   outlet, name, print/digital + ad size, dates, creatives, cost. NEVER
   budget, notes, UTMs, vendor, order number, receipts or billing words.
-  Nav: Home, Internal Hot Sheets, Advertising, Print orders, Spend, QR
-  codes. Hot Sheets come first in the nav and the home cards and are
+  Nav: Home, Internal Hot Sheets, Advertising, Collateral, Spend, QR
+  codes, Brand & templates. **Brand & templates (2026-10-10):**
+  `portal/brand.php` links the brand guidelines (`/brand-guidelines/#logos`,
+  the logo ZIP and SVGs to download) and the business card and yard sign
+  template galleries, which moved from monthausint.com/assets/marketing to
+  `brand-guidelines/business-cards/` and `brand-guidelines/yard-signs/`
+  (static HTML + PNGs, no sign-in, like the guidelines). The whole
+  `brand-guidelines/` folder is in git since that day (it was published
+  from Nova before; local and server matched). monthausint.com's
+  openhousesigns.html was not moved (not asked for). Hot Sheets come first in the nav and the home cards and are
   called "Internal" (Nikki, 2026-10-07) because a Client Hot Sheets
   section (Phase 2) will sit beside them; portal/hotsheets.php is their
   own areas and frequency (see "Hot Sheets" above). **In an admin preview
