@@ -1891,7 +1891,7 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   budget, notes, UTMs, vendor, order number, receipts or billing words.
   Nav: Home, Internal Hot Sheets, Advertising, Collateral, Spend, QR
   codes, Brand & templates. **Brand & templates (2026-10-10):**
-  `portal/brand.php` links the brand guidelines (`/brand-guidelines/#logos`,
+  `portal/brand.php` links the brand guidelines (`/brand-guidelines/#downloads`,
   the logo ZIP and SVGs to download) and the business card and yard sign
   template galleries, which moved from monthausint.com/assets/marketing to
   `brand-guidelines/business-cards/` and `brand-guidelines/yard-signs/`

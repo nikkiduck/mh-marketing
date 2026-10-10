@@ -339,7 +339,7 @@ ok('home offers Hot Sheets', has($b, 'Internal Hot Sheets') && has($b, 'Customiz
 ok('home offers the brand and templates', has($b, 'Brand &amp; templates') && has($b, 'logo files you can download'), $b);
 [$c, , $b] = req('jackson', '/portal/brand.php');
 ok('Brand & templates: guidelines with the logo downloads, card and sign templates, each in a new tab (2026-10-10)', $c === 200 && no_fatal($b)
-   && has($b, 'href="/brand-guidelines/#logos"') && has($b, 'Download the logos') && has($b, 'href="/brand-guidelines/business-cards/"') && has($b, 'href="/brand-guidelines/yard-signs/"')
+   && has($b, 'href="/brand-guidelines/#downloads"') && has($b, 'Download the logos') && has($b, 'href="/brand-guidelines/business-cards/"') && has($b, 'href="/brand-guidelines/yard-signs/"')
    && substr_count($b, 'target="_blank"') >= 3, $b);
 
 // Hot Sheets (2026-10-07): the page is the signed-in person's own subscription, never an id from the request.
