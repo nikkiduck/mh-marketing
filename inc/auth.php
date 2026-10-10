@@ -44,6 +44,36 @@ function require_login(): void {
     }
 
     require_allowlisted();
+    mh_session_intake_id();   // while $conn is still open (see the function)
+}
+
+/**
+ * The marketing account this login is linked to (users.intake_id), kept in
+ * the session and refreshed at most every 5 minutes while a database
+ * connection is open. 0 when none. The admin header's "My Portal" link reads
+ * this: index.php and agent.php close $conn before the header renders, so the
+ * nav itself cannot query (found 2026-10-10, when Jonathan's link never
+ * showed). Guarded: a missing column, a closed connection or a test stub just
+ * leaves the cached value alone.
+ */
+function mh_session_intake_id(): int {
+    if (empty($_SESSION['user_id'])) return 0;
+    if (time() - (int)($_SESSION['user_intake_checked'] ?? 0) > 300) {
+        $conn = $GLOBALS['conn'] ?? null;
+        if ($conn instanceof mysqli) {
+            try {
+                $st = $conn->prepare("SELECT intake_id FROM users WHERE id = ? LIMIT 1");
+                if ($st) {
+                    $uid = (int)$_SESSION['user_id'];
+                    $st->bind_param('i', $uid); $st->execute();
+                    $row = $st->get_result()->fetch_assoc(); $st->close();
+                    $_SESSION['user_intake_id']      = (int)($row['intake_id'] ?? 0);
+                    $_SESSION['user_intake_checked'] = time();
+                }
+            } catch (Throwable $e) { /* leave the cached value */ }
+        }
+    }
+    return (int)($_SESSION['user_intake_id'] ?? 0);
 }
 
 /**
