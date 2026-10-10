@@ -11,6 +11,7 @@
  *   php cron/import_dropbox_creatives.php --order=2          one print order's proof (marketing_collateral_orders.id)
  *   php cron/import_dropbox_creatives.php --all              every creative and proof still without a file
  *   php cron/import_dropbox_creatives.php --rethumb          make the thumbnail for every stored file that has none (PDFs, after the gs fallback)
+ *   php cron/import_dropbox_creatives.php --mirror [--dry-run]  shared placements: give every copy the creatives its siblings have (files of its own)
  *
  * Rules: a row that already has a file is never touched; the Dropbox link is
  * kept (the portal still offers "Open original"). Only single-file share
@@ -26,11 +27,42 @@ require_once __DIR__ . '/../inc/db.php';
 require_once __DIR__ . '/../inc/schema.php';
 require_once __DIR__ . '/../inc/creatives.php';
 
-$opt = getopt('', ['dry-run', 'all', 'asset:', 'order:', 'rethumb']);
+$opt = getopt('', ['dry-run', 'all', 'asset:', 'order:', 'rethumb', 'mirror']);
 $dry = isset($opt['dry-run']);
-if (!$dry && !isset($opt['all']) && !isset($opt['asset']) && !isset($opt['order']) && !isset($opt['rethumb'])) {
-    fwrite(STDERR, "Say what to import: --dry-run, --all, --asset=ID, --order=ID, or --rethumb\n");
+if (!$dry && !isset($opt['all']) && !isset($opt['asset']) && !isset($opt['order']) && !isset($opt['rethumb']) && !isset($opt['mirror'])) {
+    fwrite(STDERR, "Say what to import: --dry-run, --all, --asset=ID, --order=ID, --rethumb, or --mirror\n");
     exit(2);
+}
+
+// ── --mirror: every copy of a shared placement gets the creatives its siblings have ──
+// (sharing copies creatives only at share time; mk_mirror_asset_* keep later changes in step from here on).
+if (isset($opt['mirror'])) {
+    if (!mk_column_exists($conn, 'marketing_campaigns', 'split_group')) { echo "No shared placements here.\n"; exit(0); }
+    $made = 0;
+    $groups = [];
+    $r = $conn->query("SELECT c.id, c.split_group, i.agent_name, c.name FROM marketing_campaigns c JOIN marketing_intakes i ON i.id = c.intake_id
+                        WHERE c.split_group IS NOT NULL AND c.split_group > 0 ORDER BY c.split_group, c.id");
+    foreach ($r->fetch_all(MYSQLI_ASSOC) as $c) $groups[(int)$c['split_group']][] = $c;
+    foreach ($groups as $g => $copies) {
+        foreach ($copies as $c) {
+            $cid = (int)$c['id'];
+            foreach ($copies as $o) {
+                if ((int)$o['id'] === $cid) continue;
+                $r = $conn->query("SELECT * FROM marketing_campaign_assets WHERE campaign_id = " . (int)$o['id'] . " ORDER BY id");
+                foreach ($r->fetch_all(MYSQLI_ASSOC) as $src) {
+                    if (mk_matching_assets($conn, $cid, $src)) continue;
+                    $tag = sprintf('campaign %-3d %s: %s', $cid, $c['agent_name'], $c['name']);
+                    if ($dry) { echo "  →   {$tag}: would get \"" . trim((string)$src['label']) . "\" from " . $o['agent_name'] . "'s copy\n"; $made++; continue; }
+                    $nid = mk_copy_asset_row($conn, $src, $cid);
+                    $new = $conn->query("SELECT image_file, image_thumb FROM marketing_campaign_assets WHERE id = {$nid}")->fetch_assoc();
+                    echo "  ✓   {$tag}: \"" . trim((string)$src['label']) . "\" from " . $o['agent_name'] . "'s copy" . (!empty($new['image_file']) ? ', file copied' : '') . (!empty($new['image_thumb']) ? ', thumbnail copied' : '') . "\n";
+                    $made++;
+                }
+            }
+        }
+    }
+    echo "\n" . ($dry ? 'Dry run. ' : '') . "{$made} creative" . ($made === 1 ? '' : 's') . ($dry ? ' would be' : '') . " added to shared copies.\n";
+    exit(0);
 }
 if (!mk_column_exists($conn, 'marketing_campaign_assets', 'image_file') || !mk_column_exists($conn, 'marketing_collateral_orders', 'proof_file')) {
     fwrite(STDERR, "sql/creatives_v1.sql has not run here.\n");

@@ -226,6 +226,102 @@ function mk_creative_ini_bytes(string $v): int {
  * copy that cannot be made leaves the row with no image rather than a
  * borrowed one.
  */
+/**
+ * Shared placements (split_group, inc/campaign_share.php) are one ad with a
+ * copy per agent, and sharing copies the creatives that exist AT THAT MOMENT.
+ * A creative added, changed or removed on one copy later must follow to the
+ * other copies too (Nikki, 2026-10-09: the Vail magazine full page shared by
+ * Allison, Jean-Michel and Bryan showed on Allison's portal only). These
+ * three mirror such a change; each copy keeps files of its own, as always.
+ * Siblings' creatives are matched by label + link + target (the fields the
+ * share copied), NULL-safe.
+ */
+function mk_campaign_siblings(mysqli $conn, int $cid): array {
+    if (!mk_column_exists($conn, 'marketing_campaigns', 'split_group')) return [];
+    $r = $conn->query("SELECT split_group FROM marketing_campaigns WHERE id = {$cid}");
+    $g = (int)(($r ? $r->fetch_assoc() : null)['split_group'] ?? 0);
+    if ($g <= 0) return [];
+    $r = $conn->query("SELECT id FROM marketing_campaigns WHERE split_group = {$g} AND id <> {$cid} ORDER BY id");
+    return array_map(fn($x) => (int)$x['id'], $r ? $r->fetch_all(MYSQLI_ASSOC) : []);
+}
+
+/** Insert a copy of creative $src (a row of marketing_campaign_assets) under $cid, with files of its own. */
+function mk_copy_asset_row(mysqli $conn, array $src, int $cid): int {
+    $has_img = mk_column_exists($conn, 'marketing_campaign_assets', 'image_file');
+    [$f, $t] = $has_img && !empty($src['image_file']) ? mk_copy_creative_files($src['image_file'], $src['image_thumb'] ?? null) : [null, null];
+    if ($has_img) {
+        $s = $conn->prepare("INSERT INTO marketing_campaign_assets (campaign_id, label, file_url, target_url, file_type, image_file, image_orig_name, image_thumb, image_uploaded_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $orig = $f !== null ? ($src['image_orig_name'] ?? null) : null;
+        $when = $f !== null ? ($src['image_uploaded_at'] ?? date('Y-m-d H:i:s')) : null;
+        $s->bind_param('issssssss', $cid, $src['label'], $src['file_url'], $src['target_url'], $src['file_type'], $f, $orig, $t, $when);
+    } else {
+        $s = $conn->prepare("INSERT INTO marketing_campaign_assets (campaign_id, label, file_url, target_url, file_type) VALUES (?, ?, ?, ?, ?)");
+        $s->bind_param('issss', $cid, $src['label'], $src['file_url'], $src['target_url'], $src['file_type']);
+    }
+    $s->execute(); $new = (int)$conn->insert_id; $s->close();
+    return $new;
+}
+
+/** The sibling copy's creatives matching $key (label, file_url, target_url), as rows. */
+function mk_matching_assets(mysqli $conn, int $cid, array $key): array {
+    $s = $conn->prepare("SELECT * FROM marketing_campaign_assets WHERE campaign_id = ? AND label <=> ? AND file_url <=> ? AND target_url <=> ?");
+    $label = $key['label'] ?? null; $furl = $key['file_url'] ?? null; $turl = $key['target_url'] ?? null;
+    $s->bind_param('isss', $cid, $label, $furl, $turl);
+    $s->execute(); $rows = $s->get_result()->fetch_all(MYSQLI_ASSOC); $s->close();
+    return $rows;
+}
+
+/** A creative was just added to copy $cid: add it to every other copy of the placement. */
+function mk_mirror_asset_add(mysqli $conn, int $cid, int $asset_id): void {
+    $sibs = mk_campaign_siblings($conn, $cid);
+    if (!$sibs) return;
+    $src = $conn->query("SELECT * FROM marketing_campaign_assets WHERE id = {$asset_id} AND campaign_id = {$cid}")->fetch_assoc();
+    if (!$src) return;
+    foreach ($sibs as $sid) {
+        if (mk_matching_assets($conn, $sid, $src)) continue;   // that copy already has it
+        mk_copy_asset_row($conn, $src, $sid);
+    }
+}
+
+/**
+ * A creative on copy $cid changed from $old to what $new says (label, file_url,
+ * target_url; image_* when a new file was uploaded): change the siblings'
+ * matching creatives the same way, each with a fresh copy of a new file.
+ */
+function mk_mirror_asset_update(mysqli $conn, int $cid, array $old, array $new): void {
+    $sibs = mk_campaign_siblings($conn, $cid);
+    if (!$sibs) return;
+    $has_img = mk_column_exists($conn, 'marketing_campaign_assets', 'image_file');
+    foreach ($sibs as $sid) {
+        foreach (mk_matching_assets($conn, $sid, $old) as $m) {
+            $mid = (int)$m['id'];
+            if ($has_img && !empty($new['image_file'])) {
+                [$f, $t] = mk_copy_creative_files($new['image_file'], $new['image_thumb'] ?? null);
+                $s = $conn->prepare("UPDATE marketing_campaign_assets SET label = ?, file_url = ?, target_url = ?, image_file = ?, image_orig_name = ?, image_thumb = ?, image_uploaded_at = ? WHERE id = ?");
+                $orig = $f !== null ? ($new['image_orig_name'] ?? null) : null; $when = $f !== null ? ($new['image_uploaded_at'] ?? date('Y-m-d H:i:s')) : null;
+                $s->bind_param('sssssssi', $new['label'], $new['file_url'], $new['target_url'], $f, $orig, $t, $when, $mid);
+                $s->execute(); $s->close();
+                mk_delete_creative_files($m['image_file'] ?? null, $m['image_thumb'] ?? null);
+            } else {
+                $s = $conn->prepare("UPDATE marketing_campaign_assets SET label = ?, file_url = ?, target_url = ? WHERE id = ?");
+                $s->bind_param('sssi', $new['label'], $new['file_url'], $new['target_url'], $mid);
+                $s->execute(); $s->close();
+            }
+        }
+    }
+}
+
+/** A creative ($old: its label, file_url, target_url) was removed from copy $cid: remove the siblings' matching ones, files included. */
+function mk_mirror_asset_delete(mysqli $conn, int $cid, array $old): void {
+    foreach (mk_campaign_siblings($conn, $cid) as $sid) {
+        foreach (mk_matching_assets($conn, $sid, $old) as $m) {
+            $conn->query("DELETE FROM marketing_campaign_assets WHERE id = " . (int)$m['id']);
+            mk_delete_creative_files($m['image_file'] ?? null, $m['image_thumb'] ?? null);
+        }
+    }
+}
+
 function mk_own_asset_files(mysqli $conn, int $campaign_id): array {
     $made = [];
     $r = $conn->query("SELECT id, image_file, image_thumb FROM marketing_campaign_assets WHERE campaign_id = {$campaign_id} AND image_file IS NOT NULL");

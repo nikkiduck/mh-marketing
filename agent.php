@@ -352,6 +352,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 if ($s) { $s->bind_param('isss', $cid, $label, $furl, $turl); $s->execute(); $s->close(); }
             }
+            // A shared placement: the other agents' copies get it too (Nikki, 2026-10-09).
+            if ($conn->insert_id > 0) mk_mirror_asset_add($conn, $cid, (int)$conn->insert_id);
         } elseif ($img) {
             mk_delete_creative_files($img['file'], $img['thumb']);   // not their placement: keep nothing
         }
@@ -368,11 +370,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($img && isset($img['error'])) {
             header("Location: agent.php?id={$id}&tab=advertising&err=" . rawurlencode($img['error'])); exit;
         }
+        // The row as it was (ownership-checked), so a shared placement's other copies can be matched and changed the same way.
+        $old = null;
+        $g = $conn->prepare("SELECT a.* FROM marketing_campaign_assets a
+                               JOIN marketing_campaigns c ON c.id = a.campaign_id WHERE a.id = ? AND c.intake_id = ? LIMIT 1");
+        if ($g) { $g->bind_param('ii', $aid, $id); $g->execute(); $old = $g->get_result()->fetch_assoc(); $g->close(); }
         if ($img) {
-            $old = null;
-            $g = $conn->prepare("SELECT a.image_file, a.image_thumb FROM marketing_campaign_assets a
-                                   JOIN marketing_campaigns c ON c.id = a.campaign_id WHERE a.id = ? AND c.intake_id = ? LIMIT 1");
-            if ($g) { $g->bind_param('ii', $aid, $id); $g->execute(); $old = $g->get_result()->fetch_assoc(); $g->close(); }
             if (!$old) {
                 mk_delete_creative_files($img['file'], $img['thumb']);   // not their creative: keep nothing
                 header("Location: agent.php?id={$id}&tab=advertising"); exit;
@@ -388,6 +391,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 9 placeholders: s s s s s s s i i
             if ($s) { $s->bind_param('sssssssii', $label, $furl, $turl, $img['file'], $img['orig'], $img['thumb'], $now, $aid, $id); $s->execute(); $s->close(); }
             mk_delete_creative_files($old['image_file'] ?? null, $old['image_thumb'] ?? null);
+            mk_mirror_asset_update($conn, (int)$old['campaign_id'], $old, ['label' => $label, 'file_url' => $furl, 'target_url' => $turl,
+                'image_file' => $img['file'], 'image_orig_name' => $img['orig'], 'image_thumb' => $img['thumb'], 'image_uploaded_at' => $now]);
         } else {
             $s = $conn->prepare(
                 "UPDATE marketing_campaign_assets a
@@ -396,6 +401,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                   WHERE a.id = ? AND c.intake_id = ?"
             );
             if ($s) { $s->bind_param('sssii', $label, $furl, $turl, $aid, $id); $s->execute(); $s->close(); }
+            if ($old) mk_mirror_asset_update($conn, (int)$old['campaign_id'], $old, ['label' => $label, 'file_url' => $furl, 'target_url' => $turl]);
         }
         header("Location: agent.php?id={$id}&tab=advertising&saved=1"); exit;
     }
@@ -404,18 +410,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $aid = (int)($_POST['asset_id'] ?? 0);
         // Its uploaded files go with it (looked up with the same ownership check as the delete).
         $old = null;
-        if (mk_column_exists($conn, 'marketing_campaign_assets', 'image_file')) {
-            $g = $conn->prepare("SELECT a.image_file, a.image_thumb FROM marketing_campaign_assets a
-                                   JOIN marketing_campaigns c ON c.id = a.campaign_id WHERE a.id = ? AND c.intake_id = ? LIMIT 1");
-            if ($g) { $g->bind_param('ii', $aid, $id); $g->execute(); $old = $g->get_result()->fetch_assoc(); $g->close(); }
-        }
+        $g = $conn->prepare("SELECT a.* FROM marketing_campaign_assets a
+                               JOIN marketing_campaigns c ON c.id = a.campaign_id WHERE a.id = ? AND c.intake_id = ? LIMIT 1");
+        if ($g) { $g->bind_param('ii', $aid, $id); $g->execute(); $old = $g->get_result()->fetch_assoc(); $g->close(); }
         $s = $conn->prepare(
             "DELETE a FROM marketing_campaign_assets a
                JOIN marketing_campaigns c ON c.id = a.campaign_id
               WHERE a.id = ? AND c.intake_id = ?"
         );
         if ($s) { $s->bind_param('ii', $aid, $id); $s->execute(); $s->close(); }
-        if ($old) mk_delete_creative_files($old['image_file'] ?? null, $old['image_thumb'] ?? null);
+        if ($old) {
+            mk_delete_creative_files($old['image_file'] ?? null, $old['image_thumb'] ?? null);
+            mk_mirror_asset_delete($conn, (int)$old['campaign_id'], $old);   // a shared placement: gone from every copy
+        }
         header("Location: agent.php?id={$id}&tab=advertising"); exit;
     }
 
