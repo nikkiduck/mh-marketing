@@ -36,5 +36,5 @@ portal_header($ctx, 'Brand & templates', 'brand');
     </a>
     <?php endforeach; ?>
   </div>
-  <p class="pt-help" style="margin-top:20px">Need a file in another format, or a design you do not see here? Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p>
+  <p class="pt-help" style="margin-top:20px">Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a> if you'd like to order new signs, cards, or other collateral, or if you have questions on logo usage.</p>
 <?php portal_footer();
