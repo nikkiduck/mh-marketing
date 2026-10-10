@@ -46,11 +46,14 @@ define('CREATIVES_DIR', __DIR__ . '/../../creatives/');
  * An empty or undefined value disables the restriction entirely and access
  * falls back to the normal role checks.
  */
-// Agent portal pilot (Nikki, 2026-10-06): Weber Boxer Group (Jonathan, Scott,
-// Sara), Bryan Cournoyer, Jackson Horn. Each also needs role `agent` and
-// users.intake_id set on users.php (docs/AGENT_PORTAL_PLAN.md, section 2).
+// Team beta (Nikki, 2026-10-10): Jonathan, Jean-Michel, Jackson Horn, Megan
+// Walz, Scott Weber, Bryan Cournoyer (Sara stays from the 2026-10-06 pilot).
+// Each also needs a login with a role and users.intake_id set on users.php
+// (docs/AGENT_PORTAL_PLAN.md, section 2). Clear the list to open the site to
+// every Mont Haus login.
 define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com,jm.drai@monthaus.com,mary.lappe@monthaus.com,'
-    . 'scott.weber@monthaus.com,sara.perkowski@monthaus.com,bryan.cournoyer@monthaus.com,jackson.horn@monthaus.com');
+    . 'scott.weber@monthaus.com,sara.perkowski@monthaus.com,bryan.cournoyer@monthaus.com,jackson.horn@monthaus.com,'
+    . 'megan.walz@monthaus.com');
 
 /**
  * ADVERTISING_SHEET_URL — the working digital-advertising spreadsheet.
