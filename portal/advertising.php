@@ -157,7 +157,7 @@ if ($want > 0 && !$one):
   <p class="pt-lead">The team's ad placements, shared by every member of <?= ph($scope['name']) ?>.</p>
   <?php else: ?>
   <h1 class="pt-h1">Your advertising</h1>
-  <p class="pt-lead">Every ad placement Mont Haus has run or is running for you, with its creative. Tap one to see it in full.</p>
+  <p class="pt-lead">Ad placements Mont Haus has run or is running for you with creative.</p>
   <?php endif; ?>
 
   <?php if (!$list): ?>
@@ -177,7 +177,7 @@ if ($want > 0 && !$one):
           <span class="pt-state"><?= ph(portal_campaign_state($c)) ?></span>
           <h2 class="pt-card-h"><?= ph(portal_campaign_title($c)) ?></h2>
           <p class="pt-card-sub"><?= ph(portal_run_words($c['start_date'] ?? null, $c['end_date'] ?? null)) ?><?= $medium !== '' ? ' · ' . ph($medium) : '' ?><?= $n > 1 ? " · {$n} creatives" : '' ?></p>
-          <?php if ($pic === ''): ?><p class="pt-card-sub" style="margin-top:6px"><?= portal_no_creative_html() ?></p><?php endif; ?>
+          <?php if ($pic === ''): ?><p class="pt-card-sub" style="margin-top:6px"><?= portal_no_creative_html(false) ?></p><?php endif; ?>
           <?php if ($sp['lines'] > 0): ?><p class="pt-card-sub pt-line-f" style="margin-top:6px"><?= portal_item_spend_html($sp, portal_scope_you($scope)) ?></p><?php endif; ?>
           <span class="pt-card-go">See it ›</span>
         </span>

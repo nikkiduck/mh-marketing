@@ -348,9 +348,16 @@ function portal_picture(array $ctx, array $src, ?string $file, ?string $thumb, s
     return '';
 }
 
-/** The line shown wherever a creative or proof has not been uploaded yet (Nikki, 2026-10-09). */
-function portal_no_creative_html(): string {
-    return '<span class="pt-nopic">Contact <a href="mailto:' . PORTAL_MARKETING_EMAIL . '">' . PORTAL_MARKETING_EMAIL . '</a> to see the creative.</span>';
+/**
+ * The line shown wherever a creative or proof has not been uploaded yet
+ * (Nikki, 2026-10-09). $link = false inside a card that is itself a link
+ * (the list cards): a link inside a link is invalid HTML and the browser
+ * closes the card at the mail link, spilling the rest of it out (seen
+ * 2026-10-10). The address is still shown, just not clickable there.
+ */
+function portal_no_creative_html(bool $link = true): string {
+    $addr = $link ? '<a href="mailto:' . PORTAL_MARKETING_EMAIL . '">' . PORTAL_MARKETING_EMAIL . '</a>' : '<b>' . PORTAL_MARKETING_EMAIL . '</b>';
+    return '<span class="pt-nopic">Contact ' . $addr . ' to see the creative.</span>';
 }
 
 /** First name for the greeting; a team shows its own name. */
