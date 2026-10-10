@@ -512,7 +512,11 @@ ok('no vendor, order number or billing words', !preg_match('/invoic|billed|overd
 ok('his order opens with the proof, tracking and cost', $c === 200 && no_fatal($b) && has($b, 'asset.php?order=11&amp;thumb=1') && has($b, 'Track the shipment') && has($b, 'https://www.ups.com/track?t=1Z999JH') && has($b, 'You paid') && has($b, '$250'), $b);
 ok('…and the original files as a secondary link', has($b, 'https://www.dropbox.com/jh-cards-final') && has($b, 'Open original files'), $b);
 [$c, , $b] = req('jackson', '/portal/orders.php?id=12');
-ok('an order with no proof says so rather than showing a broken picture', $c === 200 && has($b, 'not on the portal yet') && !has($b, 'order=12&amp;thumb=1'), $b);
+ok('an order with no proof shows no picture, just the contact line (Nikki, 2026-10-09)', $c === 200 && has($b, 'to see the creative.') && has($b, 'mailto:marketing@monthaus.com') && !has($b, 'pt-pic') && !has($b, 'order=12&amp;thumb=1'), $b);
+[$c, , $b] = req('jon', '/portal/advertising.php');
+ok('a placement with no creative: no picture tile on its card, the contact line instead', !has($b, 'pt-pic') && has($b, 'to see the creative.'), $b);
+[$c, , $b] = req('jon', '/portal/advertising.php?id=23');
+ok('…and its detail page says the same, no gallery', $c === 200 && has($b, 'to see the creative.') && !has($b, 'pt-gallery'), $b);
 [$c, , $b] = req('jackson', '/portal/orders.php?id=13');
 ok('Kim\'s order id is not found for Jackson, with none of her data', $c === 404 && has($b, 'could not be found') && !has($b, 'KC postcards') && !has($b, 'KCTRACK'), "{$c} {$b}");
 [, , $b] = req('jon', '/portal/orders.php');

@@ -77,17 +77,25 @@ if ($want > 0 && !$one):
     <?php if (trim((string)($o['qty'] ?? '')) !== ''): ?>Quantity <?= ph($o['qty']) ?><?php endif; ?>
   </p>
 
+  <?php if ($img === ''): // nothing uploaded: words, not a placeholder picture (Nikki, 2026-10-09) ?>
+  <div class="pt-card" style="margin-bottom:20px">
+    <p class="pt-card-sub" style="margin:0"><?= portal_no_creative_html() ?></p>
+    <?php if (trim((string)($o['file_url'] ?? '')) !== ''): ?>
+      <span class="pt-row" style="margin-top:10px"><a class="pt-btn quiet" href="<?= ph($o['file_url']) ?>" target="_blank" rel="noopener">Open original files</a></span>
+    <?php endif; ?>
+  </div>
+  <?php else: ?>
   <div class="pt-gallery one">
     <figure class="pt-fig">
-      <?php if ($img !== '' && !$is_pdf): ?>
+      <?php if (!$is_pdf): ?>
         <a href="<?= ph(portal_url($ctx, '/portal/asset.php', $src)) ?>" target="_blank" rel="noopener">
           <img src="<?= ph(portal_url($ctx, '/portal/asset.php', !empty($o['proof_thumb']) ? $src + ['thumb' => 1] : $src)) ?>" alt="Proof" loading="lazy">
         </a>
       <?php else: ?>
-        <?= portal_picture($ctx, $src, $img, $o['proof_thumb'] ?? null, 'No proof on the portal yet', true) ?>
+        <?= portal_picture($ctx, $src, $img, $o['proof_thumb'] ?? null, '', true) ?>
       <?php endif; ?>
       <figcaption>
-        <b><?= $img !== '' ? 'Proof' : 'The proof is not on the portal yet' ?></b>
+        <b>Proof</b>
         <span class="pt-row" style="margin-top:8px">
           <?php if ($img !== ''): ?>
             <a class="pt-btn quiet" href="<?= ph(portal_url($ctx, '/portal/asset.php', $src)) ?>" target="_blank" rel="noopener"><?= $is_pdf ? 'Open PDF' : 'Open full size' ?></a>
@@ -100,6 +108,7 @@ if ($want > 0 && !$one):
       </figcaption>
     </figure>
   </div>
+  <?php endif; ?>
 
   <div class="pt-cards">
     <div class="pt-card">
@@ -152,12 +161,14 @@ if ($want > 0 && !$one):
         $when = portal_date($o['delivered_at'] ?? null) !== '' ? 'Delivered ' . portal_date($o['delivered_at'])
               : (portal_date($o['ordered_at'] ?? null) !== '' ? 'Ordered ' . portal_date($o['ordered_at']) : '');
     ?>
+      <?php $pic = portal_picture($ctx, ['order' => (int)$o['id']], $o['proof_file'] ?? null, $o['proof_thumb'] ?? null, ''); ?>
       <a class="pt-card pt-item" href="<?= ph(portal_url($ctx, '/portal/orders.php', ['id' => (int)$o['id']])) ?>">
-        <?= portal_picture($ctx, ['order' => (int)$o['id']], $o['proof_file'] ?? null, $o['proof_thumb'] ?? null, 'No proof yet') ?>
+        <?= $pic ?>
         <span class="pt-item-body">
           <span class="pt-state"><?= ph(portal_order_state($o)) ?></span>
           <h2 class="pt-card-h"><?= ph(portal_order_title($o)) ?></h2>
           <p class="pt-card-sub"><?= $qty !== '' ? 'Quantity ' . ph($qty) : '' ?><?= $qty !== '' && $when !== '' ? ' · ' : '' ?><?= ph($when) ?></p>
+          <?php if ($pic === ''): ?><p class="pt-card-sub" style="margin-top:6px"><?= portal_no_creative_html() ?></p><?php endif; ?>
           <?php if ($sp['lines'] > 0): ?><p class="pt-card-sub pt-line-f" style="margin-top:6px"><?= portal_item_spend_html($sp, portal_scope_you($scope)) ?></p><?php endif; ?>
           <span class="pt-card-go">See it ›</span>
         </span>

@@ -343,7 +343,14 @@ function portal_picture(array $ctx, array $src, ?string $file, ?string $thumb, s
         $pdf = strtolower(pathinfo($file, PATHINFO_EXTENSION)) === 'pdf';
         return '<span class="' . $cls . ' tile"><span>' . ($pdf ? 'PDF' : 'Image') . '</span></span>';
     }
-    return '<span class="' . $cls . ' tile empty"><span>' . ph($word) . '</span></span>';
+    // Nothing uploaded: no placeholder picture at all (Nikki, 2026-10-09); the
+    // caller writes portal_no_creative_html() in words instead.
+    return '';
+}
+
+/** The line shown wherever a creative or proof has not been uploaded yet (Nikki, 2026-10-09). */
+function portal_no_creative_html(): string {
+    return '<span class="pt-nopic">Contact <a href="mailto:' . PORTAL_MARKETING_EMAIL . '">' . PORTAL_MARKETING_EMAIL . '</a> to see the creative.</span>';
 }
 
 /** First name for the greeting; a team shows its own name. */

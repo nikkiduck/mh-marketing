@@ -105,7 +105,7 @@ if ($want > 0 && !$one):
   <?php endif; ?>
 
   <?php if (!$c['assets']): ?>
-    <div class="pt-card" style="margin-bottom:20px"><p class="pt-card-sub" style="margin:0">The creative for this placement is not on the portal yet.</p></div>
+    <div class="pt-card" style="margin-bottom:20px"><p class="pt-card-sub" style="margin:0"><?= portal_no_creative_html() ?></p></div>
   <?php else: ?>
     <div class="pt-gallery">
     <?php foreach ($c['assets'] as $i => $a):
@@ -120,8 +120,10 @@ if ($want > 0 && !$one):
           <a href="<?= ph(portal_url($ctx, '/portal/asset.php', $src)) ?>" target="_blank" rel="noopener">
             <img src="<?= ph(portal_url($ctx, '/portal/asset.php', !empty($a['image_thumb']) ? $src + ['thumb' => 1] : $src)) ?>" alt="<?= ph($label) ?>" loading="lazy">
           </a>
+        <?php elseif ($img !== ''): ?>
+          <?= portal_picture($ctx, $src, $img, $a['image_thumb'] ?? null, '', true) ?>
         <?php else: ?>
-          <?= portal_picture($ctx, $src, $img, $a['image_thumb'] ?? null, 'No picture yet', true) ?>
+          <p class="pt-card-sub" style="margin:4px 6px 0"><?= portal_no_creative_html() ?></p>
         <?php endif; ?>
         <figcaption>
           <b><?= ph($label) ?></b>
@@ -168,13 +170,14 @@ if ($want > 0 && !$one):
         $medium = portal_campaign_medium($c, $has_med);
         $n      = count($c['assets']);
     ?>
+      <?php $pic = $lead ? portal_picture($ctx, ['asset' => (int)$lead['id']], $lead['image_file'] ?? null, $lead['image_thumb'] ?? null, '') : ''; ?>
       <a class="pt-card pt-item" href="<?= ph(portal_url($ctx, '/portal/advertising.php', ['id' => (int)$c['id']])) ?>">
-        <?= $lead ? portal_picture($ctx, ['asset' => (int)$lead['id']], $lead['image_file'] ?? null, $lead['image_thumb'] ?? null, 'No picture yet')
-                  : portal_picture($ctx, [], null, null, 'No creative yet') ?>
+        <?= $pic ?>
         <span class="pt-item-body">
           <span class="pt-state"><?= ph(portal_campaign_state($c)) ?></span>
           <h2 class="pt-card-h"><?= ph(portal_campaign_title($c)) ?></h2>
           <p class="pt-card-sub"><?= ph(portal_run_words($c['start_date'] ?? null, $c['end_date'] ?? null)) ?><?= $medium !== '' ? ' · ' . ph($medium) : '' ?><?= $n > 1 ? " · {$n} creatives" : '' ?></p>
+          <?php if ($pic === ''): ?><p class="pt-card-sub" style="margin-top:6px"><?= portal_no_creative_html() ?></p><?php endif; ?>
           <?php if ($sp['lines'] > 0): ?><p class="pt-card-sub pt-line-f" style="margin-top:6px"><?= portal_item_spend_html($sp, portal_scope_you($scope)) ?></p><?php endif; ?>
           <span class="pt-card-go">See it ›</span>
         </span>
