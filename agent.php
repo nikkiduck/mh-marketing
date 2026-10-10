@@ -2516,6 +2516,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       </div>
     </div>
     <div class="agent-header-actions">
+      <?php if (!$is_staff && $status !== 'archived'): // their portal as they see it (admin preview; Nikki, 2026-10-09) ?>
+        <a class="btn btn-outline btn-sm" href="/portal/?preview=<?= (int)$id ?>" target="_blank" rel="noopener" title="Their agent portal, seen as they see it"><i class="ti ti-eye"></i> View portal</a>
+      <?php endif; ?>
       <?php if (isset($_GET['saved'])): ?>
         <span class="saved-flash"><i class="ti ti-check"></i> Saved</span>
       <?php endif; ?>
@@ -2936,68 +2939,6 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </form>
         </div>
 
-    <!-- ── Bio ──────────────────────────────────────────────────────────── -->
-    <div class="card">
-      <div class="card-title" style="display:flex;align-items:center;">
-        <i class="ti ti-file-text" style="margin-right:6px;"></i> Bio
-        <button class="section-edit-btn" type="button" onclick="toggleInline('edit-bio-assets')">Edit</button>
-      </div>
-
-      <?php if (!empty($agent['bio_url'])): ?>
-        <div class="asset-link-row" style="margin-bottom:10px;">
-          <i class="ti ti-file-description"></i>
-          <span class="asset-link-label">Bio Document</span>
-          <a href="<?= htmlspecialchars($agent['bio_url']) ?>" target="_blank" class="asset-link-a">
-            <i class="ti ti-external-link"></i> Open
-          </a>
-        </div>
-      <?php endif; ?>
-
-      <?php if (!empty($agent['bio_text']) || !empty($agent['bio_short'])): ?>
-        <div class="bio-tabs">
-          <?php if (!empty($agent['bio_text'])): ?><button class="bio-tab-btn active" data-bio="assets-full">Full Bio</button><?php endif; ?>
-          <?php if (!empty($agent['bio_short'])): ?><button class="bio-tab-btn <?= empty($agent['bio_text'])?'active':'' ?>" data-bio="assets-short">Short / Social</button><?php endif; ?>
-        </div>
-        <?php if (!empty($agent['bio_text'])): ?>
-          <div class="bio-panel active" id="bio-assets-full">
-            <div class="bio-content rich"><?= strip_tags($agent['bio_text'], '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
-          </div>
-        <?php endif; ?>
-        <?php if (!empty($agent['bio_short'])): ?>
-          <div class="bio-panel <?= empty($agent['bio_text'])?'active':'' ?>" id="bio-assets-short">
-            <div class="bio-content"><?= nl2br(htmlspecialchars($agent['bio_short'])) ?></div>
-          </div>
-        <?php endif; ?>
-      <?php else: ?>
-        <p class="asset-empty">No bio yet. Click Edit to add one.</p>
-      <?php endif; ?>
-
-      <div id="edit-bio-assets" style="display:none;" class="inline-edit-form">
-        <form method="POST" id="bioForm">
-          <input type="hidden" name="_action" value="update_intake_fields">
-          <input type="hidden" name="redirect_tab" value="profile">
-          <div class="fld">
-            <span class="fld-label">Bio Document URL</span>
-            <input type="url" name="bio_url" class="form-input" style="max-width:420px;"
-                   value="<?= val($agent,'bio_url') ?>" placeholder="https://drive.google.com/…">
-          </div>
-          <div class="fld" style="flex-direction:column;align-items:stretch;">
-            <span class="fld-label" style="margin-bottom:6px;">Full Bio</span>
-            <div id="bioEditor"><?= strip_tags($agent['bio_text'] ?? '', '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
-            <textarea name="bio_text" id="bioTextHidden" style="display:none;"></textarea>
-          </div>
-          <div class="fld" style="flex-direction:column;align-items:stretch;">
-            <span class="fld-label" style="margin-bottom:6px;">Short / Social Bio</span>
-            <textarea name="bio_short" class="form-input" rows="3"
-                      placeholder="Short bio for social media…"><?= htmlspecialchars($agent['bio_short'] ?? '') ?></textarea>
-          </div>
-          <div class="btn-row">
-            <button type="submit" class="btn btn-primary btn-sm">Save</button>
-            <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('edit-bio-assets')">Cancel</button>
-          </div>
-        </form>
-      </div>
-    </div>
       </div>
 
       <div>
@@ -3211,6 +3152,70 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           <p class="hint" style="margin:8px 0 0;">The MLS record is never edited here. What the website shows comes from the fields above.</p>
         </div>
         <?php endif; /* staff: no tasks or MLS */ ?>
+
+        <!-- Bio sits here, under the MLS card, since 2026-10-09 (Nikki); staff keep it too, so it is outside the guard above. -->
+    <!-- ── Bio ──────────────────────────────────────────────────────────── -->
+    <div class="card">
+      <div class="card-title" style="display:flex;align-items:center;">
+        <i class="ti ti-file-text" style="margin-right:6px;"></i> Bio
+        <button class="section-edit-btn" type="button" onclick="toggleInline('edit-bio-assets')">Edit</button>
+      </div>
+
+      <?php if (!empty($agent['bio_url'])): ?>
+        <div class="asset-link-row" style="margin-bottom:10px;">
+          <i class="ti ti-file-description"></i>
+          <span class="asset-link-label">Bio Document</span>
+          <a href="<?= htmlspecialchars($agent['bio_url']) ?>" target="_blank" class="asset-link-a">
+            <i class="ti ti-external-link"></i> Open
+          </a>
+        </div>
+      <?php endif; ?>
+
+      <?php if (!empty($agent['bio_text']) || !empty($agent['bio_short'])): ?>
+        <div class="bio-tabs">
+          <?php if (!empty($agent['bio_text'])): ?><button class="bio-tab-btn active" data-bio="assets-full">Full Bio</button><?php endif; ?>
+          <?php if (!empty($agent['bio_short'])): ?><button class="bio-tab-btn <?= empty($agent['bio_text'])?'active':'' ?>" data-bio="assets-short">Short / Social</button><?php endif; ?>
+        </div>
+        <?php if (!empty($agent['bio_text'])): ?>
+          <div class="bio-panel active" id="bio-assets-full">
+            <div class="bio-content rich"><?= strip_tags($agent['bio_text'], '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
+          </div>
+        <?php endif; ?>
+        <?php if (!empty($agent['bio_short'])): ?>
+          <div class="bio-panel <?= empty($agent['bio_text'])?'active':'' ?>" id="bio-assets-short">
+            <div class="bio-content"><?= nl2br(htmlspecialchars($agent['bio_short'])) ?></div>
+          </div>
+        <?php endif; ?>
+      <?php else: ?>
+        <p class="asset-empty">No bio yet. Click Edit to add one.</p>
+      <?php endif; ?>
+
+      <div id="edit-bio-assets" style="display:none;" class="inline-edit-form">
+        <form method="POST" id="bioForm">
+          <input type="hidden" name="_action" value="update_intake_fields">
+          <input type="hidden" name="redirect_tab" value="profile">
+          <div class="fld">
+            <span class="fld-label">Bio Document URL</span>
+            <input type="url" name="bio_url" class="form-input" style="max-width:420px;"
+                   value="<?= val($agent,'bio_url') ?>" placeholder="https://drive.google.com/…">
+          </div>
+          <div class="fld" style="flex-direction:column;align-items:stretch;">
+            <span class="fld-label" style="margin-bottom:6px;">Full Bio</span>
+            <div id="bioEditor"><?= strip_tags($agent['bio_text'] ?? '', '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
+            <textarea name="bio_text" id="bioTextHidden" style="display:none;"></textarea>
+          </div>
+          <div class="fld" style="flex-direction:column;align-items:stretch;">
+            <span class="fld-label" style="margin-bottom:6px;">Short / Social Bio</span>
+            <textarea name="bio_short" class="form-input" rows="3"
+                      placeholder="Short bio for social media…"><?= htmlspecialchars($agent['bio_short'] ?? '') ?></textarea>
+          </div>
+          <div class="btn-row">
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('edit-bio-assets')">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
       </div>
     </div>
   </div>
