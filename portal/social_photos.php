@@ -1,0 +1,22 @@
+<?php
+/**
+ * portal/social_photos.php — a listing's photos for the picker.
+ * GET ?listing=market|listing_key (one of the account's) → JSON
+ * {photos: [{url, thumb, large}]}, primary first, fetched from the site and
+ * remembered in the session so the chosen one can be checked when rendering.
+ * See inc/social.php.
+ */
+require_once __DIR__ . '/../inc/social.php';
+
+$ctx = portal_context($conn);
+social_gate();
+header('Content-Type: application/json; charset=utf-8');
+header('Cache-Control: no-store');
+
+$l = social_listing($conn, $ctx, (string)($_GET['listing'] ?? ''));
+if (!$l) { http_response_code(404); echo json_encode(['error' => 'not one of your listings']); exit; }
+
+$urls = social_photos((string)$l['market'], (string)$l['listing_key']);
+if (!$urls && (string)$l['primary_photo'] !== '') $urls = [(string)$l['primary_photo']];
+$out = array_map(fn($u) => ['url' => $u, 'thumb' => social_img($u, 400), 'large' => social_img($u, 1600)], $urls);
+echo json_encode(['listing' => $l['id'], 'count' => count($out), 'photos' => $out], JSON_UNESCAPED_SLASHES);

@@ -56,6 +56,14 @@ define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com
     . 'megan.walz@monthaus.com');
 
 /**
+ * SOCIAL_BETA_EMAILS — who can see Social posts on the agent portal
+ * (portal/social.php, 2026-10-11). While this is set the page is hidden:
+ * not in the nav, a plain 404 for everyone else. Empty or undefined opens it
+ * to every portal login. Nikki alone while it is being built.
+ */
+define('SOCIAL_BETA_EMAILS', 'nikki.boxer@monthaus.com');
+
+/**
  * ADVERTISING_SHEET_URL — the working digital-advertising spreadsheet.
  *
  * Linked from the top of billing.php. It lives in SharePoint and still holds

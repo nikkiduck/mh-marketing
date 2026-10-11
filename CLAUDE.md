@@ -1920,6 +1920,34 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   the account's campaign ids only). Proven to catch a leak by breaking the
   ownership check.
 
+### Social posts (portal/social.php, 2026-10-11, hidden)
+
+Instagram-ready PNGs (1080 x 1440) of an agent's own listings: template
+(Featured Listing, Open House), listing, photo, words, live preview,
+Download PNG, Share… on phones. Plan and mechanics:
+`docs/HANDOFF-social-posts.md`. The rules that must hold:
+- **One render path.** `social_render()` (inc/social_render.php, standalone)
+  makes the HTML; the preview iframe shows it and headless Chromium
+  (`/usr/bin/chromium`, installed 2026-10-11) screenshots it for the PNG.
+  Never draw the post in JavaScript. `tests/render_social_sample.php`
+  renders sample data without a database.
+- Everything posted is checked in `social_post_from_request()`
+  (inc/social.php): the listing must be one of the account's
+  (`social_listings()`: hs_listing_state by the account's and its teams'
+  agent_mls_ids identities or name, live statuses), the photo one the site
+  listed for it (session-cached by `social_photos()`), else its primary;
+  labels from `social_labels()`; lengths capped.
+- Photos come from the site: `api/listings.php?scope=photos` and img.php
+  (PUBLIC_SITE_URL). Fonts are self-hosted in assets/fonts/mh (variable
+  woff2) so a render never waits on Google.
+- Export runs as www-data under the system temp dir, one at a time (flock;
+  the box has under 1 GB), 60 s cap; a copy of every PNG is kept in
+  CREATIVES_DIR/social/<intake id>/. Failures log `social_export:` lines.
+- **Hidden:** `SOCIAL_BETA_EMAILS` (inc/config.php) = Nikki only; no nav
+  entry; everyone else gets a plain 404 from `social_gate()`. Nikki opens it
+  as `/portal/social.php?preview=30` (her login has no linked account). No
+  Instagram posting, ever (Nikki): the agent uploads the PNG.
+
 ### Render harnesses: run them on a server
 The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`
 so the stub is the only `mysqli`. Homebrew's PHP 8.5 on Nikki's Mac compiles

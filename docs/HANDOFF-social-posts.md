@@ -1,0 +1,81 @@
+# Social posts on the agent portal (2026-10-11)
+
+Nikki, 2026-10-11: instead of Canva templates through the Canva Connect API
+(researched the same day: possible, but autofill needs every agent to connect
+their own Canva account, and a private integration needs Canva Enterprise),
+the portal makes the posts itself from data it already has. Agents post the
+picture to Instagram themselves; no auto-posting, by decision.
+
+## What it does
+
+`/portal/social.php`: four steps on one page with a live preview.
+
+1. Template: Featured Listing or Open House.
+2. Listing: the account's live listings (hs_listing_state, the site's Mont
+   Haus feed; list or co-list agent id in agent_mls_ids for the account and
+   its teams, or the agent's name; cross-board copies collapsed).
+3. Photo: the listing's photos from the site (`api/listings.php?scope=photos`),
+   plus two sliders that choose which part of the photo shows.
+4. Words: pre-filled from the listing and the profile (address, town, price,
+   details, name, title, phone, headshot on/off; a label for Featured; date
+   and times for Open House; an optional one-liner).
+
+Download PNG posts the form to `portal/social_export.php`; Share… (phones
+with the Web Share API) fetches the PNG and opens the share sheet, so it can
+go straight into the Instagram app.
+
+## How it is built
+
+- `inc/social_render.php`: the templates. One function, `social_render()`,
+  turns a normalised post into a complete HTML document of exactly
+  1080 x 1440. Standalone (no DB, no session) so
+  `tests/render_social_sample.php` can render sample data anywhere.
+- `inc/social.php`: the gate, the agent's profile, the listings query, the
+  photo fetch (kept in the session so a posted photo is checked against
+  it), `social_post_from_request()` (every field validated, lengths capped,
+  unknown values replaced by defaults), the Chromium export, and a copy of
+  each export under `CREATIVES_DIR/social/<intake id>/`.
+- `portal/social_render.php` (preview HTML), `portal/social_export.php`
+  (PNG), `portal/social_photos.php` (JSON) all run `portal_context()` then
+  `social_gate()`, and the two POST endpoints check the CSRF token.
+- `assets/css/social.css`, `assets/fonts/mh/` (Cormorant Garamond and Jost
+  as self-hosted variable woff2, so the render never waits on Google Fonts).
+- ONE render path: the preview iframe's srcdoc and the exported PNG are the
+  same HTML. Never draw the post in JavaScript.
+
+## The export
+
+Headless Chromium (Debian package `chromium`, installed 2026-10-11 with
+Nikki's OK, 154.0) screenshots the HTML as www-data:
+
+    chromium --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage
+      --hide-scrollbars --force-device-scale-factor=1 --window-size=1080,1440
+      --virtual-time-budget=10000 --user-data-dir=<tmp>/profile
+      --screenshot=<out>.png file://<in>.html
+
+HOME is pointed at the temp dir (`<system temp>/mh-social`, under Apache's
+private /tmp), one render at a time through a flock (the instance has under
+1 GB of RAM; a render takes about 3 s and 1.2 to 2 MB), 60 s cap through
+`timeout`. Fonts, the logo and the headshot load over https from this site,
+the photo from the public site's img.php at 1600 wide. A failure logs
+`social_export: chromium rc=…` to Apache's PHP error log and the agent sees a
+"could not be made, try again" page.
+
+## Hidden while it is built
+
+`SOCIAL_BETA_EMAILS` in inc/config.php (Nikki alone). Not in the nav; anyone
+else gets a plain 404 from `social_gate()`. Nikki's login has no linked
+agent account, so she opens it as an admin preview:
+`/portal/social.php?preview=30` (Jonathan, who has the Weber Boxer listings).
+To open it up: add the nav entry in `portal_header()` (`'social' =>
+['Social posts', '/portal/social.php']`), a home card, and clear the
+constant.
+
+## Not done yet / ideas
+
+- More templates (Just Sold, Price Improvement as its own layout, Coming
+  Soon), a square 1080 x 1080 and a Story 1080 x 1920 variant of each.
+- "Your recent posts": list the kept copies.
+- A drag-to-frame photo instead of two sliders.
+- The Aspen board's photos carry a "Property of Aspen/Glenwood MLS"
+  watermark in the image itself; nothing we can do except pick another photo.
