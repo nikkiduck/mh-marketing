@@ -203,7 +203,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // starts higher and lands almost solid cream, because the words were hard to read.
         ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31',
            'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none',
-           'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.62) 40%, rgba(241,236,226,1) 100%', 'fullh' => '48%',
+           'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.72) 38%, rgba(241,236,226,.94) 62%, rgba(241,236,226,1) 100%', 'fullh' => '56%',
            'logo' => $base . '/assets/images/MH_vert-stack_brown.svg', 'mark' => $base . '/assets/images/M-mark_brown.svg']
         : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da',
            'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)',
