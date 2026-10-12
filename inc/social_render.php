@@ -198,11 +198,16 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
 
     // The two looks. The label pill is solid gold with ink text on both (it has to read in a fast scroll).
     $c = $theme === 'light'
-        ? ['bg' => '#F1ECE2', 'text' => '#231F20', 'accent' => '#8A7350', 'muted' => '#4a443a', 'soft' => '#3b362e',
-           'fade' => 'rgba(241,236,226,.42)', 'fullfade' => 'rgba(241,236,226,.94)', 'shadow' => 'none',
-           'logo' => $base . '/assets/images/MH_vert-stack_black.svg', 'mark' => $base . '/assets/images/M-mark_black.svg']
+        // Light: espresso brown rather than black for the words and the logo (Nikki, 2026-10-12;
+        // MH_vert-stack_brown.svg is the black file with its fill changed), and a fade that
+        // starts higher and lands almost solid cream, because the words were hard to read.
+        ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31',
+           'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none',
+           'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.55) 40%, rgba(241,236,226,.97) 100%', 'fullh' => '66%',
+           'logo' => $base . '/assets/images/MH_vert-stack_brown.svg', 'mark' => $base . '/assets/images/M-mark_brown.svg']
         : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da',
-           'fade' => 'rgba(20,18,16,.62)', 'fullfade' => 'rgba(12,11,9,.86)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)',
+           'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)',
+           'fullfade' => 'rgba(0,0,0,0) 0%, rgba(12,11,9,.86) 100%', 'fullh' => '58%',
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
 
     // Open House text under a date block runs a size smaller (the split layout only).
@@ -212,7 +217,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     // The text block: under the photo (split family) or over its bottom (full family).
     $bodyCss = $full
         ? ".body{position:absolute;left:0;right:0;bottom:0;padding:0 64px 64px;box-sizing:border-box;text-shadow:{$c['shadow']}}"
-        . ".photo::after{height:58%;background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,{$c['fullfade']} 100%)}"
+        . ".photo::after{height:{$c['fullh']};background:linear-gradient(to bottom,{$c['fullfade']})}"
         . ".logo{bottom:64px;height:132px}.lines{padding-right:260px}.rule{margin-bottom:22px}"
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
