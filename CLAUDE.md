@@ -1923,10 +1923,11 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 ### Social posts (portal/social.php, 2026-10-11, reworked 2026-10-12, hidden)
 
 Instagram-ready PNGs (1080 x 1440) of an agent's own listings: template
-(two families, each plain and Open House: Full Photo, where the photo
-fills the post and the words sit over a fade at the bottom with two lines;
-and Featured Listing, photo on top and a text block below with four lines)
-and look (dark, light), listing (a dropdown), photo (the listing's from
+(Full Photo and Full Photo Open House: the photo fills the post, the words
+sit over a fade at the bottom, two lines; the split family, Featured
+Listing and Open House with a text block below the photo, is kept in
+social_templates() but `offered => false` since 2026-10-12, Nikki) and
+look (dark, light), listing (a dropdown), photo (the listing's from
 the site, or the agent's own upload) framed by drag + zoom, words (a
 Headline and Text 1 to 4, each in a style: Small Caps Gold, Large Serif,
 Light, Italic Serif, Plain; a blank line takes no room), a label on the

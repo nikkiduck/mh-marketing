@@ -22,7 +22,7 @@ $ctx = portal_context($conn);
 social_gate();
 
 $listings  = array_values(social_listings($conn, $ctx));
-$templates = social_templates();
+$templates = social_templates_offered();
 $themes    = social_themes();
 $labels    = social_labels();
 $styles    = social_line_styles();
@@ -125,7 +125,7 @@ portal_header($ctx, 'Social posts', 'social');
             </label>
           </div>
           <?php endforeach; ?>
-          <small class="sp-note">Leave a line empty and the ones below move up. The Full Photo templates show two lines.</small>
+          <small class="sp-note">Leave a line empty and the ones below move up.</small>
         </div>
       </section>
 

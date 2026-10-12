@@ -41,14 +41,23 @@
 const SOCIAL_W = 1080;
 const SOCIAL_H = 1440;
 
-/** The templates an agent can pick, in menu order. */
+/**
+ * Every template, in menu order. `offered` = on the picker. The split
+ * family (photo on top, text block below) is kept but not offered since
+ * 2026-10-12 (Nikki: keep the full-photo versions, hide the others for now).
+ */
 function social_templates(): array {
     return [
-        'photo'           => ['name' => 'Full Photo',            'blurb' => 'The photo fills the post; a headline and up to two lines over it.'],
-        'photo_openhouse' => ['name' => 'Full Photo Open House', 'blurb' => 'The same, with the date and time above the headline.'],
-        'featured'        => ['name' => 'Featured Listing',      'blurb' => 'Photo on top, a text block below: headline and up to four lines.'],
-        'openhouse'       => ['name' => 'Open House',            'blurb' => 'Photo on top; the date and time lead the text block.'],
+        'photo'           => ['name' => 'Full Photo',            'blurb' => 'The photo fills the post; a headline and up to two lines over it.', 'offered' => true],
+        'photo_openhouse' => ['name' => 'Full Photo Open House', 'blurb' => 'The same, with the date and time above the headline.',             'offered' => true],
+        'featured'        => ['name' => 'Featured Listing',      'blurb' => 'Photo on top, a text block below: headline and up to four lines.', 'offered' => false],
+        'openhouse'       => ['name' => 'Open House',            'blurb' => 'Photo on top; the date and time lead the text block.',            'offered' => false],
     ];
+}
+
+/** The templates on the picker. */
+function social_templates_offered(): array {
+    return array_filter(social_templates(), fn($t) => !empty($t['offered']));
 }
 
 /** True for the two Open House templates. */
@@ -211,16 +220,16 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
      font-size:27px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;line-height:1;white-space:nowrap;
      box-shadow:0 4px 18px rgba(0,0,0,.22)}
 .rule{width:72px;height:3px;background:{$c['accent']};margin:0 0 26px}
-.when{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.02;margin:0 0 12px;white-space:nowrap;overflow:hidden}
+.when{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 8px;white-space:nowrap;overflow:hidden}
 .time{font-size:30px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 28px;white-space:nowrap;overflow:hidden}
 .whenline{font-size:28px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 18px;white-space:nowrap;overflow:hidden}
-.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.02;margin:0 0 14px;white-space:nowrap;overflow:hidden}
+.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 10px;white-space:nowrap;overflow:hidden}
 .lines{padding-right:220px}
-.ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.15}
+.ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.25}
 .ln-town{font-size:{$sz(27)}px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:{$c['accent']};margin-bottom:14px}
-.ln-price{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$sz(54)}px;line-height:1.05;margin-bottom:12px}
+.ln-price{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$sz(54)}px;line-height:1.18;margin-bottom:8px}
 .ln-details{font-size:{$sz(26)}px;font-weight:300;color:{$c['muted']};letter-spacing:.03em}
-.ln-note{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:{$sz(31)}px;line-height:1.2;color:{$c['soft']}}
+.ln-note{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:{$sz(31)}px;line-height:1.3;color:{$c['soft']}}
 .ln-plain{font-size:{$sz(26)}px;font-weight:400;color:{$c['text']}}
 .logo{position:absolute;right:64px;bottom:56px;height:120px}
 {$bodyCss}

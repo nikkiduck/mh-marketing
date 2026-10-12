@@ -246,7 +246,8 @@ function social_store_upload(array $ctx, string $field): array {
  * one), the lines and their styles, lengths, dates, the frame.
  */
 function social_post_from_request(mysqli $conn, array $ctx, array $in): array|string {
-    $type  = isset(social_templates()[(string)($in['type'] ?? '')]) ? (string)$in['type'] : 'featured';
+    $offered = social_templates_offered();
+    $type  = isset($offered[(string)($in['type'] ?? '')]) ? (string)$in['type'] : array_key_first($offered);
     $theme = isset(social_themes()[(string)($in['theme'] ?? '')]) ? (string)$in['theme'] : 'dark';
 
     $l = social_listing($conn, $ctx, (string)($in['listing'] ?? ''));

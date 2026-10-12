@@ -10,11 +10,13 @@ picture to Instagram themselves; no auto-posting, by decision.
 
 `/portal/social.php`: four steps on one page with a live preview.
 
-1. Template and look. Two families, each with a plain and an Open House
-   member (Nikki, 2026-10-12, "something different and prettier"): Full
-   Photo, the photo fills the post and the headline plus two lines sit over
-   a fade at the bottom; Featured Listing, photo on top and a text block
-   below with up to four lines. Look: dark ink, or light on the brand's
+1. Template and look. Full Photo and Full Photo Open House (Nikki,
+   2026-10-12, "something different and prettier"): the photo fills the
+   post and the headline plus two lines sit over a fade at the bottom. The
+   first family, Featured Listing and Open House (photo on top, a text
+   block below with up to four lines), is kept in `social_templates()` with
+   `offered => false`: not on the picker, refused if posted; flip the flag
+   to bring it back. Look: dark ink, or light on the brand's
    cream (on Full Photo the fade is cream and the text ink).
 2. Listing: a dropdown of the account's live listings (hs_listing_state,
    the site's Mont Haus feed; list or co-list agent id in agent_mls_ids for
