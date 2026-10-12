@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-12 12:45 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-12 14:27 from git HEAD in the Mont Haus Master folder.
 # Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
 # and assets/js/mh-qr.js, portal/*.php, assets/css/portal.css, assets/css/social.css.
 # Not listed, because the server's copies are meant to differ or are made there:
@@ -59,8 +59,8 @@ c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-f71f8f71bdf6ef1fb862a0bd8f68cfae  inc/social.php
-60ac9c6dcc053f14a31c2a124663b8cc  inc/social_render.php
+6f0db0f3a17e51daac32b43711d75415  inc/social.php
+485fc259fcdc579a279294f0011bab3f  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 c4984ee573dd0128324b9897d5565ed3  api/roster.php
@@ -86,7 +86,7 @@ ff15685886801aeda0a6cbe5e9ef3e1b  portal/hotsheets.php
 06abe9e045b7b83f3ce99ccc25f0b5b7  portal/orders.php
 84273aef9c89d39ca274bda11d5a3ce0  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
-9ce148f96a85a0dc1630015a69b4261a  portal/social.php
+30c480a555def7c4415ca4bd5a9f62c9  portal/social.php
 b4178bb297c9b2f159e24c02f559ac7b  portal/social_asset.php
 ffac5e8d41f6939bf861500aeeaacd76  portal/social_export.php
 e2e389d1c46353c140961f9e9c261bba  portal/social_photos.php
