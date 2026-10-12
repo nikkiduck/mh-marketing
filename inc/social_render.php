@@ -213,7 +213,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $bodyCss = $full
         ? ".body{position:absolute;left:0;right:0;bottom:0;padding:0 64px 64px;box-sizing:border-box;text-shadow:{$c['shadow']}}"
         . ".photo::after{height:58%;background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,{$c['fullfade']} 100%)}"
-        . ".logo{bottom:64px;height:110px}.lines{padding-right:230px}.rule{margin-bottom:22px}"
+        . ".logo{bottom:64px;height:132px}.lines{padding-right:260px}.rule{margin-bottom:22px}"
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
@@ -239,12 +239,12 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 10px;white-space:nowrap;overflow:hidden}
 .lines{padding-right:220px}
 .ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.25}
-.ln-town{font-size:{$sz(27)}px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:{$c['accent']};margin-bottom:14px}
+.ln-town{font-size:{$sz(31)}px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:{$c['accent']};margin-bottom:14px}
 .ln-price{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$sz(54)}px;line-height:1.18;margin-bottom:8px}
 .ln-details{font-size:{$sz(26)}px;font-weight:300;color:{$c['muted']};letter-spacing:.03em}
 .ln-note{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:{$sz(31)}px;line-height:1.3;color:{$c['soft']}}
-.ln-plain{font-size:{$sz(26)}px;font-weight:400;color:{$c['text']}}
-.logo{position:absolute;right:64px;bottom:56px;height:120px}
+.ln-plain{font-size:{$sz(30)}px;font-weight:400;color:{$c['text']}}
+.logo{position:absolute;right:64px;bottom:56px;height:132px}
 {$bodyCss}
 CSS;
 
