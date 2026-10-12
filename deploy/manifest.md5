@@ -41,7 +41,7 @@ adee107afca49bf84fe4181ed0aff97b  inc/agent_roster.php
 870018f3609e3720f77d45c06103021e  inc/auth.php
 b8e198e7cc0617a6128cf965b5c1cdc0  inc/boards.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
-eb05f0b3b446c49388161ed262e830d7  inc/config.php
+3c25b2f69d20d7bec56a4ef84b11b9b2  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
 0f2ccd665f7cf6ebef2b916bff6ea510  inc/financials.php
 1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
@@ -53,7 +53,7 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
-e48ceb9089428b616c869212bb65b2a7  inc/portal.php
+20c30d72462d46866846bd94fb17931e  inc/portal.php
 c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
@@ -82,11 +82,11 @@ d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php
 c141d4e49e830a83cfd047aca3ad5d49  portal/asset.php
 3b9a30c5e311e281975ef79f42e192b1  portal/brand.php
 ff15685886801aeda0a6cbe5e9ef3e1b  portal/hotsheets.php
-287027da6f934e7a0588190088bf3f5f  portal/index.php
+a8c77a0bad10a48599ccb54a0aad0ee9  portal/index.php
 06abe9e045b7b83f3ce99ccc25f0b5b7  portal/orders.php
 84273aef9c89d39ca274bda11d5a3ce0  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
-078376047de6bba9cb539c5e4372ae06  portal/social.php
+44f3a5b7dc577bd2f0b1ed1958d55f07  portal/social.php
 b4178bb297c9b2f159e24c02f559ac7b  portal/social_asset.php
 ffac5e8d41f6939bf861500aeeaacd76  portal/social_export.php
 e2e389d1c46353c140961f9e9c261bba  portal/social_photos.php
