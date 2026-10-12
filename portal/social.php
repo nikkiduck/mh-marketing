@@ -181,11 +181,16 @@ portal_header($ctx, 'Social posts', 'social');
     customWrap.hidden = labelSel.value !== '__custom';
     framer.style.aspectRatio = '1080 / ' + PHOTO_H[t];
   }
-  // Switching template swaps the default label unless the agent chose something else.
+  // The default label follows the template and the listing (a rental's is Featured
+  // Rental, Nikki 2026-10-12) unless the agent chose something else.
+  const DEFAULT_LABELS = ['Featured Listing', 'Featured Rental', 'Open House'];
+  function defaultLabel() {
+    if (isOH(f('type').value)) return 'Open House';
+    const l = listing();
+    return (l && +l.is_rental) ? 'Featured Rental' : 'Featured Listing';
+  }
   function labelForType() {
-    const oh = isOH(f('type').value);
-    if (oh && labelSel.value === 'Featured Listing') labelSel.value = 'Open House';
-    if (!oh && labelSel.value === 'Open House') labelSel.value = 'Featured Listing';
+    if (DEFAULT_LABELS.includes(labelSel.value)) labelSel.value = defaultLabel();
   }
 
   // ── Preview ──
@@ -289,7 +294,7 @@ portal_header($ctx, 'Social posts', 'social');
   // ── Wiring ──
   form.addEventListener('input', e => {
     const n = e.target.name;
-    if (n === 'listing') { fill(listing()); loadPhotos(); return; }
+    if (n === 'listing') { fill(listing()); labelForType(); loadPhotos(); return; }
     if (n === 'type') { showGroups(); labelForType(); }
     if (n === 'label') showGroups();
     if (n === 'photo') framerSet(e.target.dataset.large);
@@ -304,6 +309,7 @@ portal_header($ctx, 'Social posts', 'social');
   new ResizeObserver(scale).observe(stage); scale();
   showGroups();
   fill(listing());
+  labelForType();
   loadPhotos();
 })();
 </script>
