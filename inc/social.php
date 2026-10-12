@@ -181,6 +181,20 @@ function social_upload_url(array $ctx, string $id, int $w): string {
     return portal_url($ctx, '/portal/social_asset.php', ['id' => $id, 'w' => $w]);
 }
 
+/**
+ * mkdir's mode is cut by the umask (02775 becomes 02755), which left the
+ * folders a CLI test run created unwritable to Apache (2026-10-12: "could not
+ * be saved on the server"). chmod is not cut by the umask: set the mode
+ * outright on the new folder and its parents under CREATIVES_DIR/social.
+ */
+function social_open_dirs(string $dir): void {
+    $root = rtrim(CREATIVES_DIR, '/') . '/social';
+    for ($d = $dir; str_starts_with($d, $root); $d = dirname($d)) {
+        @chmod($d, 02775);
+        if ($d === $root) break;
+    }
+}
+
 /** This account's upload ids, newest first (at most 24). */
 function social_uploads(array $ctx): array {
     $dir = social_upload_dir($ctx);
@@ -225,7 +239,11 @@ function social_store_upload(array $ctx, string $field): array {
         if ($deg) { $r = imagerotate($img, $deg, 0); if ($r) { imagedestroy($img); $img = $r; } }
     }
     $dir = social_upload_dir($ctx);
-    if (!is_dir($dir) && !@mkdir($dir, 02775, true)) { imagedestroy($img); return ['error' => 'The photo folder could not be created on the server. Please email ' . PORTAL_MARKETING_EMAIL . '.']; }
+    if (!is_dir($dir)) {
+        if (!@mkdir($dir, 02775, true)) { imagedestroy($img); return ['error' => 'The photo folder could not be created on the server. Please email ' . PORTAL_MARKETING_EMAIL . '.']; }
+        social_open_dirs($dir);
+    }
+    if (!is_writable($dir)) { imagedestroy($img); return ['error' => 'The photo folder on the server is not writable. Please email ' . PORTAL_MARKETING_EMAIL . '.']; }
     $id = bin2hex(random_bytes(8));
     $ok = @imagejpeg(mk_photo_scale($img, 2000), "{$dir}/{$id}.jpg", 88);
     $ok = $ok && @imagejpeg(mk_photo_scale($img, 400), "{$dir}/{$id}-thumb.jpg", 82);
@@ -356,7 +374,10 @@ function social_export_png(string $html): ?string {
 function social_keep_copy(array $ctx, string $name, string $png): void {
     if (!defined('CREATIVES_DIR')) return;
     $dir = rtrim(CREATIVES_DIR, '/') . '/social/' . (int)$ctx['acct']['id'];
-    if (!is_dir($dir) && !@mkdir($dir, 02775, true)) return;
+    if (!is_dir($dir)) {
+        if (!@mkdir($dir, 02775, true)) return;
+        social_open_dirs($dir);
+    }
     @file_put_contents($dir . '/' . $name, $png);
     @chmod($dir . '/' . $name, 0664);
 }
