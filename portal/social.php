@@ -76,8 +76,15 @@ portal_header($ctx, 'Social posts', 'social');
         <h2 class="sp-step-h"><span>2</span>Listing</h2>
         <label class="sp-field">Which listing
           <select name="listing">
-            <?php foreach ($listings as $l): ?>
-            <option value="<?= ph($l['id']) ?>"><?= ph(implode('  ·  ', array_filter([$l['address'] . ', ' . $l['city'], $l['price_text'], social_status_words((string)$l['status'])]))) ?></option>
+            <?php // Sales first, then rentals, under headers (Nikki, 2026-10-12: a team's list is long).
+            $groups = ['Listings' => array_filter($listings, fn($l) => !(int)$l['is_rental']),
+                       'Rentals'  => array_filter($listings, fn($l) => (int)$l['is_rental'])];
+            foreach ($groups as $gname => $group): if (!$group) continue; ?>
+            <optgroup label="<?= ph($gname) ?>">
+              <?php foreach ($group as $l): ?>
+              <option value="<?= ph($l['id']) ?>"><?= ph(implode('  ·  ', array_filter([$l['address'] . ', ' . $l['city'], $l['price_text'], social_status_words((string)$l['status'])]))) ?></option>
+              <?php endforeach; ?>
+            </optgroup>
             <?php endforeach; ?>
           </select>
         </label>

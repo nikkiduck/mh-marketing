@@ -116,7 +116,8 @@ function social_listings(mysqli $conn, array $ctx): array {
         $id = $l['market'] . '|' . $l['listing_key'];
         $cache[$id] = $l + [
             'id'         => $id,
-            'price_text' => social_price_text($l['list_price']),
+            // Rentals: no price by default (Nikki, 2026-10-12); the agent can type one into Text 2.
+            'price_text' => (int)$l['is_rental'] ? '' : social_price_text($l['list_price']),
             'specs_text' => social_specs_text($l['beds'], $l['baths'], $l['sqft']),
             'town'       => trim((string)$l['city']) !== '' ? trim((string)$l['city']) . ', Colorado' : '',
             'thumb'      => (string)$l['primary_photo'] !== '' ? social_img((string)$l['primary_photo'], 400) : '',
