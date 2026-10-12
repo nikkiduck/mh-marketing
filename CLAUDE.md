@@ -1957,7 +1957,10 @@ mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
   portal session.
 - Photos come from the site: `api/listings.php?scope=photos` and img.php
   (PUBLIC_SITE_URL). Fonts are self-hosted in assets/fonts/mh (variable
-  woff2) so a render never waits on Google.
+  woff2); the preview loads them by URL, the EXPORT embeds them as data
+  URIs (`social_render($p, null, true)`), because a file:// page fetching
+  fonts over https hits cross-origin rules and fell back to Liberation on
+  the real download path (2026-10-12).
 - Export runs as www-data under the system temp dir, one at a time (flock;
   the box has under 1 GB), 60 s cap; a copy of every PNG is kept in
   CREATIVES_DIR/social/<intake id>/. Failures log `social_export:` lines.

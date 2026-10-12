@@ -164,8 +164,21 @@ function social_fit_size(string $text, int $size, array $steps): int {
 function social_render(array $p, ?string $base = null, bool $export = false): string {
     $base  = rtrim($base ?? (defined('SITE_URL') ? SITE_URL : ''), '/');
     $e     = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-    $fonts = $base . '/assets/fonts/mh';
     $W = SOCIAL_W; $H = SOCIAL_H;
+
+    // Fonts: by URL for the preview; EMBEDDED for the export. The export page is
+    // a local file and web fonts are the one resource a browser fetches under
+    // cross-origin rules, so from file:// they can silently fall back to
+    // Liberation (the download had Times-like type, 2026-10-12). Base64 of the
+    // three woff2 files is about 140 KB and needs no network at all.
+    $fontUrl = function (string $file) use ($base, $export): string {
+        $disk = __DIR__ . '/../assets/fonts/mh/' . $file;
+        if ($export && is_file($disk)) return 'data:font/woff2;base64,' . base64_encode((string)file_get_contents($disk));
+        return $base . '/assets/fonts/mh/' . $file;
+    };
+    $fCormorant = $fontUrl('CormorantGaramond-normal.woff2');
+    $fCormorantI = $fontUrl('CormorantGaramond-italic.woff2');
+    $fJost = $fontUrl('Jost-normal.woff2');
 
     $type   = isset(social_templates()[(string)($p['type'] ?? '')]) ? (string)$p['type'] : 'featured';
     $oh     = social_is_openhouse($type);
@@ -204,9 +217,9 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
-@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url({$fonts}/CormorantGaramond-normal.woff2) format('woff2')}
-@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:300 700;src:url({$fonts}/CormorantGaramond-italic.woff2) format('woff2')}
-@font-face{font-family:'Jost';font-style:normal;font-weight:100 900;src:url({$fonts}/Jost-normal.woff2) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url({$fCormorant}) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:300 700;src:url({$fCormorantI}) format('woff2')}
+@font-face{font-family:'Jost';font-style:normal;font-weight:100 900;src:url({$fJost}) format('woff2')}
 html,body{margin:0;padding:0}
 body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c['bg']};color:{$c['text']};
      font-family:'Jost','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased}

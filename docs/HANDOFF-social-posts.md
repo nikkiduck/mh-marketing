@@ -82,8 +82,12 @@ Nikki's OK, 154.0) screenshots the HTML as www-data:
 HOME is pointed at the temp dir (`<system temp>/mh-social`, under Apache's
 private /tmp), one render at a time through a flock (the instance has under
 1 GB of RAM; a render takes about 3 s and 1.2 to 2 MB), 60 s cap through
-`timeout`. Fonts, the logo and the headshot load over https from this site,
-the photo from the public site's img.php at 1600 wide. A failure logs
+`timeout`. The logo loads over https from this site and the photo from the public
+site's img.php at 1600 wide; the FONTS are embedded in the export HTML as
+base64 data URIs (about 140 KB). The export page is a local file, and web
+fonts are the one resource a browser fetches under cross-origin rules, so
+from file:// they fell back to Liberation on the real download path
+(2026-10-12: Times-like type) while CLI test renders looked fine. A failure logs
 `social_export: chromium rc=…` to Apache's PHP error log and the agent sees a
 "could not be made, try again" page.
 
