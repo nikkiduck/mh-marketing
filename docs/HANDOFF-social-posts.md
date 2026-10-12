@@ -40,9 +40,9 @@ fast scroll); a short rule, the headline, the lines, and the Mont Haus logo
 bottom-right. No agent
 headshot or contact details (Nikki, 2026-10-12).
 
-Download PNG posts the form to `portal/social_export.php`; Share… (phones
-with the Web Share API) fetches the PNG and opens the share sheet, so it can
-go straight into the Instagram app.
+Download PNG posts the form to `portal/social_export.php`. (A Share… button
+for the phone share sheet was tried and removed 2026-10-12: it opened the
+sheet and then errored.)
 
 ## How it is built
 

@@ -11,8 +11,8 @@
  * The preview is an iframe whose srcdoc is the HTML social_render.php
  * returns for the form as it stands (fetch on every change, debounced),
  * scaled to fit. Download POSTs the same form to social_export.php, which
- * screenshots the same HTML. Share… (phones) fetches that PNG and hands it
- * to the share sheet, so it can go straight into the Instagram app. The
+ * screenshots the same HTML. (A Share… button for phones' share sheets was
+ * removed 2026-10-12: it opened the sheet, then errored; Nikki.) The
  * framing box in step 3 applies the same CSS the renderer does (zoom, focus),
  * as a control only; the post itself is never drawn here.
  */
@@ -130,7 +130,6 @@ portal_header($ctx, 'Social posts', 'social');
 
       <div class="sp-actions">
         <button type="submit" class="sp-btn">Download PNG</button>
-        <button type="button" class="sp-btn sp-btn-alt" id="spShare" hidden>Share…</button>
         <p class="sp-help">The download is a 1080 × 1440 PNG, Instagram's portrait size.</p>
       </div>
     </form>
@@ -147,13 +146,12 @@ portal_header($ctx, 'Social posts', 'social');
 <script>
 (function () {
   const L = <?= json_encode($listings, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
-  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>,
-        PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>;
+  const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>;
   const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
   const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0;
   const form = document.getElementById('spForm'), frame = document.getElementById('spFrame'),
         stage = document.getElementById('spStage'), photos = document.getElementById('spPhotos'),
-        busy = document.getElementById('spBusy'), share = document.getElementById('spShare'),
+        busy = document.getElementById('spBusy'),
         drop = document.getElementById('spDrop'), dropMsg = document.getElementById('spDropMsg'),
         fileIn = document.getElementById('spFile'),
         framer = document.getElementById('spFramer'), fimg = document.getElementById('spFramerImg'),
@@ -295,25 +293,6 @@ portal_header($ctx, 'Social posts', 'social');
     if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') e.preventDefault();
   });
   form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), 10000); });
-
-  if (navigator.share && navigator.canShare) {
-    share.hidden = false;
-    share.addEventListener('click', async () => {
-      share.disabled = true; share.textContent = 'Making your picture…';
-      try {
-        const r = await fetch(EXPORT, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
-        if (!r.ok) throw new Error('export failed');
-        const blob = await r.blob();
-        const m = (r.headers.get('Content-Disposition') || '').match(/filename="([^"]+)"/);
-        const file = new File([blob], m ? m[1] : 'mont-haus-post.png', { type: 'image/png' });
-        if (navigator.canShare({ files: [file] })) await navigator.share({ files: [file] });
-        else { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = file.name; a.click(); }
-      } catch (e) {
-        if (e.name !== 'AbortError') alert('Sorry, that did not work. Try Download PNG instead.');
-      }
-      share.disabled = false; share.textContent = 'Share…';
-    });
-  }
 
   new ResizeObserver(scale).observe(stage); scale();
   showGroups();
