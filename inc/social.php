@@ -1,17 +1,22 @@
 <?php
 /**
- * inc/social.php — Social posts on the agent portal (Nikki, 2026-10-11).
+ * inc/social.php — Social posts on the agent portal (Nikki, 2026-10-11;
+ * reworked 2026-10-12 to her notes).
  *
- * An agent picks a template (Featured Listing, Open House), one of THEIR
- * listings, one of its photos, checks the pre-filled words, and downloads an
- * Instagram-ready PNG (1080 x 1440). The agent posts it themselves; nothing
- * here talks to Instagram.
+ * An agent picks a template (Featured Listing, Open House) and a look (dark,
+ * light), one of THEIR listings from a dropdown, a photo (the listing's, or
+ * one they upload), frames it (drag + zoom), checks the words (a headline and
+ * up to four sub lines, each in a style), and downloads an Instagram-ready
+ * PNG (1080 x 1440). The agent posts it themselves; nothing here talks to
+ * Instagram.
  *
  *   portal/social.php          the page (steps + live preview)
  *   portal/social_render.php   POST → the post as HTML, for the preview frame
  *   portal/social_export.php   POST → the same HTML screenshotted by headless
  *                              Chromium (installed 2026-10-11), as a PNG download
- *   portal/social_photos.php   GET  → the listing's photos (from the site)
+ *   portal/social_photos.php   GET  → the listing's photos (from the site) + uploads
+ *   portal/social_upload.php   POST → store the agent's own photo
+ *   portal/social_asset.php    GET  → serve one of the agent's uploads
  *   inc/social_render.php      the templates themselves (standalone, no DB)
  *
  * Who may use it: SOCIAL_BETA_EMAILS (inc/config.php). While the list is set,
@@ -25,18 +30,24 @@
  * whose agent name is the account's, live statuses only, cross-board copies
  * collapsed. Photos: the site's api/listings.php?scope=photos, through its
  * img.php proxy; the list is kept in the session so a posted photo URL is
- * checked against it (never rendered from a free URL).
+ * checked against it (never rendered from a free URL). Uploads live in
+ * CREATIVES_DIR/social/<intake id>/uploads/ as <id>.jpg (longest side 2000)
+ * + <id>-thumb.jpg (400), EXIF rotation applied; a posted "upload:<id>" is
+ * honoured only when that file exists under THIS account's folder.
  *
  * The render is ONE path: social_render() in inc/social_render.php makes the
  * preview and the export from the same normalised post. Chromium runs as
  * www-data with a throwaway profile under the system temp dir, one render at
- * a time (flock: the box has under 1 GB), 60 s cap. A copy of every export is
- * kept in CREATIVES_DIR/social/<intake id>/ for a later "your recent posts".
+ * a time (flock: the box has under 1 GB), 60 s cap; an uploaded photo is read
+ * from disk for the export (file://) because Chromium has no portal session.
+ * A copy of every export is kept in CREATIVES_DIR/social/<intake id>/.
  */
 require_once __DIR__ . '/portal.php';
+require_once __DIR__ . '/photos.php';          // mk_photo_scale(), mk_photo_srgb()
 require_once __DIR__ . '/social_render.php';
 
 if (!defined('SOCIAL_CHROMIUM')) define('SOCIAL_CHROMIUM', '/usr/bin/chromium');
+const SOCIAL_UPLOAD_MAX = 20 * 1024 * 1024;    // bytes; the server allows 25M
 
 /** True when this sign-in may see Social posts (SOCIAL_BETA_EMAILS, or everyone when it is empty). */
 function social_allowed(): bool {
@@ -55,26 +66,6 @@ function social_gate(): void {
     exit;
 }
 
-/** The account's name, title, phone and square headshot for the post's agent row. */
-function social_agent(mysqli $conn, array $ctx): array {
-    $id   = (int)$ctx['acct']['id'];
-    $cols = 'agent_name, headshot_face_url, headshot_url'
-          . (mk_column_exists($conn, 'marketing_intakes', 'agent_title') ? ', agent_title' : ", '' AS agent_title")
-          . (mk_column_exists($conn, 'marketing_intakes', 'cell_phone')  ? ', cell_phone'  : ", '' AS cell_phone");
-    $st = $conn->prepare("SELECT {$cols} FROM marketing_intakes WHERE id = ? LIMIT 1");
-    $st->bind_param('i', $id);
-    $st->execute();
-    $a = $st->get_result()->fetch_assoc() ?: [];
-    $st->close();
-    $title = trim((string)strtok((string)($a['agent_title'] ?? ''), "\r\n"));   // "CEO\nEmploying Broker": first line
-    return [
-        'name'     => trim((string)($a['agent_name'] ?? '')),
-        'title'    => $title,
-        'phone'    => social_phone_text((string)($a['cell_phone'] ?? '')),
-        'headshot' => trim((string)($a['headshot_face_url'] ?? '')) ?: trim((string)($a['headshot_url'] ?? '')),
-    ];
-}
-
 /** The public site's resized copy of a board photo (img.php: 400 / 800 / 1600). */
 function social_img(string $raw, int $w): string {
     $base = defined('PUBLIC_SITE_URL') ? rtrim(PUBLIC_SITE_URL, '/') : 'https://site.monthaus.com';
@@ -83,7 +74,7 @@ function social_img(string $raw, int $w): string {
 
 /**
  * The account's live listings, keyed "market|listing_key", with the words the
- * form pre-fills (price_text, specs_text, subline) and a thumbnail.
+ * form pre-fills (price_text, specs_text, town) and a thumbnail.
  */
 function social_listings(mysqli $conn, array $ctx): array {
     static $cache = null;
@@ -127,7 +118,7 @@ function social_listings(mysqli $conn, array $ctx): array {
             'id'         => $id,
             'price_text' => social_price_text($l['list_price']),
             'specs_text' => social_specs_text($l['beds'], $l['baths'], $l['sqft']),
-            'subline'    => trim((string)$l['city']) !== '' ? trim((string)$l['city']) . ', Colorado' : '',
+            'town'       => trim((string)$l['city']) !== '' ? trim((string)$l['city']) . ', Colorado' : '',
             'thumb'      => (string)$l['primary_photo'] !== '' ? social_img((string)$l['primary_photo'], 400) : '',
         ];
     }
@@ -170,52 +161,141 @@ function social_photos(string $market, string $key): array {
     return $urls;
 }
 
+// ── The agent's own photos ────────────────────────────────────────────────────
+
+/** Where this account's uploads live (outside the web root). */
+function social_upload_dir(array $ctx): string {
+    return rtrim(CREATIVES_DIR, '/') . '/social/' . (int)$ctx['acct']['id'] . '/uploads';
+}
+
+/** The file for an upload id (hex), full size or the thumbnail; null when it is not this account's. */
+function social_upload_file(array $ctx, string $id, bool $thumb = false): ?string {
+    if (!preg_match('/^[a-f0-9]{16}$/', $id)) return null;
+    $f = social_upload_dir($ctx) . '/' . $id . ($thumb ? '-thumb' : '') . '.jpg';
+    // realpath: CREATIVES_DIR is written with a "..", and the export hands this path to Chromium as a file:// URL.
+    return is_file($f) ? (realpath($f) ?: $f) : null;
+}
+
+/** The portal URL that serves an upload (400 = thumbnail, else full size). Carries ?preview= like every portal link. */
+function social_upload_url(array $ctx, string $id, int $w): string {
+    return portal_url($ctx, '/portal/social_asset.php', ['id' => $id, 'w' => $w]);
+}
+
+/** This account's upload ids, newest first (at most 24). */
+function social_uploads(array $ctx): array {
+    $dir = social_upload_dir($ctx);
+    if (!is_dir($dir)) return [];
+    $files = glob($dir . '/*.jpg') ?: [];
+    $files = array_filter($files, fn($f) => !str_ends_with($f, '-thumb.jpg'));
+    usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
+    return array_slice(array_map(fn($f) => basename($f, '.jpg'), $files), 0, 24);
+}
+
+/**
+ * Store an agent's own photo from $_FILES[$field]: JPG, PNG or WEBP up to
+ * SOCIAL_UPLOAD_MAX, EXIF rotation applied, saved as JPEG at 2000 px on the
+ * long side plus a 400 px thumbnail. ['id' => hex] or ['error' => words].
+ */
+function social_store_upload(array $ctx, string $field): array {
+    $err = $_FILES[$field]['error'] ?? UPLOAD_ERR_NO_FILE;
+    if ($err !== UPLOAD_ERR_OK) {
+        return ['error' => [
+            UPLOAD_ERR_NO_FILE   => 'No photo arrived. Please try again.',
+            UPLOAD_ERR_INI_SIZE  => 'That photo is larger than the server allows (' . ini_get('upload_max_filesize') . ').',
+            UPLOAD_ERR_FORM_SIZE => 'That photo is too large.',
+            UPLOAD_ERR_PARTIAL   => 'The upload was interrupted. Please try again.',
+        ][$err] ?? "Upload failed (code {$err})."];
+    }
+    $tmp = $_FILES[$field]['tmp_name'] ?? '';
+    if ($tmp === '' || !is_uploaded_file($tmp)) return ['error' => 'The upload did not arrive. Please try again.'];
+    if (($_FILES[$field]['size'] ?? 0) > SOCIAL_UPLOAD_MAX) return ['error' => 'That photo is over 20 MB. Please use a smaller one.'];
+    $mime = (string)@mime_content_type($tmp);
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        return ['error' => 'Please use a JPG, PNG or WEBP photo' . (in_array($mime, ['image/heic', 'image/heif'], true) ? ' (this one is HEIC; your phone can export it as JPG)' : '') . '.'];
+    }
+    $srgb = function_exists('mk_photo_srgb') ? mk_photo_srgb($tmp) : ['file' => $tmp];
+    $img  = @imagecreatefromstring((string)file_get_contents($srgb['file']));
+    if ($srgb['file'] !== $tmp) @unlink($srgb['file']);
+    if (!$img) return ['error' => 'That file could not be read as a photo. Please use a JPG, PNG or WEBP.'];
+    if (function_exists('exif_read_data') && $mime === 'image/jpeg') {
+        $e = @exif_read_data($tmp);
+        $o = (int)($e['Orientation'] ?? 0);
+        if (in_array($o, [2, 4, 5, 7], true)) imageflip($img, IMG_FLIP_HORIZONTAL);
+        $deg = [3 => 180, 4 => 180, 5 => -90, 6 => -90, 7 => 90, 8 => 90][$o] ?? 0;
+        if ($deg) { $r = imagerotate($img, $deg, 0); if ($r) { imagedestroy($img); $img = $r; } }
+    }
+    $dir = social_upload_dir($ctx);
+    if (!is_dir($dir) && !@mkdir($dir, 02775, true)) { imagedestroy($img); return ['error' => 'The photo folder could not be created on the server. Please email ' . PORTAL_MARKETING_EMAIL . '.']; }
+    $id = bin2hex(random_bytes(8));
+    $ok = @imagejpeg(mk_photo_scale($img, 2000), "{$dir}/{$id}.jpg", 88);
+    $ok = $ok && @imagejpeg(mk_photo_scale($img, 400), "{$dir}/{$id}-thumb.jpg", 82);
+    imagedestroy($img);
+    if (!$ok) { @unlink("{$dir}/{$id}.jpg"); @unlink("{$dir}/{$id}-thumb.jpg"); return ['error' => 'The photo could not be saved on the server. Please email ' . PORTAL_MARKETING_EMAIL . '.']; }
+    @chmod("{$dir}/{$id}.jpg", 0664); @chmod("{$dir}/{$id}-thumb.jpg", 0664);
+    return ['id' => $id];
+}
+
+// ── The post ─────────────────────────────────────────────────────────────────
+
 /**
  * The posted form as a normalised post for social_render(), or a message
  * (string) when there is nothing to render yet. Everything is checked here:
- * the template name, the listing (one of the account's), the photo (one the
- * site listed for that listing, else its primary), lengths, dates.
+ * the template, the look, the listing (one of the account's), the photo (one
+ * the site listed for that listing, or one of this account's uploads, else
+ * the listing's primary), the label (a known one, none, or a short custom
+ * one), the lines and their styles, lengths, dates, the frame.
  */
 function social_post_from_request(mysqli $conn, array $ctx, array $in): array|string {
-    $types = social_templates();
-    $type  = (string)($in['type'] ?? 'featured');
-    if (!isset($types[$type])) $type = 'featured';
+    $type  = isset(social_templates()[(string)($in['type'] ?? '')]) ? (string)$in['type'] : 'featured';
+    $theme = isset(social_themes()[(string)($in['theme'] ?? '')]) ? (string)$in['theme'] : 'dark';
 
     $l = social_listing($conn, $ctx, (string)($in['listing'] ?? ''));
     if (!$l) return 'Choose one of your listings to see your post.';
 
-    $photo   = (string)($in['photo'] ?? '');
-    $allowed = (array)($_SESSION['social_photos'][$l['id']] ?? []);
-    if ((string)$l['primary_photo'] !== '') $allowed[] = (string)$l['primary_photo'];
-    if (!in_array($photo, $allowed, true)) $photo = (string)$l['primary_photo'];
+    // The photo: an upload of this account's, or a board photo the site listed for this listing.
+    $photo = (string)($in['photo'] ?? '');
+    $photo_url = ''; $photo_file = null;
+    if (str_starts_with($photo, 'upload:') && ($f = social_upload_file($ctx, substr($photo, 7)))) {
+        $photo_url  = social_upload_url($ctx, substr($photo, 7), 1600);
+        $photo_file = $f;
+    } else {
+        $allowed = (array)($_SESSION['social_photos'][$l['id']] ?? []);
+        if ((string)$l['primary_photo'] !== '') $allowed[] = (string)$l['primary_photo'];
+        if (!in_array($photo, $allowed, true)) $photo = (string)$l['primary_photo'];
+        $photo_url = $photo !== '' ? social_img($photo, 1600) : '';
+    }
 
-    $txt = fn(string $k, int $max, string $default = '') => mb_substr(trim((string)($in[$k] ?? $default)), 0, $max);
-    $agent = social_agent($conn, $ctx);
-    $label = (string)($in['label'] ?? '');
-    if (!in_array($label, social_labels(), true)) $label = social_labels()[0];
+    // The label on the photo: a ready-made one, none, or the agent's own words.
+    $pick = (string)($in['label'] ?? '');
+    if ($pick === '__custom')                       $label = mb_substr(trim((string)($in['label_custom'] ?? '')), 0, 28);
+    elseif ($pick === '__none')                     $label = '';
+    elseif (in_array($pick, social_labels(), true)) $label = $pick;
+    else                                            $label = $type === 'openhouse' ? 'Open House' : 'Featured Listing';
+
+    // Up to four sub lines, each with a style; blanks are dropped by the renderer.
+    $styles = social_line_styles(); $defaults = social_line_defaults();
+    $texts = (array)($in['line_text'] ?? []); $kinds = (array)($in['line_style'] ?? []);
+    $lines = [];
+    for ($i = 0; $i < 4; $i++) {
+        $s = (string)($kinds[$i] ?? $defaults[$i]);
+        $lines[] = ['text' => mb_substr(trim((string)($texts[$i] ?? '')), 0, 90), 'style' => isset($styles[$s]) ? $s : $defaults[$i]];
+    }
 
     $p = [
-        'type'          => $type,
-        'listing'       => $l,
-        'label'         => $label,
-        'photo'         => $photo,
-        'photo_url'     => $photo !== '' ? social_img($photo, 1600) : '',
-        'focus_x'       => max(0, min(100, (int)($in['focus_x'] ?? 50))),
-        'focus_y'       => max(0, min(100, (int)($in['focus_y'] ?? 50))),
-        'headline'      => $txt('headline', 80, (string)$l['address']),
-        'subline'       => $txt('subline', 80, (string)$l['subline']),
-        'price'         => $txt('price', 40, (string)$l['price_text']),
-        'specs'         => $txt('specs', 80, (string)$l['specs_text']),
-        'note'          => $txt('note', 90),
-        'date_text'     => '',
-        'time_text'     => '',
-        'agent'         => [
-            'name'     => $txt('agent_name', 60, $agent['name']),
-            'title'    => $txt('agent_title', 60, $agent['title']),
-            'phone'    => $txt('agent_phone', 30, $agent['phone']),
-            'headshot' => $agent['headshot'],
-        ],
-        'show_headshot' => !isset($in['has_headshot_box']) || !empty($in['show_headshot']),
+        'type'       => $type,
+        'theme'      => $theme,
+        'listing'    => $l,
+        'label'      => $label,
+        'photo'      => $photo,
+        'photo_url'  => $photo_url,
+        'photo_file' => $photo_file,
+        'zoom'       => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
+        'focus_x'    => max(0, min(100, (int)($in['focus_x'] ?? 50))),
+        'focus_y'    => max(0, min(100, (int)($in['focus_y'] ?? 50))),
+        'headline'   => mb_substr(trim((string)($in['headline'] ?? $l['address'])), 0, 80),
+        'lines'      => $lines,
+        'date_text'  => '',
+        'time_text'  => '',
     ];
     if ($type === 'openhouse') {
         $p['date_text'] = social_date_text((string)($in['oh_date'] ?? ''));
@@ -228,7 +308,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
 /** "633-w-main-street-open-house-20261018-1432.png" */
 function social_filename(array $p): string {
     $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string)$p['headline']), '-')) ?: 'post';
-    $kind = $p['type'] === 'openhouse' ? 'open-house' : strtolower(str_replace(' ', '-', (string)$p['label']));
+    $kind = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string)($p['label'] ?: $p['type'])), '-')) ?: 'post';
     return mb_substr($slug, 0, 60) . '-' . $kind . '-' . date('Ymd-Hi') . '.png';
 }
 

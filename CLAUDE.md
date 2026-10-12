@@ -1920,29 +1920,46 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   the account's campaign ids only). Proven to catch a leak by breaking the
   ownership check.
 
-### Social posts (portal/social.php, 2026-10-11, hidden)
+### Social posts (portal/social.php, 2026-10-11, reworked 2026-10-12, hidden)
 
 Instagram-ready PNGs (1080 x 1440) of an agent's own listings: template
-(Featured Listing, Open House), listing, photo, words, live preview,
-Download PNG, Share… on phones. Plan and mechanics:
-`docs/HANDOFF-social-posts.md`. The rules that must hold:
+(Featured Listing, Open House) and look (dark, light), listing (a
+dropdown), photo (the listing's from the site, or the agent's own upload)
+framed by drag + zoom, words (a Headline and four Sub text lines, each in
+a style: town, price, details, note, plain; a blank line takes no room), a
+label on the photo (ready-made, none, or custom), the Mont Haus logo
+bottom-right of the text block. No agent headshot or contact details
+(Nikki, 2026-10-12). Live preview, Download PNG, Share… on phones. Plan and
+mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
 - **One render path.** `social_render()` (inc/social_render.php, standalone)
   makes the HTML; the preview iframe shows it and headless Chromium
   (`/usr/bin/chromium`, installed 2026-10-11) screenshots it for the PNG.
-  Never draw the post in JavaScript. `tests/render_social_sample.php`
-  renders sample data without a database.
+  Never draw the post in JavaScript. The framing box on the page applies
+  the same zoom/focus CSS as a control only. `tests/render_social_sample.php`
+  renders sample data (four looks) without a database.
 - Everything posted is checked in `social_post_from_request()`
   (inc/social.php): the listing must be one of the account's
   (`social_listings()`: hs_listing_state by the account's and its teams'
   agent_mls_ids identities or name, live statuses), the photo one the site
-  listed for it (session-cached by `social_photos()`), else its primary;
-  labels from `social_labels()`; lengths capped.
+  listed for it (session-cached by `social_photos()`) or an upload under
+  THIS account's folder (`upload:<hex>`), else its primary; labels from
+  `social_labels()` or 28 custom chars; line styles from
+  `social_line_styles()`; lengths capped.
+- Uploads: CREATIVES_DIR/social/<intake id>/uploads/<hex>.jpg (2000 px) +
+  -thumb.jpg (400), EXIF rotation applied, JPG/PNG/WEBP up to 20 MB
+  (`social_store_upload()`); served only to that account by
+  portal/social_asset.php; the EXPORT reads the file from disk
+  (`social_render($p, null, true)` writes file://), because Chromium has no
+  portal session.
 - Photos come from the site: `api/listings.php?scope=photos` and img.php
   (PUBLIC_SITE_URL). Fonts are self-hosted in assets/fonts/mh (variable
   woff2) so a render never waits on Google.
 - Export runs as www-data under the system temp dir, one at a time (flock;
   the box has under 1 GB), 60 s cap; a copy of every PNG is kept in
   CREATIVES_DIR/social/<intake id>/. Failures log `social_export:` lines.
+- `.sp-form [hidden] { display: none !important }` in social.css: portal.css
+  gives the fields a display value that beat the hidden attribute, so the
+  Open House date showed on every template (found 2026-10-12).
 - **Hidden:** `SOCIAL_BETA_EMAILS` (inc/config.php) = Nikki only; no nav
   entry; everyone else gets a plain 404 from `social_gate()`. Nikki opens it
   as `/portal/social.php?preview=30` (her login has no linked account). No

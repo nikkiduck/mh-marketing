@@ -1,9 +1,10 @@
 <?php
 /**
- * portal/social_photos.php — a listing's photos for the picker.
+ * portal/social_photos.php — the photos to pick from for a listing.
  * GET ?listing=market|listing_key (one of the account's) → JSON
- * {photos: [{url, thumb, large}]}, primary first, fetched from the site and
- * remembered in the session so the chosen one can be checked when rendering.
+ * {photos: [{id, thumb, large, own}]}: the listing's photos from the site,
+ * primary first (remembered in the session so the chosen one can be checked
+ * when rendering), then the agent's own uploads (own = true, id "upload:…").
  * See inc/social.php.
  */
 require_once __DIR__ . '/../inc/social.php';
@@ -18,5 +19,8 @@ if (!$l) { http_response_code(404); echo json_encode(['error' => 'not one of you
 
 $urls = social_photos((string)$l['market'], (string)$l['listing_key']);
 if (!$urls && (string)$l['primary_photo'] !== '') $urls = [(string)$l['primary_photo']];
-$out = array_map(fn($u) => ['url' => $u, 'thumb' => social_img($u, 400), 'large' => social_img($u, 1600)], $urls);
+$out = array_map(fn($u) => ['id' => $u, 'thumb' => social_img($u, 400), 'large' => social_img($u, 1600), 'own' => false], $urls);
+foreach (social_uploads($ctx) as $id) {
+    $out[] = ['id' => 'upload:' . $id, 'thumb' => social_upload_url($ctx, $id, 400), 'large' => social_upload_url($ctx, $id, 1600), 'own' => true];
+}
 echo json_encode(['listing' => $l['id'], 'count' => count($out), 'photos' => $out], JSON_UNESCAPED_SLASHES);

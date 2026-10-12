@@ -1,6 +1,12 @@
-/* social.css — Social posts on the agent portal (portal/social.php, 2026-10-11).
-   Loaded after portal.css; uses its tokens. Phone first: one column, the
-   preview on top; two columns from 900px with the preview sticky on the right. */
+/* social.css — Social posts on the agent portal (portal/social.php, 2026-10-11,
+   reworked 2026-10-12). Loaded after portal.css; uses its tokens. Phone first:
+   one column, the preview on top; two columns from 900px with the preview
+   sticky on the right. */
+
+/* portal.css gives .sp-field, .sp-when and friends a display value, which
+   would beat the hidden attribute: say it outright (2026-10-12, the Open
+   House date showed on every template). */
+.sp-form [hidden] { display: none !important; }
 
 .sp-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
 .sp-preview { order: -1; }
@@ -21,33 +27,48 @@
 .sp-step-h span { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%;
                   background: var(--ink); color: var(--gold); font-family: var(--sans); font-size: 15px; font-weight: 500; }
 
-/* Template and listing choices: radio cards */
-.sp-choices, .sp-listings { display: grid; grid-template-columns: 1fr; gap: 10px; }
+/* Template choices: radio cards. Look: two pills. */
+.sp-choices { display: grid; grid-template-columns: 1fr; gap: 10px; }
 @media (min-width: 560px) { .sp-choices { grid-template-columns: 1fr 1fr; } }
-.sp-choice input, .sp-listing input, .sp-photo input { position: absolute; opacity: 0; width: 0; height: 0; }
-.sp-choice, .sp-listing, .sp-photo { position: relative; cursor: pointer; }
-.sp-choice-in, .sp-listing-in { display: flex; gap: 14px; align-items: center; border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px;
-                                transition: border-color .15s, background .15s; }
-.sp-choice-in { flex-direction: column; align-items: flex-start; gap: 4px; }
+.sp-choice input, .sp-photo input, .sp-pillopt input { position: absolute; opacity: 0; width: 0; height: 0; }
+.sp-choice, .sp-photo, .sp-pillopt { position: relative; cursor: pointer; }
+.sp-choice-in { display: flex; flex-direction: column; gap: 4px; border: 2px solid var(--line); border-radius: 12px; padding: 12px 14px;
+                transition: border-color .15s, background .15s; }
 .sp-choice-in b { font-size: 18px; font-weight: 500; }
-.sp-choice-in small, .sp-listing-t small { color: var(--muted); font-size: 14px; display: block; }
-.sp-choice input:checked + .sp-choice-in, .sp-listing input:checked + .sp-listing-in { border-color: var(--gold-deep); background: #fbf7ef; }
-.sp-choice input:focus-visible + .sp-choice-in, .sp-listing input:focus-visible + .sp-listing-in, .sp-photo input:focus-visible + img { outline: 2px solid var(--gold-deep); outline-offset: 2px; }
-.sp-listing-in img, .sp-noimg { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; flex: none; background: #e8e2d6; display: block; }
-.sp-listing-t { min-width: 0; }
-.sp-listing-t b { font-weight: 500; font-size: 17px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sp-choice-in small { color: var(--muted); font-size: 14px; display: block; }
+.sp-choice input:checked + .sp-choice-in { border-color: var(--gold-deep); background: #fbf7ef; }
+.sp-choice input:focus-visible + .sp-choice-in, .sp-photo input:focus-visible + img, .sp-pillopt input:focus-visible + span { outline: 2px solid var(--gold-deep); outline-offset: 2px; }
+.sp-look { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+.sp-look-l { color: var(--muted); font-size: 15px; margin-right: 4px; }
+.sp-pillopt span { display: inline-block; padding: 7px 16px; border: 2px solid var(--line); border-radius: 999px; font-size: 15px; }
+.sp-pillopt input:checked + span { border-color: var(--gold-deep); background: #fbf7ef; color: var(--gold-deep); font-weight: 500; }
 
-/* Photo picker */
+/* Photo picker, the drop zone, the framing box */
 .sp-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 @media (min-width: 560px) { .sp-photos { grid-template-columns: repeat(4, 1fr); } }
 .sp-photo img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 3px solid transparent; transition: border-color .15s; background: #e8e2d6; }
 .sp-photo input:checked + img { border-color: var(--gold-deep); }
+.sp-photo i { position: absolute; left: 9px; bottom: 9px; font: 500 11px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #fff;
+              background: rgba(13,12,10,.72); padding: 4px 7px; border-radius: 4px; pointer-events: none; }
 .sp-wait { grid-column: 1 / -1; color: var(--muted); font-size: 15px; padding: 8px 0; }
-.sp-framing { margin-top: 14px; display: grid; grid-template-columns: 1fr; gap: 8px; }
-@media (min-width: 560px) { .sp-framing { grid-template-columns: 1fr 1fr; } }
-.sp-framing label { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--muted); }
-.sp-framing input[type=range] { flex: 1; accent-color: var(--gold-deep); }
-.sp-framing small { grid-column: 1 / -1; color: var(--muted); font-size: 13px; }
+.sp-drop { margin-top: 12px; border: 2px dashed var(--line); border-radius: 12px; padding: 14px 16px; font-size: 15px; color: var(--muted);
+           transition: border-color .15s, background .15s; }
+.sp-drop.over { border-color: var(--gold-deep); background: #fbf7ef; }
+.sp-drop.busy { opacity: .7; }
+.sp-drop small { display: block; font-size: 13px; margin-top: 4px; }
+.sp-link { color: var(--gold-deep); text-decoration: underline; cursor: pointer; }
+.sp-framing { margin-top: 16px; }
+.sp-framer { position: relative; width: 100%; max-width: 360px; aspect-ratio: 1080 / 960; overflow: hidden; border-radius: 10px; background: #26221d;
+             cursor: grab; touch-action: none; user-select: none; }
+.sp-framer.dragging { cursor: grabbing; }
+.sp-framer img { display: block; width: 100%; height: 100%; object-fit: cover; transform-origin: 0 0; pointer-events: none; }
+.sp-framer.empty img { display: none; }
+.sp-framer-hint { position: absolute; left: 10px; bottom: 10px; font: 500 11px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #fff;
+                  background: rgba(13,12,10,.6); padding: 5px 8px; border-radius: 4px; pointer-events: none; }
+.sp-framer.empty .sp-framer-hint { display: none; }
+.sp-zoom { display: flex; align-items: center; gap: 12px; max-width: 360px; margin-top: 10px; font-size: 15px; color: var(--muted); }
+.sp-zoom input[type=range] { flex: 1; accent-color: var(--gold-deep); }
+.sp-framing > small { display: block; color: var(--muted); font-size: 13px; margin-top: 6px; }
 
 /* Words */
 .sp-fields { display: grid; grid-template-columns: 1fr; gap: 12px; }
@@ -55,11 +76,13 @@
 .sp-field input, .sp-field select { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 17px; color: var(--text);
                                     padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .sp-field input:focus, .sp-field select:focus { outline: none; border-color: var(--gold-deep); box-shadow: 0 0 0 3px rgba(138,109,54,.15); }
-.sp-when { display: grid; grid-template-columns: 1fr; gap: 12px; }
-@media (min-width: 560px) { .sp-when { grid-template-columns: 1.4fr 1fr 1fr; } }
-.sp-sub { font-family: var(--serif); font-size: 21px; font-weight: 500; margin: 8px 0 -4px; }
-.sp-check { display: flex; align-items: center; gap: 10px; font-size: 16px; }
-.sp-check input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--gold-deep); }
+.sp-two, .sp-when, .sp-line { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 560px) {
+  .sp-two { grid-template-columns: 1fr 1fr; }
+  .sp-when { grid-template-columns: 1.4fr 1fr 1fr; }
+  .sp-line { grid-template-columns: minmax(0, 1fr) 230px; }
+}
+.sp-note { color: var(--muted); font-size: 13px; }
 
 /* Actions */
 .sp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 8px; }

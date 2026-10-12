@@ -6,19 +6,31 @@ their own Canva account, and a private integration needs Canva Enterprise),
 the portal makes the posts itself from data it already has. Agents post the
 picture to Instagram themselves; no auto-posting, by decision.
 
-## What it does
+## What it does (as reworked 2026-10-12 to Nikki's notes)
 
 `/portal/social.php`: four steps on one page with a live preview.
 
-1. Template: Featured Listing or Open House.
-2. Listing: the account's live listings (hs_listing_state, the site's Mont
-   Haus feed; list or co-list agent id in agent_mls_ids for the account and
-   its teams, or the agent's name; cross-board copies collapsed).
-3. Photo: the listing's photos from the site (`api/listings.php?scope=photos`),
-   plus two sliders that choose which part of the photo shows.
-4. Words: pre-filled from the listing and the profile (address, town, price,
-   details, name, title, phone, headshot on/off; a label for Featured; date
-   and times for Open House; an optional one-liner).
+1. Template (Featured Listing or Open House) and look (dark ink, or light
+   on the brand's cream).
+2. Listing: a dropdown of the account's live listings (hs_listing_state,
+   the site's Mont Haus feed; list or co-list agent id in agent_mls_ids for
+   the account and its teams, or the agent's name; cross-board copies
+   collapsed).
+3. Photo: the listing's photos from the site (`api/listings.php?scope=photos`)
+   plus the agent's own uploads (drop zone or file picker; JPG, PNG, WEBP up
+   to 20 MB; phone rotation honoured), then a framing box: drag to move,
+   zoom slider or scroll wheel to crop closer. The box applies the same
+   CSS as the post (zoom x the frame, cover, focus), so it is faithful.
+4. Words: a label for the photo (ready-made ones including Open House, no
+   label, or a custom one up to 28 characters), the Open House date and
+   times (only on that template), a Headline, and four Sub text lines each
+   with a style dropdown (Town line, Price, Details, Note, Plain) defaulting
+   to town / price / details / note. The first three are pre-filled from
+   the listing. A blank line takes no room, so the ones below move up.
+
+The post: photo on top with the label pill; below, a short rule, the
+headline, the lines, and the Mont Haus logo bottom-right. No agent
+headshot or contact details (Nikki, 2026-10-12).
 
 Download PNG posts the form to `portal/social_export.php`; Share… (phones
 with the Web Share API) fetches the PNG and opens the share sheet, so it can
@@ -36,8 +48,14 @@ go straight into the Instagram app.
   unknown values replaced by defaults), the Chromium export, and a copy of
   each export under `CREATIVES_DIR/social/<intake id>/`.
 - `portal/social_render.php` (preview HTML), `portal/social_export.php`
-  (PNG), `portal/social_photos.php` (JSON) all run `portal_context()` then
-  `social_gate()`, and the two POST endpoints check the CSRF token.
+  (PNG), `portal/social_photos.php` (JSON: the listing's photos, then the
+  uploads), `portal/social_upload.php` (store an upload) and
+  `portal/social_asset.php` (serve one, this account's only) all run
+  `portal_context()` then `social_gate()`; the POST endpoints check the
+  CSRF token. Uploads live in CREATIVES_DIR/social/<intake id>/uploads/ as
+  <hex>.jpg (2000 px) + <hex>-thumb.jpg; the export reads the file from
+  disk (`social_render($p, null, true)` writes a file:// URL) because
+  Chromium has no portal session.
 - `assets/css/social.css`, `assets/fonts/mh/` (Cormorant Garamond and Jost
   as self-hosted variable woff2, so the render never waits on Google Fonts).
 - ONE render path: the preview iframe's srcdoc and the exported PNG are the
@@ -73,9 +91,8 @@ constant.
 
 ## Not done yet / ideas
 
-- More templates (Just Sold, Price Improvement as its own layout, Coming
-  Soon), a square 1080 x 1080 and a Story 1080 x 1920 variant of each.
-- "Your recent posts": list the kept copies.
-- A drag-to-frame photo instead of two sliders.
+- More templates, a square 1080 x 1080 and a Story 1080 x 1920 variant.
+- "Your recent posts": list the kept copies. Deleting an upload.
+- Pinch to zoom on phones (the slider works there today).
 - The Aspen board's photos carry a "Property of Aspen/Glenwood MLS"
   watermark in the image itself; nothing we can do except pick another photo.

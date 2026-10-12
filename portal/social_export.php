@@ -2,7 +2,8 @@
 /**
  * portal/social_export.php — the post as a PNG download.
  * POST (the builder form, with csrf_token) → image/png attachment, rendered
- * by headless Chromium from the same HTML the preview shows. A copy is kept
+ * by headless Chromium from the same HTML the preview shows (an uploaded
+ * photo read from disk, which is what $export = true does). A copy is kept
  * in CREATIVES_DIR/social/<intake id>/. See inc/social.php.
  */
 require_once __DIR__ . '/../inc/social.php';
@@ -15,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
 $p = social_post_from_request($conn, $ctx, $_POST);
 if (is_string($p)) portal_stop('Nothing to download yet', ph($p));
 
-$png = social_export_png(social_render($p));
+$png = social_export_png(social_render($p, null, true));
 if ($png === null) {
     portal_stop('The picture could not be made', 'Something went wrong making the PNG. Please try again in a minute; if it keeps happening, email '
         . PORTAL_MARKETING_EMAIL . ' and we will sort it out.');
