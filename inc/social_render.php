@@ -48,8 +48,8 @@ const SOCIAL_H = 1440;
  */
 function social_templates(): array {
     return [
-        'photo'           => ['name' => 'Full Photo',            'blurb' => 'The photo fills the post; a headline and up to two lines over it.', 'offered' => true],
-        'photo_openhouse' => ['name' => 'Full Photo Open House', 'blurb' => 'The same, with the date and time above the headline.',             'offered' => true],
+        'photo'           => ['name' => 'Listing General', 'blurb' => 'The photo fills the post; a headline and up to two lines over it.', 'offered' => true],
+        'photo_openhouse' => ['name' => 'Open House',      'blurb' => 'The same, with the date and time above the headline.',             'offered' => true],
         'featured'        => ['name' => 'Featured Listing',      'blurb' => 'Photo on top, a text block below: headline and up to four lines.', 'offered' => false],
         'openhouse'       => ['name' => 'Open House',            'blurb' => 'Photo on top; the date and time lead the text block.',            'offered' => false],
     ];

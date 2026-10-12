@@ -10,7 +10,7 @@ picture to Instagram themselves; no auto-posting, by decision.
 
 `/portal/social.php`: four steps on one page with a live preview.
 
-1. Template and look. Full Photo and Full Photo Open House (Nikki,
+1. Template and look. Listing General and Open House (named so 2026-10-12; keys photo and photo_openhouse; Nikki,
    2026-10-12, "something different and prettier"): the photo fills the
    post and the headline plus two lines sit over a fade at the bottom. The
    first family, Featured Listing and Open House (photo on top, a text
