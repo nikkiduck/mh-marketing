@@ -59,8 +59,8 @@ c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-baa58dc451f6133b4e89040265ac1eef  inc/social.php
-866f5717c46caa929b0f1b8feb7c9348  inc/social_render.php
+5da2fc1363dc099dbc23e842be78f8f9  inc/social.php
+4273b1fe4e858cff2a3cc8ab687a3653  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 c4984ee573dd0128324b9897d5565ed3  api/roster.php
