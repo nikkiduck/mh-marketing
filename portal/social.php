@@ -172,7 +172,7 @@ portal_header($ctx, 'Social posts', 'social');
   // ── Words pre-filled from the listing (the first three sub lines; the fourth is the agent's) ──
   function fill(l) {
     if (!l) return;
-    f('headline').value = l.address;
+    f('headline').value = l.headline;
     lineText(0).value = l.town; lineText(1).value = l.price_text; lineText(2).value = l.specs_text;
   }
   function showGroups() {

@@ -149,6 +149,23 @@ function social_time_range_text(string $start, string $end): string {
     return '';
 }
 
+/**
+ * The address as the headline pre-fills it (Nikki, 2026-10-12): street words
+ * abbreviated (Street → St, Road → Rd …), "Unit K103" / "Apt 5" → "#K103" /
+ * "#5". "610 S West End Street Unit K103" → "610 S West End St #K103". The
+ * agent can still type the long form.
+ */
+function social_short_address(string $address): string {
+    $a = preg_replace('/\s+/', ' ', trim($address));
+    $a = preg_replace('/\b(?:Unit|Apt\.?|Apartment|Suite|Ste\.?)\s*#?\s*([A-Za-z0-9-]+)/i', '#$1', $a);
+    $a = preg_replace('/\s*#\s*/', ' #', $a);
+    $map = ['Street' => 'St', 'Road' => 'Rd', 'Avenue' => 'Ave', 'Drive' => 'Dr', 'Lane' => 'Ln', 'Court' => 'Ct', 'Place' => 'Pl',
+            'Circle' => 'Cir', 'Boulevard' => 'Blvd', 'Trail' => 'Trl', 'Terrace' => 'Ter', 'Highway' => 'Hwy', 'Parkway' => 'Pkwy',
+            'Square' => 'Sq', 'Point' => 'Pt', 'Ridge' => 'Rdg', 'Heights' => 'Hts', 'Mountain' => 'Mtn'];
+    foreach ($map as $long => $short) $a = preg_replace('/\b' . $long . '\b/i', $short, $a);
+    return trim($a);
+}
+
 /** A font size that keeps a line on one line: the first threshold the text exceeds wins. */
 function social_fit_size(string $text, int $size, array $steps): int {
     $n = mb_strlen($text);
@@ -241,7 +258,7 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .when{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 8px;white-space:nowrap;overflow:hidden}
 .time{font-size:30px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 28px;white-space:nowrap;overflow:hidden}
 .whenline{font-size:28px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 18px;white-space:nowrap;overflow:hidden}
-.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 14px;white-space:nowrap;overflow:hidden}
+.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.12;margin:0 0 14px;padding-right:260px;overflow-wrap:anywhere}
 .lines{padding-right:220px}
 .ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.25}
 .ln-town{font-size:{$sz(31)}px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:{$c['accent']};margin-bottom:14px}
@@ -274,8 +291,10 @@ CSS;
     }
     $headline = (string)($p['headline'] ?? '');
     if ($headline !== '') {
+        // The headline keeps clear of the logo (padding-right) and may wrap to a second
+        // line when still long after social_short_address(), rather than shrinking away.
         $size = ($oh && !$full) ? social_fit_size($headline, 46, [34 => 40, 42 => 34, 52 => 28])
-                                : social_fit_size($headline, 76, [26 => 64, 32 => 54, 40 => 44, 50 => 36]);
+                                : social_fit_size($headline, 76, [20 => 66, 30 => 58]);
         $tag  = ($oh && !$full) ? 'h2' : 'h1';
         $body .= "<{$tag} class=\"addr\" style=\"font-size:{$size}px\">" . $e($headline) . "</{$tag}>";
     }

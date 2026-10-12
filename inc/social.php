@@ -116,6 +116,7 @@ function social_listings(mysqli $conn, array $ctx): array {
         $id = $l['market'] . '|' . $l['listing_key'];
         $cache[$id] = $l + [
             'id'         => $id,
+            'headline'   => social_short_address((string)$l['address']),   // "610 S West End St #K103"
             // Rentals: no price by default (Nikki, 2026-10-12); the agent can type one into Text 2.
             'price_text' => (int)$l['is_rental'] ? '' : social_price_text($l['list_price']),
             'specs_text' => social_specs_text($l['beds'], $l['baths'], $l['sqft']),
@@ -316,7 +317,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'zoom'       => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
         'focus_x'    => max(0, min(100, (int)($in['focus_x'] ?? 50))),
         'focus_y'    => max(0, min(100, (int)($in['focus_y'] ?? 50))),
-        'headline'   => mb_substr(trim((string)($in['headline'] ?? $l['address'])), 0, 80),
+        'headline'   => mb_substr(trim((string)($in['headline'] ?? $l['headline'])), 0, 80),
         'lines'      => $lines,
         'date_text'  => '',
         'time_text'  => '',
