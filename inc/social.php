@@ -273,11 +273,15 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     elseif (in_array($pick, social_labels(), true)) $label = $pick;
     else                                            $label = social_is_openhouse($type) ? 'Open House' : 'Featured Listing';
 
-    // Up to four sub lines, each with a style; blanks are dropped by the renderer.
+    // The template's line SLOTS (two on Full Photo, four on the split family), each
+    // with a style; a blank slot is dropped by the renderer. Only the slots the
+    // template shows are read: the form still posts the hidden ones with their
+    // pre-filled words, and reading them promoted "5 Bed · 8 Bath" into view the
+    // moment the price was cleared (Nikki, 2026-10-12).
     $styles = social_line_styles(); $defaults = social_line_defaults();
     $texts = (array)($in['line_text'] ?? []); $kinds = (array)($in['line_style'] ?? []);
     $lines = [];
-    for ($i = 0; $i < 4; $i++) {
+    for ($i = 0; $i < social_line_count($type); $i++) {
         $s = (string)($kinds[$i] ?? $defaults[$i]);
         $lines[] = ['text' => mb_substr(trim((string)($texts[$i] ?? '')), 0, 90), 'style' => isset($styles[$s]) ? $s : $defaults[$i]];
     }

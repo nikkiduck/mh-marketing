@@ -275,11 +275,10 @@ CSS;
         $body .= "<{$tag} class=\"addr\" style=\"font-size:{$size}px\">" . $e($headline) . "</{$tag}>";
     }
     $styles = social_line_styles();
-    $lines  = ''; $shown = 0; $max = social_line_count($type);
-    foreach ((array)($p['lines'] ?? []) as $ln) {
+    $lines  = '';
+    foreach (array_slice((array)($p['lines'] ?? []), 0, social_line_count($type)) as $ln) {   // the template's slots only
         $t = trim((string)($ln['text'] ?? ''));
         if ($t === '') continue;                                   // a blank line takes no room
-        if (++$shown > $max) break;                                // the full-photo family shows two
         $s = isset($styles[$ln['style'] ?? '']) ? $ln['style'] : 'plain';
         $lines .= '<p class="ln ln-' . $s . '">' . $e($t) . '</p>';
     }
