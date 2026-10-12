@@ -1920,7 +1920,7 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   the account's campaign ids only). Proven to catch a leak by breaking the
   ownership check.
 
-### Social posts (portal/social.php, 2026-10-11, reworked 2026-10-12, hidden)
+### Instagram Posts (portal/social.php, 2026-10-11, reworked and opened 2026-10-12)
 
 Instagram-ready PNGs (1080 x 1440) of an agent's own listings: template
 (Listing General and Open House, keys photo and photo_openhouse: the photo fills the post, the words
@@ -1967,10 +1967,13 @@ mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
 - `.sp-form [hidden] { display: none !important }` in social.css: portal.css
   gives the fields a display value that beat the hidden attribute, so the
   Open House date showed on every template (found 2026-10-12).
-- **Hidden:** `SOCIAL_BETA_EMAILS` (inc/config.php) = Nikki only; no nav
-  entry; everyone else gets a plain 404 from `social_gate()`. Nikki opens it
-  as `/portal/social.php?preview=30` (her login has no linked account). No
-  Instagram posting, ever (Nikki): the agent uploads the PNG.
+- **Open to every portal login since 2026-10-12** (Nikki, after her review):
+  nav entry "Instagram Posts" in `portal_header()`, a home card on
+  portal/index.php, `SOCIAL_BETA_EMAILS` (inc/config.php) empty. Setting the
+  constant hides it again (plain 404 from `social_gate()`; remove the nav
+  entry and card too). Nikki's own login has no linked account, so she opens
+  it as `/portal/social.php?preview=30`. No Instagram posting, ever (Nikki):
+  the agent uploads the PNG.
 
 ### Render harnesses: run them on a server
 The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`

@@ -146,7 +146,7 @@ portal_header($ctx, 'Social posts', 'social');
         <iframe id="spFrame" title="Preview" width="1080" height="1440" scrolling="no"></iframe>
         <div class="sp-busy" id="spBusy"></div>
       </div>
-      <p class="sp-cap">This is a preview of your Post. Click Download to save as a PNG.</p>
+      <p class="sp-cap">This is a preview. Click Download to save as a PNG.</p>
       <p class="sp-cap-btn"><button type="submit" form="spForm" class="sp-btn sp-btn-sm">Download PNG</button></p>
     </aside>
   </div>

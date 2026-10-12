@@ -56,12 +56,14 @@ define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com
     . 'megan.walz@monthaus.com');
 
 /**
- * SOCIAL_BETA_EMAILS — who can see Social posts on the agent portal
- * (portal/social.php, 2026-10-11). While this is set the page is hidden:
- * not in the nav, a plain 404 for everyone else. Empty or undefined opens it
- * to every portal login. Nikki alone while it is being built.
+ * SOCIAL_BETA_EMAILS — who can see Instagram Posts on the agent portal
+ * (portal/social.php). While this is set the page is hidden: a plain 404
+ * for everyone else (the nav entry in portal_header() and the home card
+ * would need removing too). Empty opens it to every portal login. Nikki
+ * alone 2026-10-11 to 2026-10-12 while it was built; opened to all on
+ * 2026-10-12 for the team beta to test.
  */
-define('SOCIAL_BETA_EMAILS', 'nikki.boxer@monthaus.com');
+define('SOCIAL_BETA_EMAILS', '');
 
 /**
  * ADVERTISING_SHEET_URL — the working digital-advertising spreadsheet.

@@ -383,6 +383,7 @@ function portal_header(array $ctx, string $title, string $active): void {
         'spend'     => ['Spend', '/portal/spend.php'],
         'qr'        => ['QR codes', '/portal/qr.php'],
         'brand'     => ['Brand & templates', '/portal/brand.php'],   // 2026-10-10: guidelines + logo downloads, card and sign templates
+        'social'    => ['Instagram Posts', '/portal/social.php'],    // 2026-10-12: opened to every portal login after Nikki's review (was SOCIAL_BETA_EMAILS)
     ];
     ?>
 <!DOCTYPE html>

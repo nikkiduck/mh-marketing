@@ -91,7 +91,14 @@ from file:// they fell back to Liberation on the real download path
 `social_export: chromium rc=…` to Apache's PHP error log and the agent sees a
 "could not be made, try again" page.
 
-## Hidden while it is built
+## Opened 2026-10-12
+
+After Nikki's review the page went to every portal login (the team beta
+allowlist): nav entry "Instagram Posts" in `portal_header()`, a home card
+on portal/index.php, `SOCIAL_BETA_EMAILS` emptied. The gate below still
+works if it ever needs hiding again.
+
+## Hidden while it was built
 
 `SOCIAL_BETA_EMAILS` in inc/config.php (Nikki alone). Not in the nav; anyone
 else gets a plain 404 from `social_gate()`. Nikki's login has no linked
