@@ -203,7 +203,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // starts higher and lands almost solid cream, because the words were hard to read.
         ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31',
            'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none',
-           'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.55) 40%, rgba(241,236,226,.97) 100%', 'fullh' => '66%',
+           'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.6) 42%, rgba(241,236,226,1) 100%', 'fullh' => '56%',
            'logo' => $base . '/assets/images/MH_vert-stack_brown.svg', 'mark' => $base . '/assets/images/M-mark_brown.svg']
         : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da',
            'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)',
@@ -241,7 +241,7 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .when{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 8px;white-space:nowrap;overflow:hidden}
 .time{font-size:30px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 28px;white-space:nowrap;overflow:hidden}
 .whenline{font-size:28px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 18px;white-space:nowrap;overflow:hidden}
-.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 10px;white-space:nowrap;overflow:hidden}
+.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 14px;white-space:nowrap;overflow:hidden}
 .lines{padding-right:220px}
 .ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.25}
 .ln-town{font-size:{$sz(31)}px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:{$c['accent']};margin-bottom:14px}
