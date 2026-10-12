@@ -42,8 +42,8 @@ function social_status_words(string $s): string {
 portal_header($ctx, 'Social posts', 'social');
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
-  <h1 class="pt-h1">Social posts</h1>
-  <p class="pt-lead">An Instagram-ready picture of one of your listings, in four steps: pick a template and a listing, choose and frame the photo, check the words, then download it and post it yourself.</p>
+  <h1 class="pt-h1">Instagram Post Template</h1>
+  <p class="pt-lead">Pick a listing, choose and frame the photo, edit the text, and download.</p>
 
 <?php if (!$listings): ?>
   <div class="pt-flash err">We do not see any live listings under your name yet. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</div>
@@ -99,7 +99,7 @@ portal_header($ctx, 'Social posts', 'social');
       </section>
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span>4</span>Words</h2>
+        <h2 class="sp-step-h"><span>4</span>Text</h2>
         <div class="sp-fields">
           <div class="sp-two">
             <label class="sp-field">Label on the photo
@@ -125,14 +125,13 @@ portal_header($ctx, 'Social posts', 'social');
             </label>
           </div>
           <?php endforeach; ?>
-          <small class="sp-note">Leave a line empty and the ones below move up.</small>
         </div>
       </section>
 
       <div class="sp-actions">
         <button type="submit" class="sp-btn">Download PNG</button>
         <button type="button" class="sp-btn sp-btn-alt" id="spShare" hidden>Share…</button>
-        <p class="sp-help">The download is a 1080 × 1440 PNG, Instagram's portrait size. On your phone, Share… hands it straight to the Instagram app.</p>
+        <p class="sp-help">The download is a 1080 × 1440 PNG, Instagram's portrait size.</p>
       </div>
     </form>
 
@@ -141,7 +140,7 @@ portal_header($ctx, 'Social posts', 'social');
         <iframe id="spFrame" title="Preview" width="1080" height="1440" scrolling="no"></iframe>
         <div class="sp-busy" id="spBusy"></div>
       </div>
-      <p class="sp-cap">Preview. What you see is what you download.</p>
+      <p class="sp-cap">Preview.</p>
     </aside>
   </div>
 
