@@ -61,7 +61,8 @@
 .sp-framer { position: relative; width: 100%; max-width: 360px; aspect-ratio: 1080 / 960; overflow: hidden; border-radius: 10px; background: #26221d;
              cursor: grab; touch-action: none; user-select: none; }
 .sp-framer.dragging { cursor: grabbing; }
-.sp-framer img { display: block; width: 100%; height: 100%; object-fit: cover; transform-origin: 0 0; pointer-events: none; }
+/* max-width: none, because portal.css caps every img at 100% and the zoomed photo must grow past the box (2026-10-12). */
+.sp-framer img { display: block; width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; transform-origin: 0 0; pointer-events: none; }
 .sp-framer.empty img { display: none; }
 .sp-framer-hint { position: absolute; left: 10px; bottom: 10px; font: 500 11px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #fff;
                   background: rgba(13,12,10,.6); padding: 5px 8px; border-radius: 4px; pointer-events: none; }
