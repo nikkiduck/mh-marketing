@@ -270,7 +270,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     if ($pick === '__custom')                       $label = mb_substr(trim((string)($in['label_custom'] ?? '')), 0, 28);
     elseif ($pick === '__none')                     $label = '';
     elseif (in_array($pick, social_labels(), true)) $label = $pick;
-    else                                            $label = $type === 'openhouse' ? 'Open House' : 'Featured Listing';
+    else                                            $label = social_is_openhouse($type) ? 'Open House' : 'Featured Listing';
 
     // Up to four sub lines, each with a style; blanks are dropped by the renderer.
     $styles = social_line_styles(); $defaults = social_line_defaults();
@@ -297,7 +297,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'date_text'  => '',
         'time_text'  => '',
     ];
-    if ($type === 'openhouse') {
+    if (social_is_openhouse($type)) {
         $p['date_text'] = social_date_text((string)($in['oh_date'] ?? ''));
         $p['time_text'] = social_time_range_text((string)($in['oh_start'] ?? ''), (string)($in['oh_end'] ?? ''));
         if ($p['date_text'] === '') return 'Pick the open house date to see your post.';

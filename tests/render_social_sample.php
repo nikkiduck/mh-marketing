@@ -24,10 +24,12 @@ $lines = [
     ['text' => 'A West End Victorian, steps from downtown', 'style' => 'note'],
 ];
 $common = ['photo_url' => $photo, 'zoom' => 1.25, 'focus_x' => 55, 'focus_y' => 40, 'headline' => '633 W Main Street', 'lines' => $lines];
+$when = ['date_text' => social_date_text('2026-10-18'), 'time_text' => social_time_range_text('11:00', '14:00')];
 $posts = [
-    'featured'  => $common + ['type' => 'featured', 'label' => 'Featured Listing', 'date_text' => '', 'time_text' => ''],
-    'openhouse' => $common + ['type' => 'openhouse', 'label' => 'Open House',
-                              'date_text' => social_date_text('2026-10-18'), 'time_text' => social_time_range_text('11:00', '14:00')],
+    'photo'           => $common + ['type' => 'photo', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
+    'photo-openhouse' => $common + ['type' => 'photo_openhouse', 'label' => 'Open House'] + $when,
+    'featured'        => $common + ['type' => 'featured', 'label' => 'Featured Listing', 'date_text' => '', 'time_text' => ''],
+    'openhouse'       => $common + ['type' => 'openhouse', 'label' => 'Open House'] + $when,
 ];
 foreach ($posts as $k => $p) {
     foreach (['dark', 'light'] as $theme) {

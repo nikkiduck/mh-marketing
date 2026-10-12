@@ -32,7 +32,7 @@ $export_url = portal_url($ctx, '/portal/social_export.php');
 $photos_url = portal_url($ctx, '/portal/social_photos.php');
 $upload_url = portal_url($ctx, '/portal/social_upload.php');
 $next_sat   = (new DateTimeImmutable('next saturday'))->format('Y-m-d');
-$line_names = ['Sub text 1', 'Sub text 2', 'Sub text 3', 'Sub text 4'];
+$line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
 
 /** "Under Contract" for the RESO value; the rest as sent. */
 function social_status_words(string $s): string {
@@ -59,7 +59,7 @@ portal_header($ctx, 'Social posts', 'social');
         <div class="sp-choices">
           <?php foreach ($templates as $k => $t): ?>
           <label class="sp-choice">
-            <input type="radio" name="type" value="<?= ph($k) ?>"<?= $k === 'featured' ? ' checked' : '' ?>>
+            <input type="radio" name="type" value="<?= ph($k) ?>"<?= $k === array_key_first($templates) ? ' checked' : '' ?>>
             <span class="sp-choice-in"><b><?= ph($t['name']) ?></b><small><?= ph($t['blurb']) ?></small></span>
           </label>
           <?php endforeach; ?>
@@ -92,7 +92,7 @@ portal_header($ctx, 'Social posts', 'social');
           <input type="file" id="spFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
         </div>
         <div class="sp-framing">
-          <div class="sp-framer empty" id="spFramer"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
+          <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / <?= social_photo_height(array_key_first($templates)) ?>"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
           <label class="sp-zoom">Zoom <input type="range" name="zoom" min="1" max="3" step="0.02" value="1"></label>
           <small>Drag the photo to choose what shows; zoom in to crop closer.</small>
         </div>
@@ -118,14 +118,14 @@ portal_header($ctx, 'Social posts', 'social');
           </div>
           <label class="sp-field">Headline <input name="headline" maxlength="80"></label>
           <?php foreach ($line_names as $i => $nm): ?>
-          <div class="sp-line">
+          <div class="sp-line<?= $i >= 2 ? ' sp-only-long' : '' ?>">
             <label class="sp-field"><?= ph($nm) ?> <input name="line_text[]" maxlength="90"<?= $i === 3 ? ' placeholder="A West End Victorian, steps from downtown"' : '' ?>></label>
-            <label class="sp-field sp-style">Style
+            <label class="sp-field sp-style"><?= ph($nm) ?> style
               <select name="line_style[]"><?php foreach ($styles as $k => $w): ?><option value="<?= ph($k) ?>"<?= $k === $defaults[$i] ? ' selected' : '' ?>><?= ph($w) ?></option><?php endforeach; ?></select>
             </label>
           </div>
           <?php endforeach; ?>
-          <small class="sp-note">Leave a line empty and the ones below move up.</small>
+          <small class="sp-note">Leave a line empty and the ones below move up. The Full Photo templates show two lines.</small>
         </div>
       </section>
 
@@ -150,7 +150,8 @@ portal_header($ctx, 'Social posts', 'social');
   const L = <?= json_encode($listings, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
   const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>,
         PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>;
-  const PHOTO_H = { featured: <?= social_photo_height('featured') ?>, openhouse: <?= social_photo_height('openhouse') ?> };
+  const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
+  const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0;
   const form = document.getElementById('spForm'), frame = document.getElementById('spFrame'),
         stage = document.getElementById('spStage'), photos = document.getElementById('spPhotos'),
         busy = document.getElementById('spBusy'), share = document.getElementById('spShare'),
@@ -170,14 +171,15 @@ portal_header($ctx, 'Social posts', 'social');
     lineText(0).value = l.town; lineText(1).value = l.price_text; lineText(2).value = l.specs_text;
   }
   function showGroups() {
-    const oh = f('type').value === 'openhouse';
-    form.querySelectorAll('.sp-only-openhouse').forEach(el => el.hidden = !oh);
+    const t = f('type').value;
+    form.querySelectorAll('.sp-only-openhouse').forEach(el => el.hidden = !isOH(t));
+    form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = isFull(t));
     customWrap.hidden = labelSel.value !== '__custom';
-    framer.style.aspectRatio = '1080 / ' + PHOTO_H[oh ? 'openhouse' : 'featured'];
+    framer.style.aspectRatio = '1080 / ' + PHOTO_H[t];
   }
   // Switching template swaps the default label unless the agent chose something else.
   function labelForType() {
-    const oh = f('type').value === 'openhouse';
+    const oh = isOH(f('type').value);
     if (oh && labelSel.value === 'Featured Listing') labelSel.value = 'Open House';
     if (!oh && labelSel.value === 'Open House') labelSel.value = 'Featured Listing';
   }

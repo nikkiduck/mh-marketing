@@ -10,8 +10,12 @@ picture to Instagram themselves; no auto-posting, by decision.
 
 `/portal/social.php`: four steps on one page with a live preview.
 
-1. Template (Featured Listing or Open House) and look (dark ink, or light
-   on the brand's cream).
+1. Template and look. Two families, each with a plain and an Open House
+   member (Nikki, 2026-10-12, "something different and prettier"): Full
+   Photo, the photo fills the post and the headline plus two lines sit over
+   a fade at the bottom; Featured Listing, photo on top and a text block
+   below with up to four lines. Look: dark ink, or light on the brand's
+   cream (on Full Photo the fade is cream and the text ink).
 2. Listing: a dropdown of the account's live listings (hs_listing_state,
    the site's Mont Haus feed; list or co-list agent id in agent_mls_ids for
    the account and its teams, or the agent's name; cross-board copies
@@ -23,13 +27,15 @@ picture to Instagram themselves; no auto-posting, by decision.
    CSS as the post (zoom x the frame, cover, focus), so it is faithful.
 4. Words: a label for the photo (ready-made ones including Open House, no
    label, or a custom one up to 28 characters), the Open House date and
-   times (only on that template), a Headline, and four Sub text lines each
-   with a style dropdown (Town line, Price, Details, Note, Plain) defaulting
+   times (only on that template), a Headline, and Text 1 to 4 each with a
+   style dropdown (Small Caps Gold, Large Serif, Light, Italic Serif, Plain)
+   defaulting
    to town / price / details / note. The first three are pre-filled from
    the listing. A blank line takes no room, so the ones below move up.
 
-The post: photo on top with the label pill; below, a short rule, the
-headline, the lines, and the Mont Haus logo bottom-right. No agent
+The post: the label pill on the photo (solid gold, 27 px, so it reads in a
+fast scroll); a short rule, the headline, the lines, and the Mont Haus logo
+bottom-right. No agent
 headshot or contact details (Nikki, 2026-10-12).
 
 Download PNG posts the form to `portal/social_export.php`; Share… (phones

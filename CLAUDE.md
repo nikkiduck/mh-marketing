@@ -1923,12 +1923,15 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 ### Social posts (portal/social.php, 2026-10-11, reworked 2026-10-12, hidden)
 
 Instagram-ready PNGs (1080 x 1440) of an agent's own listings: template
-(Featured Listing, Open House) and look (dark, light), listing (a
-dropdown), photo (the listing's from the site, or the agent's own upload)
-framed by drag + zoom, words (a Headline and four Sub text lines, each in
-a style: town, price, details, note, plain; a blank line takes no room), a
-label on the photo (ready-made, none, or custom), the Mont Haus logo
-bottom-right of the text block. No agent headshot or contact details
+(two families, each plain and Open House: Full Photo, where the photo
+fills the post and the words sit over a fade at the bottom with two lines;
+and Featured Listing, photo on top and a text block below with four lines)
+and look (dark, light), listing (a dropdown), photo (the listing's from
+the site, or the agent's own upload) framed by drag + zoom, words (a
+Headline and Text 1 to 4, each in a style: Small Caps Gold, Large Serif,
+Light, Italic Serif, Plain; a blank line takes no room), a label on the
+photo (solid gold pill; ready-made, none, or custom), the Mont Haus logo
+bottom-right. No agent headshot or contact details
 (Nikki, 2026-10-12). Live preview, Download PNG, Share… on phones. Plan and
 mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
 - **One render path.** `social_render()` (inc/social_render.php, standalone)

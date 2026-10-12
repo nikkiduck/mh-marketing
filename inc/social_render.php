@@ -1,7 +1,7 @@
 <?php
 /**
  * inc/social_render.php — the social post templates (Nikki, 2026-10-11;
- * reworked 2026-10-12 to her notes).
+ * reworked 2026-10-12 to her notes, full-photo family added the same day).
  *
  * One function turns a normalised post (see social_post_from_request() in
  * inc/social.php) into a complete HTML document sized exactly
@@ -13,14 +13,19 @@
  * This file is deliberately standalone (no portal.php, no database) so a
  * harness can render sample data locally: tests/render_social_sample.php.
  *
- * The post (2026-10-12): a photo on top with an optional label pill; below
- * it a short rule, a HEADLINE, then up to four SUB LINES each in a style the
- * agent picks (town, price, details, note, plain), blank lines simply
- * absent so nothing leaves a gap; the Mont Haus logo bottom-right. No agent
- * row (Nikki, 2026-10-12: no headshot or contact details). Open House adds a
- * date and a time line above the headline. Two looks: dark (ink) and light
- * (the brand's cream). The photo is framed by zoom + focus (drag on the
- * portal): the image box is zoom x the frame, object-fit cover inside it,
+ * Two families, each with a plain and an Open House member:
+ *   featured / openhouse        photo on top, a text block below it
+ *   photo / photo_openhouse     the photo fills the whole post, the words sit
+ *                               over a fade at the bottom, fewer lines (two)
+ * Every post: an optional LABEL pill on the photo (solid gold, big enough to
+ * read in a fast scroll: Nikki, 2026-10-12), a short rule, a HEADLINE, then
+ * SUB LINES each in a style the agent picks (small capitals gold, large
+ * serif, light, italic serif, plain), blank lines simply absent so nothing
+ * leaves a gap; the Mont Haus logo bottom-right. No agent row (Nikki,
+ * 2026-10-12: no headshot or contact details). Open House adds a date and a
+ * time line above the headline. Two looks: dark (ink) and light (the
+ * brand's cream). The photo is framed by zoom + focus (drag on the portal):
+ * the image box is zoom x the frame, object-fit cover inside it,
  * object-position = focus, and the box is pulled by (zoom - 1) x focus so
  * focus 50/50 stays centred at any zoom. The framing widget on the portal
  * mirrors exactly this CSS, which is the only place the post is "drawn"
@@ -39,9 +44,26 @@ const SOCIAL_H = 1440;
 /** The templates an agent can pick, in menu order. */
 function social_templates(): array {
     return [
-        'featured'  => ['name' => 'Featured Listing', 'blurb' => 'One photo, a label, the address and the lines you choose.'],
-        'openhouse' => ['name' => 'Open House',       'blurb' => 'The date and time front and centre, then the listing.'],
+        'photo'           => ['name' => 'Full Photo',            'blurb' => 'The photo fills the post; a headline and up to two lines over it.'],
+        'photo_openhouse' => ['name' => 'Full Photo Open House', 'blurb' => 'The same, with the date and time above the headline.'],
+        'featured'        => ['name' => 'Featured Listing',      'blurb' => 'Photo on top, a text block below: headline and up to four lines.'],
+        'openhouse'       => ['name' => 'Open House',            'blurb' => 'Photo on top; the date and time lead the text block.'],
     ];
+}
+
+/** True for the two Open House templates. */
+function social_is_openhouse(string $type): bool {
+    return str_contains($type, 'openhouse');
+}
+
+/** True for the two full-photo templates. */
+function social_is_full(string $type): bool {
+    return str_starts_with($type, 'photo');
+}
+
+/** How many sub lines a template shows (the form hides the rest). */
+function social_line_count(string $type): int {
+    return social_is_full($type) ? 2 : 4;
 }
 
 /** The two looks. */
@@ -54,13 +76,13 @@ function social_labels(): array {
     return ['Featured Listing', 'Just Listed', 'New Price', 'Under Contract', 'Just Sold', 'Featured Rental', 'Coming Soon', 'Open House'];
 }
 
-/** The styles a sub line can take: key => what the dropdown says. */
+/** The styles a sub line can take: key => what the dropdown says (short descriptors: Nikki, 2026-10-12). */
 function social_line_styles(): array {
     return [
-        'town'    => 'Town line (small capitals, gold)',
-        'price'   => 'Price (large serif)',
-        'details' => 'Details (light)',
-        'note'    => 'Note (italic serif)',
+        'town'    => 'Small Caps Gold',
+        'price'   => 'Large Serif',
+        'details' => 'Light',
+        'note'    => 'Italic Serif',
         'plain'   => 'Plain',
     ];
 }
@@ -70,9 +92,10 @@ function social_line_defaults(): array {
     return ['town', 'price', 'details', 'note'];
 }
 
-/** The photo's height for a template; the text block has the rest. */
+/** The photo's height for a template; the text block has the rest (the full-photo family: all of it). */
 function social_photo_height(string $type): int {
-    return $type === 'openhouse' ? 900 : 960;
+    if (social_is_full($type)) return SOCIAL_H;
+    return social_is_openhouse($type) ? 900 : 960;
 }
 
 /** "$9,500,000" from a decimal, '' for none. */
@@ -135,8 +158,9 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $fonts = $base . '/assets/fonts/mh';
     $W = SOCIAL_W; $H = SOCIAL_H;
 
-    $type   = ($p['type'] ?? 'featured') === 'openhouse' ? 'openhouse' : 'featured';
-    $oh     = $type === 'openhouse';
+    $type   = isset(social_templates()[(string)($p['type'] ?? '')]) ? (string)$p['type'] : 'featured';
+    $oh     = social_is_openhouse($type);
+    $full   = social_is_full($type);
     $theme  = ($p['theme'] ?? 'dark') === 'light' ? 'light' : 'dark';
     $photoH = social_photo_height($type);
     $bodyH  = $H - $photoH;
@@ -150,18 +174,25 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $zpct = round($zoom * 100, 2);
     $photo = ($export && !empty($p['photo_file'])) ? 'file://' . $p['photo_file'] : (string)($p['photo_url'] ?? '');
 
-    // The two looks.
+    // The two looks. The label pill is solid gold with ink text on both (it has to read in a fast scroll).
     $c = $theme === 'light'
         ? ['bg' => '#F1ECE2', 'text' => '#231F20', 'accent' => '#8A7350', 'muted' => '#4a443a', 'soft' => '#3b362e',
-           'pillbg' => 'rgba(241,236,226,.88)', 'pilltext' => '#231F20', 'fade' => 'rgba(241,236,226,.42)',
+           'fade' => 'rgba(241,236,226,.42)', 'fullfade' => 'rgba(241,236,226,.94)', 'shadow' => 'none',
            'logo' => $base . '/assets/images/MH_vert-stack_black.svg', 'mark' => $base . '/assets/images/M-mark_black.svg']
-        : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#d9d2c3', 'soft' => '#e8e2d6',
-           'pillbg' => 'rgba(20,18,16,.74)', 'pilltext' => '#ffffff', 'fade' => 'rgba(20,18,16,.62)',
+        : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da',
+           'fade' => 'rgba(20,18,16,.62)', 'fullfade' => 'rgba(12,11,9,.86)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)',
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
 
-    // Open House text sits under a date block, so its lines run a size smaller.
-    $k = $oh ? 0.86 : 1.0;
+    // Open House text under a date block runs a size smaller (the split layout only).
+    $k  = ($oh && !$full) ? 0.86 : 1.0;
     $sz = fn(int $px) => round($px * $k);
+
+    // The text block: under the photo (split family) or over its bottom (full family).
+    $bodyCss = $full
+        ? ".body{position:absolute;left:0;right:0;bottom:0;padding:0 64px 64px;box-sizing:border-box;text-shadow:{$c['shadow']}}"
+        . ".photo::after{height:58%;background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,{$c['fullfade']} 100%)}"
+        . ".logo{bottom:64px;height:110px}.lines{padding-right:230px}.rule{margin-bottom:22px}"
+        : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
 @font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url({$fonts}/CormorantGaramond-normal.woff2) format('woff2')}
@@ -176,12 +207,13 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .photo .none img{width:260px;opacity:.16}
 .photo::after{content:'';position:absolute;left:0;right:0;bottom:0;height:220px;
      background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,{$c['fade']} 100%)}
-.pill{position:absolute;left:64px;top:64px;z-index:2;padding:17px 28px 15px;background:{$c['pillbg']};color:{$c['pilltext']};
-     font-size:22px;font-weight:500;letter-spacing:.32em;text-transform:uppercase;line-height:1;white-space:nowrap}
-.body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}
+.pill{position:absolute;left:64px;top:64px;z-index:2;padding:21px 32px 19px;background:#C3A561;color:#141210;
+     font-size:27px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;line-height:1;white-space:nowrap;
+     box-shadow:0 4px 18px rgba(0,0,0,.22)}
 .rule{width:72px;height:3px;background:{$c['accent']};margin:0 0 26px}
 .when{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.02;margin:0 0 12px;white-space:nowrap;overflow:hidden}
 .time{font-size:30px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 28px;white-space:nowrap;overflow:hidden}
+.whenline{font-size:28px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 18px;white-space:nowrap;overflow:hidden}
 .addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.02;margin:0 0 14px;white-space:nowrap;overflow:hidden}
 .lines{padding-right:220px}
 .ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.15}
@@ -191,6 +223,7 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .ln-note{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:{$sz(31)}px;line-height:1.2;color:{$c['soft']}}
 .ln-plain{font-size:{$sz(26)}px;font-weight:400;color:{$c['text']}}
 .logo{position:absolute;right:64px;bottom:56px;height:120px}
+{$bodyCss}
 CSS;
 
     $photoHtml = $photo !== ''
@@ -203,20 +236,28 @@ CSS;
     $body = '<div class="rule"></div>';
     if ($oh) {
         $date = (string)($p['date_text'] ?? ''); $time = (string)($p['time_text'] ?? '');
-        if ($date !== '') $body .= '<h1 class="when" style="font-size:' . social_fit_size($date, 66, [24 => 56, 30 => 48]) . 'px">' . $e($date) . '</h1>';
-        if ($time !== '') $body .= '<p class="time">' . $e($time) . '</p>';
+        if ($full) {
+            // One gold line: "Saturday, October 18  ·  11 AM to 2 PM".
+            $when = implode('  ·  ', array_filter([$date, $time], fn($s) => $s !== ''));
+            if ($when !== '') $body .= '<p class="whenline">' . $e($when) . '</p>';
+        } else {
+            if ($date !== '') $body .= '<h1 class="when" style="font-size:' . social_fit_size($date, 66, [24 => 56, 30 => 48]) . 'px">' . $e($date) . '</h1>';
+            if ($time !== '') $body .= '<p class="time">' . $e($time) . '</p>';
+        }
     }
     $headline = (string)($p['headline'] ?? '');
     if ($headline !== '') {
-        $size = $oh ? social_fit_size($headline, 46, [34 => 40, 42 => 34, 52 => 28])
-                    : social_fit_size($headline, 74, [27 => 62, 33 => 52, 40 => 44, 50 => 36]);
-        $body .= '<h' . ($oh ? '2' : '1') . ' class="addr" style="font-size:' . $size . 'px">' . $e($headline) . '</h' . ($oh ? '2' : '1') . '>';
+        $size = ($oh && !$full) ? social_fit_size($headline, 46, [34 => 40, 42 => 34, 52 => 28])
+                                : social_fit_size($headline, 76, [26 => 64, 32 => 54, 40 => 44, 50 => 36]);
+        $tag  = ($oh && !$full) ? 'h2' : 'h1';
+        $body .= "<{$tag} class=\"addr\" style=\"font-size:{$size}px\">" . $e($headline) . "</{$tag}>";
     }
     $styles = social_line_styles();
-    $lines  = '';
+    $lines  = ''; $shown = 0; $max = social_line_count($type);
     foreach ((array)($p['lines'] ?? []) as $ln) {
         $t = trim((string)($ln['text'] ?? ''));
         if ($t === '') continue;                                   // a blank line takes no room
+        if (++$shown > $max) break;                                // the full-photo family shows two
         $s = isset($styles[$ln['style'] ?? '']) ? $ln['style'] : 'plain';
         $lines .= '<p class="ln ln-' . $s . '">' . $e($t) . '</p>';
     }
