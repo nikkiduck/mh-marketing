@@ -79,8 +79,11 @@ img { max-width: 100%; }
 .pt-main { max-width: 960px; margin: 0 auto; padding: 26px 16px 48px; }
 .pt-h1 { font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.15; margin: 0 0 6px; }
 .pt-lead { color: var(--muted); margin: 0 0 24px; max-width: 60ch; }
-.pt-foot { text-align: center; color: var(--muted); font-size: 15px; line-height: 1.7; padding: 24px 16px 40px; }
-.pt-foot-q { color: var(--text); font-weight: 500; }
+.pt-foot { background: #fff; border-top: 1px solid var(--line); padding: 32px 16px 48px; margin-top: 24px; }
+.pt-foot-in { max-width: 640px; margin: 0 auto; }
+.pt-foot-sub { color: var(--muted); font-size: 15px; margin: 0 0 16px; }
+.pt-foot-form label { font-size: 15px; }
+.pt-visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 .pt-flash { border-radius: 10px; padding: 14px 16px; margin: 0 0 20px; font-size: 16px; }
 .pt-flash.ok { background: #e8f3ec; color: var(--ok); }
@@ -262,3 +265,6 @@ a.pt-list-row[href]:hover { border-color: var(--gold); }
 .pt-lprice { font-size: 20px; font-weight: 600; color: #111; }
 .pt-llink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #f97316; text-decoration: none; }
 .pt-llink:hover { text-decoration: underline; }
+/* Paragraph breaks in the bio editor show as space between paragraphs (Nikki, 2026-10-13). */
+.pt-editor .ql-editor p + p { margin-top: .9em; }
+.pt-form textarea { display: block; width: 100%; margin-top: 6px; font: 16px var(--sans); padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text); }

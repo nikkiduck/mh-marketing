@@ -2305,6 +2305,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     /* Quill */
     #bioEditor { background:#fff; min-height:180px; font-size:14px; }
     #bioEditor .ql-editor { min-height:180px; line-height:1.7; }
+    #bioEditor .ql-editor p + p { margin-top:12px; }   /* a paragraph break shows as space (Nikki, 2026-10-13) */
     .ql-toolbar.ql-snow, .ql-container.ql-snow { border-color:#e5e7eb; }
     .ql-toolbar.ql-snow { border-radius:6px 6px 0 0; background:#fff; }
     .ql-container.ql-snow { border-radius:0 0 6px 6px; }

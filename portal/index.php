@@ -49,8 +49,8 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
       <h2 class="pt-card-h">Advertising</h2>
       <p class="pt-card-sub"><?php
         if ($ads['n'] === 0)       echo 'No ad placements yet.';
-        elseif ($ads['now'] === 1) echo "{$you} 1 ad running now" . ($ads['n'] > 1 ? ', and ' . ($ads['n'] - 1) . ' more on record' : '') . '. See the creative.';
-        elseif ($ads['now'] > 1)   echo "{$you} {$ads['now']} ads running now" . ($ads['n'] > $ads['now'] ? ', and ' . ($ads['n'] - $ads['now']) . ' more on record' : '') . '. See the creative.';
+        elseif ($ads['now'] === 1) echo "{$you} 1 ad running now" . ($ads['n'] > 1 ? ', and ' . ($ads['n'] - 1) . ' more on record' : '') . '.';
+        elseif ($ads['now'] > 1)   echo "{$you} {$ads['now']} ads running now" . ($ads['n'] > $ads['now'] ? ', and ' . ($ads['n'] - $ads['now']) . ' more on record' : '') . '.';
         else                       echo ($ads['n'] === 1 ? "{$you} 1 ad placement" : "{$you} {$ads['n']} ad placements") . ' on record.';
       ?></p>
       <span class="pt-card-go">See advertising ›</span>
@@ -78,10 +78,10 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
 
 $own = portal_home_counts($conn, $acct);
 
-// Hot Sheets: the person's own subscription (an admin previewing sees the account's), for the My Profile card.
-require_once __DIR__ . '/../inc/portal_hotsheets.php';
-$hs = portal_hs_ready($conn) ? portal_hs_load($conn, $ctx) : null;
-$phone = trim((string)($conn->query("SELECT cell_phone FROM marketing_intakes WHERE id = {$acct}")->fetch_assoc()['cell_phone'] ?? ''));
+// The greeting line: email and phone (Nikki, 2026-10-13).
+$who   = $conn->query("SELECT cell_phone, mh_email FROM marketing_intakes WHERE id = {$acct}")->fetch_assoc() ?: [];
+$phone = portal_phone((string)($who['cell_phone'] ?? ''));
+$email = trim((string)($who['mh_email'] ?? '')) ?: ($ctx['preview'] ? '' : (string)$ctx['user']['email']);   // never the admin's own address in a preview
 
 $photo = trim((string)($ctx['acct']['headshot_face_url'] ?? '')) ?: trim((string)($ctx['acct']['headshot_url'] ?? ''));
 $is_team = ($ctx['acct']['entity_type'] ?? 'agent') === 'team';
@@ -92,7 +92,7 @@ portal_header($ctx, 'Home', 'home');
     <?php if ($photo !== ''): ?><img class="pt-avatar" src="<?= ph($photo) ?>" alt=""><?php endif; ?>
     <div>
       <h1 class="pt-h1">Hello, <?= ph(portal_greeting_name($ctx)) ?></h1>
-      <p class="pt-lead" style="margin:0"><?= $is_team ? 'Your team\'s marketing at Mont Haus.' : 'Your marketing at Mont Haus.' ?></p>
+      <p class="pt-lead" style="margin:0"><?= $is_team ? 'Your team\'s marketing at Mont Haus.' : ph($email) . ($phone !== '' ? ' · ' . ph($phone) : '') ?></p>
     </div>
   </div>
 
@@ -100,7 +100,7 @@ portal_header($ctx, 'Home', 'home');
   <div class="pt-cards">
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
       <h2 class="pt-card-h">My Profile</h2>
-      <p class="pt-card-sub"><?= $phone !== '' ? 'Phone ' . ph($phone) . '. ' : 'No phone on file yet. ' ?><?= $hs ? ph(portal_hs_summary($hs)) : '' ?></p>
+      <p class="pt-card-sub">Your public-facing info, Hot Sheet subscriptions, and MLS boards.</p>
       <span class="pt-card-go">See and update ›</span>
     </a>
   </div>
@@ -118,8 +118,8 @@ portal_header($ctx, 'Home', 'home');
       <span class="pt-card-go">Open the planner ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">
-      <h2 class="pt-card-h">Social Templates</h2>
-      <p class="pt-card-sub">Make an Instagram-ready picture of one of your listings: pick a photo, check the text, download the PNG.</p>
+      <h2 class="pt-card-h">Templates</h2>
+      <p class="pt-card-sub">Create Instagram posts for your listings. More templates coming soon.</p>
       <span class="pt-card-go">Make a post ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/qr.php', $qr_n === 0 ? ['request' => 1] : [])) ?>">

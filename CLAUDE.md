@@ -1927,7 +1927,15 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   subscription editable; a row of anchors under the header; and a contact
   form (marketing_requests kind `contact`, emailed via portal_send_mail).
   **The short bio is gone (Nikki, 2026-10-12):** `bio_short` is no longer
-  read or written anywhere (the column stays). **Every change an agent makes is emailed to
+  read or written anywhere (the column stays). 2026-10-13 (Nikki): the
+  contact form is the FOOTER of every portal page (portal_footer() reads the
+  page's $ctx; posts to portal/contact.php, which returns to the page it
+  came from); My Profile also edits Service areas (one per line in the box,
+  stored joined with "; " as the admin page types them); the anchors row is
+  drawn by portal_header()'s fourth argument, in the band above the title;
+  phones show with periods (`portal_phone()`); the nav says "Templates" for
+  portal/social.php; the admin editor and the portal editor show a space
+  between paragraphs (Quill's p + p). **Every change an agent makes is emailed to
   marketing@ with who, what, before, after and when (Mountain time) and
   left as a note on their agent page** (`portal_change_alert()`,
   marketing_notes). The website picks the fields up from the roster feed

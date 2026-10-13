@@ -470,7 +470,7 @@ function portal_nav(): array {
         ]],
         'tools'     => ['My Tools', null, [
             'elevation' => ['Elevation Planner', '/portal/elevation.php'],
-            'social'    => ['Social Templates', '/portal/social.php'],
+            'social'    => ['Templates', '/portal/social.php'],   // "Templates" (Nikki, 2026-10-13): Instagram posts today, more to come
             'qr'        => ['QR Codes', '/portal/qr.php'],
             'brand'     => ['Brand Tools', '/portal/brand.php'],
         ]],
@@ -491,7 +491,7 @@ function portal_nav_group(string $active): string {
  * Page top: dark header with the logo, the menu, and the preview banner.
  * $active is the nav key of the current page (a leaf key).
  */
-function portal_header(array $ctx, string $title, string $active): void {
+function portal_header(array $ctx, string $title, string $active, array $jump = []): void {
     $nav   = portal_nav();
     $group = portal_nav_group($active);
     ?>
@@ -549,6 +549,10 @@ function portal_header(array $ctx, string $title, string $active): void {
     <a href="<?= ph(portal_url($ctx, $p2)) ?>" class="<?= $lk === $active ? 'on' : '' ?>"><?= ph($l2) ?></a>
   <?php endforeach; ?>
 </nav></div>
+<?php elseif ($jump): // a long page's own sections, as anchors in the same row (My Profile); sticks while scrolling ?>
+<div class="pt-subnav-wrap sticky"><nav class="pt-subnav" aria-label="On this page">
+  <?php foreach ($jump as $id => $label): ?><a href="#<?= ph($id) ?>"><?= ph($label) ?></a><?php endforeach; ?>
+</nav></div>
 <?php endif; ?>
 <script>
 // Desktop: a tap outside closes an open dropdown; Esc too.
@@ -561,14 +565,45 @@ document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { do
     <?php
 }
 
+/**
+ * Page bottom: the Contact marketing form on every page (Nikki, 2026-10-13;
+ * it was a section of My Profile). Posts to portal/contact.php, which sends
+ * the person back to the page they wrote from. Reads the page's $ctx; an
+ * admin preview shows the email address alone.
+ */
 function portal_footer(): void {
+    global $ctx;
+    $flash = $_SESSION['pt_contact_flash'] ?? null; unset($_SESSION['pt_contact_flash']);
+    $back  = (string)($_SERVER['REQUEST_URI'] ?? '/portal/');
+    if (!str_starts_with($back, '/portal/')) $back = '/portal/';
+    $preview = !empty($ctx['preview']);
     ?>
 </main>
-<footer class="pt-foot">
-  <div class="pt-foot-q">Questions?</div>
-  <div>Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a></div>
+<footer class="pt-foot" id="contact-marketing">
+  <div class="pt-foot-in">
+    <h2 class="pt-h2">Contact marketing</h2>
+    <p class="pt-foot-sub">A question, a change we should make, something you need. Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a> or write here.</p>
+    <?php if ($flash): ?><div class="pt-flash <?= $flash[0] === 'ok' ? 'ok' : 'err' ?>"><?= ph($flash[1]) ?></div><?php endif; ?>
+    <?php if (!$preview && !empty($_SESSION['csrf_token'])): ?>
+    <form method="post" class="pt-form pt-foot-form" action="/portal/contact.php">
+      <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
+      <input type="hidden" name="back" value="<?= ph($back) ?>">
+      <label>Subject <input type="text" name="subject" maxlength="200" required placeholder="e.g. New headshot"></label>
+      <label>Message <textarea name="message" rows="4" maxlength="4000" required></textarea></label>
+      <div class="pt-row"><button type="submit" class="pt-btn main">Send to marketing</button></div>
+    </form>
+    <?php endif; ?>
+  </div>
 </footer>
 </body>
 </html>
     <?php
+}
+
+/** "970.555.0100" (Nikki, 2026-10-13: periods), or the text as given when it is not a 10-digit number. */
+function portal_phone(?string $raw): string {
+    $raw = trim((string)$raw);
+    $d = preg_replace('/\D+/', '', $raw);
+    if (strlen($d) === 11 && $d[0] === '1') $d = substr($d, 1);
+    return strlen($d) === 10 ? substr($d, 0, 3) . '.' . substr($d, 3, 3) . '.' . substr($d, 6) : $raw;
 }

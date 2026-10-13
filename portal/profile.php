@@ -84,7 +84,7 @@ function portal_profile_save(mysqli $conn, array $ctx, array $me, string $what, 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
     $key = 'pt_pf_' . preg_replace('/[^a-z]/', '', $action);
-    $anchor = ['bio' => 'bio', 'social' => 'social', 'contact' => 'message'][$action] ?? 'top';
+    $anchor = ['bio' => 'bio', 'social' => 'social', 'areas' => 'areas'][$action] ?? 'top';
     if (!portal_csrf_ok()) {
         $_SESSION[$key] = ['err', 'That page had been open too long. Please try again.'];
     } elseif ($ctx['preview']) {
@@ -104,44 +104,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $fields[$col] = [$label, $v];
         }
         portal_profile_save($conn, $ctx, $me, 'social media links', $fields, $key);
-    } elseif ($action === 'contact') {
-        $subject = mb_substr(trim((string)($_POST['subject'] ?? '')), 0, 200);
-        $message = mb_substr(trim((string)($_POST['message'] ?? '')), 0, 4000);
-        if ($subject === '' || $message === '') {
-            $_SESSION[$key] = ['err', 'Please give your message a subject and some words.'];
-        } else {
-            $u = $ctx['user']; $who = trim($u['first_name'] . ' ' . $u['last_name']) ?: $u['email'];
-            $rid = 0;
-            if (mk_table_exists($conn, 'marketing_requests')) {
-                $kind = 'contact'; $uidv = (int)$u['id']; $dest = '';
-                $st = $conn->prepare("INSERT INTO marketing_requests (intake_id, user_id, kind, title, details, destination) VALUES (?, ?, ?, ?, ?, ?)");
-                $st->bind_param('iissss', $acct, $uidv, $kind, $subject, $message, $dest);
-                $st->execute(); $rid = (int)$conn->insert_id; $st->close();
-            }
-            $e = fn($v) => nl2br(htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'), false);
-            $html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;">'
-                  . '<p><strong>' . $e($who) . '</strong> (' . $e($ctx['acct']['agent_name']) . ') wrote from their agent portal:</p>'
-                  . '<p style="white-space:pre-wrap;border-left:3px solid #c9a96a;padding-left:12px;">' . $e($message) . '</p>'
-                  . '<p style="color:#6b7280;font-size:12px;">Reply to this email to answer ' . $e($who) . ' directly.' . ($rid ? " Request #{$rid}." : '') . '</p></div>';
-            [$st_mail, $detail] = portal_send_mail('Portal message: ' . $subject . ' (' . $ctx['acct']['agent_name'] . ')', $html, (string)$u['email'], $who);
-            if ($rid) {
-                $st = $conn->prepare("UPDATE marketing_requests SET email_status = ?, email_error = ? WHERE id = ?");
-                $err = $st_mail === 'sent' ? null : mb_substr($detail, 0, 500);
-                $st->bind_param('ssi', $st_mail, $err, $rid); $st->execute(); $st->close();
-            }
-            $_SESSION[$key] = $st_mail === 'sent' ? ['ok', 'Sent. Marketing will reply to ' . $u['email'] . '.']
-                                                  : ['err', 'Sorry, your message could not be sent just now. Please email ' . PORTAL_MARKETING_EMAIL . ' directly.'];
-            if ($st_mail === 'sent') $_SESSION['pt_pf_contact_clear'] = 1;
-        }
+    } elseif ($action === 'areas') {
+        // One area per line in the box; stored the admin way, joined with "; " (the website prints the text as one line).
+        $lines = array_values(array_filter(array_map('trim', preg_split('/[\r\n;]+/', (string)($_POST['service_area'] ?? ''))), fn($x) => $x !== ''));
+        $areas = mb_substr(implode('; ', $lines), 0, 255);
+        portal_profile_save($conn, $ctx, $me, 'service areas', ['service_area' => ['Service areas', $areas]], $key);
     }
     header('Location: ' . $back($anchor)); exit;
 }
 
 // ── Read ────────────────────────────────────────────────────────────────────
 $flash = [];
-foreach (['bio', 'social', 'contact'] as $k) { $flash[$k] = $_SESSION['pt_pf_' . $k] ?? null; unset($_SESSION['pt_pf_' . $k]); }
+foreach (['bio', 'social', 'areas'] as $k) { $flash[$k] = $_SESSION['pt_pf_' . $k] ?? null; unset($_SESSION['pt_pf_' . $k]); }
 $hs_flash = $_SESSION['pt_hs_flash'] ?? null; unset($_SESSION['pt_hs_flash']);
-unset($_SESSION['pt_pf_contact_clear']);
 
 $identities = [];
 if (mk_table_exists($conn, 'agent_mls_ids')) {
@@ -158,16 +133,13 @@ $conn->close();
 $photo = trim((string)($me['headshot_face_url'] ?? '')) ?: trim((string)($me['headshot_url'] ?? ''));
 $is_team = ($me['entity_type'] ?? 'agent') === 'team';
 $name  = (string)($me['agent_name'] ?? $ctx['acct']['agent_name']);
-$email_shown = (string)($me['mh_email'] ?? '') ?: (string)$ctx['user']['email'];
+$email_shown = (string)($me['mh_email'] ?? '') ?: ($ctx['preview'] ? '' : (string)$ctx['user']['email']);   // never the admin's own address in a preview
 $flash_html = function (?array $f): string { return $f ? '<div class="pt-flash ' . ($f[0] === 'ok' ? 'ok' : 'err') . '">' . ph($f[1]) . '</div>' : ''; };
 $price = fn($v) => $v !== null && (float)$v > 0 ? '$' . number_format((float)$v) : '';
 
-$jump = ['contact' => 'Contact', 'bio' => 'Bio', 'social' => 'Social', 'boards' => 'MLS boards', 'hotsheets' => 'Hot Sheets', 'message' => 'Message', 'listings' => 'Listings'];
-portal_header($ctx, 'My Profile', 'profile');
+$jump = ['contact' => 'Contact', 'bio' => 'Bio', 'social' => 'Social', 'areas' => 'Service areas', 'boards' => 'MLS boards', 'hotsheets' => 'Hot Sheets', 'listings' => 'Listings'];
+portal_header($ctx, 'My Profile', 'profile', $jump);
 ?>
-<div class="pt-subnav-wrap sticky"><nav class="pt-subnav" aria-label="On this page">
-  <?php foreach ($jump as $id => $label): ?><a href="#<?= $id ?>"><?= ph($label) ?></a><?php endforeach; ?>
-</nav></div>
   <h1 class="pt-h1" id="top">My Profile</h1>
   <p class="pt-lead">What Mont Haus and the website hold about you. Anything you change here goes to the website within the hour, and marketing is told.</p>
 
@@ -178,11 +150,11 @@ portal_header($ctx, 'My Profile', 'profile');
       <div class="pt-who-text">
         <h2 class="pt-card-h"><?= ph($name) ?></h2>
         <?php if (trim((string)($me['agent_title'] ?? '')) !== ''): ?><p class="pt-card-sub"><?= ph(str_replace("\n", ' ', (string)$me['agent_title'])) ?></p><?php endif; ?>
-        <p class="pt-card-sub"><?= ph($email_shown) ?><?= trim((string)($me['cell_phone'] ?? '')) !== '' ? ' · ' . ph($me['cell_phone']) : '' ?></p>
-        <p class="pt-help" style="margin:8px 0 0">To update your name or contact information, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a> or send a message via the <a href="#message">form below</a>.</p>
+        <p class="pt-card-sub"><?= ph($email_shown) ?><?= trim((string)($me['cell_phone'] ?? '')) !== '' ? ' · ' . ph(portal_phone($me['cell_phone'])) : '' ?></p>
       </div>
     </div>
   </section>
+  <p class="pt-help" style="margin:-6px 0 22px">To update your name or contact information, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a> or send a message via the <a href="#contact-marketing">form below</a>.</p>
 
   <!-- Bio: editable -->
   <section class="pt-card pt-section" id="bio">
@@ -210,11 +182,25 @@ portal_header($ctx, 'My Profile', 'profile');
         <label><?= ph($label) ?>
           <span class="pt-at<?= $col === 'website_url' ? ' none' : '' ?>">
             <input type="text" name="<?= ph($col) ?>" maxlength="<?= $col === 'website_url' ? 255 : 150 ?>" autocapitalize="none" autocorrect="off"
-                   value="<?= ph($me[$col] ?? '') ?>" placeholder="<?= $col === 'website_url' ? 'https://…' : '' ?>">
+                   value="<?= ph(portal_handle($col, (string)($me[$col] ?? ''))) ?>" placeholder="<?= $col === 'website_url' ? 'https://…' : '' ?>">
           </span></label>
       <?php endforeach; ?>
       </div>
       <div class="pt-row"><button type="submit" class="pt-btn main">Save social media</button></div>
+    </form>
+  </section>
+
+  <!-- Service areas: editable, one per line -->
+  <section class="pt-card pt-section" id="areas">
+    <h2 class="pt-card-h">Service areas</h2>
+    <p class="pt-card-sub">Where you work, as it reads on your page on monthaus.com. One area per line.</p>
+    <?= $flash_html($flash['areas']) ?>
+    <form method="post" class="pt-form" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
+      <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
+      <input type="hidden" name="action" value="areas">
+      <label class="pt-visually-hidden" for="serviceArea">Service areas</label>
+      <textarea id="serviceArea" name="service_area" rows="4" maxlength="255" placeholder="Aspen and the Roaring Fork Valley"><?= ph(implode("\n", array_filter(array_map('trim', explode(';', (string)($me['service_area'] ?? ''))), fn($x) => $x !== ''))) ?></textarea>
+      <div class="pt-row"><button type="submit" class="pt-btn main">Save service areas</button></div>
     </form>
   </section>
 
@@ -240,20 +226,6 @@ portal_header($ctx, 'My Profile', 'profile');
     <?php if ($hs): portal_hs_form($ctx, $hs, $hs_flash); else: ?>
       <p class="pt-card-sub">Hot Sheet choices are not switched on yet.</p>
     <?php endif; ?>
-  </section>
-
-  <!-- Contact marketing -->
-  <section class="pt-card pt-section" id="message">
-    <h2 class="pt-card-h">Contact marketing</h2>
-    <p class="pt-card-sub">A question, a change we should make, something you need.</p>
-    <?= $flash_html($flash['contact']) ?>
-    <form method="post" class="pt-form" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
-      <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
-      <input type="hidden" name="action" value="contact">
-      <label>Subject <input type="text" name="subject" maxlength="200" required placeholder="e.g. New headshot"></label>
-      <label>Message <textarea name="message" rows="5" maxlength="4000" required></textarea></label>
-      <div class="pt-row"><button type="submit" class="pt-btn main">Send to marketing</button></div>
-    </form>
   </section>
 
   <!-- Listings: read-only, last (they can get long), drawn like the admin agent page's cards -->
