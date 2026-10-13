@@ -182,9 +182,9 @@ function social_headline_from_remarks(string $remarks): string {
     $t = preg_split('/(?<=[.!?])\s+|\s+[-–—]+\s+|\s*\|\s*/u', $t)[0] ?? '';
     $t = preg_replace('/^(welcome (home )?to|introducing|presenting|discover|experience|enjoy|step into|come (home )?to|this)\s+/i', '', $t);
     $t = trim($t, " .,;:!?-");
-    // Too long for a headline: cut at the last clause break before 52 characters
+    // Too long for a headline: cut at the last clause break before 44 characters
     // ("Perched on Red Mountain | with a top-of-the-world…"), else at a word.
-    $max = 52;
+    $max = 44;
     if (mb_strlen($t) > $max) {
         $head = mb_substr($t, 0, $max);
         $best = -1;

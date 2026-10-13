@@ -83,6 +83,7 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#231F20;fo
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:24pt;flex:none}
 .head .l{min-width:0;flex:1}
 .title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.1;margin:0;white-space:nowrap;overflow:hidden}
+.title.wrap{white-space:normal;line-height:1.08;text-wrap:balance}
 .addr{font-weight:400;letter-spacing:.12em;text-transform:uppercase;margin:7pt 0 0;line-height:1.3;white-space:nowrap;overflow:hidden}
 .price{font-family:'Cormorant Garamond',Georgia,serif;font-size:33pt;font-weight:500;line-height:1.05;margin:3pt 0 0;white-space:nowrap}
 .right{flex:none;width:204pt}
@@ -117,10 +118,12 @@ CSS;
     };
     $head  = '<div class="head"><div class="l">';
     if ($title !== '') {
-        $head .= '<h1 class="title" style="font-size:' . $fit($title, 28, 0.46) . 'pt">' . $e($title) . '</h1>';
+        $ts = $fit($title, 28, 0.46, 310.0, 22.0);
+        $head .= '<h1 class="title' . ((float)$ts <= 22.0 ? ' wrap' : '') . '" style="font-size:' . $ts . 'pt">' . $e($title) . '</h1>';
         if ($addr !== '') $head .= '<p class="addr" style="font-size:' . $fit($addr, 14.5, 0.78) . 'pt">' . $e($addr) . '</p>';
     } elseif ($addr !== '') {
-        $head .= '<h1 class="title" style="font-size:' . $fit($addr, 28, 0.46) . 'pt">' . $e($addr) . '</h1>';
+        $ts = $fit($addr, 28, 0.46, 310.0, 22.0);
+        $head .= '<h1 class="title' . ((float)$ts <= 22.0 ? ' wrap' : '') . '" style="font-size:' . $ts . 'pt">' . $e($addr) . '</h1>';
     }
     if (trim((string)($p['price'] ?? '')) !== '') $head .= '<p class="price">' . $e($p['price']) . '</p>';
     $head .= '</div>';

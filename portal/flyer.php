@@ -151,7 +151,7 @@ portal_header($ctx, 'Listing Flyer', 'social');   // under Templates in the menu
     if (!l) return;
     f('title').value = ''; f('title').dataset.touched = '';   // the suggestion arrives with the photos
     bannerSel.value = DEFAULT_BANNER[l.id] || '__none'; showBanner();
-    f('address').value = l.address + (l.city ? ', ' + l.city : '');
+    f('address').value = l.headline + (l.city ? ', ' + l.city : '');   // l.headline = the short address (St, Rd, #unit)
     f('price').value = l.price_text;
     f('beds').value = l.beds && +l.beds > 0 ? String(+l.beds) : '';
     f('baths').value = l.baths && +l.baths > 0 ? String(+l.baths) : '';

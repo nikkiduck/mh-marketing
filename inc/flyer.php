@@ -149,7 +149,7 @@ function flyer_post_from_request(mysqli $conn, array $ctx, array $in): array|str
     return [
         'listing' => $l,
         'title'   => $txt('title', 80),
-        'address' => $txt('address', 90, trim((string)$l['address']) . (trim((string)$l['city']) !== '' ? ', ' . trim((string)$l['city']) : '')),
+        'address' => $txt('address', 90, social_short_address((string)$l['address']) . (trim((string)$l['city']) !== '' ? ', ' . trim((string)$l['city']) : '')),   // St, Rd, Ave, #unit (Nikki, 2026-10-13)
         'price'   => $txt('price', 40, (string)$l['price_text']),
         'beds'    => $txt('beds', 10, $l['beds'] !== null && (float)$l['beds'] > 0 ? social_num($l['beds']) : ''),
         'baths'   => $txt('baths', 10, $l['baths'] !== null && (float)$l['baths'] > 0 ? social_num($l['baths']) : ''),
