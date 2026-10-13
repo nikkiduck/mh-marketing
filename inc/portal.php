@@ -54,6 +54,87 @@ function portal_send_mail(string $subject, string $html, string $reply_email, st
     return ['failed', "HTTP {$code}" . ($err ? " {$err}" : '')];
 }
 
+/**
+ * Change alert (Nikki, 2026-10-12): anything an agent changes on their portal
+ * (phone, bio, social handles, Hot Sheet subscription) is emailed to
+ * marketing@ with who, what, before, after and when, and left as a note on
+ * their agent page (marketing_notes), so the admin side sees it too.
+ * $changes: [[field label, before, after], ...]; nothing is sent for [].
+ * Returns 'sent' | 'failed' | 'none'.
+ */
+function portal_change_alert(mysqli $conn, array $ctx, string $what, array $changes): string {
+    if (!$changes) return 'none';
+    $u    = $ctx['user'];
+    $who  = trim((string)$u['first_name'] . ' ' . (string)$u['last_name']) ?: (string)$u['email'];
+    $acct = (string)$ctx['acct']['agent_name'];
+    $when = (new DateTime('now', new DateTimeZone('America/Denver')))->format('D, M j, Y g:i A T');
+    $cut  = fn($v) => mb_strlen((string)$v) > 600 ? mb_substr((string)$v, 0, 600) . '…' : (string)$v;
+    $e    = fn($v) => nl2br(htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'), false);
+    $lines = []; $rows = '';
+    foreach ($changes as [$label, $before, $after]) {
+        $b = trim(html_entity_decode(strip_tags((string)$before), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $a = trim(html_entity_decode(strip_tags((string)$after),  ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $lines[] = "- {$label}: " . ($b === '' ? '(blank)' : '"' . $cut($b) . '"') . ' → ' . ($a === '' ? '(blank)' : '"' . $cut($a) . '"');
+        $rows .= '<tr><td style="padding:6px 12px 6px 0;color:#6b7280;vertical-align:top;white-space:nowrap;">' . $e($label) . '</td>'
+               . '<td style="padding:6px 12px 6px 0;vertical-align:top;color:#6b7280;">' . ($b === '' ? '—' : $e($cut($b))) . '</td>'
+               . '<td style="padding:6px 0;vertical-align:top;">' . ($a === '' ? '—' : $e($cut($a))) . '</td></tr>';
+    }
+    // The note on their agent page.
+    if (mk_table_exists($conn, 'marketing_notes')) {
+        $content = "Portal: {$who} changed their {$what} ({$when})\n" . implode("\n", $lines);
+        $iid = (int)$ctx['acct']['id']; $uid = (int)$u['id'];
+        $st = $conn->prepare("INSERT INTO marketing_notes (intake_id, content, created_by) VALUES (?, ?, ?)");
+        if ($st) { $st->bind_param('isi', $iid, $content, $uid); $st->execute(); $st->close(); }
+    }
+    $html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;">'
+          . '<p><strong>' . $e($who) . '</strong> (' . $e($acct) . ') changed their <strong>' . $e($what) . '</strong> on the agent portal, ' . $e($when) . '.</p>'
+          . '<table style="border-collapse:collapse;font-size:14px;"><tr><th style="text-align:left;padding:0 12px 6px 0;color:#6b7280;font-weight:normal;">What</th>'
+          . '<th style="text-align:left;padding:0 12px 6px 0;color:#6b7280;font-weight:normal;">Before</th><th style="text-align:left;padding:0 0 6px;color:#6b7280;font-weight:normal;">After</th></tr>'
+          . $rows . '</table>'
+          . '<p style="margin-top:18px;"><a href="' . htmlspecialchars(rtrim(SITE_URL, '/') . '/agent.php?id=' . (int)$ctx['acct']['id']) . '" '
+          . 'style="background:#0d0c0a;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;">Open their agent page</a></p>'
+          . '<p style="color:#6b7280;font-size:12px;">The website picks profile changes up within the hour. Reply to this email to reach ' . $e($who) . ' directly.</p></div>';
+    [$status] = portal_send_mail("Profile change: {$acct} ({$what})", $html, (string)$u['email'], $who);
+    return $status;
+}
+
+/**
+ * The account's live listings (and its teams'), from the Hot Sheet feed copy
+ * (hs_listing_state): matched by MLS identity, else by name, like the
+ * Instagram tool's social_listings(); one property on two boards is one row.
+ */
+function portal_listings(mysqli $conn, array $ctx): array {
+    if (!mk_table_exists($conn, 'hs_listing_state')) return [];
+    $ids = implode(',', array_map('intval', $ctx['ids']));   // from portal_context, never the request
+    $conds = []; $types = ''; $vals = [];
+    $r = $conn->query("SELECT DISTINCT market, mls_agent_id FROM agent_mls_ids WHERE intake_id IN ({$ids}) AND mls_agent_id <> ''");
+    foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $i) {
+        $conds[] = '(market = ? AND (list_agent_mls_id = ? OR colist_agent_mls_id = ?))';
+        $types .= 'sss'; array_push($vals, $i['market'], $i['mls_agent_id'], $i['mls_agent_id']);
+    }
+    foreach ($ctx['scopes'] as $sc) {
+        $n = strtolower(trim((string)$sc['name']));
+        if ($n === '') continue;
+        $conds[] = '(LOWER(list_agent_name) = ? OR LOWER(colist_agent_name) = ?)';
+        $types .= 'ss'; array_push($vals, $n, $n);
+    }
+    if (!$conds) return [];
+    $st = $conn->prepare("SELECT market, listing_key, mls_id, status, is_rental, property_type, address, city, list_price, beds, baths, sqft, primary_photo, url
+                            FROM hs_listing_state
+                           WHERE in_feed = 1 AND status IN ('Active','Active Under Contract','Pending','Coming Soon')
+                             AND (" . implode(' OR ', $conds) . ")
+                           ORDER BY (market = 'recolorado'), is_rental, list_price DESC, address");
+    $st->bind_param($types, ...$vals); $st->execute();
+    $out = []; $seen = [];
+    foreach ($st->get_result()->fetch_all(MYSQLI_ASSOC) as $l) {
+        $k = strtolower(preg_replace('/\s+/', ' ', trim((string)$l['address']))) . '|' . strtolower(trim((string)$l['city'])) . '|' . (int)$l['is_rental'];
+        if (isset($seen[$k])) continue;
+        $seen[$k] = true; $out[] = $l;
+    }
+    $st->close();
+    return $out;
+}
+
 /** A plain, branded 403 that names the reason. */
 function portal_stop(string $title, string $why): never {
     http_response_code(403);
@@ -372,19 +453,47 @@ function portal_greeting_name(array $ctx): string {
  * Page top: dark header with the logo, the nav, and the preview banner.
  * $active is the nav key of the current page.
  */
-function portal_header(array $ctx, string $title, string $active): void {
-    // Hot Sheets first (Nikki, 2026-10-07); "Internal" because a Client Hot
-    // Sheets section (Phase 2) will sit beside it.
-    $nav = [
+/**
+ * The portal's menu (Nikki, 2026-10-12): main tabs with sub-menus. A group
+ * has no page of its own; its first item stands in for it. Active keys are
+ * the leaf keys; 'hotsheets' counts as My Profile (the subscription lives
+ * there). Shared by the header and the sub-tab row.
+ */
+function portal_nav(): array {
+    return [
         'home'      => ['Home', '/portal/'],
-        'hotsheets' => ['Internal Hot Sheets', '/portal/hotsheets.php'],
-        'ads'       => ['Advertising', '/portal/advertising.php'],
-        'orders'    => ['Collateral', '/portal/orders.php'],   // "Collateral", not "Print orders" (Nikki, 2026-10-09)
-        'spend'     => ['Spend', '/portal/spend.php'],
-        'qr'        => ['QR codes', '/portal/qr.php'],
-        'brand'     => ['Brand & templates', '/portal/brand.php'],   // 2026-10-10: guidelines + logo downloads, card and sign templates
-        'social'    => ['Instagram Posts', '/portal/social.php'],    // 2026-10-12: opened to every portal login after Nikki's review (was SOCIAL_BETA_EMAILS)
+        'profile'   => ['My Profile', '/portal/profile.php'],
+        'marketing' => ['My Marketing', null, [
+            'spend'  => ['Spend', '/portal/spend.php'],
+            'ads'    => ['Advertising', '/portal/advertising.php'],
+            'orders' => ['Collateral', '/portal/orders.php'],
+        ]],
+        'tools'     => ['My Tools', null, [
+            'elevation' => ['Elevation Planner', '/portal/elevation.php'],
+            'social'    => ['Social Templates', '/portal/social.php'],
+            'qr'        => ['QR Codes', '/portal/qr.php'],
+            'brand'     => ['Brand Tools', '/portal/brand.php'],
+        ]],
     ];
+}
+
+/** The group key a leaf belongs to ('' for a top-level page). */
+function portal_nav_group(string $active): string {
+    if ($active === 'hotsheets') return 'profile';
+    foreach (portal_nav() as $k => $item) {
+        if ($k === $active) return $k;
+        foreach ($item[2] ?? [] as $lk => $_) if ($lk === $active) return $k;
+    }
+    return '';
+}
+
+/**
+ * Page top: dark header with the logo, the menu, and the preview banner.
+ * $active is the nav key of the current page (a leaf key).
+ */
+function portal_header(array $ctx, string $title, string $active): void {
+    $nav   = portal_nav();
+    $group = portal_nav_group($active);
     ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -409,14 +518,45 @@ function portal_header(array $ctx, string $title, string $active): void {
 <header class="pt-top">
   <div class="pt-top-in">
     <a class="pt-logo" href="<?= ph(portal_url($ctx, '/portal/')) ?>"><img src="/assets/images/logo-white.svg" alt="Mont Haus"></a>
-    <a class="pt-signout" href="/logout.php">Sign out</a>
+    <div class="pt-top-right">
+      <a class="pt-signout" href="/logout.php">Sign out</a>
+      <button class="pt-menu-btn" type="button" aria-expanded="false" aria-controls="ptNav" onclick="document.body.classList.toggle('pt-nav-open');this.setAttribute('aria-expanded',document.body.classList.contains('pt-nav-open'))">
+        <span></span><span></span><span></span><b>Menu</b>
+      </button>
+    </div>
   </div>
-  <nav class="pt-nav">
-    <?php foreach ($nav as $k => [$label, $path]): ?>
-      <a href="<?= ph(portal_url($ctx, $path)) ?>" class="<?= $k === $active ? 'on' : '' ?>"><?= ph($label) ?></a>
+  <nav class="pt-nav" id="ptNav" aria-label="Portal">
+    <?php foreach ($nav as $k => $item): [$label, $path] = $item; $subs = $item[2] ?? []; ?>
+      <?php if (!$subs): ?>
+        <a href="<?= ph(portal_url($ctx, $path)) ?>" class="pt-nav-a <?= $k === $group ? 'on' : '' ?>"><?= ph($label) ?></a>
+      <?php else: ?>
+        <div class="pt-group <?= $k === $group ? 'on' : '' ?>">
+          <button type="button" class="pt-nav-a pt-group-btn" aria-expanded="false"
+                  onclick="var g=this.parentNode;g.classList.toggle('open');this.setAttribute('aria-expanded',g.classList.contains('open'))"><?= ph($label) ?> <i class="pt-caret"></i></button>
+          <div class="pt-sub">
+            <?php foreach ($subs as $lk => [$l2, $p2]): ?>
+              <a href="<?= ph(portal_url($ctx, $p2)) ?>" class="<?= $lk === $active ? 'on' : '' ?>"><?= ph($l2) ?></a>
+            <?php endforeach; ?>
+          </div>
+        </div>
+      <?php endif; ?>
     <?php endforeach; ?>
   </nav>
 </header>
+<?php if ($group !== '' && !empty($nav[$group][2])): // the group's pages, as a row of sub-tabs under the header ?>
+<div class="pt-subnav-wrap"><nav class="pt-subnav" aria-label="<?= ph($nav[$group][0]) ?>">
+  <?php foreach ($nav[$group][2] as $lk => [$l2, $p2]): ?>
+    <a href="<?= ph(portal_url($ctx, $p2)) ?>" class="<?= $lk === $active ? 'on' : '' ?>"><?= ph($l2) ?></a>
+  <?php endforeach; ?>
+</nav></div>
+<?php endif; ?>
+<script>
+// Desktop: a tap outside closes an open dropdown; Esc too.
+document.addEventListener('click', function (e) {
+  document.querySelectorAll('.pt-group.open').forEach(function (g) { if (!g.contains(e.target)) { g.classList.remove('open'); g.querySelector('.pt-group-btn').setAttribute('aria-expanded', 'false'); } });
+});
+document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { document.body.classList.remove('pt-nav-open'); document.querySelectorAll('.pt-group.open').forEach(function (g) { g.classList.remove('open'); }); } });
+</script>
 <main class="pt-main">
     <?php
 }

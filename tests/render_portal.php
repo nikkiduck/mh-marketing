@@ -42,7 +42,7 @@ $SB = sys_get_temp_dir() . '/pt_render_' . bin2hex(random_bytes(4));
 mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
 foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php',
-          'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'inc/portal.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
+          'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'portal/profile.php', 'portal/elevation.php', 'inc/portal.php', 'inc/portal_hotsheets.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
           'inc/creatives.php', 'inc/boards.php', 'inc/agent_lifecycle.php', 'inc/_onboarding.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
@@ -170,6 +170,24 @@ class mysqli {
             return self::s(array_values(array_filter($D['campaigns'], fn($c) => (int)$c['intake_id'] === (int)$m[1])));
         }
         if (preg_match('/INSERT INTO marketing_requests/', $sql)) { $this->insert_id = 501; $this->write('request', $p); return []; }
+        // My Profile (2026-10-12): the account's row, its MLS identities, its listings, and what it writes.
+        if (preg_match('/SELECT cell_phone FROM marketing_intakes WHERE id = (\d+)/', $sql, $m)) {
+            return self::s(array_values(array_filter($D['intakes'], fn($a) => (int)$a['id'] === (int)$m[1])));
+        }
+        if (preg_match('/FROM agent_mls_ids WHERE intake_id = \?/', $sql)) {
+            return self::s(array_values(array_filter($D['mls'], fn($x) => (int)$x['intake_id'] === (int)$p[0])));
+        }
+        if (preg_match('/FROM agent_mls_ids WHERE intake_id IN/', $sql)) {
+            $in = self::in_list($sql);
+            return self::s(array_values(array_filter($D['mls'], fn($x) => in_array((int)$x['intake_id'], $in, true))));
+        }
+        if (preg_match('/FROM hs_listing_state/', $sql)) {
+            // whose: the names bound (LOWER(list_agent_name) = ?), in pairs after any (market, id, id) triples
+            $names = array_values(array_filter($p, fn($v) => is_string($v) && preg_match('/^[a-z][a-z .-]+ [a-z .-]+$/', $v)));
+            return self::s(array_values(array_filter($D['listings'], fn($l) => in_array(strtolower($l['list_agent_name']), $names, true))));
+        }
+        if (preg_match('/^UPDATE marketing_intakes SET/', $sql)) { $this->write('intake_update', $p); return []; }
+        if (preg_match('/INSERT INTO marketing_notes/', $sql)) { $this->insert_id = 701; $this->write('note', $p); return []; }
         if (preg_match('/UPDATE marketing_requests SET email_status/', $sql)) { $this->write('request_email', $p); return []; }
         if (preg_match('/^\s*UPDATE qr_codes SET dest_type/', $sql)) { $this->write('update_qr', $p); return []; }
         if (preg_match('/INSERT INTO qr_code_changes/', $sql))       { $this->write('log_change', $p); return []; }
@@ -236,6 +254,16 @@ function scenario(array $over = []): array {
                 ['id' => 30, 'agent_name' => 'Jonathan Boxer', 'slug' => 'jonathan-boxer', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
             ],
             'teams' => ['8' => [21, 23, 30]],
+            'mls' => [
+                ['id' => 1, 'intake_id' => 6, 'market' => 'aspen', 'mls_agent_id' => 'JHORN1'],
+                ['id' => 2, 'intake_id' => 7, 'market' => 'vail', 'mls_agent_id' => 'KCSECRET'],
+            ],
+            'listings' => [
+                ['market' => 'aspen', 'listing_key' => 'k1', 'mls_id' => '100', 'status' => 'Active', 'is_rental' => 0, 'property_type' => 'Residential', 'address' => '30 Smith Way', 'city' => 'Aspen',
+                 'list_price' => 4500000, 'beds' => 4, 'baths' => 3, 'sqft' => 3000, 'primary_photo' => '', 'url' => 'https://site.monthaus.com/listing/1/30-smith-way', 'list_agent_name' => 'Jackson Horn'],
+                ['market' => 'vail', 'listing_key' => 'k2', 'mls_id' => '200', 'status' => 'Active', 'is_rental' => 0, 'property_type' => 'Residential', 'address' => '9 Secret Ln', 'city' => 'Vail',
+                 'list_price' => 1, 'beds' => 1, 'baths' => 1, 'sqft' => 1, 'primary_photo' => '', 'url' => 'https://site.monthaus.com/listing/2/kc', 'list_agent_name' => 'Kimberlee Coates'],
+            ],
             'orders' => [
                 ['id' => 11, 'intake_id' => 6, 'type' => 'business_cards', 'label' => 'JH cards', 'vendor' => 'Oakley', 'cost' => 250, 'ordered_at' => '2026-09-02', 'created_at' => '2026-09-02 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => 'JHRECEIPT.pdf', 'receipt_orig_name' => 'jh-cards.pdf', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
                  'status' => 'shipped', 'qty' => '500', 'tracking_number' => '1Z999JH', 'tracking_url' => 'https://www.ups.com/track?t=1Z999JH', 'delivered_at' => null, 'file_url' => 'https://www.dropbox.com/jh-cards-final',
@@ -335,24 +363,62 @@ ok('plain words for a profile destination', has($b, 'Your profile page on montha
 
 [$c, , $b] = req('jackson', '/portal/');
 ok('Jackson home renders and counts only his codes', $c === 200 && no_fatal($b) && has($b, 'You have 2 QR codes'), $b);
-ok('home offers Hot Sheets', has($b, 'Internal Hot Sheets') && has($b, 'Customize'), $b);
-ok('home offers the brand and templates', has($b, 'Brand &amp; templates') && has($b, 'logo files you can download'), $b);
+ok('home (2026-10-12): My Profile card with the Hot Sheet line, My Marketing and My Tools sections', has($b, 'My Profile') && has($b, 'See and update')
+   && has($b, 'for the areas you choose') && has($b, '>My Marketing<') && has($b, '>My Tools<') && has($b, 'Elevation Planner') && has($b, 'Social Templates') && has($b, 'Brand Tools'), $b);
+ok('the menu: Home, My Profile, My Marketing (Spend, Advertising, Collateral), My Tools (Elevation Planner, Social Templates, QR Codes, Brand Tools)',
+   has($b, 'class="pt-group ') && substr_count($b, 'class="pt-nav-a pt-group-btn"') === 2 && has($b, '>Spend<') && has($b, '>Advertising<') && has($b, '>Collateral<')
+   && has($b, '>Elevation Planner<') && has($b, '>Social Templates<') && has($b, '>QR Codes<') && has($b, '>Brand Tools<') && has($b, 'pt-menu-btn') && !has($b, 'Internal Hot Sheets</a>'), $b);
+[$c, , $b] = req('jackson', '/portal/advertising.php');
+ok('a page in a group shows the group\'s sub-tabs with its own tab on', has($b, 'pt-subnav') && preg_match('#<a href="/portal/advertising.php" class="on">Advertising</a>#', $b) && has($b, '/portal/orders.php" class="">Collateral'), $b);
+[$c, , $b] = req('jackson', '/portal/elevation.php');
+ok('Elevation Planner: a tab for now, with the demo in a new tab', $c === 200 && no_fatal($b) && has($b, 'elevation-plan/') && has($b, 'target="_blank"'), $b);
 [$c, , $b] = req('jackson', '/portal/brand.php');
 ok('Brand & templates: guidelines with the logo downloads, card and sign templates, each in a new tab (2026-10-10)', $c === 200 && no_fatal($b)
    && has($b, 'href="/brand-guidelines/#downloads"') && has($b, 'Download the logos') && has($b, 'href="/brand-guidelines/business-cards/"') && has($b, 'href="/brand-guidelines/yard-signs/"')
    && substr_count($b, 'target="_blank"') >= 3, $b);
 
-// Hot Sheets (2026-10-07): the page is the signed-in person's own subscription, never an id from the request.
-[$c, , $b] = req('jackson', '/portal/hotsheets.php');
-ok('Jackson: Hot Sheets renders, not subscribed, every area offered', $c === 200 && no_fatal($b) && has($b, 'Not subscribed')
+// Hot Sheets: the signed-in person's own subscription, never an id from the request. Since 2026-10-12 the form is on My Profile.
+[$c, $loc, ] = req('jackson', '/portal/hotsheets.php');
+ok('the old Hot Sheets page sends you to My Profile', $c === 302 && $loc === '/portal/profile.php#hotsheets', "{$c} {$loc}");
+[$c, , $b] = req('jackson', '/portal/profile.php');
+ok('Jackson: My Profile renders with Hot Sheets, not subscribed, every area offered', $c === 200 && no_fatal($b) && has($b, 'Not subscribed')
    && has($b, 'Roaring Fork Valley') && has($b, 'Front Range') && has($b, 'Twice a week'), $b);
+ok('…his name and email read-only, his board id, his listing, and nothing of Kim\'s', has($b, 'Jackson Horn') && has($b, 'jackson.horn@monthaus.com')
+   && has($b, 'JHORN1') && has($b, '30 Smith Way') && has($b, '$4,500,000') && !has($b, 'KCSECRET') && !has($b, 'Secret Ln'), $b);
 [$c, $loc, ] = req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'tok', 'action' => 'save', 'frequency' => 'daily', 'areas' => ['vail-valley', 'bogus']]);
-$w = writes();
+$w = writes(); $m = mails();
 ok('saving creates his row and keeps only real areas', ($w[0][0] ?? '') === 'hs_subscribe' && ($w[1][0] ?? '') === 'hs_update'
    && ($w[1][1] ?? []) === ['daily', '["vail-valley"]', 601], json_encode($w));
-ok('…then back to the page', $c === 302 && $loc === '/portal/hotsheets.php', "{$c} {$loc}");
+ok('…marketing@ is told what changed, and a note goes on his agent page', ($m[0]['subject'] ?? '') === 'Profile change: Jackson Horn (Hot Sheet subscription)'
+   && has($m[0]['content'][1]['value'] ?? '', 'Vail Valley') && has($m[0]['content'][1]['value'] ?? '', 'Daily') && ($m[0]['reply_to']['email'] ?? '') === 'jackson.horn@monthaus.com'
+   && ($note = array_values(array_filter($w, fn($x) => $x[0] === 'note'))[0] ?? null) && (int)$note[1][0] === 6 && has($note[1][1], 'Hot Sheet subscription'), json_encode($w) . json_encode($m));
+ok('…then back to My Profile', $c === 302 && $loc === '/portal/profile.php#hotsheets', "{$c} {$loc}");
 req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'bad', 'action' => 'save', 'areas' => ['vail-valley']]);
-ok('a bad form token saves nothing', writes() === [], json_encode(writes()));
+ok('a bad form token saves nothing', writes() === [] && mails() === [], json_encode(writes()));
+
+echo "\nMY PROFILE\n";
+[$c, $loc] = req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'phone', 'cell_phone' => ' 970 555 0100 ']);
+$w = writes(); $m = mails();
+ok('saving a phone writes HIS row, notes it, and emails marketing@ with before and after', $c === 302 && $loc === '/portal/profile.php#contact'
+   && ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['970 555 0100', 6]
+   && ($w[1][0] ?? '') === 'note' && has($w[1][1][1] ?? '', 'Cell phone') && (int)($w[1][1][2] ?? 0) === 101
+   && ($m[0]['subject'] ?? '') === 'Profile change: Jackson Horn (phone number)' && has($m[0]['content'][1]['value'] ?? '', '970 555 0100') && has($m[0]['content'][1]['value'] ?? '', 'Before'), json_encode($w) . json_encode($m));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'social', 'social_instagram' => 'https://www.instagram.com/@jhorn', 'social_tiktok' => '@jh', 'website_url' => 'jacksonhorn.com']);
+$w = writes();
+ok('social handles are stored bare, the website gets https://', ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['jhorn', 'jh', 'https://jacksonhorn.com', 6], json_encode($w));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'bio', 'bio_text' => '<p>Hi <script>x()</script><b onclick="y()">there</b></p>', 'bio_short' => 'Short.']);
+$w = writes();
+ok('the bio keeps safe tags only', ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['<p>Hi x()<b>there</b></p>', 'Short.', 6], json_encode($w));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'phone', 'cell_phone' => '']);
+ok('nothing changed: nothing written, nothing sent', writes() === [] && mails() === [], json_encode(writes()));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'nope', 'action' => 'phone', 'cell_phone' => '1']);
+ok('a bad form token writes nothing', writes() === [] && mails() === [], json_encode(writes()));
+req('nikki', '/portal/profile.php?preview=6', ['csrf_token' => 'tok', 'action' => 'phone', 'cell_phone' => '1']);
+ok('an admin preview cannot change their details', writes() === [] && mails() === [], json_encode(writes()));
+[$c, $loc] = req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'contact', 'subject' => 'New headshot', 'message' => 'Can we book one?']);
+$w = writes(); $m = mails();
+ok('the contact form saves a request and emails marketing@, Reply-To him', $loc === '/portal/profile.php#message' && ($w[0][0] ?? '') === 'request' && ($w[0][1][2] ?? '') === 'contact'
+   && has($m[0]['subject'] ?? '', 'Portal message: New headshot') && ($m[0]['reply_to']['email'] ?? '') === 'jackson.horn@monthaus.com' && ($w[1][1][0] ?? '') === 'sent', json_encode($w) . json_encode($m));
 
 // 2026-10-08 (Nikki): a login is the PERSON's; the team's marketing is a section on each member's portal.
 [$c, , $b] = req('jon', '/portal/qr.php');
@@ -578,7 +644,7 @@ ok('an admin without a preview gets a 403 that explains', $c === 403 && has($b, 
 [, , $b] = req('nikki', '/portal/?preview=6');
 ok('an admin previewing Jackson\'s home sees HIS Hot Sheet areas, not their own',
    has($b, 'Preview:') && has($b, 'You get the Vail Valley Hot Sheet twice a week.') && !has($b, 'Summit County'), $b);
-[, , $b] = req('nikki', '/portal/hotsheets.php?preview=6');
+[, , $b] = req('nikki', '/portal/profile.php?preview=6');
 ok('…and the Hot Sheets tab agrees', has($b, 'Preview:') && has($b, 'value="vail-valley" checked') && !has($b, 'value="summit-county" checked'), $b);
 [$c, , $b] = req('nolink', '/portal/');
 ok('an unlinked agent gets a friendly 403', $c === 403 && has($b, 'not connected to your marketing'), "{$c} {$b}");

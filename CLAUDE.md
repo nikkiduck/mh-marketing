@@ -1909,6 +1909,29 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   (index.php) has an eye icon per agent that opens their portal as an
   admin preview; the checklist count, Profile meter and Subs marks left
   the list the same day (the agent page has them).
+- **Menu and My Profile (Nikki, 2026-10-12).** The nav is main tabs with
+  sub-menus (`portal_nav()` in inc/portal.php, one place): Home · My
+  Profile · My Marketing (Spend, Advertising, Collateral) · My Tools
+  (Elevation Planner, Social Templates = portal/social.php, QR Codes, Brand
+  Tools). Desktop: dropdowns; phones (< 720px): a Menu button opens a
+  stacked list with every group's pages under its name; a page in a group
+  also gets a row of sub-tabs under the header. Home mirrors it (a My
+  Profile card, then My Marketing and My Tools sections). `portal/profile.php`
+  is My Profile: name, email, title, headshot, MLS identities
+  (agent_mls_ids) and current listings (`portal_listings()`, the Hot Sheet
+  feed copy matched like the Instagram tool) read-only; cell phone, full +
+  short bio (Quill from assets/vendor, the admin page's safe tags), social
+  handles (stored bare, like agent.php) and the Hot Sheet subscription
+  editable; and a contact form (marketing_requests kind `contact`, emailed
+  via portal_send_mail). **Every change an agent makes is emailed to
+  marketing@ with who, what, before, after and when (Mountain time) and
+  left as a note on their agent page** (`portal_change_alert()`,
+  marketing_notes). The website picks the fields up from the roster feed
+  within the hour. The Hot Sheets form lives on the profile
+  (inc/portal_hotsheets.php renders it); portal/hotsheets.php only takes
+  the POST and sends a GET to the profile. `portal/elevation.php` is a tab
+  for now (Nikki: built with her later): a word on the planner and a button
+  to the website's demo at /elevation-plan/.
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` (or admin) +
   `users.intake_id`. Pilot (Nikki, 2026-10-06): Weber Boxer Group
   (Jonathan -> 30, Scott -> 21, Sara -> 23; the team row 8 is their

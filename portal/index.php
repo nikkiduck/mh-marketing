@@ -78,23 +78,10 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
 
 $own = portal_home_counts($conn, $acct);
 
-// Hot Sheets (2026-10-07): the signed-in person's own subscription, by their address.
-// An admin previewing sees the ACCOUNT's subscription (same rule as portal/hotsheets.php);
-// until 2026-10-08 the card read the admin's own row, so every preview listed the admin's areas.
-$hs = null;
-if (mk_table_exists($conn, 'hs_subscribers') && mk_column_exists($conn, 'hs_subscribers', 'areas')) {
-    require_once __DIR__ . '/../inc/boards.php';
-    require_once __DIR__ . '/../inc/agent_lifecycle.php';
-    if ($ctx['preview']) {
-        $hs = mk_hs_subscription($conn, (int)$ctx['acct']['id']);
-    } else {
-        $st = $conn->prepare("SELECT frequency, areas, is_active, unsubscribed_at FROM hs_subscribers WHERE email = ? LIMIT 1");
-        $em = strtolower(trim((string)$ctx['user']['email']));
-        $st->bind_param('s', $em); $st->execute();
-        $hs = $st->get_result()->fetch_assoc() ?: null;
-        $st->close();
-    }
-}
+// Hot Sheets: the person's own subscription (an admin previewing sees the account's), for the My Profile card.
+require_once __DIR__ . '/../inc/portal_hotsheets.php';
+$hs = portal_hs_ready($conn) ? portal_hs_load($conn, $ctx) : null;
+$phone = trim((string)($conn->query("SELECT cell_phone FROM marketing_intakes WHERE id = {$acct}")->fetch_assoc()['cell_phone'] ?? ''));
 
 $photo = trim((string)($ctx['acct']['headshot_face_url'] ?? '')) ?: trim((string)($ctx['acct']['headshot_url'] ?? ''));
 $is_team = ($ctx['acct']['entity_type'] ?? 'agent') === 'team';
@@ -109,41 +96,43 @@ portal_header($ctx, 'Home', 'home');
     </div>
   </div>
 
+  <?php // Home mirrors the menu (Nikki, 2026-10-12): My Profile, My Marketing, My Tools. ?>
   <div class="pt-cards">
-    <?php if ($hs !== null || mk_table_exists($conn, 'hs_subscribers')): // first (Nikki, 2026-10-07) ?>
-    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/hotsheets.php')) ?>">
-      <h2 class="pt-card-h">Internal Hot Sheets</h2>
-      <p class="pt-card-sub"><?php
-        $hs_areas = $hs ? mk_areas_decode($hs['areas']) : [];
-        if ($hs && (int)$hs['is_active'] && !$hs['unsubscribed_at'] && $hs_areas) {
-            echo 'You get the ' . ph(implode(', ', array_map('mk_area_name', $hs_areas))) . ' Hot Sheet' . (count($hs_areas) === 1 ? '' : 's')
-               . ' ' . ($hs['frequency'] === 'daily' ? 'every day' : 'twice a week') . '.';
-        } elseif ($hs && (int)$hs['is_active'] && !$hs['unsubscribed_at']) {
-            echo 'You are subscribed but have not chosen any areas yet, so nothing is being sent.';
-        } else {
-            echo 'Emailed Mont Haus listings, pocket listings, buyer reps and rentals, for the areas you choose.';
-        }
-      ?></p>
-      <span class="pt-card-go">Customize ›</span>
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
+      <h2 class="pt-card-h">My Profile</h2>
+      <p class="pt-card-sub"><?= $phone !== '' ? 'Phone ' . ph($phone) . '. ' : 'No phone on file yet. ' ?><?= $hs ? ph(portal_hs_summary($hs)) : '' ?></p>
+      <span class="pt-card-go">See and update ›</span>
     </a>
-    <?php endif; ?>
+  </div>
+
+  <h2 class="pt-h2 pt-home-h">My Marketing</h2>
+  <div class="pt-cards">
     <?php portal_home_cards($ctx, $ctx['scopes'][0], $own); ?>
+  </div>
+
+  <h2 class="pt-h2 pt-home-h">My Tools</h2>
+  <div class="pt-cards">
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/elevation.php')) ?>">
+      <h2 class="pt-card-h">Elevation Planner</h2>
+      <p class="pt-card-sub">Your business plan for the year, and how the year is tracking against it.</p>
+      <span class="pt-card-go">Open the planner ›</span>
+    </a>
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">
+      <h2 class="pt-card-h">Social Templates</h2>
+      <p class="pt-card-sub">Make an Instagram-ready picture of one of your listings: pick a photo, check the text, download the PNG.</p>
+      <span class="pt-card-go">Make a post ›</span>
+    </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/qr.php', $qr_n === 0 ? ['request' => 1] : [])) ?>">
-      <h2 class="pt-card-h">QR codes</h2>
+      <h2 class="pt-card-h">QR Codes</h2>
       <p class="pt-card-sub"><?= $qr_n === 0 ? 'You do not have any QR codes yet. Request one for a marketing project.'
           : ($qr_n === 1 ? 'You have 1 QR code. See where it points, or change it.'
                          : "You have {$qr_n} QR codes. See where each one points, or change it.") ?></p>
       <span class="pt-card-go"><?= $qr_n === 0 ? 'Request ›' : 'Review + Edit ›' ?></span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/brand.php')) ?>">
-      <h2 class="pt-card-h">Brand & templates</h2>
+      <h2 class="pt-card-h">Brand Tools</h2>
       <p class="pt-card-sub">MH brand guidelines, with logo files you can download, plus business card and yard sign designs.</p>
       <span class="pt-card-go">See the brand ›</span>
-    </a>
-    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">
-      <h2 class="pt-card-h">Instagram Posts</h2>
-      <p class="pt-card-sub">Make an Instagram-ready picture of one of your listings: pick a photo, check the text, download the PNG.</p>
-      <span class="pt-card-go">Make a post ›</span>
     </a>
   </div>
 

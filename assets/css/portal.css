@@ -32,11 +32,48 @@ img { max-width: 100%; }
 @media (min-width: 640px) { .pt-logo img { height: 64px; } }
 .pt-signout { color: #cfc6b3; font-size: 14px; text-decoration: none; }
 .pt-signout:hover { color: #fff; }
-.pt-nav { max-width: 960px; margin: 0 auto; padding: 0 8px; display: flex; gap: 2px; overflow-x: auto; }
-.pt-nav a { color: #cfc6b3; text-decoration: none; padding: 12px 12px 13px; font-size: 15px; white-space: nowrap;
-            border-bottom: 2px solid transparent; }
-.pt-nav a.on { color: #fff; border-bottom-color: var(--gold); }
-.pt-nav a:hover { color: #fff; }
+/* ── Menu (2026-10-12): main tabs with sub-menus. Desktop: a row, groups drop
+   down. Phone (< 720px): a Menu button opens a stacked list with every
+   group's pages shown under its name, so nothing is two taps deep. ────── */
+.pt-top-right { display: flex; align-items: center; gap: 14px; }
+.pt-menu-btn { display: none; background: transparent; border: 1px solid #3a352c; border-radius: 10px; color: #fff; padding: 8px 12px;
+               font: 500 14px var(--sans); cursor: pointer; align-items: center; gap: 4px; }
+.pt-menu-btn span { display: block; width: 18px; height: 2px; background: #fff; margin: 0; }
+.pt-menu-btn span + span { margin-top: 4px; }
+.pt-menu-btn b { font-weight: 500; margin-left: 8px; }
+.pt-nav { max-width: 960px; margin: 0 auto; padding: 0 8px; display: flex; gap: 2px; }
+.pt-nav-a { display: block; background: transparent; border: 0; color: #cfc6b3; text-decoration: none; padding: 12px 12px 13px;
+            font: 400 15px var(--sans); white-space: nowrap; border-bottom: 2px solid transparent; cursor: pointer; }
+.pt-nav-a.on, .pt-group.on > .pt-nav-a { color: #fff; border-bottom-color: var(--gold); }
+.pt-nav-a:hover { color: #fff; }
+.pt-caret { display: inline-block; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+            transform: rotate(45deg); margin: 0 0 3px 4px; }
+.pt-group { position: relative; }
+.pt-sub { display: none; position: absolute; left: 0; top: 100%; min-width: 220px; background: #1a1712; border: 1px solid #3a352c;
+          border-radius: 0 0 12px 12px; padding: 6px 0; z-index: 30; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
+.pt-group.open > .pt-sub, .pt-group:hover > .pt-sub, .pt-group:focus-within > .pt-sub { display: block; }
+.pt-sub a { display: block; color: #cfc6b3; text-decoration: none; padding: 11px 18px; font-size: 15px; white-space: nowrap; }
+.pt-sub a:hover, .pt-sub a.on { color: #fff; background: #2a2620; }
+.pt-sub a.on { box-shadow: inset 3px 0 0 var(--gold); }
+/* The group's pages as a row under the header, on every page in the group. */
+.pt-subnav-wrap { background: #fff; border-bottom: 1px solid var(--line); }
+.pt-subnav { max-width: 960px; margin: 0 auto; padding: 0 8px; display: flex; gap: 2px; overflow-x: auto; }
+.pt-subnav a { color: var(--muted); text-decoration: none; padding: 11px 12px; font-size: 15px; white-space: nowrap; border-bottom: 2px solid transparent; }
+.pt-subnav a.on { color: var(--text); border-bottom-color: var(--gold); }
+.pt-subnav a:hover { color: var(--text); }
+@media (max-width: 719px) {
+  .pt-menu-btn { display: flex; }
+  .pt-nav { display: none; flex-direction: column; gap: 0; padding: 0 0 8px; border-top: 1px solid #3a352c; }
+  body.pt-nav-open .pt-nav { display: flex; }
+  .pt-nav-a { padding: 14px 20px; font-size: 17px; border-bottom: 0; border-left: 3px solid transparent; width: 100%; text-align: left; }
+  .pt-nav-a.on, .pt-group.on > .pt-nav-a { border-bottom-color: transparent; border-left-color: var(--gold); }
+  .pt-group-btn { pointer-events: none; }          /* on a phone the group is a heading: its pages are always listed */
+  .pt-caret { display: none; }
+  .pt-sub, .pt-group:hover > .pt-sub, .pt-group:focus-within > .pt-sub { display: block; position: static; min-width: 0; background: transparent;
+          border: 0; border-radius: 0; padding: 0 0 6px; box-shadow: none; }
+  .pt-sub a { padding: 11px 20px 11px 40px; font-size: 16px; }
+  .pt-sub a.on { background: #2a2620; box-shadow: inset 3px 0 0 var(--gold); }
+}
 
 /* ── Page ───────────────────────────────────────────────────────────────── */
 .pt-main { max-width: 960px; margin: 0 auto; padding: 26px 16px 48px; }
@@ -167,3 +204,37 @@ a.pt-card:hover { border-color: var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,.
 .pt-fig figcaption b { display: block; font-size: 18px; font-weight: 500; }
 .pt-fig .pt-row { margin-top: 8px; }
 .pt-fig .pt-btn { padding: 10px 14px; font-size: 15px; }
+
+/* ── My Profile (2026-10-12) and the Home sections ───────────────────────── */
+.pt-home-h { margin-top: 32px; font-size: 24px; }
+.pt-section { margin-bottom: 18px; scroll-margin-top: 16px; }
+.pt-section .pt-card-h { font-size: 24px; }
+.pt-section > .pt-card-sub { margin-bottom: 14px; }
+.pt-h3 { font-family: var(--serif); font-weight: 500; font-size: 22px; margin: 18px 0 10px; }
+.pt-who { display: flex; gap: 18px; align-items: center; margin-bottom: 18px; }
+.pt-who-text { min-width: 0; }
+.pt-who-text .pt-card-sub { overflow-wrap: anywhere; }
+.pt-avatar.large { width: 96px; height: 96px; display: block; }
+.pt-form.pt-inline { max-width: 420px; }
+.pt-grid2 { display: grid; grid-template-columns: 1fr; gap: 0 20px; }
+@media (min-width: 640px) { .pt-grid2 { grid-template-columns: 1fr 1fr; } }
+.pt-kv { display: grid; grid-template-columns: 1fr; gap: 8px; }
+@media (min-width: 640px) { .pt-kv { grid-template-columns: 1fr 1fr; } }
+.pt-kv div { display: flex; justify-content: space-between; gap: 12px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+.pt-kv span { color: var(--muted); font-size: 14px; }
+.pt-kv b { font-weight: 500; overflow-wrap: anywhere; text-align: right; }
+.pt-list { display: flex; flex-direction: column; gap: 10px; }
+.pt-list-row { display: flex; gap: 14px; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+               padding: 10px 12px; color: inherit; text-decoration: none; }
+a.pt-list-row[href]:hover { border-color: var(--gold); }
+.pt-list-row img, .pt-list-nopic { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex: none; background: #e9e3d6; display: block; }
+.pt-list-text { min-width: 0; }
+.pt-list-text b { display: block; font-weight: 500; overflow-wrap: anywhere; }
+.pt-list-text span { color: var(--muted); font-size: 14px; }
+/* The bio editor: Quill's box in our colours; the textarea stands in when Quill is absent. */
+.pt-editor { background: #fff; border-radius: 0 0 10px 10px; min-height: 180px; font: 16px var(--sans); color: var(--text); }
+.pt-editor .ql-editor { min-height: 180px; font-size: 16px; line-height: 1.5; }
+.ql-toolbar.ql-snow { border-color: var(--line); border-radius: 10px 10px 0 0; background: #fff; }
+.ql-container.ql-snow { border-color: var(--line); }
+.pt-editor-fallback { display: none; }
+.pt-form .pt-editor-fallback { margin-top: 6px; }

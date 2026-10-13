@@ -9,8 +9,15 @@ sql/creatives_v1.sql, inc/creatives.php, upload fields on agent.php's
 Advertising creatives and Collateral orders, creative.php for admins,
 portal/asset.php for agents) and the Phase 3 Advertising and Print orders
 pages (portal/advertising.php, portal/orders.php, home cards, nav).
-tests/render_portal.php: 113 assertions. Pilot (Nikki, 2026-10-06): Weber
+tests/render_portal.php: 140 assertions (2026-10-12). Pilot (Nikki, 2026-10-06): Weber
 Boxer Group (Jonathan, Scott, Sara), Bryan Cournoyer, Jackson Horn.
+**2026-10-12 (Nikki):** menu restructured into main tabs with sub-menus
+(Home, My Profile, My Marketing, My Tools), phone-friendly; My Profile
+built (read-only identity, boards and listings; editable phone, bio,
+social handles, Hot Sheets; contact form); every agent change alerts
+marketing@ and notes the agent page. Elevation Planner is a placeholder
+tab. Team beta opened 2026-10-10 (Jonathan, Jean-Michel, Jackson, Megan,
+Scott, Bryan).
 **Access check 2026-10-08:** no pilot agent can sign in yet. The server's
 inc/config.php is the pre-a28cd18 copy (allowlist = the four admins, no
 CREATIVES_DIR; /var/www/creatives does not exist), no `users.intake_id` is
