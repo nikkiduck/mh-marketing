@@ -44,8 +44,8 @@ b8e198e7cc0617a6128cf965b5c1cdc0  inc/boards.php
 3c25b2f69d20d7bec56a4ef84b11b9b2  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
 0f2ccd665f7cf6ebef2b916bff6ea510  inc/financials.php
-6e40606532c2cf62e8bd7838cad79243  inc/flyer.php
-e119b1e069e44a6f9ccbe3b1efb8e413  inc/flyer_render.php
+758035c7cd19b89138d0551975b9f411  inc/flyer.php
+68def6579f0fb2b41872ad289c35c550  inc/flyer_render.php
 1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
 ef0c14279cdbaef87219fc1ba01931ea  inc/hs_data.php
 e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
@@ -62,7 +62,7 @@ c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-c84e7834c476730fb4c757d6fd01c0df  inc/social.php
+2d771d675b4f288e3766e25d18230731  inc/social.php
 01e6be69100b1e3a076cb3c5ba109132  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -86,7 +86,7 @@ c141d4e49e830a83cfd047aca3ad5d49  portal/asset.php
 32d55d208d6c858e685bbe7a6e7fd466  portal/brand.php
 0f9c154074c6ffe5c3e60246a1c500cd  portal/contact.php
 034e7c38b450646eb5edfbf821a5bfe5  portal/elevation.php
-fe150115c0914d608e8837942cc0b354  portal/flyer.php
+6cf40c859e80510c5d4746c6d1722bed  portal/flyer.php
 db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
