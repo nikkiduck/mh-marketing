@@ -21,9 +21,9 @@
  * read in a fast scroll: Nikki, 2026-10-12), a short rule, a HEADLINE, then
  * SUB LINES each in a style the agent picks (small capitals gold, large
  * serif, light, italic serif, plain), blank lines simply absent so nothing
- * leaves a gap; the Mont Haus logo top-right over the photo on the
- * full-photo family (2026-10-13; bottom-right of the text block on the
- * split family). No agent row (Nikki,
+ * leaves a gap; the Mont Haus logo bottom-right (a top-right version was
+ * tried and dropped on 2026-10-13: the shadow it needed over a photo did
+ * not suit; a long address wraps instead). No agent row (Nikki,
  * 2026-10-12: no headshot or contact details). Open House adds a date and a
  * time line above the headline. Two looks: dark (ink) and light (the
  * brand's cream). The photo is framed by zoom + focus (drag on the portal):
@@ -221,11 +221,11 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // MH_vert-stack_brown.svg is the black file with its fill changed), and a fade that
         // starts higher and lands almost solid cream, because the words were hard to read.
         ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31',
-           'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none', 'logoshadow' => 'drop-shadow(0 0 12px rgba(241,236,226,.9))',
+           'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none',
            'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.72) 38%, rgba(241,236,226,.94) 62%, rgba(241,236,226,1) 100%', 'fullh' => '56%',
            'logo' => $base . '/assets/images/MH_vert-stack_brown.svg', 'mark' => $base . '/assets/images/M-mark_brown.svg']
         : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da',
-           'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'logoshadow' => 'drop-shadow(0 2px 12px rgba(0,0,0,.45))',
+           'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)',
            'fullfade' => 'rgba(0,0,0,0) 0%, rgba(12,11,9,.86) 100%', 'fullh' => '58%',
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
 
@@ -237,8 +237,9 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $bodyCss = $full
         ? ".body{position:absolute;left:0;right:0;bottom:0;padding:0 64px 64px;box-sizing:border-box;text-shadow:{$c['shadow']}}"
         . ".photo::after{height:{$c['fullh']};background:linear-gradient(to bottom,{$c['fullfade']})}"
-        // The logo sits top-right over the photo (Nikki, 2026-10-13), so the words have the full width.
-        . ".logo{top:64px;right:64px;bottom:auto;height:132px;z-index:2;filter:{$c['logoshadow']}}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
+        // The logo stays bottom-right in the band (a top-right version with a shadow was
+        // tried and dropped the same day, 2026-10-13: Nikki); a long address wraps instead.
+        . ".logo{bottom:64px;height:132px}.lines{padding-right:260px}.rule{margin-bottom:22px}"
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
@@ -294,9 +295,8 @@ CSS;
     }
     $headline = (string)($p['headline'] ?? '');
     if ($headline !== '') {
-        // The headline has the full width on the full-photo family (the logo is top-right
-        // since 2026-10-13) and may wrap to a second line when still long after
-        // social_short_address(), rather than shrinking away.
+        // The headline keeps clear of the logo (padding-right) and may wrap to a second
+        // line when still long after social_short_address(), rather than shrinking away.
         // When it wraps the two lines are balanced (text-wrap) and the unit number stays
         // with the word before it, so "#1513" is never a line by itself (Nikki, 2026-10-13).
         $size = ($oh && !$full) ? social_fit_size($headline, 46, [34 => 40, 42 => 34, 52 => 28])
@@ -314,14 +314,11 @@ CSS;
         $lines .= '<p class="ln ln-' . $s . '">' . $e($t) . '</p>';
     }
     if ($lines !== '') $body .= '<div class="lines">' . $lines . '</div>';
-    // The full-photo family carries the logo at page level (top-right over the photo);
-    // the split family keeps it inside the text block, bottom-right.
-    $logoHtml = '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
-    if (!$full) $body .= $logoHtml;
+    $body .= '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
          . '<title>' . $e($headline !== '' ? $headline : 'Post') . '</title><style>' . $css . '</style></head><body>'
-         . '<div class="photo">' . $photoHtml . '</div>' . $pill . ($full ? $logoHtml : '')
+         . '<div class="photo">' . $photoHtml . '</div>' . $pill
          . '<div class="body">' . $body . '</div>'
          . '</body></html>';
 }

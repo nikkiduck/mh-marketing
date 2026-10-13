@@ -1976,7 +1976,8 @@ the site, or the agent's own upload) framed by drag + zoom, words (a
 Headline and Text 1 to 4, each in a style: Small Caps Gold, Large Serif,
 Light, Italic Serif, Plain; a blank line takes no room), a label on the
 photo (solid gold pill; ready-made, none, or custom), the Mont Haus logo
-top-right over the photo (2026-10-13; the words have the full width). No agent headshot or contact details
+bottom-right (a top-right version was tried and dropped 2026-10-13; a
+long headline wraps, balanced, instead). No agent headshot or contact details
 (Nikki, 2026-10-12). Live preview, Download PNG, Share… on phones. Plan and
 mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
 - **One render path.** `social_render()` (inc/social_render.php, standalone)
