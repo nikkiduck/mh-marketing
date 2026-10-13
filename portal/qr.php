@@ -221,7 +221,7 @@ if ($sent_view): ?>
     $profile_url = $can_profile ? qr_profile_url((string)$edit['slug']) : '';
 ?>
   <h1 class="pt-h1">Where should “<?= ph($edit['label'] ?: $edit['code']) ?>” go?</h1>
-  <p class="pt-lead">The printed code stays the same. Only where it sends people changes, straight away.</p>
+  <p class="pt-lead">The printed code stays the same. Only the destination URL changes.</p>
 
   <?php if (!(int)$edit['is_active']): ?>
     <div class="pt-flash err">This QR code is paused. Email <?= PORTAL_MARKETING_EMAIL ?> to turn it back on.</div>

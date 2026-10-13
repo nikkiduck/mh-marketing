@@ -12,20 +12,20 @@ $ctx = portal_context($conn);
 
 $items = [
     ['Brand guidelines', '/brand-guidelines/#downloads',
-     'Colors, type, how the logo is used, and the logo files you can download and use: the full set as a ZIP, or each mark on its own.',
+     'Colors, type, how the logo is used, and the logo files for download.',
      'Download the logos ›'],
     ['Business card templates', '/brand-guidelines/business-cards/',
-     'The business card designs Mont Haus prints, front and back, so you can see what to ask for.',
+     'Current MH business card designs.',
      'See the designs ›'],
     ['Yard sign templates', '/brand-guidelines/yard-signs/',
-     'The yard sign layouts, with a broker version and a team version of each.',
+     'Current MH yard sign layouts.',
      'See the designs ›'],
 ];
 
 portal_header($ctx, 'Brand & templates', 'brand');
 ?>
-  <h1 class="pt-h1">Brand & templates</h1>
-  <p class="pt-lead">The Mont Haus brand, and the designs your collateral is built from. Each opens in a new tab.</p>
+  <h1 class="pt-h1">Brand Tools</h1>
+  <p class="pt-lead">The Mont Haus brand and current designs.</p>
 
   <div class="pt-cards">
     <?php foreach ($items as [$title, $url, $sub, $go]): ?>

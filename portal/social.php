@@ -43,7 +43,7 @@ portal_header($ctx, 'Social posts', 'social');
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
   <h1 class="pt-h1">Instagram Post Template</h1>
-  <p class="pt-lead">Pick a listing, choose and frame the photo, edit the text, and download.</p>
+  <p class="pt-lead">Pick a listing, choose and frame the photo, edit the text, and download. If you'd like to create a custom post, you may download the MH logos from the Brand Tools tab.</p>
 
 <?php if (!$listings): ?>
   <div class="pt-flash err">We do not see any live listings under your name yet. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</div>
