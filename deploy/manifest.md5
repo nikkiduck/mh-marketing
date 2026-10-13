@@ -1,6 +1,6 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-12 18:44 from git HEAD in the Mont Haus Master folder.
-9bd03a7d4f375a3c13b53e2c5da8c0ef  agent.php
+# Generated 2026-10-12 18:58 from git HEAD in the Mont Haus Master folder.
+e897e219ae529b23ba991f207e75dc5e  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 c4984ee573dd0128324b9897d5565ed3  api/roster.php
@@ -70,7 +70,7 @@ c141d4e49e830a83cfd047aca3ad5d49  portal/asset.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
 9d949638fcd8f94592ac9fb1e95f9067  portal/index.php
 06abe9e045b7b83f3ce99ccc25f0b5b7  portal/orders.php
-e8b5a26801c7e3aeebb28bcc432a39ec  portal/profile.php
+9eb4b43b93cdf423c2d48a3c89790b8e  portal/profile.php
 e6411bc80e28c79a013e475e5dc875eb  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
 908dcc84a949035762b0a758028c89f9  portal/social.php
@@ -93,5 +93,5 @@ e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 90750ac4905fdab022c241560911f5ba  website_order.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
-a6da3e2a0728c46b43ce19bb8e620928  assets/css/portal.css
+0a7e678729cb7a5bf43c326471ec4cd6  assets/css/portal.css
 9bdf507aa67ce88737f7f33fc7221b86  assets/css/social.css
