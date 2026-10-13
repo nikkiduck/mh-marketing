@@ -569,7 +569,8 @@ document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { do
  * Page bottom: the Contact marketing form on every page (Nikki, 2026-10-13;
  * it was a section of My Profile). Posts to portal/contact.php, which sends
  * the person back to the page they wrote from. Reads the page's $ctx; an
- * admin preview shows the email address alone.
+ * admin preview shows the form as the agent sees it, with its fields
+ * disabled (Nikki, 2026-10-13: hidden, it looked as if it had not rendered).
  */
 function portal_footer(): void {
     global $ctx;
@@ -584,13 +585,13 @@ function portal_footer(): void {
     <h2 class="pt-h2">Contact marketing</h2>
     <p class="pt-foot-sub">A question, a change we should make, something you need. Email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a> or write here.</p>
     <?php if ($flash): ?><div class="pt-flash <?= $flash[0] === 'ok' ? 'ok' : 'err' ?>"><?= ph($flash[1]) ?></div><?php endif; ?>
-    <?php if (!$preview && !empty($_SESSION['csrf_token'])): ?>
+    <?php if (!empty($_SESSION['csrf_token'])): $dis = $preview ? ' disabled' : ''; ?>
     <form method="post" class="pt-form pt-foot-form" action="/portal/contact.php">
       <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
       <input type="hidden" name="back" value="<?= ph($back) ?>">
-      <label>Subject <input type="text" name="subject" maxlength="200" required placeholder="e.g. New headshot"></label>
-      <label>Message <textarea name="message" rows="4" maxlength="4000" required></textarea></label>
-      <div class="pt-row"><button type="submit" class="pt-btn main">Send to marketing</button></div>
+      <label>Subject <input type="text" name="subject" maxlength="200" required placeholder="e.g. New headshot"<?= $dis ?>></label>
+      <label>Message <textarea name="message" rows="4" maxlength="4000" required<?= $dis ?>></textarea></label>
+      <div class="pt-row"><button type="submit" class="pt-btn main"<?= $dis ?>>Send to marketing</button><?php if ($preview): ?><span class="pt-help" style="align-self:center">Preview: the form is turned off.</span><?php endif; ?></div>
     </form>
     <?php endif; ?>
   </div>

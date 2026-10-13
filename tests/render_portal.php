@@ -658,8 +658,8 @@ ok('…and links keep the preview', has($b, 'preview=6'));
 ok('an admin without a preview gets a 403 that explains', $c === 403 && has($b, 'preview'), "{$c}");
 // 2026-10-08: the home card showed the ADMIN's own Hot Sheet areas on every preview (Bryan's preview listed all six).
 [, , $b] = req('nikki', '/portal/?preview=6');
-ok('an admin previewing Jackson\'s home sees HIS home (email line, no form in the footer)',
-   has($b, 'Preview:') && has($b, 'jackson.horn@monthaus.com') && !has($b, 'nikki.boxer@monthaus.com') && !has($b, 'action="/portal/contact.php"'), $b);
+ok('an admin previewing Jackson\'s home sees HIS home (email line, the footer form shown but turned off)',
+   has($b, 'Preview:') && has($b, 'jackson.horn@monthaus.com') && !has($b, 'nikki.boxer@monthaus.com') && has($b, 'action="/portal/contact.php"') && has($b, 'placeholder="e.g. New headshot" disabled') && has($b, 'Preview: the form is turned off.'), $b);
 [, , $b] = req('nikki', '/portal/profile.php?preview=6');
 ok('…and the Hot Sheets tab agrees', has($b, 'Preview:') && has($b, 'value="vail-valley" checked') && !has($b, 'value="summit-county" checked'), $b);
 [$c, , $b] = req('nolink', '/portal/');
