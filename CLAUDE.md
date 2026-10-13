@@ -2020,6 +2020,35 @@ mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
   it as `/portal/social.php?preview=30`. No Instagram posting, ever (Nikki):
   the agent uploads the PNG.
 
+### Listing Flyer (portal/flyer.php, 2026-10-13)
+
+A printed Letter-size PDF of one of the agent's listings, after the
+InDesign display template in "Listings Display Flyer" (Nikki's Documents):
+headline, address, price, a beds / baths / sq ft box, optional notes, up to
+six photos in the order picked (hero, then two across, then three; fewer
+photos = fewer rows, the grid stretches), footer with the logo, name,
+phone, monthaus.com, email and a QR code. Nav: My Tools > Listing Flyer.
+- `inc/flyer_render.php` (standalone layout at 612 x 792 pt, Jost) and
+  `inc/flyer.php` (rules, QR, PDF export) sit on the Instagram tool's data
+  layer: `social_listings()` (now with `url`), `social_photos()`,
+  uploads, `social_gate()`, the same endpoints for photos and uploads.
+  ONE render path, as for the posts: preview iframe and PDF from the same
+  HTML; `flyer_render($p, null, true)` embeds fonts and reads uploads from
+  disk.
+- PDF: Chromium `--print-to-pdf` (page size from `@page`), same temp dir
+  and lock as the Instagram export (`flyer_export_pdf()`); a copy of each
+  PDF is kept beside the PNGs in CREATIVES_DIR/social/<intake id>/.
+  Photos: the hero at the site's 2048 rendition (img.php allows 2048 since
+  2026-10-13), the rest at 1600; about 220 dpi on the hero.
+- QR: `qrencode` (Debian package, installed 2026-10-13 with Nikki's OK) as
+  inline SVG, level H, the triangle mark over the centre
+  (assets/images/triangle_mark-black.svg). Choices: the listing's page on
+  the site (hs_listing_state.url, default), each of the account's active
+  dynamic codes (qr_codes → qr_public_url()), or none.
+- Everything posted is checked in `flyer_post_from_request()`: the
+  account's listing, photos from the site's list for it or the account's
+  uploads (six at most), the QR choice from `flyer_qr_options()`, lengths.
+
 ### Render harnesses: run them on a server
 The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`
 so the stub is the only `mysqli`. Homebrew's PHP 8.5 on Nikki's Mac compiles

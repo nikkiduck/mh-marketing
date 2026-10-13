@@ -100,7 +100,7 @@ function social_listings(mysqli $conn, array $ctx): array {
     if (!$conds) return $cache;
 
     $st = $conn->prepare("SELECT market, listing_key, mls_id, status, is_rental, property_type, address, city,
-                                 list_price, beds, baths, sqft, primary_photo
+                                 list_price, beds, baths, sqft, primary_photo, url
                             FROM hs_listing_state
                            WHERE in_feed = 1 AND status IN ('Active','Active Under Contract','Pending','Coming Soon')
                              AND (" . implode(' OR ', $conds) . ")

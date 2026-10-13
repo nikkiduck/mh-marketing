@@ -118,3 +118,19 @@ constant.
 - Pinch to zoom on phones (the slider works there today).
 - The Aspen board's photos carry a "Property of Aspen/Glenwood MLS"
   watermark in the image itself; nothing we can do except pick another photo.
+
+## Listing Flyer (2026-10-13)
+
+A second template on the same foundation: `portal/flyer.php`, a printed
+Letter-size PDF after the InDesign display template (Nikki's "Listings
+Display Flyer" folder). Same listings, photos, uploads and gate as the
+Instagram tool; its own layout (`inc/flyer_render.php`, 612 x 792 pt, Jost)
+and rules (`inc/flyer.php`). The agent picks up to six photos in order (the
+first is the hero, then rows of two and three; fewer photos, fewer rows),
+may add a headline and notes under the details, and chooses the QR code:
+the listing's page on the site, one of their dynamic QR codes, or none.
+The PDF is Chromium's print of the same HTML the preview shows
+(`--print-to-pdf`); the QR is an inline SVG from `qrencode` (installed
+2026-10-13) with the triangle mark in the centre. The hero photo uses the
+site's full 2048 rendition (img.php allows it since 2026-10-13), about 220
+dpi across the page: fine for a flyer, not for a glossy brochure.

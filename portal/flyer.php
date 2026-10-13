@@ -1,0 +1,229 @@
+<?php
+/**
+ * portal/flyer.php — Listing Flyer (Nikki, 2026-10-13): a printed Letter-size
+ * PDF of one of the agent's listings, after the InDesign display template.
+ * Pick a listing, pick up to six photos in order (the first is the big one),
+ * check the words (headline, address, price, the three figures, optional
+ * notes under them, contact lines), choose the QR code, download the PDF.
+ * inc/flyer.php has the rules; inc/flyer_render.php the layout. Photos and
+ * uploads come through the Instagram tool's endpoints (social_photos.php,
+ * social_upload.php, social_asset.php).
+ *
+ * The preview is an iframe whose srcdoc is the HTML flyer_render.php returns
+ * for the form as it stands (fetch on every change, debounced), scaled to
+ * fit. Download PNG's sibling here is Download PDF: the same form posted to
+ * flyer_export.php, which prints the same HTML.
+ */
+require_once __DIR__ . '/../inc/flyer.php';
+
+$ctx = portal_context($conn);
+social_gate();
+
+$listings   = array_values(social_listings($conn, $ctx));
+$agent      = flyer_agent($conn, $ctx);
+$render_url = portal_url($ctx, '/portal/flyer_render.php');
+$export_url = portal_url($ctx, '/portal/flyer_export.php');
+$photos_url = portal_url($ctx, '/portal/social_photos.php');
+$upload_url = portal_url($ctx, '/portal/social_upload.php');
+
+/** "Under Contract" for the RESO value; the rest as sent. */
+function flyer_status_words(string $s): string {
+    return $s === 'Active Under Contract' ? 'Under Contract' : $s;
+}
+
+// The QR choices per listing, for the dropdown to switch as the listing changes.
+$qr_by_listing = [];
+foreach ($listings as $l) $qr_by_listing[$l['id']] = array_map(fn($o) => $o[0], flyer_qr_options($conn, $ctx, $l));
+
+portal_header($ctx, 'Listing Flyer', 'flyer');
+?>
+<link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
+<link rel="stylesheet" href="/assets/css/flyer.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/flyer.css') ?>">
+  <h1 class="pt-h1">Listing Flyer</h1>
+  <p class="pt-lead">A printed flyer of one of your listings, Letter size. Pick the listing and up to six photos, check the text, and download the PDF.</p>
+
+<?php if (!$listings): ?>
+  <div class="pt-flash err">We do not see any live listings under your name yet. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</div>
+<?php else: ?>
+  <div class="sp-grid fl-grid">
+    <form id="flForm" class="sp-form" method="post" action="<?= ph($export_url) ?>" autocomplete="off">
+      <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
+      <div id="flOrder"></div>
+
+      <section class="sp-step">
+        <h2 class="sp-step-h"><span>1</span>Listing</h2>
+        <label class="sp-field">Which listing
+          <select name="listing">
+            <?php $groups = ['Listings' => array_filter($listings, fn($l) => !(int)$l['is_rental']),
+                             'Rentals'  => array_filter($listings, fn($l) => (int)$l['is_rental'])];
+            foreach ($groups as $gname => $group): if (!$group) continue; ?>
+            <optgroup label="<?= ph($gname) ?>">
+              <?php foreach ($group as $l): ?>
+              <option value="<?= ph($l['id']) ?>"><?= ph(implode('  ·  ', array_filter([$l['address'] . ', ' . $l['city'], $l['price_text'], flyer_status_words((string)$l['status'])]))) ?></option>
+              <?php endforeach; ?>
+            </optgroup>
+            <?php endforeach; ?>
+          </select>
+        </label>
+      </section>
+
+      <section class="sp-step">
+        <h2 class="sp-step-h"><span>2</span>Photos</h2>
+        <p class="fl-hint">Tap photos in the order you want them: the first is the big one, then two across, then three. Up to six. Tap again to take one out.</p>
+        <div class="sp-photos fl-photos" id="flPhotos"><div class="sp-wait">Loading photos…</div></div>
+        <div class="sp-drop" id="flDrop">
+          <span id="flDropMsg">Or add your own: drop a photo here, or <label class="sp-link" for="flFile">choose one</label>.</span>
+          <small>JPG, PNG or WEBP, up to 20 MB.</small>
+          <input type="file" id="flFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
+        </div>
+      </section>
+
+      <section class="sp-step">
+        <h2 class="sp-step-h"><span>3</span>Text</h2>
+        <div class="sp-fields">
+          <label class="sp-field">Headline (optional) <input name="title" maxlength="80" placeholder="Beautiful Simba Run Update"></label>
+          <label class="sp-field">Address line <input name="address" maxlength="90"></label>
+          <div class="fl-four">
+            <label class="sp-field">Price <input name="price" maxlength="40"></label>
+            <label class="sp-field">Beds <input name="beds" maxlength="10"></label>
+            <label class="sp-field">Baths <input name="baths" maxlength="10"></label>
+            <label class="sp-field">Sq Ft <input name="sqft" maxlength="12"></label>
+          </div>
+          <label class="sp-field">Notes under the details (optional) <textarea name="notes" maxlength="900" rows="3" placeholder="A few lines about the home, or leave this empty."></textarea></label>
+          <h3 class="sp-sub">Contact</h3>
+          <div class="fl-three">
+            <label class="sp-field">Name <input name="agent_name" maxlength="60" value="<?= ph($agent['name']) ?>"></label>
+            <label class="sp-field">Phone <input name="agent_phone" maxlength="30" value="<?= ph($agent['phone']) ?>"></label>
+            <label class="sp-field">Email <input name="agent_email" maxlength="80" value="<?= ph($agent['email']) ?>"></label>
+          </div>
+          <label class="sp-field">QR code <select name="qr" id="flQr"></select></label>
+        </div>
+      </section>
+
+      <div class="sp-actions">
+        <button type="submit" class="sp-btn">Download PDF</button>
+        <p class="sp-help">The download is a Letter-size PDF (8.5 × 11 in), ready to print or email.</p>
+      </div>
+    </form>
+
+    <aside class="sp-preview">
+      <div class="sp-stage fl-stage" id="flStage">
+        <iframe id="flFrame" title="Preview" width="816" height="1056" scrolling="no"></iframe>
+        <div class="sp-busy" id="flBusy"></div>
+      </div>
+      <p class="sp-cap">This is a preview. Click Download to save as a PDF.</p>
+      <p class="sp-cap-btn"><button type="submit" form="flForm" class="sp-btn sp-btn-sm">Download PDF</button></p>
+    </aside>
+  </div>
+
+<script>
+(function () {
+  const L = <?= json_encode($listings, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
+  const QR = <?= json_encode($qr_by_listing, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
+  const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>;
+  const form = document.getElementById('flForm'), frame = document.getElementById('flFrame'), stage = document.getElementById('flStage'),
+        photos = document.getElementById('flPhotos'), busy = document.getElementById('flBusy'), order = document.getElementById('flOrder'),
+        drop = document.getElementById('flDrop'), dropMsg = document.getElementById('flDropMsg'), fileIn = document.getElementById('flFile'),
+        qrSel = document.getElementById('flQr');
+  const f = n => form.elements[n];
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+  const listing = () => L.find(l => l.id === f('listing').value);
+  let picked = [];   // photo ids in order
+
+  function fill(l) {
+    if (!l) return;
+    f('address').value = l.address + (l.city ? ', ' + l.city : '');
+    f('price').value = l.price_text;
+    f('beds').value = l.beds && +l.beds > 0 ? String(+l.beds) : '';
+    f('baths').value = l.baths && +l.baths > 0 ? String(+l.baths) : '';
+    f('sqft').value = l.sqft && +l.sqft > 0 ? (+l.sqft).toLocaleString('en-US') : '';
+    qrSel.innerHTML = Object.entries(QR[l.id] || {}).map(([k, v]) => '<option value="' + esc(k) + '">' + esc(v) + '</option>').join('');
+  }
+  let timer, seq = 0;
+  function update() { clearTimeout(timer); timer = setTimeout(render, 300); }
+  async function render() {
+    const n = ++seq; busy.classList.add('on');
+    try {
+      const r = await fetch(RENDER, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
+      const html = await r.text();
+      if (n === seq) frame.srcdoc = html;
+    } catch (e) {}
+    finally { if (n === seq) busy.classList.remove('on'); }
+  }
+  function scale() {
+    const w = stage.clientWidth;
+    frame.style.transform = 'scale(' + (w / 816) + ')';
+    stage.style.height = Math.round(1056 * w / 816) + 'px';
+  }
+
+  // ── Photos in order ──
+  function tile(p) {
+    return '<button type="button" class="fl-photo' + (p.own ? ' own' : '') + '" data-id="' + esc(p.id) + '"><img src="' + esc(p.thumb) + '" alt="" loading="lazy"><i></i>' + (p.own ? '<b>Yours</b>' : '') + '</button>';
+  }
+  function syncOrder() {
+    order.innerHTML = picked.map(id => '<input type="hidden" name="photo[]" value="' + esc(id) + '">').join('');
+    photos.querySelectorAll('.fl-photo').forEach(el => {
+      const i = picked.indexOf(el.dataset.id);
+      el.classList.toggle('on', i >= 0);
+      el.querySelector('i').textContent = i >= 0 ? String(i + 1) : '';
+    });
+  }
+  photos.addEventListener('click', e => {
+    const el = e.target.closest('.fl-photo'); if (!el) return;
+    const id = el.dataset.id, i = picked.indexOf(id);
+    if (i >= 0) picked.splice(i, 1);
+    else if (picked.length < 6) picked.push(id);
+    else return;
+    syncOrder(); update();
+  });
+  async function loadPhotos() {
+    const l = listing(); if (!l) return;
+    photos.innerHTML = '<div class="sp-wait">Loading photos…</div>';
+    const u = new URL(PHOTOS, location.origin); u.searchParams.set('listing', l.id);
+    let j = { photos: [] };
+    try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
+    if (!j.photos || !j.photos.length) {
+      photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Add your own below.</div>';
+      picked = []; syncOrder(); update(); return;
+    }
+    photos.innerHTML = j.photos.map(tile).join('');
+    picked = j.photos.filter(p => !p.own).slice(0, 6).map(p => p.id);   // the first six board photos to start
+    syncOrder(); update();
+  }
+  async function upload(file) {
+    if (!file) return;
+    drop.classList.add('busy'); dropMsg.textContent = 'Uploading ' + file.name + '…';
+    const fd = new FormData(); fd.append('csrf_token', f('csrf_token').value); fd.append('photo', file);
+    let j = {};
+    try { j = await (await fetch(UPLOAD, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); }
+    catch (e) { j = { error: 'The upload did not go through. Please try again.' }; }
+    drop.classList.remove('busy'); fileIn.value = '';
+    if (j.error) { dropMsg.textContent = j.error; return; }
+    dropMsg.innerHTML = 'Added. Drop another, or <label class="sp-link" for="flFile">choose one</label>.';
+    photos.querySelector('.sp-wait')?.remove();
+    photos.insertAdjacentHTML('afterbegin', tile({ id: j.id, thumb: j.thumb, own: true }));
+    if (picked.length < 6) picked.push(j.id);
+    syncOrder(); update();
+  }
+  fileIn.addEventListener('change', e => upload(e.target.files[0]));
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => upload(e.dataTransfer.files[0]));
+
+  // ── Wiring ──
+  form.addEventListener('input', e => {
+    if (e.target.name === 'listing') { fill(listing()); loadPhotos(); return; }
+    update();
+  });
+  form.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') e.preventDefault();
+  });
+  form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), 15000); });
+
+  new ResizeObserver(scale).observe(stage); scale();
+  fill(listing());
+  loadPhotos();
+})();
+</script>
+<?php endif;
+portal_footer();

@@ -471,6 +471,7 @@ function portal_nav(): array {
         'tools'     => ['My Tools', null, [
             'elevation' => ['Elevation Planner', '/portal/elevation.php'],
             'social'    => ['Templates', '/portal/social.php'],   // "Templates" (Nikki, 2026-10-13): Instagram posts today, more to come
+            'flyer'     => ['Listing Flyer', '/portal/flyer.php'], // 2026-10-13: the printed Letter-size flyer (PDF)
             'qr'        => ['QR Codes', '/portal/qr.php'],
             'brand'     => ['Brand Tools', '/portal/brand.php'],
         ]],

@@ -1,0 +1,26 @@
+/* flyer.css — the Listing Flyer builder (portal/flyer.php, 2026-10-13).
+   Loaded after social.css and reuses its steps, fields, drop zone, buttons
+   and preview stage; this file only adds the Letter-size stage and the
+   ordered photo picker. */
+
+.fl-stage { max-width: 420px; background: #fff; }
+.fl-stage iframe { width: 816px; height: 1056px; background: #fff; }
+@media (min-width: 900px) { .fl-grid { grid-template-columns: minmax(0, 1fr) 420px; } }
+
+.fl-hint { color: var(--muted); font-size: 14px; margin: 0 0 12px; }
+.fl-photos { gap: 8px; }
+.fl-photo { position: relative; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; }
+.fl-photo img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 3px solid transparent; transition: border-color .15s; background: #e8e2d6; }
+.fl-photo.on img { border-color: var(--gold-deep); }
+.fl-photo i { position: absolute; right: 9px; top: 9px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; display: none;
+              align-items: center; justify-content: center; font: 500 13px/1 var(--sans); color: var(--ink); background: var(--gold); font-style: normal; }
+.fl-photo.on i { display: inline-flex; }
+.fl-photo b { position: absolute; left: 9px; bottom: 9px; font: 500 11px/1 var(--sans); letter-spacing: .08em; text-transform: uppercase; color: #fff;
+              background: rgba(13,12,10,.72); padding: 4px 7px; border-radius: 4px; pointer-events: none; }
+.fl-photo:focus-visible img { outline: 2px solid var(--gold-deep); outline-offset: 2px; }
+
+.fl-four, .fl-three { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (min-width: 560px) { .fl-four { grid-template-columns: 1.6fr 1fr 1fr 1fr; } .fl-three { grid-template-columns: 1fr 1fr 1.4fr; } }
+.sp-field textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 17px; color: var(--text); padding: 10px 12px;
+                     border: 1px solid var(--line); border-radius: 10px; background: #fff; resize: vertical; }
+.sp-field textarea:focus { outline: none; border-color: var(--gold-deep); box-shadow: 0 0 0 3px rgba(138,109,54,.15); }
