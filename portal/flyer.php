@@ -35,12 +35,13 @@ function flyer_status_words(string $s): string {
 $qr_by_listing = [];
 foreach ($listings as $l) $qr_by_listing[$l['id']] = array_map(fn($o) => $o[0], flyer_qr_options($conn, $ctx, $l));
 
-portal_header($ctx, 'Listing Flyer', 'flyer');
+portal_header($ctx, 'Listing Flyer', 'social');   // under Templates in the menu
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
 <link rel="stylesheet" href="/assets/css/flyer.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/flyer.css') ?>">
   <h1 class="pt-h1">Listing Flyer</h1>
   <p class="pt-lead">A printed flyer of one of your listings, Letter size. Pick the listing and up to six photos, check the text, and download the PDF.</p>
+  <p class="tp-switch"><a href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">Instagram Post</a><a class="on" href="<?= ph(portal_url($ctx, '/portal/flyer.php')) ?>">Listing Flyer</a></p>
 
 <?php if (!$listings): ?>
   <div class="pt-flash err">We do not see any live listings under your name yet. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</div>
@@ -89,6 +90,19 @@ portal_header($ctx, 'Listing Flyer', 'flyer');
             <label class="sp-field">Baths <input name="baths" maxlength="10"></label>
             <label class="sp-field">Sq Ft <input name="sqft" maxlength="12"></label>
           </div>
+          <label class="sp-field">Banner under the details
+            <select name="banner" id="flBanner">
+              <?php foreach (flyer_banners() as $k => [$w, $c]): ?><option value="<?= ph($k) ?>"><?= ph($w) ?></option><?php endforeach; ?>
+              <option value="__none">No banner</option>
+              <option value="__custom">Custom…</option>
+            </select>
+          </label>
+          <div class="sp-two" id="flBannerCustom" hidden>
+            <label class="sp-field">Banner words <input name="banner_custom" maxlength="24" placeholder="Coming Soon"></label>
+            <label class="sp-field">Banner colour
+              <select name="banner_color"><?php foreach (flyer_banner_colors() as $k => $hex): ?><option value="<?= ph($k) ?>"><?= ph(ucfirst($k)) ?></option><?php endforeach; ?></select>
+            </label>
+          </div>
           <label class="sp-field">Notes under the details (optional) <textarea name="notes" maxlength="900" rows="3" placeholder="A few lines about the home, or leave this empty."></textarea></label>
           <h3 class="sp-sub">Contact</h3>
           <div class="fl-three">
@@ -130,8 +144,13 @@ portal_header($ctx, 'Listing Flyer', 'flyer');
   const listing = () => L.find(l => l.id === f('listing').value);
   let picked = [];   // photo ids in order
 
+  const DEFAULT_BANNER = <?= json_encode(array_combine(array_column($listings, 'id'), array_map('flyer_default_banner', $listings)) ?: new stdClass) ?>;
+  const bannerSel = document.getElementById('flBanner'), bannerCustom = document.getElementById('flBannerCustom');
+  function showBanner() { bannerCustom.hidden = bannerSel.value !== '__custom'; }
   function fill(l) {
     if (!l) return;
+    f('title').value = ''; f('title').dataset.touched = '';   // the suggestion arrives with the photos
+    bannerSel.value = DEFAULT_BANNER[l.id] || '__none'; showBanner();
     f('address').value = l.address + (l.city ? ', ' + l.city : '');
     f('price').value = l.price_text;
     f('beds').value = l.beds && +l.beds > 0 ? String(+l.beds) : '';
@@ -186,6 +205,8 @@ portal_header($ctx, 'Listing Flyer', 'flyer');
       photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Add your own below.</div>';
       picked = []; syncOrder(); update(); return;
     }
+    // A headline from the opening of the listing description, unless the agent has typed one.
+    if (j.headline && !f('title').dataset.touched) f('title').value = j.headline;
     photos.innerHTML = j.photos.map(tile).join('');
     picked = j.photos.filter(p => !p.own).slice(0, 6).map(p => p.id);   // the first six board photos to start
     syncOrder(); update();
@@ -213,6 +234,8 @@ portal_header($ctx, 'Listing Flyer', 'flyer');
   // ── Wiring ──
   form.addEventListener('input', e => {
     if (e.target.name === 'listing') { fill(listing()); loadPhotos(); return; }
+    if (e.target.name === 'title') f('title').dataset.touched = '1';
+    if (e.target.name === 'banner') showBanner();
     update();
   });
   form.addEventListener('keydown', e => {

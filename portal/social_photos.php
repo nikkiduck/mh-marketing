@@ -23,4 +23,5 @@ $out = array_map(fn($u) => ['id' => $u, 'thumb' => social_img($u, 400), 'large' 
 foreach (social_uploads($ctx) as $id) {
     $out[] = ['id' => 'upload:' . $id, 'thumb' => social_upload_url($ctx, $id, 400), 'large' => social_upload_url($ctx, $id, 1600), 'own' => true];
 }
-echo json_encode(['listing' => $l['id'], 'count' => count($out), 'photos' => $out], JSON_UNESCAPED_SLASHES);
+$headline = social_headline_from_remarks((string)($_SESSION['social_remarks'][$l['id']] ?? ''));   // the flyer's suggestion
+echo json_encode(['listing' => $l['id'], 'count' => count($out), 'headline' => $headline, 'photos' => $out], JSON_UNESCAPED_SLASHES);

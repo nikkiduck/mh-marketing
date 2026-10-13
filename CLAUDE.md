@@ -2027,7 +2027,21 @@ InDesign display template in "Listings Display Flyer" (Nikki's Documents):
 headline, address, price, a beds / baths / sq ft box, optional notes, up to
 six photos in the order picked (hero, then two across, then three; fewer
 photos = fewer rows, the grid stretches), footer with the logo, name,
-phone, monthaus.com, email and a QR code. Nav: My Tools > Listing Flyer.
+phone, monthaus.com, email and a QR code. Under the figures box an optional
+coloured BANNER (`flyer_banners()`: Just Listed, Price Improvement,
+Pending, Under Contract, Long Term Rental, Short Term Rental, Open House,
+Sold, each with a preset colour from `flyer_banner_colors()`; or the
+agent's own words in one of those colours; `flyer_default_banner()` picks
+Pending / Under Contract / Long Term Rental from the listing). The headline
+starts as a phrase from the opening of the public remarks
+(`social_headline_from_remarks()`: first sentence minus lead-ins, cut at
+the last clause break before 52 characters; the site's photos scope
+carries `remarks` since 2026-10-13, kept in the session beside the photo
+list) and shrinks to stay on one line; the address and price are large
+(`$fit()` in flyer_render.php sizes both to the column). **Nav (Nikki,
+2026-10-13):** My Tools > Templates is `portal/templates.php`, a landing
+with the two tools; each tool page carries a switch to the other
+(`.tp-switch`); both pass 'social' as the active key.
 - `inc/flyer_render.php` (standalone layout at 612 x 792 pt, Jost) and
   `inc/flyer.php` (rules, QR, PDF export) sit on the Instagram tool's data
   layer: `social_listings()` (now with `url`), `social_photos()`,

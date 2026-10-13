@@ -40,6 +40,33 @@ function flyer_agent(mysqli $conn, array $ctx): array {
     ];
 }
 
+/** The banner colours (Nikki, 2026-10-13: preset per banner; a custom banner picks one). */
+function flyer_banner_colors(): array {
+    return ['blue' => '#1FA6DB', 'orange' => '#C9643A', 'green' => '#3E8F4A', 'bronze' => '#8A7350', 'gold' => '#C3A561', 'black' => '#231F20'];
+}
+
+/** The ready-made banners under the figures box: key => [words, colour key]. The form adds "No banner" and "Custom". */
+function flyer_banners(): array {
+    return [
+        'just_listed'       => ['Just Listed', 'bronze'],
+        'price_improvement' => ['Price Improvement', 'green'],
+        'pending'           => ['Pending', 'blue'],
+        'under_contract'    => ['Under Contract', 'blue'],
+        'long_term_rental'  => ['Long Term Rental', 'orange'],
+        'short_term_rental' => ['Short Term Rental', 'orange'],
+        'open_house'        => ['Open House', 'gold'],
+        'sold'              => ['Sold', 'black'],
+    ];
+}
+
+/** The banner a listing starts with: its status, a rental, else none. */
+function flyer_default_banner(array $l): string {
+    if ($l['status'] === 'Pending') return 'pending';
+    if ($l['status'] === 'Active Under Contract') return 'under_contract';
+    if ((int)$l['is_rental']) return 'long_term_rental';
+    return '__none';
+}
+
 /** The QR choices: the listing's page, each of the account's active dynamic codes, none. [key => [label, url]] */
 function flyer_qr_options(mysqli $conn, array $ctx, ?array $listing): array {
     $opts = [];
@@ -102,6 +129,18 @@ function flyer_post_from_request(mysqli $conn, array $ctx, array $in): array|str
 
     $txt   = fn(string $k, int $max, string $default = '') => mb_substr(trim((string)($in[$k] ?? $default)), 0, $max);
     $agent = flyer_agent($conn, $ctx);
+    // The banner under the figures: a preset, the agent's own words in a preset colour, or none.
+    $banners = flyer_banners(); $colors = flyer_banner_colors();
+    $bk = (string)($in['banner'] ?? flyer_default_banner($l));
+    if ($bk === '__custom') {
+        $btext  = mb_substr(trim((string)($in['banner_custom'] ?? '')), 0, 24);
+        $bcolor = $colors[(string)($in['banner_color'] ?? '')] ?? $colors['blue'];
+    } elseif (isset($banners[$bk])) {
+        $btext  = $banners[$bk][0];
+        $bcolor = $colors[$banners[$bk][1]];
+    } else {
+        $btext = ''; $bcolor = '';
+    }
     $qrs   = flyer_qr_options($conn, $ctx, $l);
     $qk    = (string)($in['qr'] ?? '');
     if (!isset($qrs[$qk])) $qk = array_key_first($qrs);
@@ -116,6 +155,8 @@ function flyer_post_from_request(mysqli $conn, array $ctx, array $in): array|str
         'baths'   => $txt('baths', 10, $l['baths'] !== null && (float)$l['baths'] > 0 ? social_num($l['baths']) : ''),
         'sqft'    => $txt('sqft', 12, $l['sqft'] !== null && (int)$l['sqft'] > 0 ? number_format((int)$l['sqft']) : ''),
         'notes'   => mb_substr(trim((string)($in['notes'] ?? '')), 0, 900),
+        'banner_text'  => $btext,
+        'banner_color' => $bcolor,
         'photos'  => $photos,
         'agent'   => [
             'name'  => $txt('agent_name', 60, $agent['name']),

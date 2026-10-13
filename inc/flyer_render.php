@@ -82,10 +82,12 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#231F20;fo
      -webkit-font-smoothing:antialiased;box-sizing:border-box;padding:36pt 36pt 36pt;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:24pt;flex:none}
 .head .l{min-width:0;flex:1}
-.title{font-family:'Cormorant Garamond',Georgia,serif;font-size:28pt;font-weight:500;line-height:1.1;margin:0}
-.addr{font-size:10pt;font-weight:400;letter-spacing:.2em;text-transform:uppercase;margin:7pt 0 0;line-height:1.3}
-.price{font-family:'Cormorant Garamond',Georgia,serif;font-size:27pt;font-weight:500;line-height:1.1;margin:10pt 0 0}
-.stats{flex:none;border:.75pt solid #231F20;display:flex;height:57pt;min-width:204pt}
+.title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.1;margin:0;white-space:nowrap;overflow:hidden}
+.addr{font-weight:400;letter-spacing:.12em;text-transform:uppercase;margin:7pt 0 0;line-height:1.3;white-space:nowrap;overflow:hidden}
+.price{font-family:'Cormorant Garamond',Georgia,serif;font-size:33pt;font-weight:500;line-height:1.05;margin:9pt 0 0;white-space:nowrap}
+.right{flex:none;width:204pt}
+.stats{border:.75pt solid #231F20;display:flex;height:57pt}
+.banner{margin-top:8pt;height:28pt;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15pt;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;padding:0 8pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .stat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 10pt;border-left:.75pt solid #231F20;white-space:nowrap}
 .stat:first-child{border-left:0}
 .stat b{font-family:'Cormorant Garamond',Georgia,serif;font-size:27pt;font-weight:500;line-height:1}
@@ -107,12 +109,18 @@ CSS;
 
     $title = trim((string)($p['title'] ?? ''));
     $addr  = trim((string)($p['address'] ?? ''));
+    // One line each, shrinking to fit the column beside the box (about 310 pt):
+    // the headline from 28 pt, the address from 13 pt (Nikki, 2026-10-13).
+    $fit = function (string $t, float $size, float $emPerChar, float $width = 310.0, float $min = 9.0): string {
+        $need = mb_strlen($t) * $emPerChar * $size;
+        return number_format($need > $width ? max($min, $size * $width / $need) : $size, 1, '.', '');
+    };
     $head  = '<div class="head"><div class="l">';
     if ($title !== '') {
-        $head .= '<h1 class="title">' . $e($title) . '</h1>';
-        if ($addr !== '') $head .= '<p class="addr">' . $e($addr) . '</p>';
+        $head .= '<h1 class="title" style="font-size:' . $fit($title, 28, 0.46) . 'pt">' . $e($title) . '</h1>';
+        if ($addr !== '') $head .= '<p class="addr" style="font-size:' . $fit($addr, 13, 0.78) . 'pt">' . $e($addr) . '</p>';
     } elseif ($addr !== '') {
-        $head .= '<h1 class="title">' . $e($addr) . '</h1>';
+        $head .= '<h1 class="title" style="font-size:' . $fit($addr, 28, 0.46) . 'pt">' . $e($addr) . '</h1>';
     }
     if (trim((string)($p['price'] ?? '')) !== '') $head .= '<p class="price">' . $e($p['price']) . '</p>';
     $head .= '</div>';
@@ -121,7 +129,10 @@ CSS;
         $v = trim((string)($p[$k] ?? ''));
         if ($v !== '') $stats .= '<div class="stat"><b>' . $e($v) . '</b><small>' . $label . '</small></div>';
     }
-    if ($stats !== '') $head .= '<div class="stats">' . $stats . '</div>';
+    $banner = trim((string)($p['banner_text'] ?? ''));
+    $right  = ($stats !== '' ? '<div class="stats">' . $stats . '</div>' : '')
+            . ($banner !== '' ? '<div class="banner" style="background:' . $e($p['banner_color'] ?? '#231F20') . '">' . $e($banner) . '</div>' : '');
+    if ($right !== '') $head .= '<div class="right">' . $right . '</div>';
     $head .= '</div>';
 
     $notes = trim((string)($p['notes'] ?? ''));

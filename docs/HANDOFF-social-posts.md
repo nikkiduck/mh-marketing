@@ -134,3 +134,12 @@ The PDF is Chromium's print of the same HTML the preview shows
 2026-10-13) with the triangle mark in the centre. The hero photo uses the
 site's full 2048 rendition (img.php allows it since 2026-10-13), about 220
 dpi across the page: fine for a flyer, not for a glossy brochure.
+
+Later on 2026-10-13 (Nikki): a coloured banner under the figures box (preset
+words and colours, or custom words in a preset colour; Pending, Under
+Contract and rentals start with theirs), a headline suggested from the
+opening of the listing description (the agent edits it; typing marks it as
+theirs so a listing change does not overwrite it), the headline on one line
+at whatever size fits, the address and price larger. Templates in the menu
+is now a landing page (portal/templates.php) with the two tools, and each
+tool page switches to the other.

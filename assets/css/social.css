@@ -8,6 +8,11 @@
    House date showed on every template). */
 .sp-form [hidden] { display: none !important; }
 
+/* The switch between the two template tools, under each page's lead (2026-10-13). */
+.tp-switch { display: flex; gap: 8px; margin: -8px 0 22px; }
+.tp-switch a { display: inline-block; padding: 8px 18px; border: 2px solid var(--line); border-radius: 999px; font-size: 15px; color: var(--text); text-decoration: none; }
+.tp-switch a.on { border-color: var(--gold-deep); background: #fbf7ef; color: var(--gold-deep); font-weight: 500; }
+
 .sp-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
 .sp-preview { order: -1; }
 @media (min-width: 900px) {

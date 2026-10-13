@@ -154,6 +154,11 @@ function social_photos(string $market, string $key): array {
         $u = (string)($p['url'] ?? '');
         if ($u !== '' && !in_array($u, $urls, true)) $urls[] = $u;
     }
+    // The public remarks ride along (2026-10-13), for the flyer's headline suggestion.
+    $rem = (array)($_SESSION['social_remarks'] ?? []);
+    unset($rem[$sk]);
+    $rem[$sk] = mb_substr(trim((string)($j['remarks'] ?? '')), 0, 600);
+    $_SESSION['social_remarks'] = array_slice($rem, -12, null, true);
     if ($urls) {
         $all = (array)($_SESSION['social_photos'] ?? []);
         unset($all[$sk]);
@@ -161,6 +166,40 @@ function social_photos(string $market, string $key): array {
         $_SESSION['social_photos'] = array_slice($all, -12, null, true);
     }
     return $urls;
+}
+
+/**
+ * A headline suggestion from the opening of the public remarks (Nikki,
+ * 2026-10-13: "maybe pull a phrase from the opening of the listing
+ * description"): the first sentence, minus a "Welcome to" sort of start,
+ * cut at a word boundary to about 44 characters, no trailing punctuation.
+ * '' when the remarks give nothing usable; the agent edits it anyway.
+ */
+function social_headline_from_remarks(string $remarks): string {
+    $t = trim(preg_replace('/\s+/', ' ', $remarks));
+    if ($t === '') return '';
+    // The first sentence, minus the usual lead-ins ("Welcome to", "Presenting", "Enjoy", "This").
+    $t = preg_split('/(?<=[.!?])\s+|\s+[-–—]+\s+|\s*\|\s*/u', $t)[0] ?? '';
+    $t = preg_replace('/^(welcome (home )?to|introducing|presenting|discover|experience|enjoy|step into|come (home )?to|this)\s+/i', '', $t);
+    $t = trim($t, " .,;:!?-");
+    // Too long for a headline: cut at the last clause break before 52 characters
+    // ("Perched on Red Mountain | with a top-of-the-world…"), else at a word.
+    $max = 52;
+    if (mb_strlen($t) > $max) {
+        $head = mb_substr($t, 0, $max);
+        $best = -1;
+        foreach ([', ', ' with ', ' from ', ' at ', ' featuring ', ' features ', ' offering ', ' offers ', ' that ', ' where ', ' and ', ' boasting ', ' is ', ' in ', ' on '] as $m) {
+            $pos = mb_strrpos($head, $m);
+            if ($pos !== false && $pos > 16 && $pos > $best) $best = $pos;
+        }
+        if ($best < 0) { $sp = mb_strrpos($head, ' '); $best = ($sp !== false && $sp > 16) ? $sp : $max; }
+        $t = mb_substr($t, 0, $best);
+    }
+    // No dangling small word at the end ("…with a", "…of the").
+    $t = preg_replace('/(\s+(a|an|the|with|and|of|in|on|at|for|to|this|that|its|is|from))+$/i', '', trim($t, " .,;:!?-"));
+    $t = trim($t, " .,;:!?-");
+    if (mb_strlen($t) < 8) return '';
+    return mb_strtoupper(mb_substr($t, 0, 1)) . mb_substr($t, 1);
 }
 
 // ── The agent's own photos ────────────────────────────────────────────────────
