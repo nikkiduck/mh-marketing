@@ -20,6 +20,7 @@
 require_once __DIR__ . '/../inc/portal.php';
 require_once __DIR__ . '/../inc/portal_hotsheets.php';
 require_once __DIR__ . '/../inc/boards.php';
+require_once __DIR__ . '/../inc/qr.php';   // qr_profile_url(): the agent's page on the website
 
 $ctx  = portal_context($conn);
 $acct = (int)$ctx['acct']['id'];
@@ -35,7 +36,7 @@ $SOCIAL = [
     'social_facebook'  => ['Facebook',  'https://www.facebook.com/',  ['https://www.facebook.com/', 'https://facebook.com/', 'https://fb.com/']],
     'social_linkedin'  => ['LinkedIn',  'https://www.linkedin.com/in/', ['https://www.linkedin.com/in/', 'https://linkedin.com/in/', 'https://www.linkedin.com/company/', 'https://linkedin.com/company/']],
     'social_tiktok'    => ['TikTok',    'https://www.tiktok.com/@',   ['https://www.tiktok.com/@', 'https://tiktok.com/@', 'https://www.tiktok.com/', 'https://tiktok.com/']],
-    'website_url'      => ['Website',   '',                           []],
+    'website_url'      => ['Personal Website', '',                    []],
 ];
 const PORTAL_BIO_TAGS = '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>';
 
@@ -151,6 +152,11 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
         <h2 class="pt-card-h"><?= ph($name) ?></h2>
         <?php if (trim((string)($me['agent_title'] ?? '')) !== ''): ?><p class="pt-card-sub"><?= ph(str_replace("\n", ' ', (string)$me['agent_title'])) ?></p><?php endif; ?>
         <p class="pt-card-sub"><?= ph($email_shown) ?><?= trim((string)($me['cell_phone'] ?? '')) !== '' ? ' · ' . ph(portal_phone($me['cell_phone'])) : '' ?></p>
+        <?php if (trim((string)($me['slug'] ?? '')) !== '' && ($me['web_status'] ?? '') === 'approved'): ?>
+          <p class="pt-card-sub" style="margin-top:6px"><a href="<?= ph(qr_profile_url((string)$me['slug'])) ?>" target="_blank" rel="noopener">View your page on monthaus.com ↗</a></p>
+        <?php elseif (!$is_team): ?>
+          <p class="pt-card-sub" style="margin-top:6px">Your page on monthaus.com is not published yet.</p>
+        <?php endif; ?>
       </div>
     </div>
   </section>
@@ -172,7 +178,7 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
 
   <!-- Social: editable -->
   <section class="pt-card pt-section" id="social">
-    <h2 class="pt-card-h">Social media</h2>
+    <h2 class="pt-card-h">Social + Digital</h2>
     <?= $flash_html($flash['social']) ?>
     <form method="post" class="pt-form" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
       <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">

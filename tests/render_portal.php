@@ -247,7 +247,7 @@ function scenario(array $over = []): array {
                 ['id' => 1,   'first_name' => 'Nikki', 'last_name' => 'Boxer', 'email' => 'nikki.boxer@monthaus.com', 'role' => 'super_admin', 'is_active' => 1, 'intake_id' => null],
             ],
             'intakes' => [
-                ['id' => 6,  'agent_name' => 'Jackson Horn', 'slug' => 'jackson-horn', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent', 'mh_email' => 'jackson.horn@monthaus.com', 'cell_phone' => '(970) 555-0100'],
+                ['id' => 6,  'agent_name' => 'Jackson Horn', 'slug' => 'jackson-horn', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent', 'mh_email' => 'jackson.horn@monthaus.com', 'cell_phone' => '(970) 555-0100', 'web_status' => 'approved'],
                 ['id' => 7,  'agent_name' => 'Kimberlee Coates', 'slug' => 'kim-coates', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
                 ['id' => 8,  'agent_name' => 'Weber Boxer Group', 'slug' => '', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'team'],
                 ['id' => 40, 'agent_name' => 'Sierrah Smith', 'slug' => 'sierrah-smith', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
@@ -364,7 +364,7 @@ ok('plain words for a profile destination', has($b, 'Your profile page on montha
 [$c, , $b] = req('jackson', '/portal/');
 ok('Jackson home renders and counts only his codes', $c === 200 && no_fatal($b) && has($b, 'You have 2 QR codes'), $b);
 ok('home (2026-10-12): My Profile card with the Hot Sheet line, My Marketing and My Tools sections', has($b, 'My Profile') && has($b, 'See and update')
-   && has($b, 'Your public-facing info, Hot Sheet subscriptions, and MLS boards.') && has($b, '>My Marketing<') && has($b, '>My Tools<') && has($b, 'Elevation Planner') && has($b, '>Templates<') && has($b, 'More templates coming soon') && has($b, 'Brand Tools')
+   && has($b, 'Your public-facing info, Hot Sheet subscriptions, service areas and MLS boards.') && has($b, '>My Marketing<') && has($b, '>My Tools<') && has($b, 'Elevation Planner') && has($b, '>Templates<') && has($b, 'More templates coming soon') && has($b, 'Brand Tools')
    && has($b, 'jackson.horn@monthaus.com · 970.555.0100') && !has($b, 'Your marketing at Mont Haus') && !has($b, 'See the creative'), $b);
 ok('every page ends with the Contact marketing form, posting back to the page it is on', has($b, 'action="/portal/contact.php"') && has($b, 'name="subject"') && has($b, 'name="back" value="/portal/"'), $b);
 ok('the menu: Home, My Profile, My Marketing (Spend, Advertising, Collateral), My Tools (Elevation Planner, Social Templates, QR Codes, Brand Tools)',
@@ -387,7 +387,8 @@ ok('Jackson: My Profile renders with Hot Sheets, not subscribed, every area offe
    && has($b, 'Roaring Fork Valley') && has($b, 'Front Range') && has($b, 'Twice a week'), $b);
 ok('…his name and email read-only, his board id, his listing as a card, and nothing of Kim\'s', has($b, 'Jackson Horn') && has($b, 'jackson.horn@monthaus.com')
    && has($b, 'JHORN1') && has($b, '30 Smith Way') && has($b, '$4,500,000') && has($b, 'View on the website') && has($b, 'pt-lstatus active">Active<')
-   && !has($b, 'KCSECRET') && !has($b, 'Secret Ln') && !has($b, 'bio_short') && !has($b, 'name="cell_phone"'), $b);
+   && !has($b, 'KCSECRET') && !has($b, 'Secret Ln') && !has($b, 'bio_short') && !has($b, 'name="cell_phone"')
+   && has($b, 'broker.php?s=jackson-horn') && has($b, 'View your page on monthaus.com') && has($b, 'Social + Digital') && has($b, 'Personal Website'), $b);
 ok('…an anchors row in the header band (above the title), listings last, no message section (the form is the footer now)', has($b, 'href="#hotsheets"') && has($b, 'href="#areas"') && has($b, 'href="#listings"')
    && strpos($b, 'pt-subnav-wrap sticky') < strpos($b, '<main class="pt-main">') && strpos($b, 'id="listings"') > strpos($b, 'id="hotsheets"') && !has($b, 'id="message"') && has($b, 'id="contact-marketing"'), $b);
 [$c, $loc, ] = req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'tok', 'action' => 'save', 'frequency' => 'daily', 'areas' => ['vail-valley', 'bogus']]);

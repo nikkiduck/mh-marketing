@@ -100,7 +100,7 @@ portal_header($ctx, 'Home', 'home');
   <div class="pt-cards">
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
       <h2 class="pt-card-h">My Profile</h2>
-      <p class="pt-card-sub">Your public-facing info, Hot Sheet subscriptions, and MLS boards.</p>
+      <p class="pt-card-sub">Your public-facing info, Hot Sheet subscriptions, service areas and MLS boards.</p>
       <span class="pt-card-go">See and update ›</span>
     </a>
   </div>
