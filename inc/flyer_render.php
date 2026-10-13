@@ -15,8 +15,9 @@
  * inc/social_render.php.
  *
  * Photos: the hero at the site's 2048 rendition, the rest at 1600 (img.php),
- * an upload read from disk for the export (file://). Fonts: self-hosted Jost
- * by URL for the preview, embedded for the export. The QR code is an inline
+ * an upload read from disk for the export (file://). Fonts: the Instagram
+ * template's pair, Jost and Cormorant Garamond, self-hosted, by URL for the
+ * preview and embedded for the export. The QR code is an inline
  * SVG made by qrencode (inc/flyer.php) with the Mont Haus triangle mark in
  * the centre, like the dynamic QR codes (mh-qr.js) and the template.
  */
@@ -65,6 +66,7 @@ function flyer_render(array $p, ?string $base = null, bool $export = false): str
         return $base . '/assets/fonts/mh/' . $file;
     };
     $fJost = $fontUrl('Jost-normal.woff2');
+    $fCorm = $fontUrl('CormorantGaramond-normal.woff2');   // the Instagram template's serif, for the headline, price, figures and name (Nikki, 2026-10-13)
     $logo  = $base . '/assets/images/MH_vert-stack_black.svg';
     $mark  = $base . '/assets/images/triangle_mark-black.svg';
 
@@ -73,19 +75,20 @@ function flyer_render(array $p, ?string $base = null, bool $export = false): str
 
     $css = <<<CSS
 @font-face{font-family:'Jost';font-style:normal;font-weight:100 900;src:url({$fJost}) format('woff2')}
+@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url({$fCorm}) format('woff2')}
 @page{size:{$W}pt {$H}pt;margin:0}
 html,body{margin:0;padding:0}
 body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#231F20;font-family:'Jost','Helvetica Neue',Arial,sans-serif;
      -webkit-font-smoothing:antialiased;box-sizing:border-box;padding:36pt 36pt 36pt;display:flex;flex-direction:column;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .head{display:flex;justify-content:space-between;align-items:flex-start;gap:24pt;flex:none}
 .head .l{min-width:0;flex:1}
-.title{font-size:24pt;font-weight:500;line-height:1.12;margin:0;letter-spacing:-.005em}
+.title{font-family:'Cormorant Garamond',Georgia,serif;font-size:28pt;font-weight:500;line-height:1.1;margin:0}
 .addr{font-size:10pt;font-weight:400;letter-spacing:.2em;text-transform:uppercase;margin:7pt 0 0;line-height:1.3}
-.price{font-size:24pt;font-weight:400;line-height:1.1;margin:11pt 0 0}
+.price{font-family:'Cormorant Garamond',Georgia,serif;font-size:27pt;font-weight:500;line-height:1.1;margin:10pt 0 0}
 .stats{flex:none;border:.75pt solid #231F20;display:flex;height:57pt;min-width:204pt}
 .stat{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 10pt;border-left:.75pt solid #231F20;white-space:nowrap}
 .stat:first-child{border-left:0}
-.stat b{font-size:24pt;font-weight:400;line-height:1}
+.stat b{font-family:'Cormorant Garamond',Georgia,serif;font-size:27pt;font-weight:500;line-height:1}
 .stat small{font-size:9.5pt;letter-spacing:.2em;text-transform:uppercase;margin-top:3pt;color:#231F20}
 .notes{flex:none;font-size:10.5pt;font-weight:300;line-height:1.5;margin:14pt 0 0;max-height:120pt;overflow:hidden;white-space:pre-line}
 .photos{flex:1;min-height:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:{$layout['rows']};gap:10pt;margin-top:18pt}
@@ -94,7 +97,7 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#231F20;fo
 .foot{flex:none;border-top:.75pt solid #231F20;margin-top:18pt;padding-top:16pt;display:flex;align-items:center;gap:14pt;height:82pt;box-sizing:border-box}
 .foot .logo{height:64pt;width:auto;flex:none}
 .foot .who{flex:1;min-width:0;padding-left:12pt}
-.name{font-size:24pt;font-weight:400;line-height:1;white-space:nowrap;overflow:hidden}
+.name{font-family:'Cormorant Garamond',Georgia,serif;font-size:27pt;font-weight:500;line-height:1;white-space:nowrap;overflow:hidden}
 .contact{font-size:10pt;letter-spacing:.2em;text-transform:uppercase;line-height:1.55;margin-top:5pt}
 .qr{position:relative;width:67pt;height:67pt;flex:none}
 .qr svg{display:block;width:100%;height:100%}
