@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-13 07:43 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-13 08:00 from git HEAD in the Mont Haus Master folder.
 5d6d1b549d907c2ef01188cfc8d35725  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -43,7 +43,7 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
-f987b7eef2f98d57d0165914b61e7589  inc/portal.php
+5d224b82330a64fe3a7f3850b718798e  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
@@ -69,12 +69,12 @@ c141d4e49e830a83cfd047aca3ad5d49  portal/asset.php
 0f9c154074c6ffe5c3e60246a1c500cd  portal/contact.php
 034e7c38b450646eb5edfbf821a5bfe5  portal/elevation.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
-1d77f1c844a9f80f2c2e2b78699adace  portal/index.php
+90bc96b7d16e7275f6bd91f4ca98fc9c  portal/index.php
 06abe9e045b7b83f3ce99ccc25f0b5b7  portal/orders.php
-f485d0cada1ad84eaf830343b39d8347  portal/profile.php
+d863f2ea3abfe5cd9cb1489046732776  portal/profile.php
 e6411bc80e28c79a013e475e5dc875eb  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
-908dcc84a949035762b0a758028c89f9  portal/social.php
+bb2f21fc2ce8ba5343dbafdeb40b6475  portal/social.php
 b4178bb297c9b2f159e24c02f559ac7b  portal/social_asset.php
 ffac5e8d41f6939bf861500aeeaacd76  portal/social_export.php
 e2e389d1c46353c140961f9e9c261bba  portal/social_photos.php
@@ -94,5 +94,5 @@ e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 90750ac4905fdab022c241560911f5ba  website_order.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
-88c26a2dbcda242d58aaa13d0c11e360  assets/css/portal.css
+5d8f3a6c60e546aa21a8df980e4cc0dc  assets/css/portal.css
 9bdf507aa67ce88737f7f33fc7221b86  assets/css/social.css
