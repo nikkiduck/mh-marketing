@@ -94,12 +94,12 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#231F20;fo
 .photos{flex:1;min-height:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:{$layout['rows']};gap:10pt;margin-top:18pt}
 .photos .ph{min-height:0;min-width:0;overflow:hidden;background:#e8e2d6}
 .photos img{display:block;width:100%;height:100%;object-fit:cover}
-.foot{flex:none;border-top:.75pt solid #231F20;margin-top:18pt;padding-top:16pt;display:flex;align-items:center;gap:14pt;height:82pt;box-sizing:border-box}
-.foot .logo{height:64pt;width:auto;flex:none}
+.foot{flex:none;border-top:.75pt solid #231F20;margin-top:18pt;padding-top:16pt;display:flex;align-items:flex-start;gap:14pt}
+.foot .logo{height:74pt;width:auto;flex:none}
 .foot .who{flex:1;min-width:0;padding-left:12pt}
-.name{font-family:'Cormorant Garamond',Georgia,serif;font-size:27pt;font-weight:500;line-height:1;white-space:nowrap;overflow:hidden}
-.contact{font-size:10pt;letter-spacing:.2em;text-transform:uppercase;line-height:1.55;margin-top:5pt}
-.qr{position:relative;width:67pt;height:67pt;flex:none}
+.name{font-family:'Cormorant Garamond',Georgia,serif;font-size:26pt;font-weight:500;line-height:1.15;white-space:nowrap;overflow:hidden;margin-top:-3pt}
+.contact{font-size:10pt;letter-spacing:.08em;text-transform:uppercase;line-height:1.38;margin-top:3pt}
+.qr{position:relative;width:67pt;height:67pt;flex:none;align-self:center}
 .qr svg{display:block;width:100%;height:100%}
 .qr .mark{position:absolute;left:50%;top:50%;width:19pt;height:19pt;transform:translate(-50%,-50%);background:#fff;padding:2.5pt;box-sizing:border-box}
 .qr .mark img{display:block;width:100%;height:100%}
