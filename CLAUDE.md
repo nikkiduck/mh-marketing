@@ -1934,8 +1934,17 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   stored joined with "; " as the admin page types them); the anchors row is
   drawn by portal_header()'s fourth argument, in the band above the title;
   phones show with periods (`portal_phone()`); the nav says "Templates" for
-  portal/social.php; the admin editor and the portal editor show a space
-  between paragraphs (Quill's p + p). **Every change an agent makes is emailed to
+  portal/social.php ("More templates coming soon." in italics above its
+  title); the admin editor and the portal editor show a space between
+  paragraphs (Quill's p + p). Later that day: an admin preview shows the
+  footer form with its fields disabled (hidden, it looked unrendered); My
+  Profile links "View your page on monthaus.com" (qr_profile_url(), shown
+  only when web_status is approved, else "not published yet"); the social
+  section is "Social + Digital" and the last field "Personal Website"; a
+  preview never falls back to the admin's own email. **Wanted next (Nikki,
+  2026-10-13, a SITE session):** friendlier agent URLs, monthaus.com/
+  bryan-cournoyer in place of broker.php?s=bryan-cournoyer, with the old
+  form redirected; qr_profile_url() here is the one place to follow it. **Every change an agent makes is emailed to
   marketing@ with who, what, before, after and when (Mountain time) and
   left as a note on their agent page** (`portal_change_alert()`,
   marketing_notes). The website picks the fields up from the roster feed

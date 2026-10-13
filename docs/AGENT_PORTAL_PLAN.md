@@ -11,6 +11,13 @@ portal/asset.php for agents) and the Phase 3 Advertising and Print orders
 pages (portal/advertising.php, portal/orders.php, home cards, nav).
 tests/render_portal.php: 140 assertions (2026-10-12). Pilot (Nikki, 2026-10-06): Weber
 Boxer Group (Jonathan, Scott, Sara), Bryan Cournoyer, Jackson Horn.
+**2026-10-13 (Nikki):** Contact marketing is the footer of every page
+(portal/contact.php); My Profile edits service areas, shows phone with
+periods, links the agent's website page, "Social + Digital" / "Personal
+Website"; the anchors row is in the header band; the short bio is gone
+everywhere. Open: friendlier agent URLs on the site
+(monthaus.com/<slug>), a site-session job. Phase 5 (menu + requests inbox)
+and the Elevation Planner build are still ahead.
 **2026-10-12 (Nikki):** menu restructured into main tabs with sub-menus
 (Home, My Profile, My Marketing, My Tools), phone-friendly; My Profile
 built (read-only identity, boards and listings; editable phone, bio,
