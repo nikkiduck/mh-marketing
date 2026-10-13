@@ -84,7 +84,7 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#231F20;fo
 .head .l{min-width:0;flex:1}
 .title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.1;margin:0;white-space:nowrap;overflow:hidden}
 .addr{font-weight:400;letter-spacing:.12em;text-transform:uppercase;margin:7pt 0 0;line-height:1.3;white-space:nowrap;overflow:hidden}
-.price{font-family:'Cormorant Garamond',Georgia,serif;font-size:33pt;font-weight:500;line-height:1.05;margin:9pt 0 0;white-space:nowrap}
+.price{font-family:'Cormorant Garamond',Georgia,serif;font-size:33pt;font-weight:500;line-height:1.05;margin:3pt 0 0;white-space:nowrap}
 .right{flex:none;width:204pt}
 .stats{border:.75pt solid #231F20;display:flex;height:57pt}
 .banner{margin-top:8pt;height:28pt;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15pt;font-weight:600;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;padding:0 8pt;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -118,7 +118,7 @@ CSS;
     $head  = '<div class="head"><div class="l">';
     if ($title !== '') {
         $head .= '<h1 class="title" style="font-size:' . $fit($title, 28, 0.46) . 'pt">' . $e($title) . '</h1>';
-        if ($addr !== '') $head .= '<p class="addr" style="font-size:' . $fit($addr, 13, 0.78) . 'pt">' . $e($addr) . '</p>';
+        if ($addr !== '') $head .= '<p class="addr" style="font-size:' . $fit($addr, 14.5, 0.78) . 'pt">' . $e($addr) . '</p>';
     } elseif ($addr !== '') {
         $head .= '<h1 class="title" style="font-size:' . $fit($addr, 28, 0.46) . 'pt">' . $e($addr) . '</h1>';
     }
