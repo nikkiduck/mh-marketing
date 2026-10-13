@@ -1225,7 +1225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'agent_name','initials','agent_title','cell_phone','mh_email','alt_email','email_forwarded',
             'website_url','start_date','headshot_url',
             'social_instagram','social_facebook','social_linkedin','social_tiktok','social_other',
-            'bio_url','bio_text','bio_short',
+            'bio_url','bio_text',   // bio_short dropped 2026-10-12 (Nikki); the column stays, nothing reads or writes it
             // Assets tab — file links
             'qr_code_url','email_signature_url',
             // Assets tab — headshot / photoshoot
@@ -3178,21 +3178,10 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         </div>
       <?php endif; ?>
 
-      <?php if (!empty($agent['bio_text']) || !empty($agent['bio_short'])): ?>
-        <div class="bio-tabs">
-          <?php if (!empty($agent['bio_text'])): ?><button class="bio-tab-btn active" data-bio="assets-full">Full Bio</button><?php endif; ?>
-          <?php if (!empty($agent['bio_short'])): ?><button class="bio-tab-btn <?= empty($agent['bio_text'])?'active':'' ?>" data-bio="assets-short">Short / Social</button><?php endif; ?>
+      <?php if (!empty($agent['bio_text'])): ?>
+        <div class="bio-panel active" id="bio-assets-full">
+          <div class="bio-content rich"><?= strip_tags($agent['bio_text'], '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
         </div>
-        <?php if (!empty($agent['bio_text'])): ?>
-          <div class="bio-panel active" id="bio-assets-full">
-            <div class="bio-content rich"><?= strip_tags($agent['bio_text'], '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
-          </div>
-        <?php endif; ?>
-        <?php if (!empty($agent['bio_short'])): ?>
-          <div class="bio-panel <?= empty($agent['bio_text'])?'active':'' ?>" id="bio-assets-short">
-            <div class="bio-content"><?= nl2br(htmlspecialchars($agent['bio_short'])) ?></div>
-          </div>
-        <?php endif; ?>
       <?php else: ?>
         <p class="asset-empty">No bio yet. Click Edit to add one.</p>
       <?php endif; ?>
@@ -3210,11 +3199,6 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <span class="fld-label" style="margin-bottom:6px;">Full Bio</span>
             <div id="bioEditor"><?= strip_tags($agent['bio_text'] ?? '', '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>') ?></div>
             <textarea name="bio_text" id="bioTextHidden" style="display:none;"></textarea>
-          </div>
-          <div class="fld" style="flex-direction:column;align-items:stretch;">
-            <span class="fld-label" style="margin-bottom:6px;">Short / Social Bio</span>
-            <textarea name="bio_short" class="form-input" rows="3"
-                      placeholder="Short bio for social media…"><?= htmlspecialchars($agent['bio_short'] ?? '') ?></textarea>
           </div>
           <div class="btn-row">
             <button type="submit" class="btn btn-primary btn-sm">Save</button>

@@ -1918,12 +1918,16 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   also gets a row of sub-tabs under the header. Home mirrors it (a My
   Profile card, then My Marketing and My Tools sections). `portal/profile.php`
   is My Profile: name, email, title, headshot, MLS identities
-  (agent_mls_ids) and current listings (`portal_listings()`, the Hot Sheet
-  feed copy matched like the Instagram tool) read-only; cell phone, full +
-  short bio (Quill from assets/vendor, the admin page's safe tags), social
-  handles (stored bare, like agent.php) and the Hot Sheet subscription
-  editable; and a contact form (marketing_requests kind `contact`, emailed
-  via portal_send_mail). **Every change an agent makes is emailed to
+  (agent_mls_ids), cell phone and current listings (`portal_listings()`,
+  the Hot Sheet feed copy matched like the Instagram tool, drawn like the
+  admin page's listing cards, last on the page) read-only; the bio (Quill
+  from assets/vendor, the admin page's safe tags), social handles (an @
+  before the box; a pasted address is parsed to the handle by
+  `portal_handle()`, stored bare like agent.php) and the Hot Sheet
+  subscription editable; a row of anchors under the header; and a contact
+  form (marketing_requests kind `contact`, emailed via portal_send_mail).
+  **The short bio is gone (Nikki, 2026-10-12):** `bio_short` is no longer
+  read or written anywhere (the column stays). **Every change an agent makes is emailed to
   marketing@ with who, what, before, after and when (Mountain time) and
   left as a note on their agent page** (`portal_change_alert()`,
   marketing_notes). The website picks the fields up from the roster feed

@@ -383,8 +383,10 @@ ok('the old Hot Sheets page sends you to My Profile', $c === 302 && $loc === '/p
 [$c, , $b] = req('jackson', '/portal/profile.php');
 ok('Jackson: My Profile renders with Hot Sheets, not subscribed, every area offered', $c === 200 && no_fatal($b) && has($b, 'Not subscribed')
    && has($b, 'Roaring Fork Valley') && has($b, 'Front Range') && has($b, 'Twice a week'), $b);
-ok('…his name and email read-only, his board id, his listing, and nothing of Kim\'s', has($b, 'Jackson Horn') && has($b, 'jackson.horn@monthaus.com')
-   && has($b, 'JHORN1') && has($b, '30 Smith Way') && has($b, '$4,500,000') && !has($b, 'KCSECRET') && !has($b, 'Secret Ln'), $b);
+ok('…his name and email read-only, his board id, his listing as a card, and nothing of Kim\'s', has($b, 'Jackson Horn') && has($b, 'jackson.horn@monthaus.com')
+   && has($b, 'JHORN1') && has($b, '30 Smith Way') && has($b, '$4,500,000') && has($b, 'View on the website') && has($b, 'pt-lstatus active">Active<')
+   && !has($b, 'KCSECRET') && !has($b, 'Secret Ln') && !has($b, 'bio_short') && !has($b, 'name="cell_phone"'), $b);
+ok('…an anchors row under the header, listings last', has($b, 'href="#hotsheets"') && has($b, 'href="#listings"') && strpos($b, 'id="listings"') > strpos($b, 'id="message"'), $b);
 [$c, $loc, ] = req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'tok', 'action' => 'save', 'frequency' => 'daily', 'areas' => ['vail-valley', 'bogus']]);
 $w = writes(); $m = mails();
 ok('saving creates his row and keeps only real areas', ($w[0][0] ?? '') === 'hs_subscribe' && ($w[1][0] ?? '') === 'hs_update'
@@ -397,23 +399,26 @@ req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'bad', 'action' => 'sav
 ok('a bad form token saves nothing', writes() === [] && mails() === [], json_encode(writes()));
 
 echo "\nMY PROFILE\n";
-[$c, $loc] = req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'phone', 'cell_phone' => ' 970 555 0100 ']);
+[$c, $loc] = req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'social',
+    'social_instagram' => 'https://www.instagram.com/@jhorn/?hl=en', 'social_facebook' => 'www.facebook.com/monthaus/', 'social_linkedin' => 'https://www.linkedin.com/in/jackson-horn/',
+    'social_tiktok' => '@jh', 'website_url' => 'jacksonhorn.com']);
 $w = writes(); $m = mails();
-ok('saving a phone writes HIS row, notes it, and emails marketing@ with before and after', $c === 302 && $loc === '/portal/profile.php#contact'
-   && ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['970 555 0100', 6]
-   && ($w[1][0] ?? '') === 'note' && has($w[1][1][1] ?? '', 'Cell phone') && (int)($w[1][1][2] ?? 0) === 101
-   && ($m[0]['subject'] ?? '') === 'Profile change: Jackson Horn (phone number)' && has($m[0]['content'][1]['value'] ?? '', '970 555 0100') && has($m[0]['content'][1]['value'] ?? '', 'Before'), json_encode($w) . json_encode($m));
-req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'social', 'social_instagram' => 'https://www.instagram.com/@jhorn', 'social_tiktok' => '@jh', 'website_url' => 'jacksonhorn.com']);
+ok('handles are parsed from whatever was pasted and stored bare; the website gets https://; HIS row only', $c === 302 && $loc === '/portal/profile.php#social'
+   && ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['jhorn', 'monthaus', 'jackson-horn', 'jh', 'https://jacksonhorn.com', 6], json_encode($w));
+ok('…noted on his agent page and emailed to marketing@ with before and after', ($w[1][0] ?? '') === 'note' && has($w[1][1][1] ?? '', 'Instagram') && (int)($w[1][1][2] ?? 0) === 101
+   && ($m[0]['subject'] ?? '') === 'Profile change: Jackson Horn (social media links)' && has($m[0]['content'][1]['value'] ?? '', 'jackson-horn') && has($m[0]['content'][1]['value'] ?? '', 'Before'), json_encode($w) . json_encode($m));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'social', 'social_instagram' => 'mont.haus']);
+ok('a handle with a dot in it is still a handle', (writes()[0][1] ?? []) === ['mont.haus', 6], json_encode(writes()));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'bio', 'bio_text' => '<p>Hi <script>x()</script><b onclick="y()">there</b></p>', 'bio_short' => 'ignored']);
 $w = writes();
-ok('social handles are stored bare, the website gets https://', ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['jhorn', 'jh', 'https://jacksonhorn.com', 6], json_encode($w));
-req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'bio', 'bio_text' => '<p>Hi <script>x()</script><b onclick="y()">there</b></p>', 'bio_short' => 'Short.']);
-$w = writes();
-ok('the bio keeps safe tags only', ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['<p>Hi x()<b>there</b></p>', 'Short.', 6], json_encode($w));
-req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'phone', 'cell_phone' => '']);
+ok('the bio keeps safe tags only, and there is no short bio any more', ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['<p>Hi x()<b>there</b></p>', 6], json_encode($w));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'social', 'social_instagram' => '']);
 ok('nothing changed: nothing written, nothing sent', writes() === [] && mails() === [], json_encode(writes()));
-req('jackson', '/portal/profile.php', ['csrf_token' => 'nope', 'action' => 'phone', 'cell_phone' => '1']);
+req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'phone', 'cell_phone' => '970 555 0100']);
+ok('the phone is not editable on the portal: a posted phone writes nothing', writes() === [] && mails() === [], json_encode(writes()));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'nope', 'action' => 'social', 'social_instagram' => 'x']);
 ok('a bad form token writes nothing', writes() === [] && mails() === [], json_encode(writes()));
-req('nikki', '/portal/profile.php?preview=6', ['csrf_token' => 'tok', 'action' => 'phone', 'cell_phone' => '1']);
+req('nikki', '/portal/profile.php?preview=6', ['csrf_token' => 'tok', 'action' => 'social', 'social_instagram' => 'x']);
 ok('an admin preview cannot change their details', writes() === [] && mails() === [], json_encode(writes()));
 [$c, $loc] = req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'contact', 'subject' => 'New headshot', 'message' => 'Can we book one?']);
 $w = writes(); $m = mails();

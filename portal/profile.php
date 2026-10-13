@@ -2,9 +2,12 @@
 /**
  * portal/profile.php — My Profile (Nikki, 2026-10-12). What the website and
  * marketing hold about the agent, some of it editable here:
- *   read-only  name, email, title, headshot, MLS board identities, current listings
- *   editable   cell phone, bio (full + short), social handles, Hot Sheet subscription
+ *   read-only  name, email, phone, title, headshot, MLS board identities, current listings
+ *   editable   bio, social handles, Hot Sheet subscription
  *   plus       a small form to contact marketing@
+ * (Nikki, 2026-10-12 pm: phone read-only with the name and email; the short bio is gone
+ * for good; handles get an @ in front of the box and a pasted URL is parsed; listings
+ * last, drawn like the admin agent page's cards; a row of anchors under the header.)
  * Every save goes through portal_change_alert(): marketing@ gets who changed
  * what, before and after, when; the agent page gets a note. The website
  * reads these fields from the roster feed within the hour, so a change here
@@ -36,6 +39,31 @@ $SOCIAL = [
 ];
 const PORTAL_BIO_TAGS = '<p><br><strong><b><em><i><u><ol><ul><li><a><h3><h4><blockquote>';
 
+/**
+ * A handle from whatever was typed: "@jhorn", "jhorn", or a pasted address
+ * ("https://www.instagram.com/jhorn/?hl=en", "linkedin.com/in/jackson-horn").
+ * Stored bare, as the admin page stores them. The website is kept as an https URL.
+ */
+function portal_handle(string $col, string $v): string {
+    $v = trim($v);
+    if ($col === 'website_url') {
+        if ($v !== '' && !preg_match('~^https?://~i', $v)) $v = 'https://' . $v;
+        return $v;
+    }
+    // An address, not a handle: it has a scheme, starts with www., or has a slash
+    // in it (a handle never does; "mont.haus" with a dot is still a handle).
+    if (preg_match('~^(?:https?://|www\.)~i', $v) || str_contains($v, '/')) {
+        $path = preg_replace('~^(?:https?://)?[^/]*~i', '', $v);
+        $path = trim($path, '/');
+        $path = preg_replace('~[?#].*$~', '', $path);
+        $parts = array_values(array_filter(explode('/', $path), fn($x) => $x !== ''));
+        // linkedin.com/in/<handle>, linkedin.com/company/<name>, tiktok.com/@<handle>, instagram.com/<handle>
+        if ($parts && in_array(strtolower($parts[0]), ['in', 'company', 'pub', 'profile.php'], true)) array_shift($parts);
+        $v = (string)($parts[0] ?? '');
+    }
+    return ltrim(rawurldecode($v), '@');
+}
+
 /** Save changed fields, alert, flash. $fields: column => [label, new value]. */
 function portal_profile_save(mysqli $conn, array $ctx, array $me, string $what, array $fields, string $flash_key): void {
     $changes = []; $sets = []; $vals = []; $types = '';
@@ -56,14 +84,11 @@ function portal_profile_save(mysqli $conn, array $ctx, array $me, string $what, 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
     $key = 'pt_pf_' . preg_replace('/[^a-z]/', '', $action);
-    $anchor = ['phone' => 'contact', 'bio' => 'bio', 'social' => 'social', 'contact' => 'message'][$action] ?? 'top';
+    $anchor = ['bio' => 'bio', 'social' => 'social', 'contact' => 'message'][$action] ?? 'top';
     if (!portal_csrf_ok()) {
         $_SESSION[$key] = ['err', 'That page had been open too long. Please try again.'];
     } elseif ($ctx['preview']) {
         $_SESSION[$key] = ['err', 'This is a preview: change their details from their agent page.'];
-    } elseif ($action === 'phone') {
-        $phone = mb_substr(trim((string)($_POST['cell_phone'] ?? '')), 0, 30);
-        portal_profile_save($conn, $ctx, $me, 'phone number', ['cell_phone' => ['Cell phone', $phone]], $key);
     } elseif ($action === 'bio') {
         $full = trim((string)($_POST['bio_text'] ?? ''));
         if ($full !== '') {
@@ -71,15 +96,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $full = preg_replace('/\s+on[a-z]+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $full);
             if (in_array(trim($full), ['<p><br></p>', '<p></p>', '<br>'], true)) $full = '';
         }
-        $short = mb_substr(trim((string)($_POST['bio_short'] ?? '')), 0, 1000);
-        portal_profile_save($conn, $ctx, $me, 'bio', ['bio_text' => ['Full bio', $full], 'bio_short' => ['Short bio', $short]], $key);
+        portal_profile_save($conn, $ctx, $me, 'bio', ['bio_text' => ['Bio', $full]], $key);
     } elseif ($action === 'social') {
         $fields = [];
-        foreach ($SOCIAL as $col => [$label, $prefix, $strip]) {
-            $v = mb_substr(trim((string)($_POST[$col] ?? '')), 0, $col === 'website_url' ? 255 : 150);
-            foreach ($strip as $pre) if ($v !== '' && stripos($v, $pre) === 0) { $v = substr($v, strlen($pre)); break; }
-            if ($col !== 'website_url') $v = ltrim($v, '@');
-            if ($col === 'website_url' && $v !== '' && !preg_match('~^https?://~i', $v)) $v = 'https://' . $v;
+        foreach ($SOCIAL as $col => [$label]) {
+            $v = mb_substr(portal_handle($col, (string)($_POST[$col] ?? '')), 0, $col === 'website_url' ? 255 : 150);
             $fields[$col] = [$label, $v];
         }
         portal_profile_save($conn, $ctx, $me, 'social media links', $fields, $key);
@@ -118,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ── Read ────────────────────────────────────────────────────────────────────
 $flash = [];
-foreach (['phone', 'bio', 'social', 'contact'] as $k) { $flash[$k] = $_SESSION['pt_pf_' . $k] ?? null; unset($_SESSION['pt_pf_' . $k]); }
+foreach (['bio', 'social', 'contact'] as $k) { $flash[$k] = $_SESSION['pt_pf_' . $k] ?? null; unset($_SESSION['pt_pf_' . $k]); }
 $hs_flash = $_SESSION['pt_hs_flash'] ?? null; unset($_SESSION['pt_hs_flash']);
 unset($_SESSION['pt_pf_contact_clear']);
 
@@ -141,8 +162,12 @@ $email_shown = (string)($me['mh_email'] ?? '') ?: (string)$ctx['user']['email'];
 $flash_html = function (?array $f): string { return $f ? '<div class="pt-flash ' . ($f[0] === 'ok' ? 'ok' : 'err') . '">' . ph($f[1]) . '</div>' : ''; };
 $price = fn($v) => $v !== null && (float)$v > 0 ? '$' . number_format((float)$v) : '';
 
+$jump = ['contact' => 'Contact', 'bio' => 'Bio', 'social' => 'Social', 'boards' => 'MLS boards', 'hotsheets' => 'Hot Sheets', 'message' => 'Message', 'listings' => 'Listings'];
 portal_header($ctx, 'My Profile', 'profile');
 ?>
+<div class="pt-subnav-wrap sticky"><nav class="pt-subnav" aria-label="On this page">
+  <?php foreach ($jump as $id => $label): ?><a href="#<?= $id ?>"><?= ph($label) ?></a><?php endforeach; ?>
+</nav></div>
   <h1 class="pt-h1" id="top">My Profile</h1>
   <p class="pt-lead">What Mont Haus and the website hold about you. Anything you change here goes to the website within the hour, and marketing is told.</p>
 
@@ -153,33 +178,22 @@ portal_header($ctx, 'My Profile', 'profile');
       <div class="pt-who-text">
         <h2 class="pt-card-h"><?= ph($name) ?></h2>
         <?php if (trim((string)($me['agent_title'] ?? '')) !== ''): ?><p class="pt-card-sub"><?= ph(str_replace("\n", ' ', (string)$me['agent_title'])) ?></p><?php endif; ?>
-        <p class="pt-card-sub"><?= ph($email_shown) ?></p>
-        <p class="pt-help" style="margin:8px 0 0">To change your name, email or headshot, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p>
+        <p class="pt-card-sub"><?= ph($email_shown) ?><?= trim((string)($me['cell_phone'] ?? '')) !== '' ? ' · ' . ph($me['cell_phone']) : '' ?></p>
+        <p class="pt-help" style="margin:8px 0 0">To update your name or contact information, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a> or send a message via the <a href="#message">form below</a>.</p>
       </div>
     </div>
-    <?= $flash_html($flash['phone']) ?>
-    <form method="post" class="pt-form pt-inline" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
-      <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
-      <input type="hidden" name="action" value="phone">
-      <label>Cell phone
-        <input type="text" name="cell_phone" inputmode="tel" autocomplete="tel" maxlength="30" value="<?= ph($me['cell_phone'] ?? '') ?>" placeholder="970 555 0100"></label>
-      <div class="pt-row"><button type="submit" class="pt-btn main">Save phone</button></div>
-    </form>
   </section>
 
   <!-- Bio: editable -->
   <section class="pt-card pt-section" id="bio">
     <h2 class="pt-card-h">Bio</h2>
-    <p class="pt-card-sub">Your full bio is on your page on monthaus.com. The short one is for cards and print.</p>
+    <p class="pt-card-sub">Your bio, as it reads on your page on monthaus.com.</p>
     <?= $flash_html($flash['bio']) ?>
     <form method="post" class="pt-form" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>" id="bioForm">
       <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
       <input type="hidden" name="action" value="bio">
-      <label>Full bio</label>
       <div id="bioEditor" class="pt-editor"><?= strip_tags((string)($me['bio_text'] ?? ''), PORTAL_BIO_TAGS) ?></div>
       <textarea name="bio_text" id="bioText" rows="10" class="pt-editor-fallback"><?= ph($me['bio_text'] ?? '') ?></textarea>
-      <label style="margin-top:16px">Short bio
-        <textarea name="bio_short" rows="3" maxlength="1000" placeholder="Two or three sentences."><?= ph($me['bio_short'] ?? '') ?></textarea></label>
       <div class="pt-row"><button type="submit" class="pt-btn main">Save bio</button></div>
     </form>
   </section>
@@ -187,7 +201,6 @@ portal_header($ctx, 'My Profile', 'profile');
   <!-- Social: editable -->
   <section class="pt-card pt-section" id="social">
     <h2 class="pt-card-h">Social media</h2>
-    <p class="pt-card-sub">Your handle, not the full address: <b>monthaus</b>, not instagram.com/monthaus. These show on your page on monthaus.com.</p>
     <?= $flash_html($flash['social']) ?>
     <form method="post" class="pt-form" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
       <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
@@ -195,8 +208,10 @@ portal_header($ctx, 'My Profile', 'profile');
       <div class="pt-grid2">
       <?php foreach ($SOCIAL as $col => [$label, $prefix]): ?>
         <label><?= ph($label) ?>
-          <input type="text" name="<?= ph($col) ?>" maxlength="<?= $col === 'website_url' ? 255 : 150 ?>" autocapitalize="none" autocorrect="off"
-                 value="<?= ph($me[$col] ?? '') ?>" placeholder="<?= $col === 'website_url' ? 'https://…' : 'handle' ?>"></label>
+          <span class="pt-at<?= $col === 'website_url' ? ' none' : '' ?>">
+            <input type="text" name="<?= ph($col) ?>" maxlength="<?= $col === 'website_url' ? 255 : 150 ?>" autocapitalize="none" autocorrect="off"
+                   value="<?= ph($me[$col] ?? '') ?>" placeholder="<?= $col === 'website_url' ? 'https://…' : '' ?>">
+          </span></label>
       <?php endforeach; ?>
       </div>
       <div class="pt-row"><button type="submit" class="pt-btn main">Save social media</button></div>
@@ -227,31 +242,10 @@ portal_header($ctx, 'My Profile', 'profile');
     <?php endif; ?>
   </section>
 
-  <!-- Listings: read-only -->
-  <section class="pt-card pt-section" id="listings">
-    <h2 class="pt-card-h">Current listings</h2>
-    <?php if (!$listings): ?>
-      <p class="pt-card-sub">We do not see any live listings under your name right now. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p>
-    <?php else: ?>
-      <p class="pt-card-sub">From the MLS feed, as the website shows them.</p>
-      <div class="pt-list">
-        <?php foreach ($listings as $l): $u = trim((string)($l['url'] ?? '')); ?>
-          <a class="pt-list-row" <?= $u !== '' ? 'href="' . ph($u) . '" target="_blank" rel="noopener"' : '' ?>>
-            <?php if (trim((string)$l['primary_photo']) !== ''): ?><img src="<?= ph($l['primary_photo']) ?>" alt="" loading="lazy"><?php else: ?><span class="pt-list-nopic"></span><?php endif; ?>
-            <span class="pt-list-text">
-              <b><?= ph($l['address']) ?></b>
-              <span><?= ph(trim((string)$l['city'])) ?><?= $price($l['list_price']) !== '' ? ' · ' . ph($price($l['list_price'])) . ((int)$l['is_rental'] ? ' / mo' : '') : '' ?> · <?= ph((int)$l['is_rental'] ? 'Rental' : (string)$l['status']) ?></span>
-            </span>
-          </a>
-        <?php endforeach; ?>
-      </div>
-    <?php endif; ?>
-  </section>
-
   <!-- Contact marketing -->
   <section class="pt-card pt-section" id="message">
     <h2 class="pt-card-h">Contact marketing</h2>
-    <p class="pt-card-sub">A question, a change we should make, something you need. It goes to <?= PORTAL_MARKETING_EMAIL ?> and they reply to <?= ph($ctx['user']['email']) ?>.</p>
+    <p class="pt-card-sub">A question, a change we should make, something you need.</p>
     <?= $flash_html($flash['contact']) ?>
     <form method="post" class="pt-form" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
       <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
@@ -260,6 +254,38 @@ portal_header($ctx, 'My Profile', 'profile');
       <label>Message <textarea name="message" rows="5" maxlength="4000" required></textarea></label>
       <div class="pt-row"><button type="submit" class="pt-btn main">Send to marketing</button></div>
     </form>
+  </section>
+
+  <!-- Listings: read-only, last (they can get long), drawn like the admin agent page's cards -->
+  <section class="pt-section" id="listings">
+    <h2 class="pt-h2">Current Listings</h2>
+    <?php if (!$listings): ?>
+      <div class="pt-card"><p class="pt-card-sub" style="margin:0">We do not see any live listings under your name right now. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p></div>
+    <?php else: ?>
+      <div class="pt-lgrid">
+        <?php foreach ($listings as $l):
+          $lst   = (string)$l['status'];
+          $lstat = $lst === 'Pending' || $lst === 'Active Under Contract' ? 'pending' : 'active';
+          $llab  = ($lst === 'Active Under Contract' ? 'Under Contract' : $lst) . ((int)$l['is_rental'] ? ' · For Rent' : '');
+          $u = trim((string)($l['url'] ?? ''));
+        ?>
+        <div class="pt-lcard">
+          <?php if (trim((string)$l['primary_photo']) !== ''): ?>
+            <img class="pt-lphoto" src="<?= ph($l['primary_photo']) ?>" alt="" loading="lazy">
+          <?php else: ?>
+            <div class="pt-lphoto"></div>
+          <?php endif; ?>
+          <div class="pt-lbody">
+            <div class="pt-lstatus <?= $lstat ?>"><?= ph($llab) ?></div>
+            <div class="pt-laddr"><?= ph($l['address']) ?></div>
+            <?php if (trim((string)$l['city']) !== ''): ?><div class="pt-lcity"><?= ph(trim((string)$l['city'])) ?>, CO</div><?php endif; ?>
+            <?php if ($price($l['list_price']) !== ''): ?><div class="pt-lprice"><?= ph($price($l['list_price'])) ?></div><?php endif; ?>
+            <?php if ($u !== ''): ?><a class="pt-llink" href="<?= ph($u) ?>" target="_blank" rel="noopener">View on the website ↗</a><?php endif; ?>
+          </div>
+        </div>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
   </section>
 
 <link rel="stylesheet" href="/assets/vendor/quill.snow.css">

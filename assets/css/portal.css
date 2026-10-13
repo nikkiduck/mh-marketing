@@ -238,3 +238,27 @@ a.pt-list-row[href]:hover { border-color: var(--gold); }
 .ql-container.ql-snow { border-color: var(--line); }
 .pt-editor-fallback { display: none; }
 .pt-form .pt-editor-fallback { margin-top: 6px; }
+
+/* My Profile, second pass (2026-10-12 pm): anchors row sticks; @ before a handle; listings like the admin page's cards. */
+.pt-subnav-wrap.sticky { position: sticky; top: 0; z-index: 20; }
+.pt-at { display: flex; align-items: center; margin-top: 6px; border: 1px solid var(--line); border-radius: 10px; background: #fff; overflow: hidden; }
+.pt-at::before { content: '@'; color: var(--muted); font-size: 17px; padding: 0 2px 0 14px; }
+.pt-at.none::before { content: none; }
+.pt-at.none input { padding-left: 14px; }
+.pt-form .pt-at input[type=text] { margin: 0; border: 0; border-radius: 0; padding-left: 4px; background: transparent; }
+.pt-form .pt-at input[type=text]:focus { outline: none; }
+.pt-at:focus-within { outline: 2px solid var(--gold); border-color: var(--gold); }
+.pt-lgrid { display: grid; grid-template-columns: 1fr; gap: 14px; }
+@media (min-width: 520px) { .pt-lgrid { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 860px) { .pt-lgrid { grid-template-columns: repeat(3, 1fr); } }
+.pt-lcard { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid var(--line); }
+.pt-lphoto { width: 100%; height: 160px; object-fit: cover; display: block; background: #f3f4f6; }
+.pt-lbody { padding: 12px 14px 14px; }
+.pt-lstatus { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin-bottom: 4px; }
+.pt-lstatus.active { color: #10b981; }
+.pt-lstatus.pending { color: #f97316; }
+.pt-laddr { font-size: 17px; font-weight: 600; color: #111; margin-bottom: 2px; overflow-wrap: anywhere; }
+.pt-lcity { font-size: 14px; color: #9ca3af; margin-bottom: 8px; }
+.pt-lprice { font-size: 20px; font-weight: 600; color: #111; }
+.pt-llink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #f97316; text-decoration: none; }
+.pt-llink:hover { text-decoration: underline; }
