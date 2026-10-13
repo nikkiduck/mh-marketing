@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-13 17:33 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-13 18:01 from git HEAD in the Mont Haus Master folder.
 # Every .php under the root, inc/, api/ and cron/, plus assets/css/mh-theme.css
 # and assets/js/mh-qr.js, portal/*.php, assets/css/portal.css, assets/css/social.css, assets/css/flyer.css.
 # Not listed, because the server's copies are meant to differ or are made there:
@@ -44,8 +44,8 @@ b8e198e7cc0617a6128cf965b5c1cdc0  inc/boards.php
 3c25b2f69d20d7bec56a4ef84b11b9b2  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
 0f2ccd665f7cf6ebef2b916bff6ea510  inc/financials.php
-535f8ec66cfce38d6bd599ba36839527  inc/flyer.php
-fe0008086c64f365dbbc24955e3ad41c  inc/flyer_render.php
+6e40606532c2cf62e8bd7838cad79243  inc/flyer.php
+ad0836005d7dd096e702b4f74f08aad8  inc/flyer_render.php
 1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
 ef0c14279cdbaef87219fc1ba01931ea  inc/hs_data.php
 e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
@@ -55,14 +55,14 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
-ef87ceda1fbe2fd5c234b1a7793cf4a1  inc/portal.php
+ee363849a1a987851a14edfdf23da976  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-abd0d06ba780a5f3af72452751979de9  inc/social.php
+c84e7834c476730fb4c757d6fd01c0df  inc/social.php
 01e6be69100b1e3a076cb3c5ba109132  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -86,7 +86,7 @@ c141d4e49e830a83cfd047aca3ad5d49  portal/asset.php
 32d55d208d6c858e685bbe7a6e7fd466  portal/brand.php
 0f9c154074c6ffe5c3e60246a1c500cd  portal/contact.php
 034e7c38b450646eb5edfbf821a5bfe5  portal/elevation.php
-20e35a64ac8c85744d1c9f9744802c73  portal/flyer.php
+fe150115c0914d608e8837942cc0b354  portal/flyer.php
 db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
@@ -95,15 +95,16 @@ aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 d863f2ea3abfe5cd9cb1489046732776  portal/profile.php
 e6411bc80e28c79a013e475e5dc875eb  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
-bb2f21fc2ce8ba5343dbafdeb40b6475  portal/social.php
+bfe3ebfff9314e4244322be8688d60cc  portal/social.php
 b4178bb297c9b2f159e24c02f559ac7b  portal/social_asset.php
 ffac5e8d41f6939bf861500aeeaacd76  portal/social_export.php
-e2e389d1c46353c140961f9e9c261bba  portal/social_photos.php
+2d1bf94046c45ef9e5b05d415a10c278  portal/social_photos.php
 3b2ecd3bf5e7571ef9f9630e67208d3e  portal/social_render.php
 e6cafb63f213289c3e835aede4d2c27f  portal/social_upload.php
 d9fcb94717527a0db1ccf652d6418759  portal/spend.php
+89287d5d65cc4cf6d5e58f02843f96c4  portal/templates.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 5d8f3a6c60e546aa21a8df980e4cc0dc  assets/css/portal.css
-9bdf507aa67ce88737f7f33fc7221b86  assets/css/social.css
+0a9803b1e556f8e1ab647ec2307d96ce  assets/css/social.css
 53a9eac7f51e73550b6085c5defc28f2  assets/css/flyer.css
