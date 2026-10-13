@@ -35,12 +35,12 @@ picture to Instagram themselves; no auto-posting, by decision.
    to town / price / details / note. The first three are pre-filled from
    the listing. A blank line takes no room, so the ones below move up.
 
-The post: the label pill top-left on the photo (solid gold, 27 px, so it
-reads in a fast scroll); at the bottom a short rule, the headline
-(balanced over two lines when long, the unit number never alone), the
-lines, and the Mont Haus logo bottom-right. A top-right logo over the
-photo was tried on 2026-10-13 and dropped the same day: the shadow it
-needed did not suit (Nikki). No agent
+The post: the label pill top-left and the Mont Haus logo top-right, both
+on a soft fade across the top of the photo (ink on dark, cream on light;
+the bottom fade's lighter twin; settled 2026-10-13 after a drop shadow on
+the logo was rejected), so the words at the bottom have the full width:
+a short rule, the headline (balanced over two lines only when very long,
+the unit number never alone) and the lines. No agent
 headshot or contact details (Nikki, 2026-10-12).
 
 Download PNG posts the form to `portal/social_export.php`. (A Share… button
