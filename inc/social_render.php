@@ -258,7 +258,7 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .when{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 8px;white-space:nowrap;overflow:hidden}
 .time{font-size:30px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 28px;white-space:nowrap;overflow:hidden}
 .whenline{font-size:28px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 18px;white-space:nowrap;overflow:hidden}
-.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.12;margin:0 0 14px;padding-right:260px;overflow-wrap:anywhere}
+.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.12;margin:0 0 14px;padding-right:260px;overflow-wrap:anywhere;text-wrap:balance}
 .lines{padding-right:220px}
 .ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.25}
 .ln-town{font-size:{$sz(31)}px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:{$c['accent']};margin-bottom:14px}
@@ -293,10 +293,13 @@ CSS;
     if ($headline !== '') {
         // The headline keeps clear of the logo (padding-right) and may wrap to a second
         // line when still long after social_short_address(), rather than shrinking away.
+        // When it wraps the two lines are balanced (text-wrap) and the unit number stays
+        // with the word before it, so "#1513" is never a line by itself (Nikki, 2026-10-13).
         $size = ($oh && !$full) ? social_fit_size($headline, 46, [34 => 40, 42 => 34, 52 => 28])
-                                : social_fit_size($headline, 76, [20 => 66, 30 => 58]);
+                                : social_fit_size($headline, 76, [20 => 68, 27 => 60, 36 => 52]);
         $tag  = ($oh && !$full) ? 'h2' : 'h1';
-        $body .= "<{$tag} class=\"addr\" style=\"font-size:{$size}px\">" . $e($headline) . "</{$tag}>";
+        $text = str_replace(' #', '&nbsp;#', $e($headline));
+        $body .= "<{$tag} class=\"addr\" style=\"font-size:{$size}px\">" . $text . "</{$tag}>";
     }
     $styles = social_line_styles();
     $lines  = '';
