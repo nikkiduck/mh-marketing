@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- pocket_listings_v1.sql — pocket (off-MLS) listings on the agent page and
 -- the agent portal (Nikki, 2026-10-14). NEVER the public site.
