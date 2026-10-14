@@ -23,7 +23,7 @@ $SRC = __DIR__ . '/../inc/financials.php';
 $src = file_get_contents($SRC);
 if ($src === false) { fwrite(STDERR, "cannot read {$SRC}\n"); exit(1); }
 
-foreach (['mk_campaign_months', 'mk_weekday_days', 'mk_camp_resolve'] as $fn) {
+foreach (['mk_campaign_months', 'mk_weekday_days', 'mk_camp_resolve', 'mk_fin_kind_label'] as $fn) {
     if (!preg_match('/^function ' . $fn . '\(.*?^\}/ms', $src, $m)) {
         fwrite(STDERR, "FATAL: could not extract {$fn}() from inc/financials.php\n");
         exit(1);
@@ -249,6 +249,15 @@ ok('...but is visible in the grid',
 // The end-before-start typo still yields its one month, unclamped.
 ok('end before start is still one month',
    count(mk_campaign_months($back . '-01', $back . '-01', true)), 1);
+
+echo "\n── What a line is called (memberships, 2026-10-14) ─────────────\n";
+// A membership is an Advertising line underneath (same links, same share
+// arithmetic); only the word shown changes, and only for that medium.
+ok('a digital placement is Advertising',   mk_fin_kind_label(['kind' => 'Advertising', 'medium' => 'digital']), 'Advertising');
+ok('a print placement is Advertising',     mk_fin_kind_label(['kind' => 'Advertising', 'medium' => 'print']), 'Advertising');
+ok('a membership is Membership',           mk_fin_kind_label(['kind' => 'Advertising', 'medium' => 'membership']), 'Membership');
+ok('a line with no medium is Advertising', mk_fin_kind_label(['kind' => 'Advertising']), 'Advertising');
+ok('collateral is never relabelled',       mk_fin_kind_label(['kind' => 'Collateral', 'medium' => 'membership']), 'Collateral');
 
 echo "\n─────────────────────────────────────────────────────────────────\n";
 printf("%d passed, %d failed\n\n", $pass, $fail);

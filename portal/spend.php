@@ -67,14 +67,15 @@ if ($month):
 
   <div class="pt-lines">
   <?php foreach ($month['items'] as $it):
-      $is_ad = ($it['kind'] ?? '') === 'Advertising';
-      $title = $is_ad ? portal_platform_label((string)$it['platform']) . ($it['name'] !== '' ? ': ' . $it['name'] : '')
-                      : $it['name'];
+      $is_ad  = ($it['kind'] ?? '') === 'Advertising';
+      $is_mem = $is_ad && ($it['medium'] ?? '') === 'membership';   // a membership's line is the organization's name
+      $title  = $is_mem ? ($it['name'] !== '' ? $it['name'] : 'Membership')
+              : ($is_ad ? portal_platform_label((string)$it['platform']) . ($it['name'] !== '' ? ': ' . $it['name'] : '') : $it['name']);
       $not_set = $is_ad && empty($it['set']) && (float)$it['total'] == 0.0;
   ?>
     <div class="pt-line">
       <div class="pt-line-h">
-        <span class="pt-kind"><?= $is_ad ? 'Advertising' : 'Print' ?></span>
+        <span class="pt-kind"><?= $is_mem ? 'Membership' : ($is_ad ? 'Advertising' : 'Print') ?></span>
         <b><?= ph($title) ?></b>
         <?php if (!$is_ad && !empty($it['platform'])): ?><small><?= ph($it['platform']) ?></small><?php endif; ?>
       </div>

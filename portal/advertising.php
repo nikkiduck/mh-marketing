@@ -10,6 +10,9 @@
  * one of those ids, and the detail view is picked out of the already-scoped
  * list, so an id from the address bar can never reach another account's row.
  *
+ * Memberships (medium = membership) are left out here; portal/memberships.php
+ * shows them (2026-10-14).
+ *
  * Shown: outlet, name, print or digital (and the ad size), when it ran, its
  * state in plain words, the creatives (uploaded pictures first; the original
  * file link as "Open original"), and what it cost from the same
@@ -31,7 +34,10 @@ $campaigns = [];
 foreach ($ctx['scopes'] as $scope) {
     $sid = (int)$scope['id'];
     $r = $conn->query("SELECT * FROM marketing_campaigns WHERE intake_id = {$sid} ORDER BY COALESCE(start_date, created_at) DESC, id DESC");
-    foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $c) $campaigns[(int)$c['id']] = $c + ['assets' => [], '_scope' => $scope];
+    foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $c) {
+        if (portal_is_membership($c)) continue;   // memberships have their own page (portal/memberships.php, 2026-10-14)
+        $campaigns[(int)$c['id']] = $c + ['assets' => [], '_scope' => $scope];
+    }
 }
 
 // Their creatives, in one query over the ids the scoped list gave us.

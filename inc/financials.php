@@ -18,6 +18,8 @@
  * function whose closing brace is in column 0.
  */
 
+require_once __DIR__ . '/schema.php';   // mk_column_exists(): the medium column is read only once it exists
+
 function mk_fin_add(array &$months, string $date, array $item): void {
     $key = substr($date, 0, 7);                       // YYYY-MM
     if (!isset($months[$key])) {
@@ -51,6 +53,20 @@ function mk_coll_type_label(string $type): string {
         'other'          => 'Other',
     ];
     return $map[$type] ?? ucwords(str_replace('_', ' ', $type));
+}
+
+/**
+ * What a Financials line is, as shown in the Type column, the Billing modal
+ * and the portal's Spend page: "Collateral", "Advertising", or "Membership"
+ * for a placement whose medium is membership (campaign_membership_v1.sql,
+ * 2026-10-14). The item's `kind` stays 'Advertising' underneath, so every
+ * link to the Advertising tab, portal_item_spend() and the share arithmetic
+ * are untouched; only the word changes.
+ */
+function mk_fin_kind_label(array $it): string {
+    $kind = (string)($it['kind'] ?? '');
+    if ($kind === 'Advertising' && (string)($it['medium'] ?? '') === 'membership') return 'Membership';
+    return $kind;
 }
 
 /** Split one line's total into broker / MH / unassigned per its paid_by. */
@@ -377,10 +393,13 @@ function mh_agent_financials(mysqli $conn, int $id): array {
         }
     }
 
+    // medium (digital, print or membership) labels the line; the column is
+    // named only once it exists, since a failed query here would empty the tab.
+    $med_col = mk_column_exists($conn, 'marketing_campaigns', 'medium') ? ', medium' : '';
     $r = $conn->query("
         SELECT id, platform, name, budget, billing_mode, unit_rate, unit_weekday, unit_label,
                start_date, end_date, created_at,
-               paid_by, paid_broker_amount, paid_mh_amount
+               paid_by, paid_broker_amount, paid_mh_amount{$med_col}
           FROM marketing_campaigns
          WHERE intake_id = {$id}
     ");
@@ -440,6 +459,7 @@ function mh_agent_financials(mysqli $conn, int $id): array {
                 // so keep the raw value and resolve it at render time.
                 mk_fin_add($fin_months, $when, array_merge($parts, [
                     'kind'       => 'Advertising',
+                    'medium'     => (string)($row['medium'] ?? 'digital'),   // mk_fin_kind_label() says Membership for one
                     'name'       => trim((string)($row['name'] ?? '')),
                     'platform'   => (string)$row['platform'],
                     'total'      => $amount,

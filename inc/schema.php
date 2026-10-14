@@ -68,3 +68,34 @@ function mk_table_exists(mysqli $conn, string $table): bool {
     }
     return $cache[$table] = $ok;
 }
+
+/**
+ * "Does this ENUM column accept this value yet?" — for a migration that widens
+ * an enum (campaign_membership_v1.sql adds 'membership' to
+ * marketing_campaigns.medium). Writing a value the enum does not hold fails
+ * the INSERT or UPDATE in strict mode, silently from the user's seat, so the
+ * form offers the option only once the column accepts it. Same per-request
+ * cache as the two above.
+ */
+function mk_enum_has(mysqli $conn, string $table, string $col, string $value): bool {
+    static $cache = [];
+    $key = $table . '.' . $col . '=' . $value;
+    if (isset($cache[$key])) return $cache[$key];
+
+    $ok = false;
+    $s  = $conn->prepare(
+        "SELECT COLUMN_TYPE FROM information_schema.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?
+          LIMIT 1"
+    );
+    if ($s) {
+        $s->bind_param('ss', $table, $col);
+        $s->execute();
+        $row  = $s->get_result()->fetch_row();
+        $type = (string)($row[0] ?? '');
+        $s->close();
+        // enum('digital','print','membership') — match the quoted value.
+        $ok = stripos($type, 'enum(') === 0 && strpos($type, "'" . str_replace("'", "''", $value) . "'") !== false;
+    }
+    return $cache[$key] = $ok;
+}

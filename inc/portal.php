@@ -305,8 +305,13 @@ function portal_platform_label(string $p): string {
     return [
         'vail_daily' => 'Vail Daily', 'aspen_daily' => 'Aspen Daily News',
         'aspen_times' => 'Aspen Times', 'vail_bc_mag' => 'Vail BC Mag', 'social_meta' => 'Meta (Facebook/Instagram)',
-        'social_instagram' => 'Instagram', 'google' => 'Google', 'other' => 'Advertising',
+        'social_instagram' => 'Instagram', 'google' => 'Google', 'other' => 'Advertising', 'membership' => 'Membership',
     ][$p] ?? ucwords(str_replace('_', ' ', $p));
+}
+
+/** A placement row that is a membership (campaign_membership_v1.sql, 2026-10-14), not an ad. */
+function portal_is_membership(array $c): bool {
+    return (string)($c['medium'] ?? '') === 'membership';
 }
 
 /** "March 5, 2026" (US order since 2026-10-09, Nikki), or '' for no date. */
@@ -356,6 +361,34 @@ function portal_campaign_state(array $c): string {
     if ($start !== '' && $start !== '0000-00-00' && $start > $today) return 'Starts ' . portal_date($start);
     if ($status === 'active' || ($start !== '' && $start !== '0000-00-00')) return 'Running now';
     return 'Planned';
+}
+
+/**
+ * A membership's state in the agent's words (2026-10-14): Active member /
+ * Renews soon (60 days out) / Renewal due (the date has passed and nobody has
+ * marked it ended) / Starts March 5, 2026 / Ended / Being set up.
+ */
+function portal_membership_state(array $c): string {
+    $today  = date('Y-m-d');
+    $status = (string)($c['status'] ?? 'planned');
+    $start  = (string)($c['start_date'] ?? ''); $end = (string)($c['end_date'] ?? '');
+    $has_s  = $start !== '' && $start !== '0000-00-00';
+    $has_e  = $end !== '' && $end !== '0000-00-00';
+    if ($status === 'ended') return 'Ended';
+    if ($has_e && $end < $today) return 'Renewal due';
+    if ($has_s && $start > $today) return 'Starts ' . portal_date($start);
+    if ($has_e && (strtotime($end) - strtotime($today)) <= 60 * 86400) return 'Renews soon';
+    if ($status === 'active' || $has_s) return 'Active member';
+    return 'Being set up';
+}
+
+/** "Member since March 5, 2026 · Renews March 5, 2027", either half alone, or "Dates to be confirmed". */
+function portal_membership_term(array $c): string {
+    $s = portal_date($c['start_date'] ?? null); $e = portal_date($c['end_date'] ?? null);
+    $out = [];
+    if ($s !== '') $out[] = 'Member since ' . $s;
+    if ($e !== '') $out[] = 'Renews ' . $e;
+    return $out ? implode(' · ', $out) : 'Dates to be confirmed';
 }
 
 /** An order's status in the agent's words (agent.php's statuses, reworded). */
@@ -468,6 +501,7 @@ function portal_nav(): array {
             'spend'  => ['Spend', '/portal/spend.php'],
             'ads'    => ['Advertising', '/portal/advertising.php'],
             'orders' => ['Collateral', '/portal/orders.php'],
+            'memberships' => ['Memberships', '/portal/memberships.php'],   // chambers, associations, clubs Mont Haus joined for them (2026-10-14)
         ]],
         'tools'     => ['My Tools', null, [
             'elevation' => ['Elevation Planner', '/portal/elevation.php'],

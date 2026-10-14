@@ -26,8 +26,17 @@ if (mk_table_exists($conn, 'qr_codes')) {
  */
 function portal_home_counts(mysqli $conn, int $id): array {
     $ads = ['n' => 0, 'now' => 0];
+    $mem = ['n' => 0, 'soon' => 0, 'names' => []];   // memberships (2026-10-14): their own card and page
     $r = $conn->query("SELECT * FROM marketing_campaigns WHERE intake_id = {$id} ORDER BY id");
-    foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $c) { $ads['n']++; if (portal_campaign_state($c) === 'Running now') $ads['now']++; }
+    foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $c) {
+        if (portal_is_membership($c)) {
+            if (portal_membership_state($c) === 'Ended') continue;
+            $mem['n']++; $mem['names'][] = trim((string)($c['name'] ?? '')) ?: 'Membership';
+            if (in_array(portal_membership_state($c), ['Renews soon', 'Renewal due'], true)) $mem['soon']++;
+            continue;
+        }
+        $ads['n']++; if (portal_campaign_state($c) === 'Running now') $ads['now']++;
+    }
     $ord = ['n' => 0, 'moving' => 0];
     $r = $conn->query("SELECT * FROM marketing_collateral_orders WHERE intake_id = {$id} ORDER BY id");
     foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $o) { $ord['n']++; if (!in_array((string)($o['status'] ?? ''), ['delivered'], true)) $ord['moving']++; }
@@ -35,12 +44,12 @@ function portal_home_counts(mysqli $conn, int $id): array {
     $fin = mh_agent_financials($conn, $id);
     $yr = ['broker' => 0.0, 'mh' => 0.0];
     foreach ($fin['months'] as $k => $m) if (substr($k, 0, 4) === date('Y')) { $yr['broker'] += $m['broker']; $yr['mh'] += $m['mh']; }
-    return ['ads' => $ads, 'ord' => $ord, 'fin' => $fin, 'yr' => $yr];
+    return ['ads' => $ads, 'mem' => $mem, 'ord' => $ord, 'fin' => $fin, 'yr' => $yr];
 }
 
-/** The Advertising, Print orders and Spend cards for one scope. $who is "You" for the person, the team's name for a team. */
+/** The Advertising, Print orders, Memberships and Spend cards for one scope. $who is "You" for the person, the team's name for a team. */
 function portal_home_cards(array $ctx, array $scope, array $n): void {
-    $ads = $n['ads']; $ord = $n['ord']; $fin = $n['fin']; $yr = $n['yr'];
+    $ads = $n['ads']; $ord = $n['ord']; $fin = $n['fin']; $yr = $n['yr']; $mem = $n['mem'] ?? ['n' => 0, 'soon' => 0, 'names' => []];
     $q   = $scope['team'] ? ['team' => (int)$scope['id']] : [];
     $you = $scope['team'] ? 'The team has' : 'You have';
     $pre = $scope['team'] ? $scope['short'] . ' ' : '';   // "WB Advertising", "WB Collateral", "WB Marketing Spend"
@@ -65,6 +74,17 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
         else                          echo ($ord['n'] === 1 ? "{$you} 1 collateral order" : "{$you} {$ord['n']} collateral orders") . '.';
       ?></p>
       <span class="pt-card-go">See collateral ›</span>
+    </a>
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/memberships.php', $q)) ?>">
+      <h2 class="pt-card-h"><?= ph($pre) ?>Memberships</h2>
+      <p class="pt-card-sub"><?php
+        // Chambers, associations and clubs Mont Haus has joined on their behalf (2026-10-14); ended ones are not counted.
+        $is = $scope['team'] ? 'The team is' : 'You are';
+        if ($mem['n'] === 0)     echo 'No memberships yet.';
+        elseif ($mem['n'] === 1) echo "{$is} a member of " . ph($mem['names'][0]) . ($mem['soon'] ? ', renewing soon.' : '.');
+        else                     echo "{$is} a member of {$mem['n']} organizations" . ($mem['soon'] ? " ({$mem['soon']} renewing soon)." : '.');
+      ?></p>
+      <span class="pt-card-go">See memberships ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/spend.php', $q)) ?>">
       <h2 class="pt-card-h"><?= $pre !== '' ? ph($pre) . 'Marketing Spend' : 'Spend' ?></h2>

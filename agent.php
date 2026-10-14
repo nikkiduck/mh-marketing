@@ -15,6 +15,18 @@ require_once __DIR__ . '/inc/photos.php';           // headshots, and PHP's uplo
 require_once __DIR__ . '/inc/qr.php';               // QR codes card on the Profile tab
 require_once __DIR__ . '/inc/receipts.php';         // receipt files: collateral orders and advertising placements
 require_once __DIR__ . '/inc/creatives.php';        // creative files shown on the agent portal (sql/creatives_v1.sql)
+
+/**
+ * A posted or stored `medium` reduced to one the column accepts: 'digital',
+ * 'print', or 'membership' once campaign_membership_v1.sql has widened the
+ * enum (mk_enum_has; a value the enum lacks would fail the write in strict
+ * mode, silently from the user's seat). Anything else is digital.
+ */
+function mk_medium_value(mysqli $conn, string $v): string {
+    if ($v === 'print') return 'print';
+    if ($v === 'membership' && mk_enum_has($conn, 'marketing_campaigns', 'medium', 'membership')) return 'membership';
+    return 'digital';
+}
 require_login();
 require_role('admin');
 
@@ -165,6 +177,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                        ? $_POST['paid_by'] : null;
         $paid_broker = trim($_POST['paid_broker_amount'] ?? '') ?: null;
         $paid_mh     = trim($_POST['paid_mh_amount']     ?? '') ?: null;
+        // A membership (campaign_membership_v1.sql, 2026-10-14): no outlet, no
+        // UTMs, nothing is sent to media. The platform is the fixed word so the
+        // Financials tab and the portal can name it without the medium column.
+        $medium_in = mk_column_exists($conn, 'marketing_campaigns', 'medium') ? mk_medium_value($conn, (string)($_POST['medium'] ?? '')) : 'digital';
+        if ($medium_in === 'membership') {
+            $platform = 'membership'; $sent = 0;
+            $utm_source = $utm_medium = $utm_camp = $utm_content = null;
+        }
         if ($platform) {
             // Ad files are never stored on the campaign row — each creative goes into
             // marketing_campaign_assets so a placement can hold any number of ads,
@@ -184,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // whose type string is counted by hand; before the migration the
             // columns do not exist and the placement is simply digital.
             if ($new_cid && mk_column_exists($conn, 'marketing_campaigns', 'medium')) {
-                $medium  = ($_POST['medium'] ?? '') === 'print' ? 'print' : 'digital';
+                $medium  = $medium_in;
                 $ad_size = $medium === 'print' ? (mb_substr(trim((string)($_POST['ad_size'] ?? '')), 0, 80) ?: null) : null;
                 $m = $conn->prepare("UPDATE marketing_campaigns SET medium = ?, ad_size = ? WHERE id = ? AND intake_id = ?");
                 if ($m) { $m->bind_param('ssii', $medium, $ad_size, $new_cid, $id); $m->execute(); $m->close(); }
@@ -230,8 +250,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Print or digital (campaign_medium_v1.sql): only once the columns exist,
         // and medium only ever one of the two values.
         if (mk_column_exists($conn, 'marketing_campaigns', 'medium')) {
-            if (array_key_exists('medium', $_POST)) $_POST['medium'] = $_POST['medium'] === 'print' ? 'print' : 'digital';
+            if (array_key_exists('medium', $_POST)) $_POST['medium'] = mk_medium_value($conn, (string)$_POST['medium']);
             if (($_POST['medium'] ?? '') !== 'print' && array_key_exists('ad_size', $_POST)) $_POST['ad_size'] = '';
+            // A membership has no outlet or UTMs; the hidden platform select
+            // posts whatever it held, so the word is set here.
+            if (($_POST['medium'] ?? '') === 'membership') {
+                $_POST['platform'] = 'membership';
+                foreach (['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'] as $u) if (array_key_exists($u, $_POST)) $_POST[$u] = '';
+            }
             $fields[] = 'medium'; $fields[] = 'ad_size';
         }
         $sets = []; $vals = []; $types = '';
@@ -524,11 +550,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $new_cid = (int)$conn->insert_id;
                 $s->close();
             }
-            // A copy of a print ad is a print ad, same size.
+            // A copy of a print ad is a print ad, same size; a copy of a membership
+            // is its next term, dates blank (the renewal case Duplicate is for).
             if ($new_cid && array_key_exists('medium', $src)) {
                 $m = $conn->prepare("UPDATE marketing_campaigns SET medium = ?, ad_size = ? WHERE id = ? AND intake_id = ?");
                 if ($m) {
-                    $md = $src['medium'] === 'print' ? 'print' : 'digital'; $az = $v('ad_size');
+                    $md = mk_medium_value($conn, (string)$src['medium']); $az = $v('ad_size');
                     $m->bind_param('ssii', $md, $az, $new_cid, $id); $m->execute(); $m->close();
                 }
             }
@@ -1389,6 +1416,7 @@ if ($r) {
 
 // ── Campaigns ─────────────────────────────────────────────────────────────────
 $has_medium = mk_column_exists($conn, 'marketing_campaigns', 'medium');   // print vs digital; checked here, above the early close
+$has_membership = $has_medium && mk_enum_has($conn, 'marketing_campaigns', 'medium', 'membership');   // campaign_membership_v1.sql (2026-10-14)
 $campaigns = [];
 $r = $conn->query("SELECT * FROM marketing_campaigns WHERE intake_id={$id} ORDER BY created_at DESC");
 if ($r) {
@@ -1612,6 +1640,7 @@ $platform_labels = [
     'vail_daily' => 'Vail Daily', 'aspen_daily' => 'Aspen Daily News',
     'aspen_times' => 'Aspen Times', 'vail_bc_mag' => 'Vail BC Mag', 'social_meta' => 'Meta (FB/IG)',
     'social_instagram' => 'Instagram', 'google' => 'Google', 'other' => 'Other',
+    'membership' => 'Membership',   // the fixed platform of a membership row; never offered in the outlet select
 ];
 $campaign_status_labels = ['planned' => 'Planned', 'active' => 'Active', 'ended' => 'Ended'];
 $campaign_status_colors = ['planned' => '#6b7280', 'active' => '#10b981', 'ended' => '#9ca3af'];
@@ -2006,6 +2035,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                         padding:2px 7px; border-radius:10px; margin-left:6px; vertical-align:middle; }
     .camp-medium-chip.digital { background:#eff6ff; color:#1d4ed8; }
     .camp-medium-chip.print   { background:#fdf4e7; color:#92400e; }
+    .camp-medium-chip.membership { background:#ecfdf5; color:#047857; }
+    /* A membership's renewal (2026-10-14): amber from 60 days out, red once the date has passed. */
+    .camp-renew { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; margin-left:6px; vertical-align:middle; }
+    .camp-renew.soon { background:#fef3c7; color:#92400e; }
+    .camp-renew.due  { background:#fee2e2; color:#b91c1c; }
     .camp-adsize { font-size:12px; font-weight:500; color:#6b7280; margin-left:6px; }
     .camp-filter { display:flex; gap:6px; margin:0 0 14px; flex-wrap:wrap; }
     .camp-filter-btn { border:1px solid #e5e7eb; background:#fff; border-radius:16px; padding:5px 12px; font-size:12px; font-weight:600;
@@ -2199,6 +2233,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 padding:2px 7px; border-radius:9px; white-space:nowrap; }
     .fin-kind.coll { background:#ede9fe; color:#5b21b6; }
     .fin-kind.adv  { background:#e0f2fe; color:#075985; }
+    .fin-kind.mem  { background:#ecfdf5; color:#047857; }
     .fin-flag { font-size:11px; color:#b45309; font-style:italic; }
     .fin-billed { color:#0184BB; }
     /* A Financials line produced by a recurring monthly campaign. */
@@ -3647,6 +3682,33 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
   <?php
   }
 
+  /**
+   * Which placement fields show for a medium (2026-10-14). The forms carry
+   * four kinds of element: .js-digital-only, .js-print-only,
+   * .js-membership-only and .js-ad-only (digital or print). This gives the
+   * server-rendered state; mhApplyMedium() in the page script keeps it in
+   * step when the select changes.
+   */
+  function mk_show_for(string $medium, string $want): string {
+      $show = $want === 'ad' ? $medium !== 'membership' : $medium === $want;
+      return $show ? '' : ' style="display:none;"';
+  }
+
+  /**
+   * A membership's renewal, for the chip on its card (2026-10-14): "Renews in
+   * 23 days" from 60 days out, "Renewal was due 03/05/2026" once the date has
+   * passed; nothing for one marked Ended or with no renewal date.
+   */
+  function mk_membership_renewal(array $c): ?array {
+      $end = (string)($c['end_date'] ?? '');
+      if ($end === '' || $end === '0000-00-00' || ($c['status'] ?? '') === 'ended') return null;
+      $days = (int)floor((strtotime($end) - strtotime(date('Y-m-d'))) / 86400);
+      if ($days < 0)   return ['cls' => 'due',  'text' => 'Renewal was due ' . date('m/d/Y', strtotime($end))];
+      if ($days === 0) return ['cls' => 'due',  'text' => 'Renews today'];
+      if ($days <= 60) return ['cls' => 'soon', 'text' => "Renews in {$days} day" . ($days === 1 ? '' : 's')];
+      return null;
+  }
+
   function mk_who_pays_fields(array $row, string $key, string $total_field = 'cost'): void {
       $paid_by = $row['paid_by'] ?? '';
       $grp = $key !== '' ? $key : ('new' . substr(md5(uniqid('', true)), 0, 6));
@@ -4103,20 +4165,35 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
       <!-- ── Add Placement (collapsed until the button above is clicked) ── -->
       <div class="add-form" id="add-campaign-panel" style="display:none;margin-bottom:18px;">
-        <h4>Add Advertising Placement</h4>
+        <h4>Add Advertising Placement<?= $has_membership ? ' or Membership' : '' ?></h4>
         <form method="POST" id="adForm">
           <input type="hidden" name="_action" value="add_campaign">
-          <div class="form-row">
-            <label>Publication / Platform
-              <select name="platform" class="form-input" required>
-                <option value="">— select —</option>
-                <?php foreach ($platform_labels as $v=>$l): ?><option value="<?= $v ?>"><?= $l ?></option><?php endforeach; ?>
+          <?php if ($has_medium): /* Print or digital (2026-10-05), or a membership (2026-10-14). The choice swaps the fields below, so it comes first. */ ?>
+          <div class="form-row js-medium-row" style="align-items:flex-end;">
+            <label>Type
+              <select name="medium" class="form-input js-medium">
+                <option value="digital">Digital ad</option>
+                <option value="print">Print ad</option>
+                <?php if ($has_membership): ?><option value="membership">Membership</option><?php endif; ?>
               </select>
             </label>
-            <label class="grow">Ad / Campaign Name
-              <input type="text" name="name" class="form-input" placeholder="e.g. Full Page — Aug 2026">
+            <label class="grow js-print-only" style="display:none;">Ad size
+              <input type="text" name="ad_size" class="form-input" maxlength="80" placeholder="e.g. Full page, Half page horizontal, 1/4 page">
             </label>
-            <label>Budget <input type="number" name="budget" class="form-input" placeholder="0.00" step="0.01" min="0"></label>
+            <span class="hint js-membership-only" style="display:none;align-self:center;max-width:52ch;">A chamber, association or club Mont Haus joins so the agent can network. Dues, who pays, a share among agents and the receipt work as for an ad; the agent sees it on their portal under Memberships.</span>
+          </div>
+          <?php endif; ?>
+          <div class="form-row">
+            <label class="js-ad-only">Publication / Platform
+              <select name="platform" class="form-input" required>
+                <option value="">— select —</option>
+                <?php foreach ($platform_labels as $v=>$l): if ($v === 'membership') continue; ?><option value="<?= $v ?>"><?= $l ?></option><?php endforeach; ?>
+              </select>
+            </label>
+            <label class="grow"><span class="js-ad-only">Ad / Campaign Name</span><span class="js-membership-only" style="display:none;">Organization</span>
+              <input type="text" name="name" class="form-input" placeholder="e.g. Full Page — Aug 2026" data-ph-ad="e.g. Full Page — Aug 2026" data-ph-membership="e.g. Ridgway Chamber of Commerce">
+            </label>
+            <label><span class="js-ad-only">Budget</span><span class="js-membership-only" style="display:none;">Dues</span> <input type="number" name="budget" class="form-input" placeholder="0.00" step="0.01" min="0"></label>
             <label>Billing
               <select name="billing_mode" class="form-input js-billing-mode">
                 <option value="one_time">One-time/single issue</option>
@@ -4127,22 +4204,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             </label>
           </div>
           <?php mk_unit_fields(); ?>
-          <?php if ($has_medium): /* Print or digital (2026-10-05). Print hides the URL builder and asks for the ad size. */ ?>
-          <div class="form-row js-medium-row" style="align-items:flex-end;">
-            <label>Medium
-              <select name="medium" class="form-input js-medium">
-                <option value="digital">Digital</option>
-                <option value="print">Print</option>
-              </select>
-            </label>
-            <label class="grow js-print-only" style="display:none;">Ad size
-              <input type="text" name="ad_size" class="form-input" maxlength="80" placeholder="e.g. Full page, Half page horizontal, 1/4 page">
-            </label>
-          </div>
-          <?php endif; ?>
           <div class="form-row">
-            <label>Run Start <input type="date" name="start_date" class="form-input"></label>
-            <label>Run End   <input type="date" name="end_date"   class="form-input"></label>
+            <label><span class="js-ad-only">Run Start</span><span class="js-membership-only" style="display:none;">Member since</span> <input type="date" name="start_date" class="form-input"></label>
+            <label><span class="js-ad-only">Run End</span><span class="js-membership-only" style="display:none;">Renews</span> <input type="date" name="end_date"   class="form-input"></label>
             <label class="grow">Notes <textarea name="notes" class="form-input" rows="2" placeholder="Any notes about this placement…"></textarea></label>
           </div>
 
@@ -4151,9 +4215,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 // rebuilding a URL that already existed. The builder is still
                 // here, one click away, for when it earns its keep. ?>
           <div class="form-row" style="align-items:flex-end;">
-            <label class="grow"><span class="js-digital-only">Target URL</span><span class="js-print-only" style="display:none;">QR / landing URL (optional)</span>
+            <label class="grow"><span class="js-digital-only">Target URL</span><span class="js-print-only" style="display:none;">QR / landing URL (optional)</span><span class="js-membership-only" style="display:none;">Organization website (optional)</span>
               <input type="url" name="target_url" id="targetUrlInput" class="form-input"
-                     placeholder="https://monthaus.com/… — paste one, or build it below">
+                     placeholder="https://monthaus.com/… — paste one, or build it below" data-ph-ad="https://monthaus.com/… — paste one, or build it below" data-ph-membership="https://…">
             </label>
             <button type="button" class="btn btn-outline btn-sm js-digital-only" id="toggleUrlBuilder">
               <i class="ti ti-tools"></i> Build with UTMs
@@ -4198,7 +4262,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </div>
 
           <!-- Ads / creatives — add as many as needed, each with its own target URL -->
-          <div class="ads-builder">
+          <div class="ads-builder js-ad-only">
             <div class="url-builder-title" style="margin-bottom:8px;">
               <i class="ti ti-photo"></i> Ads / Creatives
               <small style="font-weight:400;color:#9ca3af;text-transform:none;letter-spacing:0;">
@@ -4219,7 +4283,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           <div class="btn-row" style="margin-top:14px;align-items:center;">
             <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-check"></i> Save Placement</button>
             <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('add-campaign-panel')">Cancel</button>
-            <label class="chk-inline">
+            <label class="chk-inline js-ad-only">
               <input type="checkbox" name="sent" value="1"> Already sent to media
             </label>
           </div>
@@ -4229,12 +4293,15 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       <?php if ($has_medium && count($campaigns) > 1): ?>
       <div class="camp-filter" id="campFilter">
         <button type="button" class="camp-filter-btn on" data-medium="">All <span><?= count($campaigns) ?></span></button>
-        <button type="button" class="camp-filter-btn" data-medium="digital">Digital <span><?= count(array_filter($campaigns, fn($x) => ($x['medium'] ?? 'digital') !== 'print')) ?></span></button>
+        <button type="button" class="camp-filter-btn" data-medium="digital">Digital <span><?= count(array_filter($campaigns, fn($x) => !in_array($x['medium'] ?? 'digital', ['print', 'membership'], true))) ?></span></button>
         <button type="button" class="camp-filter-btn" data-medium="print">Print <span><?= count(array_filter($campaigns, fn($x) => ($x['medium'] ?? 'digital') === 'print')) ?></span></button>
+        <?php $_n_mem = count(array_filter($campaigns, fn($x) => ($x['medium'] ?? 'digital') === 'membership')); if ($_n_mem): ?>
+        <button type="button" class="camp-filter-btn" data-medium="membership">Memberships <span><?= $_n_mem ?></span></button>
+        <?php endif; ?>
       </div>
       <?php endif; ?>
       <?php if (empty($campaigns)): ?>
-        <div class="no-campaigns"><i class="ti ti-speakerphone" style="font-size:28px;display:block;margin-bottom:8px;color:#d1d5db;"></i>No advertising placements yet. Click “Add Placement” to create one.</div>
+        <div class="no-campaigns"><i class="ti ti-speakerphone" style="font-size:28px;display:block;margin-bottom:8px;color:#d1d5db;"></i>No advertising placements<?= $has_membership ? ' or memberships' : '' ?> yet. Click “Add Placement” to create one.</div>
       <?php else: ?>
         <?php foreach ($campaigns as $c):
           $csc     = $campaign_status_colors[$c['status']] ?? '#9ca3af';
@@ -4262,12 +4329,14 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                              'legacy' => false];
           }
         ?>
-        <?php $_medium = ($c['medium'] ?? 'digital') === 'print' ? 'print' : 'digital'; ?>
+        <?php $_medium = in_array($c['medium'] ?? 'digital', ['print', 'membership'], true) ? $c['medium'] : 'digital';
+              $_is_mem = $_medium === 'membership';   // a membership (2026-10-14): no outlet, creatives or Sent; renewal chip ?>
         <div class="campaign-card" id="camp-<?= (int)$c['id'] ?>" data-medium="<?= $_medium ?>">
           <div class="campaign-header">
             <div style="flex:1;min-width:0;">
-              <div class="campaign-platform"><?= htmlspecialchars($platform_labels[$c['platform']] ?? $c['platform']) ?><?php if ($has_medium): ?> <span class="camp-medium-chip <?= $_medium ?>"><?= $_medium === 'print' ? 'Print' : 'Digital' ?></span><?php endif; ?><?php if ($_medium === 'print' && !empty($c['ad_size'])): ?> <span class="camp-adsize"><?= htmlspecialchars($c['ad_size']) ?></span><?php endif; ?></div>
-              <?php if ($c['name']): ?><div class="campaign-name"><?= htmlspecialchars($c['name']) ?></div><?php endif; ?>
+              <?php // A membership leads with the organization (its name); an ad with the outlet, the name under it. ?>
+              <div class="campaign-platform"><?= htmlspecialchars($_is_mem ? ($c['name'] ?: 'Membership') : ($platform_labels[$c['platform']] ?? $c['platform'])) ?><?php if ($has_medium): ?> <span class="camp-medium-chip <?= $_medium ?>"><?= ['print' => 'Print', 'membership' => 'Membership'][$_medium] ?? 'Digital' ?></span><?php endif; ?><?php if ($_medium === 'print' && !empty($c['ad_size'])): ?> <span class="camp-adsize"><?= htmlspecialchars($c['ad_size']) ?></span><?php endif; ?><?php if ($_is_mem && ($_rn = mk_membership_renewal($c))): ?> <span class="camp-renew <?= $_rn['cls'] ?>"><i class="ti ti-calendar-event"></i> <?= htmlspecialchars($_rn['text']) ?></span><?php endif; ?></div>
+              <?php if ($c['name'] && !$_is_mem): ?><div class="campaign-name"><?= htmlspecialchars($c['name']) ?></div><?php endif; ?>
               <?php // Shared among agents: every copy shows the full amount and who pays
                     // what (this page's agent first), each other name linked to their copy.
                     $_sh_members = $has_share ? mk_share_members($c, !empty($c['split_group']) ? ($share_groups[(int)$c['split_group']] ?? []) : []) : [];
@@ -4323,7 +4392,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               <?php // Three different meanings, three different words. "Budget"
                     // on a monthly placement was what made it read as the figure
                     // that bills when it was only a default. ?>
-              <span><?= $_mode === 'monthly_flat' ? 'Standing' : ($_mode === 'monthly' ? 'Usual' : 'Budget') ?>:
+              <span><?= $_mode === 'monthly_flat' ? 'Standing' : ($_mode === 'monthly' ? 'Usual' : ($_is_mem ? 'Dues' : 'Budget')) ?>:
                 <strong><?= money((float)$c['budget']) ?></strong><?= in_array($_mode, ['monthly','monthly_flat'], true) ? ' / month' : '' ?><?php if ($_sh_on): ?> <em class="camp-share-of">share of <?= money2($_sh_total) ?></em><?php endif; ?></span>
             <?php endif; ?>
 
@@ -4345,8 +4414,8 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <?php endif; ?>
               </span>
             <?php endif; ?>
-            <?php if ($c['start_date']): ?><span>Start: <strong><?= date('m/d/Y', strtotime($c['start_date'])) ?></strong></span><?php endif; ?>
-            <?php if ($c['end_date']): ?><span>End: <strong><?= date('m/d/Y', strtotime($c['end_date'])) ?></strong></span><?php endif; ?>
+            <?php if ($c['start_date']): ?><span><?= $_is_mem ? 'Member since' : 'Start' ?>: <strong><?= date('m/d/Y', strtotime($c['start_date'])) ?></strong></span><?php endif; ?>
+            <?php if ($c['end_date']): ?><span><?= $_is_mem ? 'Renews' : 'End' ?>: <strong><?= date('m/d/Y', strtotime($c['end_date'])) ?></strong></span><?php endif; ?>
           </div>
           <?php // white-space:pre-wrap so line breaks typed into the textarea survive ?>
           <?php if ($c['notes']): ?><p style="font-size:12px;color:#6b7280;margin:0 0 8px;white-space:pre-wrap;"><?= htmlspecialchars($c['notes']) ?></p><?php endif; ?>
@@ -4357,7 +4426,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <?php // No title attribute: hovering anywhere near this row used to
                   // pop a 150-character tracking URL over the rest of the card. ?>
             <div class="link-row">
-              <span class="link-row-label"><i class="ti ti-link"></i> Target URL</span>
+              <span class="link-row-label"><i class="ti ti-link"></i> <?= $_is_mem ? 'Website' : 'Target URL' ?></span>
               <a class="btn btn-outline btn-xs" href="<?= htmlspecialchars($c['target_url']) ?>" target="_blank"><i class="ti ti-external-link"></i> Open</a>
               <button type="button" class="btn btn-outline btn-xs copy-btn"
                       data-copy="<?= htmlspecialchars($c['target_url']) ?>"><i class="ti ti-copy"></i> Copy</button>
@@ -4379,6 +4448,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             </div>
           <?php endif; ?>
 
+          <?php if (!$_is_mem): // a membership has no creative ?>
           <!-- Creatives: any number per placement, each with its own target URL -->
           <div class="ad-files">
             <div class="ad-files-title">Creatives <span class="ad-count"><?= count($ad_files) ?></span></div>
@@ -4531,7 +4601,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               </form>
             </div>
           </div>
-
+          <?php endif; ?>
 
           <div class="camp-actions">
             <form method="POST" style="margin:0;display:flex;gap:6px;align-items:center;">
@@ -4543,6 +4613,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <?php endforeach; ?>
               </select>
             </form>
+            <?php if (!$_is_mem): // nothing is sent to media for a membership ?>
             <form method="POST" style="margin:0;">
               <input type="hidden" name="_action" value="toggle_campaign_sent">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
@@ -4551,6 +4622,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <?= $is_sent ? '<i class="ti ti-x"></i> Unmark Sent' : '<i class="ti ti-check"></i> Mark Sent' ?>
               </button>
             </form>
+            <?php endif; ?>
             <button type="button" class="btn btn-outline btn-xs" onclick="toggleInline('edit-camp-<?= $c['id'] ?>')">
               <i class="ti ti-pencil"></i> Edit
             </button>
@@ -4560,7 +4632,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <form method="POST" style="margin:0;">
               <input type="hidden" name="_action" value="duplicate_campaign">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
-              <button type="submit" class="btn btn-outline btn-xs" title="Copy this placement and its creatives into a new placement">
+              <button type="submit" class="btn btn-outline btn-xs" title="<?= $_is_mem ? 'Copy this membership for its next term; the dates are left blank' : 'Copy this placement and its creatives into a new placement' ?>">
                 <i class="ti ti-copy"></i> Duplicate
               </button>
             </form>
@@ -4574,7 +4646,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               <i class="ti ti-receipt"></i> <?= empty($c['receipt_file']) ? 'Add Receipt' : 'Replace Receipt' ?>
             </button>
             <?php endif; ?>
-            <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this placement and all its ad files?')">
+            <form method="POST" style="margin:0;" onsubmit="return confirm('<?= $_is_mem ? 'Delete this membership?' : 'Delete this placement and all its ad files?' ?>')">
               <input type="hidden" name="_action" value="delete_campaign">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
               <button type="submit" class="btn btn-danger btn-xs"><i class="ti ti-trash"></i> Delete</button>
@@ -4590,18 +4662,32 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <form method="POST">
               <input type="hidden" name="_action" value="update_campaign">
               <input type="hidden" name="campaign_id" value="<?= $c['id'] ?>">
+              <?php if ($has_medium): // the type first, since it decides which fields follow (2026-10-14) ?>
+              <div class="form-row js-medium-row" style="align-items:flex-end;">
+                <label>Type
+                  <select name="medium" class="form-input js-medium">
+                    <option value="digital" <?= $_medium === 'digital' ? 'selected' : '' ?>>Digital ad</option>
+                    <option value="print" <?= $_medium === 'print' ? 'selected' : '' ?>>Print ad</option>
+                    <?php if ($has_membership || $_is_mem): ?><option value="membership" <?= $_is_mem ? 'selected' : '' ?>>Membership</option><?php endif; ?>
+                  </select>
+                </label>
+                <label class="grow js-print-only"<?= mk_show_for($_medium, 'print') ?>>Ad size
+                  <input type="text" name="ad_size" class="form-input" maxlength="80" value="<?= htmlspecialchars($c['ad_size'] ?? '') ?>" placeholder="e.g. Full page, Half page horizontal, 1/4 page">
+                </label>
+              </div>
+              <?php endif; ?>
               <div class="form-row">
-                <label>Publication / Platform
-                  <select name="platform" class="form-input" required>
-                    <?php foreach ($platform_labels as $v=>$l): ?>
+                <label class="js-ad-only"<?= mk_show_for($_medium, 'ad') ?>>Publication / Platform
+                  <select name="platform" class="form-input"<?= $_is_mem ? '' : ' required' ?>>
+                    <?php foreach ($platform_labels as $v=>$l): if ($v === 'membership') continue; ?>
                       <option value="<?= $v ?>" <?= $c['platform']===$v?'selected':'' ?>><?= $l ?></option>
                     <?php endforeach; ?>
                   </select>
                 </label>
-                <label class="grow">Ad / Campaign Name
-                  <input type="text" name="name" class="form-input" value="<?= htmlspecialchars($c['name'] ?? '') ?>">
+                <label class="grow"><span class="js-ad-only"<?= mk_show_for($_medium, 'ad') ?>>Ad / Campaign Name</span><span class="js-membership-only"<?= mk_show_for($_medium, 'membership') ?>>Organization</span>
+                  <input type="text" name="name" class="form-input" value="<?= htmlspecialchars($c['name'] ?? '') ?>" data-ph-ad="" data-ph-membership="e.g. Ridgway Chamber of Commerce">
                 </label>
-                <label>Budget
+                <label><span class="js-ad-only"<?= mk_show_for($_medium, 'ad') ?>>Budget</span><span class="js-membership-only"<?= mk_show_for($_medium, 'membership') ?>>Dues</span>
                   <input type="number" name="budget" class="form-input" step="0.01" min="0" value="<?= htmlspecialchars($c['budget'] ?? '') ?>">
                 </label>
                 <label>Billing
@@ -4615,30 +4701,17 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 </label>
               </div>
               <?php mk_unit_fields($c); ?>
-              <?php if ($has_medium): ?>
-              <div class="form-row js-medium-row" style="align-items:flex-end;">
-                <label>Medium
-                  <select name="medium" class="form-input js-medium">
-                    <option value="digital" <?= $_medium === 'digital' ? 'selected' : '' ?>>Digital</option>
-                    <option value="print" <?= $_medium === 'print' ? 'selected' : '' ?>>Print</option>
-                  </select>
-                </label>
-                <label class="grow js-print-only"<?= $_medium === 'print' ? '' : ' style="display:none;"' ?>>Ad size
-                  <input type="text" name="ad_size" class="form-input" maxlength="80" value="<?= htmlspecialchars($c['ad_size'] ?? '') ?>" placeholder="e.g. Full page, Half page horizontal, 1/4 page">
-                </label>
-              </div>
-              <?php endif; ?>
               <div class="form-row">
-                <label>Run Start <input type="date" name="start_date" class="form-input" value="<?= htmlspecialchars($c['start_date'] ?? '') ?>"></label>
-                <label>Run End   <input type="date" name="end_date"   class="form-input" value="<?= htmlspecialchars($c['end_date'] ?? '') ?>"></label>
+                <label><span class="js-ad-only"<?= mk_show_for($_medium, 'ad') ?>>Run Start</span><span class="js-membership-only"<?= mk_show_for($_medium, 'membership') ?>>Member since</span> <input type="date" name="start_date" class="form-input" value="<?= htmlspecialchars($c['start_date'] ?? '') ?>"></label>
+                <label><span class="js-ad-only"<?= mk_show_for($_medium, 'ad') ?>>Run End</span><span class="js-membership-only"<?= mk_show_for($_medium, 'membership') ?>>Renews</span> <input type="date" name="end_date"   class="form-input" value="<?= htmlspecialchars($c['end_date'] ?? '') ?>"></label>
                 <label class="grow">Notes <textarea name="notes" class="form-input" rows="2" placeholder="Any notes about this placement…"><?= htmlspecialchars($c['notes'] ?? '') ?></textarea></label>
               </div>
               <div class="form-row">
-                <label class="grow"><span class="js-digital-only"<?= $_medium === 'print' ? ' style="display:none;"' : '' ?>>Target URL</span><span class="js-print-only"<?= $_medium === 'print' ? '' : ' style="display:none;"' ?>>QR / landing URL (optional)</span>
+                <label class="grow"><span class="js-digital-only"<?= mk_show_for($_medium, 'digital') ?>>Target URL</span><span class="js-print-only"<?= mk_show_for($_medium, 'print') ?>>QR / landing URL (optional)</span><span class="js-membership-only"<?= mk_show_for($_medium, 'membership') ?>>Organization website (optional)</span>
                   <input type="text" name="target_url" class="form-input" value="<?= htmlspecialchars($c['target_url'] ?? '') ?>" placeholder="https://monthaus.com/…">
                 </label>
               </div>
-              <div class="form-row js-digital-only"<?= $_medium === 'print' ? ' style="display:none;"' : '' ?>>
+              <div class="form-row js-digital-only"<?= mk_show_for($_medium, 'digital') ?>>
                 <label>UTM Source   <input type="text" name="utm_source"   class="form-input" value="<?= htmlspecialchars($c['utm_source']   ?? '') ?>"></label>
                 <label>UTM Medium   <input type="text" name="utm_medium"   class="form-input" value="<?= htmlspecialchars($c['utm_medium']   ?? '') ?>"></label>
                 <label>UTM Campaign <input type="text" name="utm_campaign" class="form-input" value="<?= htmlspecialchars($c['utm_campaign'] ?? '') ?>"></label>
@@ -5160,8 +5233,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <?php endif; ?>
               </td>
               <td>
-                <span class="fin-kind <?= $it['kind'] === 'Collateral' ? 'coll' : 'adv' ?>">
-                  <?= $it['kind'] ?>
+                <?php $_kl = mk_fin_kind_label($it); // Collateral, Advertising or Membership ?>
+                <span class="fin-kind <?= $_kl === 'Collateral' ? 'coll' : ($_kl === 'Membership' ? 'mem' : 'adv') ?>">
+                  <?= $_kl ?>
                 </span>
               </td>
               <td class="num"><?= !empty($it['billed_with']) ? '<span class="fin-flag">included</span>' : money2((float)$it['total']) ?></td>
@@ -5490,15 +5564,21 @@ document.addEventListener('change', function (e) {
 // than a blank one until something is touched.
 document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('.js-billing-mode').forEach(mhApplyBillingMode);
-  // Print vs digital: within one placement form, show the print fields or the
-  // digital ones. Print never needs the UTM builder; the URL becomes an
-  // optional QR / landing address.
+  // Digital, print or membership: within one placement form, show the fields
+  // for the type chosen. Print never needs the UTM builder; the URL becomes an
+  // optional QR / landing address. A membership (2026-10-14) has no outlet,
+  // creatives or Sent flag (.js-ad-only), and its own words (.js-membership-only).
   function mhApplyMedium(sel) {
     var form = sel.closest('form'); if (!form) return;
-    var print = sel.value === 'print';
+    var print = sel.value === 'print', mem = sel.value === 'membership', digital = !print && !mem;
     form.querySelectorAll('.js-print-only').forEach(function (el) { el.style.display = print ? '' : 'none'; });
-    form.querySelectorAll('.js-digital-only').forEach(function (el) { el.style.display = print ? 'none' : ''; });
-    if (print) form.querySelectorAll('.js-digital-builder').forEach(function (el) { el.style.display = 'none'; });
+    form.querySelectorAll('.js-digital-only').forEach(function (el) { el.style.display = digital ? '' : 'none'; });
+    form.querySelectorAll('.js-membership-only').forEach(function (el) { el.style.display = mem ? '' : 'none'; });
+    form.querySelectorAll('.js-ad-only').forEach(function (el) { el.style.display = mem ? 'none' : ''; });
+    if (!digital) form.querySelectorAll('.js-digital-builder').forEach(function (el) { el.style.display = 'none'; });
+    // A hidden required select would block the submit with nothing on screen to say why.
+    var plat = form.querySelector('select[name="platform"]'); if (plat) plat.required = !mem;
+    form.querySelectorAll('[data-ph-membership]').forEach(function (el) { el.placeholder = mem ? el.dataset.phMembership : (el.dataset.phAd || ''); });
   }
   document.addEventListener('change', function (e) {
     if (e.target && e.target.classList && e.target.classList.contains('js-medium')) mhApplyMedium(e.target);
@@ -5573,7 +5653,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (first) addLine();
     check();
   });
-  // All / Digital / Print above the placements list.
+  // All / Digital / Print / Memberships above the placements list.
   var campFilter = document.getElementById('campFilter');
   if (campFilter) campFilter.addEventListener('click', function (e) {
     var b = e.target.closest('.camp-filter-btn'); if (!b) return;

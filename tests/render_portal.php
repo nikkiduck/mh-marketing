@@ -41,7 +41,7 @@ if (stripos((string)shell_exec('php -n -m 2>/dev/null'), 'mysqli') !== false) {
 $SB = sys_get_temp_dir() . '/pt_render_' . bin2hex(random_bytes(4));
 mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
-foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php',
+foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php', 'portal/memberships.php',
           'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'portal/profile.php', 'portal/elevation.php', 'portal/contact.php', 'inc/portal.php', 'inc/portal_hotsheets.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
           'inc/creatives.php', 'inc/boards.php', 'inc/agent_lifecycle.php', 'inc/_onboarding.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
@@ -285,6 +285,15 @@ function scenario(array $over = []): array {
                  'status' => 'active', 'medium' => 'digital', 'ad_size' => null, 'split_group' => null, 'notes' => 'KC SECRET NOTE', 'sent' => 1],
                 ['id' => 23, 'intake_id' => 8, 'platform' => 'vail_daily', 'name' => 'WB Ad', 'budget' => null, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => null, 'end_date' => null, 'created_at' => '2026-09-01 10:00:00', 'paid_by' => null, 'paid_broker_amount' => null, 'paid_mh_amount' => null,
                  'status' => 'planned', 'medium' => 'digital', 'ad_size' => null, 'split_group' => null, 'notes' => '', 'sent' => 0],
+                // Memberships (sql/campaign_membership_v1.sql, 2026-10-14): Jackson's chamber, dues Mont Haus paid in
+                // July 2026 (a month no other assertion counts), renewing next July; Kim's, which must never show for
+                // anyone else; and one the team holds, shared.
+                ['id' => 24, 'intake_id' => 6, 'platform' => 'membership', 'name' => 'Ridgway Chamber of Commerce', 'budget' => 350, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => '2026-07-01', 'end_date' => '2027-06-30', 'created_at' => '2026-07-01 10:00:00', 'paid_by' => 'mont_haus', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'active', 'medium' => 'membership', 'ad_size' => null, 'split_group' => null, 'notes' => 'JH MEMBER SECRET', 'sent' => 0, 'target_url' => 'https://www.ridgwaycolorado.com/chamber'],
+                ['id' => 25, 'intake_id' => 7, 'platform' => 'membership', 'name' => 'KC Secret Club', 'budget' => 5555, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => '2026-07-01', 'end_date' => '2027-06-30', 'created_at' => '2026-07-01 10:00:00', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'active', 'medium' => 'membership', 'ad_size' => null, 'split_group' => null, 'notes' => '', 'sent' => 0, 'target_url' => ''],
+                ['id' => 26, 'intake_id' => 8, 'platform' => 'membership', 'name' => 'Vail Valley Partnership', 'budget' => null, 'billing_mode' => 'one_time', 'unit_rate' => null, 'unit_weekday' => null, 'unit_label' => null, 'start_date' => null, 'end_date' => null, 'created_at' => '2026-10-01 10:00:00', 'paid_by' => null, 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'status' => 'planned', 'medium' => 'membership', 'ad_size' => null, 'split_group' => 26, 'notes' => '', 'sent' => 0, 'target_url' => ''],
             ],
             // Creatives on the placements (sql/creatives_v1.sql): an uploaded image with a
             // thumbnail, a PDF without one, and Kim's, which must never show for anyone else.
@@ -511,7 +520,8 @@ ok('…but not as his own month', $c === 200 && !has($b, 'WB signs'), $b);
 [$c, , $b] = req('jon', '/portal/spend.php?m=2026-09&team=7');
 ok('a team id that is not his is ignored: nothing of Kim\'s', $c === 200 && !has($b, 'KC postcards') && !has($b, '7,777'), $b);
 [, , $b] = req('jackson', '/portal/');
-ok('home shows this year\'s spend in the new words', has($b, 'This year you&#039;ve spent $250 and Mont Haus $1,234, for a total of $1,484 on marketing and advertising.') || has($b, "This year you've spent \$250 and Mont Haus \$1,234, for a total of \$1,484 on marketing and advertising."), $b);
+// Mont Haus: the $1,234 ad plus the $350 chamber dues (a membership is marketing spend, 2026-10-14).
+ok('home shows this year\'s spend in the new words', has($b, 'This year you&#039;ve spent $250 and Mont Haus $1,584, for a total of $1,834 on marketing and advertising.') || has($b, "This year you've spent \$250 and Mont Haus \$1,584, for a total of \$1,834 on marketing and advertising."), $b);
 ok('…linked as See details', has($b, 'See details ›'));
 ok('with codes, the QR card says Review + Edit', has($b, 'Review + Edit ›'));
 ok('the footer sends questions to marketing@, with no phone and no personal email', has($b, 'marketing@monthaus.com') && !has($b, '948.4300') && !has($b, 'nikki.boxer@'));
@@ -570,6 +580,7 @@ ok('Jackson: advertising renders', $c === 200 && no_fatal($b), $b);
 ok('his placement, in plain words: outlet, print, size, running now', has($b, 'Aspen Times: JH Ad') && has($b, 'Print, Half page') && has($b, 'Running now') && has($b, 'From March 5, 2026'), $b);
 ok('the card pictures his creative by its thumbnail', has($b, 'asset.php?asset=31&amp;thumb=1'), $b);
 ok('NOTHING of Kim\'s or Weber Boxer\'s advertising', !has($b, 'KC Ad') && !has($b, 'asset=32') && !has($b, 'KC Secret') && !has($b, 'WB Ad'), $b);
+ok('his membership is not an ad: it is left off this page (memberships have their own)', !has($b, 'Ridgway'), $b);
 ok('the creatives were asked for by HIS campaign ids only', (writes()[0][0] ?? '') === 'assets_in' && (writes()[0][1] ?? []) === [21], json_encode(writes()));
 ok('no budget, notes or billing words', !has($b, 'SECRET NOTE') && !has($b, '1,234.00') && !preg_match('/invoic|billed|overdue|balance|unpaid|budget/i', strip_tags($b)), $b);
 [$c, , $b] = req('jackson', '/portal/advertising.php?id=21');
@@ -589,6 +600,22 @@ ok('…and the team\'s placement opens, marked as the team\'s', $c === 200 && ha
 ok('…Jackson\'s placement is not found for him', $c === 404 && !has($b, 'JH Ad'), "{$c}");
 [, , $b] = req('nikki', '/portal/advertising.php?preview=6');
 ok('an admin previews Jackson\'s advertising, and links keep the preview', has($b, 'Preview:') && has($b, 'JH Ad') && has($b, 'advertising.php?preview=6&amp;id=21'), $b);
+
+echo "\nMEMBERSHIPS\n";
+[$c, , $b] = req('jackson', '/portal/memberships.php');
+ok('Jackson: memberships render', $c === 200 && no_fatal($b), $b);
+ok('his chamber, in plain words: active, member since, renews, the site, Mont Haus paid', has($b, 'Ridgway Chamber of Commerce') && has($b, '<span class="pt-state">Active member</span>')
+   && has($b, 'Member since July 1, 2026 · Renews June 30, 2027') && has($b, 'href="https://www.ridgwaycolorado.com/chamber"') && has($b, 'Visit ridgwaycolorado.com') && has($b, 'Mont Haus paid <b>$350</b>'), $b);
+ok('NOTHING of Kim\'s or the team\'s memberships, no notes or billing words', !has($b, 'KC Secret') && !has($b, '5,555') && !has($b, 'Vail Valley Partnership') && !has($b, 'MEMBER SECRET')
+   && !preg_match('/invoic|billed|overdue|balance|unpaid|budget|dues/i', strip_tags($b)), $b);
+ok('the menu lists Memberships under My Marketing', has($b, '/portal/memberships.php') && has($b, '>Memberships</a>'), $b);
+[$c, , $b] = req('jon', '/portal/memberships.php');
+ok('Jonathan: none of his own, the team\'s in its section, being set up, nothing of Jackson\'s', $c === 200 && has($b, 'No memberships yet.') && has($b, '>WB Memberships<') && has($b, 'Vail Valley Partnership')
+   && has($b, 'Being set up') && has($b, 'Dates to be confirmed') && has($b, 'A Weber Boxer Group membership') && !has($b, 'Ridgway'), $b);
+[, , $b] = req('nikki', '/portal/memberships.php?preview=6');
+ok('an admin previews Jackson\'s memberships', has($b, 'Preview:') && has($b, 'Ridgway Chamber of Commerce') && !has($b, 'KC Secret'), $b);
+[$c, , $b] = req('jackson', '/portal/spend.php?m=2026-07');
+ok('on Spend the dues are a Membership line named for the organization', has($b, '>Membership</span>') && has($b, 'Ridgway Chamber of Commerce') && has($b, 'Mont Haus paid') && !has($b, 'Membership: Ridgway'), $b);
 
 echo "\nPRINT ORDERS\n";
 [$c, , $b] = req('jackson', '/portal/orders.php');
@@ -645,10 +672,11 @@ foreach (array_keys(['JHAD.jpg' => 1, 'JHAD_thumb.jpg' => 1, 'JHAD2.pdf' => 1, '
 echo "\nHOME CARDS\n";
 [, , $b] = req('jackson', '/portal/');
 ok('home counts his advertising and orders in plain words', has($b, 'You have 1 ad running now') && has($b, 'You have 1 order on the way, and 1 delivered'), $b);
+ok('…and his membership on its own card, not among the ads', has($b, 'You are a member of Ridgway Chamber of Commerce.') && has($b, 'See memberships ›') && !has($b, '2 ad'), $b);
 [, , $b] = req('jon', '/portal/');
 ok('Jonathan\'s home: nothing of his own, the team\'s placement and order in the team section', has($b, 'No ad placements yet.') && has($b, 'The team has 1 ad placement on record') && has($b, 'The team has 1 order on the way.'), $b);
 [, , $b] = req('sierrah', '/portal/');
-ok('nothing yet: the cards say so, no dead ends', has($b, 'No ad placements yet.') && has($b, 'No collateral yet.'), $b);
+ok('nothing yet: the cards say so, no dead ends', has($b, 'No ad placements yet.') && has($b, 'No collateral yet.') && has($b, 'No memberships yet.'), $b);
 
 echo "\nPREVIEW AND REFUSALS\n";
 [, , $b] = req('jackson', '/portal/qr.php?preview=8');
@@ -684,7 +712,8 @@ if ($snap = getenv('PORTAL_SNAPSHOTS')) {
               'qr-sent' => ['sierrah', '/portal/qr.php?sent=1'],
               'ads-jackson' => ['jackson', '/portal/advertising.php'], 'ad-jackson' => ['jackson', '/portal/advertising.php?id=21'],
               'orders-jackson' => ['jackson', '/portal/orders.php'], 'order-jackson' => ['jackson', '/portal/orders.php?id=11'],
-              'ads-wb' => ['jon', '/portal/advertising.php'], 'orders-wb' => ['jon', '/portal/orders.php']] as $name => [$who, $path]) {
+              'ads-wb' => ['jon', '/portal/advertising.php'], 'orders-wb' => ['jon', '/portal/orders.php'],
+              'memberships-jackson' => ['jackson', '/portal/memberships.php'], 'memberships-wb' => ['jon', '/portal/memberships.php']] as $name => [$who, $path]) {
         file_put_contents("{$snap}/{$name}.html", req($who, $path)[2]);
     }
     echo "  (snapshots saved to {$snap})\n";

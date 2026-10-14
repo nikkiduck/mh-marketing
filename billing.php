@@ -242,7 +242,7 @@ foreach ($intakes as $ag) {
         $lines = [];
         foreach (($m['items'] ?? []) as $it) {
             $lines[] = [
-                'kind'     => (string)($it['kind'] ?? ''),
+                'kind'     => mk_fin_kind_label($it),   // Collateral, Advertising or Membership
                 'name'     => (string)($it['name'] ?? ''),
                 'platform' => (string)($it['platform'] ?? ''),
                 'total'    => (float)($it['total'] ?? 0),

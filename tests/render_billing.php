@@ -31,6 +31,7 @@ mkdir($SB . '/inc', 0777, true);
 
 copy($ROOT . '/billing.php',        $SB . '/billing.php');
 copy($ROOT . '/inc/financials.php', $SB . '/inc/financials.php');
+copy($ROOT . '/inc/schema.php',     $SB . '/inc/schema.php');   // financials.php requires it (the medium column check, 2026-10-14)
 
 // ── Stubs ────────────────────────────────────────────────────────────────────
 file_put_contents($SB . '/inc/auth.php', '<?php
@@ -154,7 +155,8 @@ $CAMPAIGNS = [
 function render(string $SB, array $get, array $intakes, array $coll,
                 array $camps, array $billing_months): array {
     $fx = ['FROM marketing_billing_months' => $billing_months,
-           'FROM marketing_intakes'        => $intakes];
+           'FROM marketing_intakes'        => $intakes,
+           'information_schema'            => [[1]]];   // mk_column_exists(): every column exists here
     foreach ($intakes as $ag) {
         $id = $ag['id'];
         $fx["FROM marketing_collateral_orders\n         WHERE intake_id = {$id}"] = $coll[$id] ?? [];

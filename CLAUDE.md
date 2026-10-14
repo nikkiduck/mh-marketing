@@ -285,6 +285,37 @@ principle as order_split.php: each agent's own record carries their own
 figure, so inc/financials.php is untouched. This is separate from Who Pays,
 which splits one agent's placement between that agent and Mont Haus.
 
+**Memberships live on the Advertising tab too (2026-10-14).** A chamber of
+commerce, association or club Mont Haus joins on an agent's behalf (Nikki:
+the Ridgway Chamber of Commerce for Sierrah Smith) is a marketing tool for
+networking, not an ad, but it carries the same money: dues, who pays (Mont
+Haus, the agent, or a split), a share among several agents, a receipt, and a
+term with a renewal date. So it is a row in `marketing_campaigns` with
+`medium = 'membership'` (sql/campaign_membership_v1.sql widens the enum;
+`mk_enum_has()` in inc/schema.php guards it, so until it has run the form
+offers Digital and Print only) and `platform = 'membership'` (the fixed
+word; it is in `$platform_labels` for the Financials tab but never in the
+outlet select). The form's Type select (first row now: Digital ad, Print ad,
+Membership) swaps the fields through four classes, `.js-digital-only`,
+`.js-print-only`, `.js-membership-only` and `.js-ad-only` (digital or
+print): a membership hides the outlet, the UTM builder, the creatives and
+"Already sent to media", and relabels Name, Budget, Run Start and Run End as
+Organization, Dues, Member since and Renews; Target URL becomes the
+organization's website. `mk_medium_value()` reduces every posted or copied
+medium to one the column accepts, and the add and update handlers set the
+platform and blank the UTMs for a membership. On the card: the organization
+leads with a green Membership chip, Dues / Member since / Renews, a renewal
+chip from 60 days out (amber "Renews in 23 days", red "Renewal was due
+…"; `mk_membership_renewal()`), no creatives section, no Mark Sent.
+Duplicate is the renewal (same dues and who-pays, dates blank). Share and
+Receipt work unchanged. The list filter gains Memberships. The Financials
+tab, the Billing modal and the portal's Spend page say "Membership" through
+`mk_fin_kind_label()` (inc/financials.php, which now reads `medium` with
+the placement); the item's `kind` stays 'Advertising' underneath, so links,
+`portal_item_spend()` and the share arithmetic are untouched. The agent
+portal shows them on their own page, portal/memberships.php (see Agent
+portal), and leaves them off Advertising.
+
 ## Advertising: how a placement reaches Financials
 
 `marketing_campaigns.billing_mode` decides how a placement is charged:
@@ -439,7 +470,7 @@ Three rules that came from the page getting unusable rather than from taste:
 Run the test first — it fails loudly rather than silently:
 
 ```bash
-php tests/test_campaign_billing.php     # 64 assertions
+php tests/test_campaign_billing.php     # 69 assertions
 ```
 
 It pulls `mk_campaign_months()`, `mk_weekday_days()` and `mk_camp_resolve()`
@@ -1895,6 +1926,22 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   (`portal_no_creative_html()`). The old `file_url` links stay as "Open
   original". `$has_creatives` / `$has_proofs` are computed above agent.php's
   early close; every handler guards with `mk_column_exists()`.
+- **Memberships (2026-10-14).** `portal/memberships.php`, under My
+  Marketing: one card per membership (a `marketing_campaigns` row with
+  `medium = 'membership'`, entered on the admin Advertising tab): the
+  organization, its state in plain words (`portal_membership_state()`:
+  Active member / Renews soon, 60 days out / Renewal due, the date passed
+  and nobody marked it ended / Starts … / Ended / Being set up), "Member
+  since … · Renews …" (`portal_membership_term()`), a "Visit {host}" button
+  to the organization's website (the placement's target_url), the shared or
+  team note, and the spend line from the same `mh_agent_financials()` lines
+  by `ref_id`. No `?id=` detail: the card says everything there is. Ended
+  memberships sort last. Never dues as a figure, notes, the receipt or
+  billing words. `portal/advertising.php` and the home ad count leave these
+  rows out (`portal_is_membership()`); Home gets a fourth card per scope
+  ("You are a member of Ridgway Chamber of Commerce, renewing soon.",
+  ended ones not counted). On Spend the line is the organization's name
+  with the kind "Membership".
 - `portal/advertising.php` and `portal/orders.php`: cards (picture, title,
   plain-word state, when, spend from the same `mh_agent_financials()` lines
   by `ref_id`), `?id=` opens one; an id from another account is a 404 with
@@ -1923,7 +1970,7 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   the list the same day (the agent page has them).
 - **Menu and My Profile (Nikki, 2026-10-12).** The nav is main tabs with
   sub-menus (`portal_nav()` in inc/portal.php, one place): Home · My
-  Profile · My Marketing (Spend, Advertising, Collateral) · My Tools
+  Profile · My Marketing (Spend, Advertising, Collateral, Memberships) · My Tools
   (Elevation Planner, Social Templates = portal/social.php, QR Codes, Brand
   Tools). Desktop: dropdowns; phones (< 720px): a Menu button opens a
   stacked list with every group's pages under its name; a page in a group
