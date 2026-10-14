@@ -1,10 +1,10 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-14 07:43 from git HEAD in the Mont Haus Master folder.
-472eadd95abaa35f78c5ee105cd0302f  agent.php
+# Generated 2026-10-14 14:11 from git HEAD in the Mont Haus Master folder.
+341eb784d6db56740ac18d537a35b8d3  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 c4984ee573dd0128324b9897d5565ed3  api/roster.php
-308eea76bb7a9af0b9267f0c611d5445  billing.php
+a0a741fb23901617405f30fee4a12bbe  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
 abe5a0e74decb1e1ef7273468ad83837  creative.php
 18f86e70bdc154a8cace266e54daff72  cron/activate_roster.php
@@ -33,7 +33,7 @@ b8e198e7cc0617a6128cf965b5c1cdc0  inc/boards.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 3c25b2f69d20d7bec56a4ef84b11b9b2  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
-0f2ccd665f7cf6ebef2b916bff6ea510  inc/financials.php
+e1f54bbc169f216d31e5b333a5c81986  inc/financials.php
 758035c7cd19b89138d0551975b9f411  inc/flyer.php
 68def6579f0fb2b41872ad289c35c550  inc/flyer_render.php
 1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
@@ -45,12 +45,12 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
-33343a7fdf79ed3718462cf6950ae63d  inc/portal.php
+72bc4cf2f18bd254930353870171d0c4  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
-23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php
+0f0bc7ca27dcdcaae3dc7a0d2ea6f75b  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 2d771d675b4f288e3766e25d18230731  inc/social.php
 01e6be69100b1e3a076cb3c5ba109132  inc/social_render.php
@@ -65,7 +65,7 @@ f3327ec6854ed5362ede027a9b198064  oauth_start.php
 210a1c8334cfa292107df4eac8d2fa85  order_split.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 57c4ad13bdfb33cfd964731ae89387ac  pipeline_review.php
-23a26431edc8c24501c4107d22352dab  portal/advertising.php
+dce6b022a8146453bb2054adcd6a5144  portal/advertising.php
 c141d4e49e830a83cfd047aca3ad5d49  portal/asset.php
 32d55d208d6c858e685bbe7a6e7fd466  portal/brand.php
 0f9c154074c6ffe5c3e60246a1c500cd  portal/contact.php
@@ -74,7 +74,8 @@ c141d4e49e830a83cfd047aca3ad5d49  portal/asset.php
 db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
-fc9bfa474615f90f88e5990e3010db3e  portal/index.php
+ef4de6ae50749b8f8b3f036e8cb9a4bf  portal/index.php
+2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
 e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
 d863f2ea3abfe5cd9cb1489046732776  portal/profile.php
 e6411bc80e28c79a013e475e5dc875eb  portal/qr.php
@@ -85,7 +86,7 @@ ffac5e8d41f6939bf861500aeeaacd76  portal/social_export.php
 2d1bf94046c45ef9e5b05d415a10c278  portal/social_photos.php
 3b2ecd3bf5e7571ef9f9630e67208d3e  portal/social_render.php
 e6cafb63f213289c3e835aede4d2c27f  portal/social_upload.php
-0002d5fc2e96e4713a3c88083ca3fce2  portal/spend.php
+2f6f6b397081287ed0190cebbd0b1bca  portal/spend.php
 89287d5d65cc4cf6d5e58f02843f96c4  portal/templates.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 8e6d7d7742f6c9589b47c7a0e28b4d0d  qr_codes.php
