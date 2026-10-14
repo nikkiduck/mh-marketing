@@ -1,7 +1,7 @@
 -- ============================================================================
 --  alter_campaign_billing_v4_annual.sql — a yearly charge (membership dues)
 --
---  STATUS: not yet run
+--  STATUS: run
 --
 --  ▸ Runs AFTER alter_campaign_billing_v3.sql (which it only widens).
 --
