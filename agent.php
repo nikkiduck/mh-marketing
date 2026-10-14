@@ -2758,7 +2758,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           <div class="card-title" style="display:flex;align-items:center;">
             <i class="ti ti-world" style="margin-right:6px;"></i> Website
             <?php if ($web_status === 'approved' && $agent_slug !== ''): ?>
-              <a class="section-edit-btn" href="<?= e_attr(rtrim(PUBLIC_SITE_URL, '/') . '/broker.php?s=' . $agent_slug) ?>" target="_blank" style="text-decoration:none;">
+              <a class="section-edit-btn" href="<?= e_attr(rtrim(PUBLIC_SITE_URL, '/') . '/' . $agent_slug) ?>" target="_blank" style="text-decoration:none;">
                 View public profile <i class="ti ti-external-link"></i></a>
             <?php endif; ?>
           </div>

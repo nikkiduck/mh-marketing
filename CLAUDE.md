@@ -14,6 +14,13 @@ Its own code, its own database, its own cron. Nothing is shared with the hub
 except the Spark MLS API credentials — so a fix made here does not reach
 monthausint.com, and a fix made there does not reach here.
 
+## Broker page links (2026-10-13)
+
+The public site's broker pages live at `/{slug}` (monthaus.com/bryan-cournoyer).
+`qr_profile_url()` (inc/qr.php: QR destinations, the portal's "View your page"
+link) and the profile page's "View public profile" build that form. The site
+301s the old `broker.php?s=` form, so QR codes printed before this keep working.
+
 ## How to work on this project
 
 **Check, don't speculate.** Read the actual file before making any claim about

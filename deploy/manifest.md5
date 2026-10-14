@@ -5,7 +5,7 @@
 # Not listed, because the server's copies are meant to differ or are made there:
 #   inc/db.php, inc/sso_config.php, agent-photos/, assets/vendor/, assets/fonts/mh/
 # Check with:  cd /var/www/marketing.monthaus.com && md5sum -c ~/manifest.md5 2>&1 | grep -v ': OK$'
-5d6d1b549d907c2ef01188cfc8d35725  agent.php
+472eadd95abaa35f78c5ee105cd0302f  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 308eea76bb7a9af0b9267f0c611d5445  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
@@ -57,7 +57,7 @@ d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
 ee363849a1a987851a14edfdf23da976  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
-c4cbad8fb99943fbcfe7a6aaecbafb81  inc/qr.php
+f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 23bd5b65927d2c0d5cd9a5a94a717b66  inc/schema.php

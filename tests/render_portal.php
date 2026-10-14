@@ -388,7 +388,7 @@ ok('Jackson: My Profile renders with Hot Sheets, not subscribed, every area offe
 ok('…his name and email read-only, his board id, his listing as a card, and nothing of Kim\'s', has($b, 'Jackson Horn') && has($b, 'jackson.horn@monthaus.com')
    && has($b, 'JHORN1') && has($b, '30 Smith Way') && has($b, '$4,500,000') && has($b, 'View on the website') && has($b, 'pt-lstatus active">Active<')
    && !has($b, 'KCSECRET') && !has($b, 'Secret Ln') && !has($b, 'bio_short') && !has($b, 'name="cell_phone"')
-   && has($b, 'broker.php?s=jackson-horn') && has($b, 'View your page on monthaus.com') && has($b, 'Social + Digital') && has($b, 'Personal Website'), $b);
+   && has($b, 'site.monthaus.com/jackson-horn') && has($b, 'View your page on monthaus.com') && has($b, 'Social + Digital') && has($b, 'Personal Website'), $b);
 ok('…an anchors row in the header band (above the title), listings last, no message section (the form is the footer now)', has($b, 'href="#hotsheets"') && has($b, 'href="#areas"') && has($b, 'href="#listings"')
    && strpos($b, 'pt-subnav-wrap sticky') < strpos($b, '<main class="pt-main">') && strpos($b, 'id="listings"') > strpos($b, 'id="hotsheets"') && !has($b, 'id="message"') && has($b, 'id="contact-marketing"'), $b);
 [$c, $loc, ] = req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'tok', 'action' => 'save', 'frequency' => 'daily', 'areas' => ['vail-valley', 'bogus']]);

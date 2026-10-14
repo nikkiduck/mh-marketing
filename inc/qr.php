@@ -82,7 +82,8 @@ function qr_public_url(string $code): string {
 /** A broker's page on the public website, the same link agent.php uses. */
 function qr_profile_url(string $slug): string {
     $base = defined('PUBLIC_SITE_URL') ? PUBLIC_SITE_URL : QR_FALLBACK_URL;
-    return rtrim($base, '/') . '/broker.php?s=' . rawurlencode($slug);
+    // /{slug} since 2026-10-13 (the site 301s the old broker.php?s= form, so codes already printed still work)
+    return rtrim($base, '/') . '/' . rawurlencode($slug);
 }
 
 /**
