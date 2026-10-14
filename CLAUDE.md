@@ -1830,7 +1830,12 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   (from `team_members`) and `ctx['scopes']` (the person first, then each
   team) drive home, advertising, orders and spend; each page loops the
   scopes and labels a team's section with its name, "The team paid" in
-  place of "You paid", and a detail page carries the team's name. Every
+  place of "You paid", and a detail page carries the team's name. **A team
+  is marketing, nothing more (Nikki, 2026-10-14):** on a member's Home the
+  team's three cards sit inside My Marketing after their own, and every team
+  heading carries the team's initials from its roster row (`scope['short']`:
+  "WB Marketing Spend", "WB Advertising", "WB Collateral"; the name when the
+  row has no initials). Every
   member sees the team's full spend (Nikki). asset.php and receipt.php
   check `intake_id IN (scopes)`; QR lists the person's and their teams'
   codes. Hot Sheets stay personal (by sign-in address). Spend's month view
