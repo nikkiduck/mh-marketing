@@ -1,12 +1,12 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-14 18:02 from git HEAD in the Mont Haus Master folder.
-f50a0ad2fdfd60647deaebbf951c31e1  agent.php
+# Generated 2026-10-14 18:13 from git HEAD in the Mont Haus Master folder.
+7a76729e712b971ff265b9c1a93f1cde  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 c4984ee573dd0128324b9897d5565ed3  api/roster.php
 a0a741fb23901617405f30fee4a12bbe  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
-abe5a0e74decb1e1ef7273468ad83837  creative.php
+2574ed722be2203d46373fd5d0e209e6  creative.php
 18f86e70bdc154a8cace266e54daff72  cron/activate_roster.php
 03d0d64fb48de0dfaaea38019bc5efcd  cron/check_health.php
 1873db09f7e742eb9209b9f665aa33fe  cron/import_dropbox_creatives.php
@@ -45,7 +45,7 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
-72bc4cf2f18bd254930353870171d0c4  inc/portal.php
+a0e23e857e08e5300b62e703e245b822  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
@@ -66,7 +66,7 @@ f3327ec6854ed5362ede027a9b198064  oauth_start.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 57c4ad13bdfb33cfd964731ae89387ac  pipeline_review.php
 dce6b022a8146453bb2054adcd6a5144  portal/advertising.php
-c141d4e49e830a83cfd047aca3ad5d49  portal/asset.php
+f69e92a4cc1632404c42761619aee4b4  portal/asset.php
 32d55d208d6c858e685bbe7a6e7fd466  portal/brand.php
 0f9c154074c6ffe5c3e60246a1c500cd  portal/contact.php
 034e7c38b450646eb5edfbf821a5bfe5  portal/elevation.php
@@ -77,7 +77,7 @@ aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 ef4de6ae50749b8f8b3f036e8cb9a4bf  portal/index.php
 2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
 e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
-3d672445f35f2e40493e2e36e9abb6b9  portal/profile.php
+0016b79c0686e0e4d7d598975bdaacc2  portal/profile.php
 e6411bc80e28c79a013e475e5dc875eb  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
 bfe3ebfff9314e4244322be8688d60cc  portal/social.php
@@ -101,5 +101,5 @@ e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 90750ac4905fdab022c241560911f5ba  website_order.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
-5d8f3a6c60e546aa21a8df980e4cc0dc  assets/css/portal.css
+5cfe54d2b6cae78fd3677d6c07c7d004  assets/css/portal.css
 0a9803b1e556f8e1ab647ec2307d96ce  assets/css/social.css
