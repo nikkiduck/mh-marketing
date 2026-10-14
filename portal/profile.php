@@ -243,7 +243,7 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
   <section class="pt-section" id="listings">
     <h2 class="pt-h2">Current Listings</h2>
     <?php if (!$listings && !$pocket): ?>
-      <div class="pt-card"><p class="pt-card-sub" style="margin:0">We do not see any live listings under your name right now. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p></div>
+      <div class="pt-card"><p class="pt-card-sub" style="margin:0">We do not see any live listings under your name right now. If that is wrong or if you'd like to add an Off-Market Listing, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p></div>
     <?php else: ?>
       <div class="pt-lgrid">
         <?php foreach ($listings as $l):

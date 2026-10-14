@@ -436,6 +436,7 @@ ok('a forwarded Mont Haus email says where it goes (Nikki, 2026-10-14); the serv
    $c === 200 && has($b, 'Your Mont Haus email forwards to jackson.secret@gmail.com.') && !has($b, 'One area per line'), $b);
 [, , $b] = req('sierrah', '/portal/profile.php');
 ok('no forwarding, no note', !has($b, 'forwards to') && !has($b, 'jackson.secret'), $b);
+ok('no listings: the card offers an off-market listing by email (Nikki, 2026-10-14)', has($b, "If that is wrong or if you'd like to add an Off-Market Listing, email") && has($b, 'mailto:marketing@monthaus.com'), $b);
 [, , $b] = req('jackson', '/portal/profile.php');
 ok('his pocket listing sits with his listings: badge, photo by thumbnail, specs, no MLS link, no admin note (2026-10-14)',
    has($b, '77 Hidden Lane') && has($b, 'Pocket listing') && has($b, 'asset.php?pocket=41&amp;thumb=1') && has($b, '3 bd · 2.5 ba · 2,100 sq ft') && has($b, '$1,250,000')
