@@ -126,6 +126,7 @@ if (mk_table_exists($conn, 'agent_mls_ids')) {
     $identities = $st->get_result()->fetch_all(MYSQLI_ASSOC); $st->close();
 }
 $listings = portal_listings($conn, $ctx);
+$pocket   = portal_pocket_listings($conn, $ctx);   // off-MLS listings entered by marketing (2026-10-14)
 $hs_ready = portal_hs_ready($conn);
 $hs = $hs_ready ? portal_hs_load($conn, $ctx) : null;
 $conn->close();
@@ -241,7 +242,7 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
   <!-- Listings: read-only, last (they can get long), drawn like the admin agent page's cards -->
   <section class="pt-section" id="listings">
     <h2 class="pt-h2">Current Listings</h2>
-    <?php if (!$listings): ?>
+    <?php if (!$listings && !$pocket): ?>
       <div class="pt-card"><p class="pt-card-sub" style="margin:0">We do not see any live listings under your name right now. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</p></div>
     <?php else: ?>
       <div class="pt-lgrid">
@@ -263,6 +264,30 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
             <?php if (trim((string)$l['city']) !== ''): ?><div class="pt-lcity"><?= ph(trim((string)$l['city'])) ?>, CO</div><?php endif; ?>
             <?php if ($price($l['list_price']) !== ''): ?><div class="pt-lprice"><?= ph($price($l['list_price'])) ?></div><?php endif; ?>
             <?php if ($u !== ''): ?><a class="pt-llink" href="<?= ph($u) ?>" target="_blank" rel="noopener">View on the website ↗</a><?php endif; ?>
+          </div>
+        </div>
+        <?php endforeach; ?>
+        <?php // Pocket listings after the MLS ones (2026-10-14): the photo marketing uploaded, no website link.
+              foreach ($pocket as $p): [$plab, $pcls] = portal_pocket_state($p);
+          $specs = [];
+          if ($p['beds']  !== null && $p['beds']  !== '') $specs[] = (0 + $p['beds'])  . ' bd';
+          if ($p['baths'] !== null && $p['baths'] !== '') $specs[] = (0 + $p['baths']) . ' ba';
+          if ((int)$p['sqft'] > 0) $specs[] = number_format((int)$p['sqft']) . ' sq ft';
+          $psrc = ['pocket' => (int)$p['id']] + (!empty($p['photo_thumb']) ? ['thumb' => 1] : []);
+        ?>
+        <div class="pt-lcard pt-lpocket">
+          <?php if (!empty($p['photo_file'])): ?>
+            <img class="pt-lphoto" src="<?= ph(portal_url($ctx, '/portal/asset.php', $psrc)) ?>" alt="" loading="lazy">
+          <?php else: ?>
+            <div class="pt-lphoto"></div>
+          <?php endif; ?>
+          <div class="pt-lbody">
+            <div class="pt-lstatus <?= $pcls ?>"><?= ph($plab) ?><?= (int)$p['is_rental'] ? ' · For Rent' : '' ?> <span class="pt-lpocket-badge">Pocket listing</span></div>
+            <div class="pt-laddr"><?= ph($p['address']) ?></div>
+            <?php if (trim((string)$p['city']) !== ''): ?><div class="pt-lcity"><?= ph(trim((string)$p['city'])) ?>, CO</div><?php endif; ?>
+            <?php if ($price($p['list_price']) !== ''): ?><div class="pt-lprice"><?= ph($price($p['list_price'])) ?></div><?php endif; ?>
+            <?php if ($specs): ?><div class="pt-lcity" style="margin-top:4px"><?= ph(implode(' · ', $specs)) ?></div><?php endif; ?>
+            <div class="pt-lcity" style="margin-top:8px">Not on the MLS or the website.</div>
           </div>
         </div>
         <?php endforeach; ?>

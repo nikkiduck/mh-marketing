@@ -135,6 +135,26 @@ function portal_listings(mysqli $conn, array $ctx): array {
     return $out;
 }
 
+/**
+ * The account's pocket (off-MLS) listings (sql/pocket_listings_v1.sql,
+ * 2026-10-14): entered by admins on the agent page, shown after the MLS
+ * listings on My Profile, never on the website. Available and Under Contract
+ * only; sold and withdrawn stay on the admin page. Scoped by the context's
+ * ids (the person and their teams), never the request.
+ */
+function portal_pocket_listings(mysqli $conn, array $ctx): array {
+    if (!mk_table_exists($conn, 'pocket_listings')) return [];
+    $ids = implode(',', array_map('intval', $ctx['ids']));
+    $r = $conn->query("SELECT * FROM pocket_listings WHERE intake_id IN ({$ids}) AND status IN ('available', 'under_contract')
+                        ORDER BY FIELD(status, 'available', 'under_contract'), is_rental, list_price DESC, id DESC");
+    return $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
+}
+
+/** A pocket listing's state for the card: [label, css class]. */
+function portal_pocket_state(array $p): array {
+    return (string)($p['status'] ?? '') === 'under_contract' ? ['Under Contract', 'pending'] : ['Available', 'active'];
+}
+
 /** A plain, branded 403 that names the reason. */
 function portal_stop(string $title, string $why): never {
     http_response_code(403);

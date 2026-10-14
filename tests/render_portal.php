@@ -155,6 +155,15 @@ class mysqli {
             return self::s(array_values(array_filter($D['assets'], fn($a) => (int)$a['id'] === (int)$p[0]
                 && in_array((int)($camps[$a['campaign_id']]['intake_id'] ?? 0), $in, true))));
         }
+        // Pocket listings (sql/pocket_listings_v1.sql): the profile's scoped list, and one photo by id for the owners only.
+        if (preg_match('/FROM pocket_listings WHERE id = \? AND intake_id IN \(([0-9, ]+)\)/', $sql, $m)) {
+            $in = array_map('intval', explode(',', $m[1]));
+            return self::s(array_values(array_filter($D['pocket'] ?? [], fn($x) => (int)$x['id'] === (int)$p[0] && in_array((int)$x['intake_id'], $in, true))));
+        }
+        if (preg_match('/FROM pocket_listings WHERE intake_id IN \(([0-9, ]+)\)/', $sql, $m)) {
+            $in = array_map('intval', explode(',', $m[1]));
+            return self::s(array_values(array_filter($D['pocket'] ?? [], fn($x) => in_array((int)$x['intake_id'], $in, true) && in_array($x['status'], ['available', 'under_contract'], true))));
+        }
         if (preg_match('/FROM marketing_collateral_orders WHERE id = \? AND intake_id IN \(([0-9, ]+)\)/', $sql, $m)) {
             $in = array_map('intval', explode(',', $m[1]));
             return self::s(array_values(array_filter($D['orders'], fn($o) => (int)$o['id'] === (int)$p[0] && in_array((int)$o['intake_id'], $in, true))));
@@ -306,6 +315,15 @@ function scenario(array $over = []): array {
                 ['id' => 32, 'campaign_id' => 22, 'label' => 'KC Secret Creative', 'file_url' => 'https://www.dropbox.com/kc-ad-original', 'target_url' => null, 'file_type' => 'file', 'uploaded_at' => '2026-03-01 10:00:00',
                  'image_file' => 'KCAD.jpg', 'image_orig_name' => 'kc-ad.jpg', 'image_thumb' => 'KCAD_thumb.jpg', 'image_uploaded_at' => '2026-03-01 10:00:00'],
             ],
+            // Pocket (off-MLS) listings: Jackson's, with a photo; one he sold (admin page only); Kim's, never his.
+            'pocket' => [
+                ['id' => 41, 'intake_id' => 6, 'address' => '77 Hidden Lane', 'city' => 'Ridgway', 'list_price' => 1250000, 'beds' => 3, 'baths' => 2.5, 'sqft' => 2100, 'is_rental' => 0, 'status' => 'available', 'notes' => 'JH POCKET SECRET NOTE',
+                 'photo_file' => 'PKT.jpg', 'photo_orig_name' => 'hidden-lane.jpg', 'photo_thumb' => 'PKT_thumb.jpg', 'photo_uploaded_at' => '2026-10-14 10:00:00'],
+                ['id' => 43, 'intake_id' => 6, 'address' => '9 Sold Pocket Way', 'city' => 'Ouray', 'list_price' => 500000, 'beds' => null, 'baths' => null, 'sqft' => null, 'is_rental' => 0, 'status' => 'sold', 'notes' => '',
+                 'photo_file' => null, 'photo_orig_name' => null, 'photo_thumb' => null, 'photo_uploaded_at' => null],
+                ['id' => 42, 'intake_id' => 7, 'address' => 'KC Secret Pocket Rd', 'city' => 'Vail', 'list_price' => 9999999, 'beds' => null, 'baths' => null, 'sqft' => null, 'is_rental' => 0, 'status' => 'available', 'notes' => '',
+                 'photo_file' => 'KCPKT.jpg', 'photo_orig_name' => 'kc.jpg', 'photo_thumb' => null, 'photo_uploaded_at' => null],
+            ],
             'qr' => [
                 ['id' => 1, 'code' => 'jhorn-yard', 'intake_id' => 6,  'label' => 'JH Yard Sign',     'dest_type' => 'profile', 'dest_url' => null, 'is_active' => 1, 'scan_count' => 4],
                 ['id' => 5, 'code' => 'jhorn-oh',   'intake_id' => 6,  'label' => 'JH Open House',    'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/oh', 'is_active' => 0, 'scan_count' => 0],
@@ -418,6 +436,11 @@ ok('a forwarded Mont Haus email says where it goes (Nikki, 2026-10-14); the serv
    $c === 200 && has($b, 'Your Mont Haus email forwards to jackson.secret@gmail.com.') && !has($b, 'One area per line'), $b);
 [, , $b] = req('sierrah', '/portal/profile.php');
 ok('no forwarding, no note', !has($b, 'forwards to') && !has($b, 'jackson.secret'), $b);
+[, , $b] = req('jackson', '/portal/profile.php');
+ok('his pocket listing sits with his listings: badge, photo by thumbnail, specs, no MLS link, no admin note (2026-10-14)',
+   has($b, '77 Hidden Lane') && has($b, 'Pocket listing') && has($b, 'asset.php?pocket=41&amp;thumb=1') && has($b, '3 bd · 2.5 ba · 2,100 sq ft') && has($b, '$1,250,000')
+   && has($b, 'Not on the MLS or the website.') && !has($b, 'POCKET SECRET'), $b);
+ok('…his sold one and Kim\'s stay off', !has($b, 'Sold Pocket') && !has($b, 'KC Secret Pocket') && !has($b, 'pocket=42') && !has($b, 'pocket=43'), $b);
 [$c, $loc] = req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'social',
     'social_instagram' => 'https://www.instagram.com/@jhorn/?hl=en', 'social_facebook' => 'www.facebook.com/monthaus/', 'social_linkedin' => 'https://www.linkedin.com/in/jackson-horn/',
     'social_tiktok' => '@jh', 'website_url' => 'jacksonhorn.com']);
@@ -650,7 +673,8 @@ echo "\nCREATIVE FILES\n";
 $cdir = dirname($SB) . '/creatives/';
 @mkdir($cdir, 0777, true);
 foreach (['JHAD.jpg' => 'JACKSON-AD-BYTES', 'JHAD_thumb.jpg' => 'JACKSON-AD-THUMB', 'JHAD2.pdf' => 'JACKSON-PDF-BYTES', 'KCAD.jpg' => 'KIM-AD-BYTES',
-          'KCAD_thumb.jpg' => 'KIM-AD-THUMB', 'JHPROOF.png' => 'JACKSON-PROOF-BYTES', 'JHPROOF_thumb.jpg' => 'JACKSON-PROOF-THUMB', 'KCPROOF.png' => 'KIM-PROOF-BYTES'] as $f => $bytes) {
+          'KCAD_thumb.jpg' => 'KIM-AD-THUMB', 'JHPROOF.png' => 'JACKSON-PROOF-BYTES', 'JHPROOF_thumb.jpg' => 'JACKSON-PROOF-THUMB', 'KCPROOF.png' => 'KIM-PROOF-BYTES',
+          'PKT.jpg' => 'JACKSON-POCKET-BYTES', 'PKT_thumb.jpg' => 'JACKSON-POCKET-THUMB', 'KCPKT.jpg' => 'KIM-POCKET-BYTES'] as $f => $bytes) {
     file_put_contents($cdir . $f, $bytes);
 }
 [$c, , $b] = req('jackson', '/portal/asset.php?asset=31');
@@ -663,6 +687,10 @@ ok('a creative with no thumbnail: 404 for the thumbnail, the file still opens', 
 ok('Kim\'s creative is not found for Jackson', $c === 404 && !has($b, 'KIM'), "{$c} {$b}");
 [$c, , $b] = req('jon', '/portal/asset.php?asset=31');
 ok('…nor Jackson\'s for Weber Boxer', $c === 404 && !has($b, 'JACKSON'), "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?pocket=41&thumb=1');
+ok('Jackson opens his pocket listing\'s photo', $c === 200 && $b === 'JACKSON-POCKET-THUMB' && req('jackson', '/portal/asset.php?pocket=41')[2] === 'JACKSON-POCKET-BYTES', "{$c} {$b}");
+[$c, , $b] = req('jackson', '/portal/asset.php?pocket=42');
+ok('Kim\'s pocket photo is not found for him', $c === 404 && !has($b, 'KIM'), "{$c} {$b}");
 [$c, , $b] = req('jackson', '/portal/asset.php?order=11');
 ok('Jackson opens his own proof', $c === 200 && $b === 'JACKSON-PROOF-BYTES', "{$c} {$b}");
 [$c, , $b] = req('jackson', '/portal/asset.php?order=11&thumb=1');

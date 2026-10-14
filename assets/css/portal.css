@@ -265,6 +265,8 @@ a.pt-list-row[href]:hover { border-color: var(--gold); }
 .pt-lprice { font-size: 20px; font-weight: 600; color: #111; }
 .pt-llink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #f97316; text-decoration: none; }
 .pt-llink:hover { text-decoration: underline; }
+/* Pocket listings (2026-10-14): off-MLS, entered by marketing */
+.pt-lpocket-badge { display: inline-block; background: #ecfdf5; color: #047857; border-radius: 8px; padding: 1px 7px; margin-left: 4px; font-size: 11px; letter-spacing: .02em; text-transform: none; }
 /* Paragraph breaks in the bio editor show as space between paragraphs (Nikki, 2026-10-13). */
 .pt-editor .ql-editor p + p { margin-top: .9em; }
 .pt-form textarea { display: block; width: 100%; margin-top: 6px; font: 16px var(--sans); padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text); }

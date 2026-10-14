@@ -147,6 +147,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: agent.php?id={$id}&tab=notes"); exit;
     }
 
+    /* --- Pocket listings: off-MLS, entered here, shown on the agent's portal, never public (sql/pocket_listings_v1.sql; Nikki, 2026-10-14) --- */
+    if (in_array($action, ['add_pocket', 'update_pocket', 'delete_pocket', 'pocket_status'], true) && mk_table_exists($conn, 'pocket_listings')) {
+        $back = "agent.php?id={$id}&tab=profile";
+        $pid  = (int)($_POST['pocket_id'] ?? 0);
+        $own  = null;
+        if ($action !== 'add_pocket') {
+            $q = $conn->prepare("SELECT * FROM pocket_listings WHERE id = ? AND intake_id = ? LIMIT 1");
+            if ($q) { $q->bind_param('ii', $pid, $id); $q->execute(); $own = $q->get_result()->fetch_assoc(); $q->close(); }
+            if (!$own) { header("Location: {$back}&err=" . rawurlencode('That pocket listing could not be found.') . '#listings'); exit; }
+        }
+        $statuses = ['available', 'under_contract', 'sold', 'withdrawn'];
+        if ($action === 'delete_pocket') {
+            mk_delete_creative_files($own['photo_file'], $own['photo_thumb']);
+            $conn->query("DELETE FROM pocket_listings WHERE id = {$pid} AND intake_id = {$id}");
+            header("Location: {$back}&saved=1#listings"); exit;
+        }
+        if ($action === 'pocket_status') {
+            $st = in_array($_POST['status'] ?? '', $statuses, true) ? $_POST['status'] : $own['status'];
+            $s = $conn->prepare("UPDATE pocket_listings SET status = ? WHERE id = ? AND intake_id = ?");
+            if ($s) { $s->bind_param('sii', $st, $pid, $id); $s->execute(); $s->close(); }
+            header("Location: {$back}&saved=1#pocket-{$pid}"); exit;
+        }
+        // add_pocket / update_pocket
+        $address = mb_substr(trim((string)($_POST['address'] ?? '')), 0, 255);
+        if ($address === '') { header("Location: {$back}&err=" . rawurlencode('A pocket listing needs an address.') . '#listings'); exit; }
+        $city   = mb_substr(trim((string)($_POST['city'] ?? '')), 0, 100);
+        $num    = function (string $k): ?string { $v = trim((string)($_POST[$k] ?? '')); return $v === '' || !is_numeric($v) ? null : $v; };
+        $price  = $num('list_price'); $beds = $num('beds'); $baths = $num('baths'); $sqft = $num('sqft');
+        $rental = !empty($_POST['is_rental']) ? 1 : 0;
+        $status = in_array($_POST['status'] ?? '', $statuses, true) ? $_POST['status'] : 'available';
+        $notes  = trim((string)($_POST['notes'] ?? '')) ?: null;
+        // The photo is optional and stored like a creative (inc/creatives.php); a PDF is not a photo.
+        $photo  = mk_store_creative('photo');
+        if ($photo && isset($photo['error'])) { header("Location: {$back}&err=" . rawurlencode($photo['error']) . '#listings'); exit; }
+        if ($photo && strtolower(pathinfo($photo['file'], PATHINFO_EXTENSION)) === 'pdf') {
+            mk_delete_creative_files($photo['file'], $photo['thumb']);
+            header("Location: {$back}&err=" . rawurlencode('The photo must be a JPG, PNG or GIF.') . '#listings'); exit;
+        }
+        $pf = $photo['file'] ?? null; $po = $photo['orig'] ?? null; $pt = $photo['thumb'] ?? null; $pu = $photo ? date('Y-m-d H:i:s') : null;
+        if ($action === 'add_pocket') {
+            $s = $conn->prepare("INSERT INTO pocket_listings (intake_id, address, city, list_price, beds, baths, sqft, is_rental, status, notes, photo_file, photo_orig_name, photo_thumb, photo_uploaded_at)
+                                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+            // 14 placeholders: i s s s s s s i s s s s s s
+            if ($s) { $s->bind_param('issssssissssss', $id, $address, $city, $price, $beds, $baths, $sqft, $rental, $status, $notes, $pf, $po, $pt, $pu); $s->execute(); $s->close(); }
+            $pid = (int)$conn->insert_id;
+        } else {
+            $sql   = "UPDATE pocket_listings SET address=?, city=?, list_price=?, beds=?, baths=?, sqft=?, is_rental=?, status=?, notes=?";
+            $types = 'ssssssiss'; $vals = [$address, $city, $price, $beds, $baths, $sqft, $rental, $status, $notes];
+            if ($photo || !empty($_POST['remove_photo'])) {   // a new photo replaces the old file; "remove" clears it
+                mk_delete_creative_files($own['photo_file'], $own['photo_thumb']);
+                $sql .= ", photo_file=?, photo_orig_name=?, photo_thumb=?, photo_uploaded_at=?";
+                $types .= 'ssss'; array_push($vals, $pf, $po, $pt, $pu);
+            }
+            $sql .= " WHERE id=? AND intake_id=?"; $types .= 'ii'; array_push($vals, $pid, $id);
+            $s = $conn->prepare($sql);
+            if ($s) { $s->bind_param($types, ...$vals); $s->execute(); $s->close(); }
+        }
+        header("Location: {$back}&saved=1#pocket-{$pid}"); exit;
+    }
+
     /* --- Campaigns / Advertising --- */
     if ($action === 'add_campaign') {
         $platform    = trim($_POST['platform']     ?? '');
@@ -1509,6 +1569,15 @@ if (mk_table_exists($conn, 'hs_listing_state') && mk_table_exists($conn, 'agent_
         if ($r) $listings = $r->fetch_all(MYSQLI_ASSOC);
     }
 }
+// Pocket (off-MLS) listings entered by hand on this page (sql/pocket_listings_v1.sql,
+// 2026-10-14): shown after the MLS ones here and on the agent's portal; never public.
+$has_pocket = mk_table_exists($conn, 'pocket_listings');
+$pocket = [];
+if ($has_pocket) {
+    $r = $conn->query("SELECT * FROM pocket_listings WHERE intake_id = {$id}
+                        ORDER BY FIELD(status, 'available', 'under_contract', 'sold', 'withdrawn'), is_rental, list_price DESC, id DESC");
+    if ($r) $pocket = $r->fetch_all(MYSQLI_ASSOC);
+}
 
 // ── Profile tab data ────────────────────────────────────────────────────────
 // Board labels and the picker's choices come from the registry (inc/boards.php, via agent_roster.php).
@@ -2091,6 +2160,16 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .listing-price { font-size:14px; font-weight:700; color:#111; }
     .listing-link { display:block; margin-top:8px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:#f97316; text-decoration:none; }
     .listing-link:hover { text-decoration:underline; }
+    /* Pocket listings (2026-10-14): off-MLS, entered on this page */
+    .listing-status.done { color:#9ca3af; }
+    .listing-pocket { display:inline-block; background:#ecfdf5; color:#047857; border-radius:8px; padding:1px 6px; margin-left:4px; font-size:9px; letter-spacing:.4px; }
+    .listing-specs { font-size:11px; color:#6b7280; margin-top:4px; }
+    .listing-notes { font-size:11px; color:#6b7280; margin-top:6px; white-space:pre-wrap; }
+    .pocket-head { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:20px 0 10px; }
+    .pocket-title { font-size:13px; font-weight:700; color:#111; }
+    .pocket-title .hint { font-weight:400; margin-left:6px; }
+    .pocket-actions { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+    .pocket-actions .form-input { padding:3px 6px; font-size:11px; }
     .no-listings { text-align:center; padding:32px; color:#9ca3af; font-size:13px; background:#fff; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,.08); }
 
     /* ── Headshot path dividers ── */
@@ -3713,6 +3792,50 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       if ($days === 0) return ['cls' => 'due',  'text' => 'Renews today'];
       if ($days <= 60) return ['cls' => 'soon', 'text' => "Renews in {$days} day" . ($days === 1 ? '' : 's')];
       return null;
+  }
+
+  /** A pocket listing's status: [label, css class for .listing-status]. */
+  function mk_pocket_status(string $s): array {
+      return ['available' => ['Available', 'active'], 'under_contract' => ['Under Contract', 'pending'],
+              'sold' => ['Sold', 'done'], 'withdrawn' => ['Withdrawn', 'done']][$s] ?? [ucfirst($s), ''];
+  }
+
+  /** The pocket listing form fields (add and edit; sql/pocket_listings_v1.sql). */
+  function mk_pocket_fields(array $p): void {
+      $n = fn(string $k): string => isset($p[$k]) && $p[$k] !== '' && $p[$k] !== null ? (string)(0 + $p[$k]) : '';
+  ?>
+    <div class="form-row">
+      <label class="grow">Address <input type="text" name="address" class="form-input" required maxlength="255" value="<?= e_attr($p['address'] ?? '') ?>" placeholder="e.g. 123 Main Street"></label>
+      <label>City <input type="text" name="city" class="form-input" maxlength="100" value="<?= e_attr($p['city'] ?? '') ?>" placeholder="Ridgway"></label>
+      <label>Price <input type="number" name="list_price" class="form-input" step="1" min="0" value="<?= $n('list_price') ?>" placeholder="0"></label>
+    </div>
+    <div class="form-row" style="align-items:flex-end;">
+      <label>Beds <input type="number" name="beds" class="form-input" step="0.5" min="0" value="<?= $n('beds') ?>"></label>
+      <label>Baths <input type="number" name="baths" class="form-input" step="0.5" min="0" value="<?= $n('baths') ?>"></label>
+      <label>Sq ft <input type="number" name="sqft" class="form-input" step="1" min="0" value="<?= $n('sqft') ?>"></label>
+      <label>Status
+        <select name="status" class="form-input">
+          <?php foreach (['available', 'under_contract', 'sold', 'withdrawn'] as $sv): ?>
+            <option value="<?= $sv ?>" <?= ($p['status'] ?? 'available') === $sv ? 'selected' : '' ?>><?= mk_pocket_status($sv)[0] ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+      <label class="chk-inline"><input type="checkbox" name="is_rental" value="1" <?= !empty($p['is_rental']) ? 'checked' : '' ?>> For rent</label>
+    </div>
+    <div class="form-row" style="align-items:flex-end;">
+      <label class="grow">Photo <small style="font-weight:400;color:#9ca3af;">(optional; JPG, PNG or GIF; what the agent sees on their portal)</small>
+        <input type="file" name="photo" class="form-input" accept="image/jpeg,image/png,image/gif">
+      </label>
+      <?php if (!empty($p['photo_file'])): ?>
+      <label class="chk-inline"><input type="checkbox" name="remove_photo" value="1"> Remove the current photo</label>
+      <?php endif; ?>
+    </div>
+    <div class="form-row">
+      <label class="grow">Notes <small style="font-weight:400;color:#9ca3af;">(this page only; never shown to the agent)</small>
+        <textarea name="notes" class="form-input" rows="2"><?= htmlspecialchars((string)($p['notes'] ?? '')) ?></textarea>
+      </label>
+    </div>
+  <?php
   }
 
   function mk_who_pays_fields(array $row, string $key, string $total_field = 'cost'): void {
@@ -5356,6 +5479,79 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       </div>
       <?php endforeach; ?>
     </div>
+  <?php endif; ?>
+
+  <?php if ($has_pocket): // Pocket listings (2026-10-14): off-MLS, entered here; the agent sees them on their portal; never the website ?>
+  <div class="pocket-head" id="pocket-listings">
+    <div class="pocket-title"><i class="ti ti-eye-off" style="color:#9ca3af;"></i> Pocket listings <span class="hint">off-MLS; the agent sees them on their portal, the website never does</span></div>
+    <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('add-pocket-panel')"><i class="ti ti-plus"></i> Add Pocket Listing</button>
+  </div>
+  <div class="add-form" id="add-pocket-panel" style="display:none;margin-bottom:14px;">
+    <h4>Add Pocket Listing</h4>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_action" value="add_pocket">
+      <?php mk_pocket_fields([]); ?>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-check"></i> Save</button>
+        <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('add-pocket-panel')">Cancel</button>
+      </div>
+    </form>
+  </div>
+  <?php if (!$pocket): ?>
+    <div class="no-listings">No pocket listings.</div>
+  <?php else: ?>
+    <div class="listings-grid">
+      <?php foreach ($pocket as $p): [$plab, $pcls] = mk_pocket_status((string)$p['status']);
+        $specs = [];
+        if ($p['beds']  !== null && $p['beds']  !== '') $specs[] = (0 + $p['beds'])  . ' bd';
+        if ($p['baths'] !== null && $p['baths'] !== '') $specs[] = (0 + $p['baths']) . ' ba';
+        if ((int)$p['sqft'] > 0) $specs[] = number_format((int)$p['sqft']) . ' sq ft';
+      ?>
+      <div class="listing-card" id="pocket-<?= (int)$p['id'] ?>">
+        <?php if (!empty($p['photo_file'])): ?>
+          <a href="creative.php?pocket=<?= (int)$p['id'] ?>" target="_blank"><img class="listing-photo" src="creative.php?pocket=<?= (int)$p['id'] ?><?= !empty($p['photo_thumb']) ? '&amp;thumb=1' : '' ?>" alt=""></a>
+        <?php else: ?>
+          <div class="listing-photo" style="display:flex;align-items:center;justify-content:center;color:#d1d5db;"><i class="ti ti-photo-off" style="font-size:28px;"></i></div>
+        <?php endif; ?>
+        <div class="listing-body">
+          <div class="listing-status <?= $pcls ?>"><?= htmlspecialchars($plab) ?><?= (int)$p['is_rental'] ? ' · For Rent' : '' ?> <span class="listing-pocket">Pocket</span></div>
+          <div class="listing-addr"><?= htmlspecialchars($p['address']) ?></div>
+          <?php if ((string)$p['city'] !== ''): ?><div class="listing-city"><?= htmlspecialchars($p['city']) ?>, CO</div><?php endif; ?>
+          <?php if ($p['list_price']): ?><div class="listing-price"><?= money((float)$p['list_price']) ?></div><?php endif; ?>
+          <?php if ($specs): ?><div class="listing-specs"><?= htmlspecialchars(implode(' · ', $specs)) ?></div><?php endif; ?>
+          <?php if ((string)$p['notes'] !== ''): ?><div class="listing-notes"><?= htmlspecialchars($p['notes']) ?></div><?php endif; ?>
+          <div class="pocket-actions">
+            <form method="POST" style="margin:0;">
+              <input type="hidden" name="_action" value="pocket_status"><input type="hidden" name="pocket_id" value="<?= (int)$p['id'] ?>">
+              <select name="status" class="form-input" onchange="this.form.submit()" title="Status">
+                <?php foreach (['available', 'under_contract', 'sold', 'withdrawn'] as $sv): ?><option value="<?= $sv ?>" <?= $p['status'] === $sv ? 'selected' : '' ?>><?= mk_pocket_status($sv)[0] ?></option><?php endforeach; ?>
+              </select>
+            </form>
+            <button type="button" class="btn btn-outline btn-xs" onclick="toggleInline('edit-pocket-<?= (int)$p['id'] ?>')"><i class="ti ti-pencil"></i> Edit</button>
+            <form method="POST" style="margin:0;" onsubmit="return confirm('Delete this pocket listing?')">
+              <input type="hidden" name="_action" value="delete_pocket"><input type="hidden" name="pocket_id" value="<?= (int)$p['id'] ?>">
+              <button type="submit" class="btn-ghost" title="Delete"><i class="ti ti-trash"></i></button>
+            </form>
+          </div>
+        </div>
+      </div>
+      <?php endforeach; ?>
+    </div>
+    <?php // The edit forms sit under the grid, full width, one per listing (toggleInline opens them). ?>
+    <?php foreach ($pocket as $p): ?>
+    <div id="edit-pocket-<?= (int)$p['id'] ?>" style="display:none;" class="inline-edit-form">
+      <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="_action" value="update_pocket"><input type="hidden" name="pocket_id" value="<?= (int)$p['id'] ?>">
+        <h4 style="margin:0 0 10px;font-size:13px;">Edit <?= htmlspecialchars($p['address']) ?></h4>
+        <?php mk_pocket_fields($p); ?>
+        <div class="btn-row">
+          <button type="submit" class="btn btn-primary btn-sm"><i class="ti ti-check"></i> Save</button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="toggleInline('edit-pocket-<?= (int)$p['id'] ?>')">Cancel</button>
+        </div>
+      </form>
+    </div>
+    <?php endforeach; ?>
+  <?php endif; ?>
   <?php endif; ?>
 
 </div><!-- /wrap -->

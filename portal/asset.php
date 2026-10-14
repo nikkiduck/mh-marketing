@@ -21,6 +21,7 @@ $ctx  = portal_context($conn);
 $in   = portal_scope_in($ctx);   // ints from the context, never the request
 $aid  = (int)($_GET['asset'] ?? 0);
 $oid  = (int)($_GET['order'] ?? 0);
+$pid  = (int)($_GET['pocket'] ?? 0);   // a pocket listing's photo (sql/pocket_listings_v1.sql, 2026-10-14)
 
 $row = null;
 if ($aid > 0 && mk_column_exists($conn, 'marketing_campaign_assets', 'image_file')) {
@@ -39,10 +40,17 @@ if ($aid > 0 && mk_column_exists($conn, 'marketing_campaign_assets', 'image_file
     $st->execute();
     $row = $st->get_result()->fetch_assoc();
     $st->close();
+} elseif ($pid > 0 && mk_table_exists($conn, 'pocket_listings')) {
+    $st = $conn->prepare("SELECT photo_file, photo_orig_name, photo_thumb
+                            FROM pocket_listings WHERE id = ? AND intake_id IN ({$in}) LIMIT 1");
+    $st->bind_param('i', $pid);
+    $st->execute();
+    $row = $st->get_result()->fetch_assoc();
+    $st->close();
 }
-$file  = (string)($row['image_file'] ?? $row['proof_file'] ?? '');
-$name  = (string)($row['image_orig_name'] ?? $row['proof_orig_name'] ?? '');
-$tfile = (string)($row['image_thumb'] ?? $row['proof_thumb'] ?? '');
+$file  = (string)($row['image_file'] ?? $row['proof_file'] ?? $row['photo_file'] ?? '');
+$name  = (string)($row['image_orig_name'] ?? $row['proof_orig_name'] ?? $row['photo_orig_name'] ?? '');
+$tfile = (string)($row['image_thumb'] ?? $row['proof_thumb'] ?? $row['photo_thumb'] ?? '');
 if ($file === '') { http_response_code(404); exit('That file could not be found.'); }
 
 $thumb = !empty($_GET['thumb']);

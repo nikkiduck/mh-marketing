@@ -22,14 +22,18 @@ require_once __DIR__ . '/inc/creatives.php';
 require_login();
 require_role('admin');
 
-$asset_id = (int)($_GET['asset'] ?? 0);
-$order_id = (int)($_GET['order'] ?? 0);
-if (!$asset_id && !$order_id) { http_response_code(400); exit('Missing asset or order.'); }
+$asset_id  = (int)($_GET['asset'] ?? 0);
+$order_id  = (int)($_GET['order'] ?? 0);
+$pocket_id = (int)($_GET['pocket'] ?? 0);   // a pocket listing's photo (sql/pocket_listings_v1.sql, 2026-10-14)
+if (!$asset_id && !$order_id && !$pocket_id) { http_response_code(400); exit('Missing asset, order or pocket.'); }
 
 // Table and columns chosen here, never from input; only a bound integer reaches the query.
 if ($asset_id) {
     $sql  = "SELECT image_file, image_orig_name, image_thumb FROM marketing_campaign_assets WHERE id = ? LIMIT 1";
     $want = $asset_id;
+} elseif ($pocket_id) {
+    $sql  = "SELECT photo_file, photo_orig_name, photo_thumb FROM pocket_listings WHERE id = ? LIMIT 1";
+    $want = $pocket_id;
 } else {
     $sql  = "SELECT proof_file, proof_orig_name, proof_thumb FROM marketing_collateral_orders WHERE id = ? LIMIT 1";
     $want = $order_id;
@@ -40,9 +44,9 @@ $stmt->bind_param('i', $want);
 $stmt->execute();
 $row = $stmt->get_result()->fetch_assoc();
 $stmt->close();
-$file  = (string)($row['image_file'] ?? $row['proof_file'] ?? '');
-$name  = (string)($row['image_orig_name'] ?? $row['proof_orig_name'] ?? '');
-$tfile = (string)($row['image_thumb'] ?? $row['proof_thumb'] ?? '');
+$file  = (string)($row['image_file'] ?? $row['proof_file'] ?? $row['photo_file'] ?? '');
+$name  = (string)($row['image_orig_name'] ?? $row['proof_orig_name'] ?? $row['photo_orig_name'] ?? '');
+$tfile = (string)($row['image_thumb'] ?? $row['proof_thumb'] ?? $row['photo_thumb'] ?? '');
 if ($file === '') { http_response_code(404); exit('No file on this item.'); }
 
 $thumb = !empty($_GET['thumb']);

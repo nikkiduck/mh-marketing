@@ -608,6 +608,27 @@ follow describe the old card layout; the optional card view keeps its spirit.
   (feed URLs follow the site's address, so they become monthaus.com at
   go-live); its old Lofty `listing-detail/` links are gone.
 
+### Pocket listings (2026-10-14)
+- Off-MLS listings cannot come from `hs_listing_state` (the feed never has
+  them), so they are entered by hand on the agent page, under Current
+  Listings: `pocket_listings` (sql/pocket_listings_v1.sql; `$has_pocket` =
+  `mk_table_exists()` guards everything): address, city, price, beds, baths,
+  sq ft, for-rent, status (Available / Under Contract / Sold / Withdrawn),
+  admin-only notes, and an optional photo stored like a creative
+  (`mk_store_creative('photo')`, images only, a PDF is refused) and served by
+  `creative.php?pocket=` here and `portal/asset.php?pocket=` on the portal
+  (owning account only). Handlers add_pocket / update_pocket / pocket_status /
+  delete_pocket in agent.php; the card carries a green "Pocket" chip and a
+  status select; edit forms sit under the grid. **Admins only for now**
+  (Nikki, 2026-10-14; agents entering their own is a decision for Jonathan).
+  The portal's My Profile shows Available and Under Contract ones after the
+  MLS listings (`portal_pocket_listings()`, badge "Pocket listing", "Not on
+  the MLS or the website.", never the notes). Nothing public reads the
+  table: not the roster feed, not Hot Sheets, and not the Templates tools
+  (Nikki: no). When the property later lists on an MLS its feed card
+  appears on its own; mark the pocket row Sold or Withdrawn by hand (no
+  address auto-hide: the two can legitimately overlap for a day).
+
 ### Website order and title line breaks (2026-09-29)
 - `website_order.php` (admin only, "Website Order" button on the roster) sets
   the public broker grid's order by dragging. It shows approved, active,
