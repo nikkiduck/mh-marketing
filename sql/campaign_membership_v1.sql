@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- campaign_membership_v1.sql — memberships on the Advertising tab (2026-10-14)
 --
