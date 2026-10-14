@@ -157,6 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // per_unit : unit_rate × matching days in each month
         $bill_mode   = in_array($_POST['billing_mode'] ?? '', ['monthly','monthly_flat','per_unit'], true)
                        ? $_POST['billing_mode'] : 'one_time';
+        // Yearly dues (alter_campaign_billing_v4_annual.sql): only once the enum holds it, else one_time.
+        if (($_POST['billing_mode'] ?? '') === 'annual' && mk_enum_has($conn, 'marketing_campaigns', 'billing_mode', 'annual')) $bill_mode = 'annual';
         $unit_rate   = trim($_POST['unit_rate']  ?? '') ?: null;
         // '' means "no weekday — type the quantity each month", and must stay
         // NULL rather than becoming 0, which is a real weekday (Sunday).
@@ -243,6 +245,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (array_key_exists('billing_mode', $_POST) && $_POST['billing_mode'] !== 'per_unit') {
             $_POST['unit_rate'] = ''; $_POST['unit_weekday'] = ''; $_POST['unit_label'] = '';
         }
+        // 'annual' before its migration would fail the UPDATE silently in strict mode.
+        if (($_POST['billing_mode'] ?? '') === 'annual' && !mk_enum_has($conn, 'marketing_campaigns', 'billing_mode', 'annual')) $_POST['billing_mode'] = 'one_time';
         $fields = ['platform','name','budget','billing_mode','unit_rate','unit_weekday','unit_label',
                    'start_date','end_date','notes','target_url',
                    'utm_source','utm_medium','utm_campaign','utm_content',
@@ -1417,6 +1421,7 @@ if ($r) {
 // ── Campaigns ─────────────────────────────────────────────────────────────────
 $has_medium = mk_column_exists($conn, 'marketing_campaigns', 'medium');   // print vs digital; checked here, above the early close
 $has_membership = $has_medium && mk_enum_has($conn, 'marketing_campaigns', 'medium', 'membership');   // campaign_membership_v1.sql (2026-10-14)
+$has_annual = mk_enum_has($conn, 'marketing_campaigns', 'billing_mode', 'annual');   // alter_campaign_billing_v4_annual.sql: yearly dues
 $campaigns = [];
 $r = $conn->query("SELECT * FROM marketing_campaigns WHERE intake_id={$id} ORDER BY created_at DESC");
 if ($r) {
@@ -3484,7 +3489,8 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
          data-one_time="Budget is the whole charge, and it lands in the month of the start date."
          data-monthly_flat="Budget is the amount, every month, from the run start onward — no end date means it keeps going until you set one. A new month starts billing on its first day, never before. Change a single month in the Month-by-month grid."
          data-monthly="Budget here is only a default. It bills nothing on its own — each month's amount is entered in the Month-by-month grid, and a month you have not entered bills nothing and stays flagged."
-         data-per_unit="Budget is ignored in this mode. The money is the rate below, times the days that fall in each month."></div>
+         data-per_unit="Budget is ignored in this mode. The money is the rate below, times the days that fall in each month."
+         data-annual="The amount once a year: in the month of the start date, and again in that month every year up to the end date (Renews). No end date means it keeps renewing until you set one. For membership dues, that is the dues from Member since until Renews."></div>
     <div class="form-row js-unit-fields" style="<?= $mode === 'per_unit' ? '' : 'display:none;' ?>">
       <label>Rate per day
         <input type="number" name="unit_rate" class="form-input" step="0.01" min="0"
@@ -4200,6 +4206,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <option value="monthly_flat">Monthly — same amount, ongoing</option>
                 <option value="monthly">Monthly — a different amount each month</option>
                 <option value="per_unit">Per day — rate × days that month</option>
+                <?php if ($has_annual): ?><option value="annual">Annually — same amount each year</option><?php endif; ?>
               </select>
             </label>
           </div>
@@ -4343,7 +4350,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                     $_sh_on      = count($_sh_members) > 1;
                     $_sh_total   = 0.0; foreach ($_sh_members as $_g) $_sh_total += (float)(mk_share_base($_g) ?? 0);
                     $_sh_mode    = $c['billing_mode'] ?: 'one_time';
-                    $_sh_what    = ['one_time' => 'in total', 'monthly_flat' => 'a month', 'monthly' => 'a month',
+                    $_sh_what    = ['one_time' => 'in total', 'monthly_flat' => 'a month', 'monthly' => 'a month', 'annual' => 'a year',
                                     'per_unit' => 'a ' . ($c['unit_label'] ?: 'day')][$_sh_mode] ?? 'in total';
                     if ($_sh_on): ?>
               <div class="camp-shared"><i class="ti ti-users"></i> Shared placement:
@@ -4393,7 +4400,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                     // on a monthly placement was what made it read as the figure
                     // that bills when it was only a default. ?>
               <span><?= $_mode === 'monthly_flat' ? 'Standing' : ($_mode === 'monthly' ? 'Usual' : ($_is_mem ? 'Dues' : 'Budget')) ?>:
-                <strong><?= money((float)$c['budget']) ?></strong><?= in_array($_mode, ['monthly','monthly_flat'], true) ? ' / month' : '' ?><?php if ($_sh_on): ?> <em class="camp-share-of">share of <?= money2($_sh_total) ?></em><?php endif; ?></span>
+                <strong><?= money((float)$c['budget']) ?></strong><?= in_array($_mode, ['monthly','monthly_flat'], true) ? ' / month' : ($_mode === 'annual' ? ' / year' : '') ?><?php if ($_sh_on): ?> <em class="camp-share-of">share of <?= money2($_sh_total) ?></em><?php endif; ?></span>
             <?php endif; ?>
 
             <?php if ($_rec): ?>
@@ -4412,6 +4419,12 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                   · <?= $_billed ?> month<?= $_billed === 1 ? '' : 's' ?><?= $_mode === 'monthly' ? ' entered' : '' ?>
                   · <?= money2($_tot) ?>
                 <?php endif; ?>
+              </span>
+            <?php elseif ($_mode === 'annual' && $c['start_date']): // yearly dues: the years of the run so far, and their total
+                $_yrs = mk_campaign_years($c['start_date'], $c['end_date'] ?: null); ?>
+              <span class="camp-monthly-chip">
+                <i class="ti ti-repeat"></i> Yearly<?= empty($c['end_date']) ? ', ongoing' : '' ?>
+                · <?= count($_yrs) ?> year<?= count($_yrs) === 1 ? '' : 's' ?> · <?= money2(count($_yrs) * (float)$c['budget']) ?>
               </span>
             <?php endif; ?>
             <?php if ($c['start_date']): ?><span><?= $_is_mem ? 'Member since' : 'Start' ?>: <strong><?= date('m/d/Y', strtotime($c['start_date'])) ?></strong></span><?php endif; ?>
@@ -4697,6 +4710,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                     <option value="monthly_flat" <?= $_mode === 'monthly_flat' ? 'selected' : '' ?>>Monthly — same amount, ongoing</option>
                     <option value="monthly"  <?= $_mode === 'monthly'  ? 'selected' : '' ?>>Monthly — a different amount each month</option>
                     <option value="per_unit" <?= $_mode === 'per_unit' ? 'selected' : '' ?>>Per day — rate × days that month</option>
+                    <?php if ($has_annual || $_mode === 'annual'): ?><option value="annual" <?= $_mode === 'annual' ? 'selected' : '' ?>>Annually — same amount each year</option><?php endif; ?>
                   </select>
                 </label>
               </div>
@@ -5185,7 +5199,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                   </div>
                 <?php elseif (!empty($it['recurring'])): ?>
                   <div class="fin-item-sub fin-recurring">
-                    <i class="ti ti-repeat" style="font-size:10px;"></i> monthly
+                    <i class="ti ti-repeat" style="font-size:10px;"></i> <?= ($it['mode'] ?? '') === 'annual' ? 'yearly' : 'monthly' ?>
                   </div>
                 <?php endif; ?>
 

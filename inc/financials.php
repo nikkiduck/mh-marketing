@@ -123,6 +123,31 @@ function mk_campaign_months(?string $start, ?string $end, bool $started_only = f
 }
 
 /**
+ * Every YYYY-MM an `annual` placement bills in (membership dues, 2026-10-14):
+ * the month of start_date and that same month every year after, up to and
+ * including the month of end_date. No end date keeps renewing through the
+ * current year. $started_only (Financials) leaves out an anniversary that
+ * has not arrived; the card passes false to show the committed years.
+ * End before start still yields the first year. Capped at 30.
+ */
+function mk_campaign_years(?string $start, ?string $end, bool $started_only = false): array {
+    if (!$start) return [];
+    $cur  = substr($start, 0, 7);
+    $last = $end ? substr($end, 0, 7) : date('Y-m');
+    if ($started_only && $last > date('Y-m')) $last = date('Y-m');
+    if ($last < $cur) {
+        if ($started_only && $cur > date('Y-m')) return [];
+        $last = $cur;
+    }
+    $out = [];
+    while ($cur <= $last && count($out) < 30) {
+        $out[] = $cur;
+        $cur = date('Y-m', strtotime($cur . '-01 +12 months'));
+    }
+    return $out;
+}
+
+/**
  * How many times a given weekday falls inside one month AND inside the run.
  *
  * This is the whole of the fixed-placement problem: a Wednesday marquee and a
@@ -225,8 +250,9 @@ function mk_camp_resolve(array $c, string $ym, array $ov): ?array {
             $set    = false;
         }
 
-    } elseif ($mode === 'monthly_flat') {
-        // A standing buy. `budget` IS the monthly amount, and that is the whole
+    } elseif ($mode === 'monthly_flat' || $mode === 'annual') {
+        // A standing buy, or yearly dues (annual, 2026-10-14: the same rule, one
+        // line per anniversary). `budget` IS the amount, and that is the whole
         // difference from `monthly` — the decision was made once, when the
         // placement was set up, so falling back to it here is honouring an
         // instruction rather than inventing one.
@@ -409,6 +435,7 @@ function mh_agent_financials(mysqli $conn, int $id): array {
             $budget    = (float)($row['budget'] ?? 0);
             $mode      = $row['billing_mode'] ?? 'one_time';
             $recurring = in_array($mode, ['monthly','monthly_flat','per_unit'], true);
+            $annual    = $mode === 'annual';   // one line per anniversary (alter_campaign_billing_v4_annual.sql)
             $start     = $row['start_date'] ?: ($row['created_at'] ? substr($row['created_at'], 0, 10) : date('Y-m-d'));
 
             // Nothing to bill and nobody assigned: skip entirely, same as before.
@@ -430,10 +457,10 @@ function mh_agent_financials(mysqli $conn, int $id): array {
             // them. The grid is where a future month is visible and enterable.
             $months = $recurring
                 ? mk_campaign_months($start, $row['end_date'] ?: null, true)
-                : [substr($start, 0, 7)];
+                : ($annual ? mk_campaign_years($start, $row['end_date'] ?: null, true) : [substr($start, 0, 7)]);
             // A one-time placement dated in the future is left alone: it is a
             // single committed charge, and it has always shown in its own month.
-            if (!$months && !$recurring) $months = [substr($start, 0, 7)];
+            if (!$months && !$recurring && !$annual) $months = [substr($start, 0, 7)];
 
             $covs = $camp_overrides[$cid] ?? [];
 
@@ -466,7 +493,7 @@ function mh_agent_financials(mysqli $conn, int $id): array {
                     'paid_by'    => $paid_by ?: null,
                     'date'       => $when,
                     'ref_id'     => $cid,
-                    'recurring'  => $recurring,
+                    'recurring'  => $recurring || $annual,   // the Financials tab says "yearly" for annual (by mode)
                     'mode'       => $mode,
                     'ym'         => $ym,
                     'units'      => $res['units'],

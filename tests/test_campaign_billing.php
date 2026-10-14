@@ -23,7 +23,7 @@ $SRC = __DIR__ . '/../inc/financials.php';
 $src = file_get_contents($SRC);
 if ($src === false) { fwrite(STDERR, "cannot read {$SRC}\n"); exit(1); }
 
-foreach (['mk_campaign_months', 'mk_weekday_days', 'mk_camp_resolve', 'mk_fin_kind_label'] as $fn) {
+foreach (['mk_campaign_months', 'mk_weekday_days', 'mk_camp_resolve', 'mk_fin_kind_label', 'mk_campaign_years'] as $fn) {
     if (!preg_match('/^function ' . $fn . '\(.*?^\}/ms', $src, $m)) {
         fwrite(STDERR, "FATAL: could not extract {$fn}() from inc/financials.php\n");
         exit(1);
@@ -249,6 +249,23 @@ ok('...but is visible in the grid',
 // The end-before-start typo still yields its one month, unclamped.
 ok('end before start is still one month',
    count(mk_campaign_months($back . '-01', $back . '-01', true)), 1);
+
+echo "\n── Yearly dues: annual (alter_campaign_billing_v4_annual.sql) ──\n";
+// One line per anniversary of the start date, up to the end date (Renews).
+$ty = date('Y'); $tm = date('m');
+ok('a one-year term bills once, in the join month',      mk_campaign_years('2026-07-01', '2027-06-30'), ['2026-07']);
+ok('a term ending on the anniversary bills that year too', mk_campaign_years('2026-07-01', '2027-07-01'), ['2026-07', '2027-07']);
+ok('no end date keeps renewing through the current year', mk_campaign_years(($ty - 2) . '-03-01', null), [($ty - 2) . '-03', ($ty - 1) . '-03', $ty . '-03']);
+ok('…but only the anniversaries that have arrived',       mk_campaign_years(($ty - 1) . '-12-01', null, true), ($tm >= '12') ? [($ty - 1) . '-12', $ty . '-12'] : [($ty - 1) . '-12']);
+ok('a term that has not started shows nothing in Financials', mk_campaign_years(($ty + 1) . '-01-01', null, true), []);
+ok('…and its first year on the card',                   mk_campaign_years(($ty + 1) . '-01-01', ($ty + 1) . '-12-31'), [($ty + 1) . '-01']);
+ok('end before start is one year',                       mk_campaign_years('2026-07-01', '2026-01-01'), ['2026-07']);
+ok('no start, no years',                                 mk_campaign_years(null, '2027-06-30'), []);
+$an = camp(['billing_mode' => 'annual', 'budget' => '350.00', 'start_date' => '2026-07-01', 'end_date' => '2027-06-30', 'paid_by' => 'mont_haus']);
+ok('the dues are the budget, each year',                 mk_camp_resolve($an, '2026-07', [])['amount'], 350.0);
+ok('…marked as set',                                     mk_camp_resolve($an, '2026-07', [])['set'], true);
+ok('a year row overrides that year',                     mk_camp_resolve($an, '2027-07', byYm([mrow(['ym' => '2027-07', 'amount' => '400'])]))['amount'], 400.0);
+ok('no dues entered: nothing, flagged',                  mk_camp_resolve(camp(['billing_mode' => 'annual']), '2026-08', [])['set'], false);
 
 echo "\n── What a line is called (memberships, 2026-10-14) ─────────────\n";
 // A membership is an Advertising line underneath (same links, same share

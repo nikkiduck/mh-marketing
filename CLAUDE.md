@@ -334,6 +334,17 @@ portal), and leaves them off Advertising.
   marquee at $125/day is $500 where there are four Wednesdays and $625 where
   there are five. That is not a rounding artefact; it is what the outlet
   invoices.
+- **`annual`** (alter_campaign_billing_v4_annual.sql, 2026-10-14, Nikki:
+  "Annually" for membership dues) — `budget` is the amount, once a year: in
+  the month of `start_date` and in that month every year after, up to and
+  including `end_date` (Renews); no end date keeps renewing through the
+  current year. `mk_campaign_years()` lists the anniversaries (Financials
+  passes `started_only`, the card does not); `mk_camp_resolve()` treats it
+  like `monthly_flat`, so a `marketing_campaign_months` row can still
+  override one year, though the card shows no month grid for it. The item
+  carries `recurring` so the Financials tab labels it ("yearly", by mode).
+  agent.php offers the option once `mk_enum_has()` sees the value; a posted
+  'annual' before that is stored as one_time. Shares say "a year".
 
 ### The rule that governs all of this
 
@@ -470,7 +481,7 @@ Three rules that came from the page getting unusable rather than from taste:
 Run the test first — it fails loudly rather than silently:
 
 ```bash
-php tests/test_campaign_billing.php     # 69 assertions
+php tests/test_campaign_billing.php     # 81 assertions
 ```
 
 It pulls `mk_campaign_months()`, `mk_weekday_days()` and `mk_camp_resolve()`
