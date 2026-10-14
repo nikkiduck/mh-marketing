@@ -338,8 +338,9 @@ portal), and leaves them off Advertising.
   "Annually" for membership dues) — `budget` is the amount, once a year: in
   the month of `start_date` and in that month every year after, up to and
   including `end_date` (Renews); no end date keeps renewing through the
-  current year. `mk_campaign_years()` lists the anniversaries (Financials
-  passes `started_only`, the card does not); `mk_camp_resolve()` treats it
+  current year. `mk_campaign_years()` lists the anniversaries, compared by
+  DAY (10/14/2026 to 10/13/2027 is one year; the first version compared
+  months and said two; Financials passes `started_only`, the card does not); `mk_camp_resolve()` treats it
   like `monthly_flat`, so a `marketing_campaign_months` row can still
   override one year, though the card shows no month grid for it. The item
   carries `recurring` so the Financials tab labels it ("yearly", by mode).
@@ -481,7 +482,7 @@ Three rules that came from the page getting unusable rather than from taste:
 Run the test first — it fails loudly rather than silently:
 
 ```bash
-php tests/test_campaign_billing.php     # 81 assertions
+php tests/test_campaign_billing.php     # 84 assertions
 ```
 
 It pulls `mk_campaign_months()`, `mk_weekday_days()` and `mk_camp_resolve()`

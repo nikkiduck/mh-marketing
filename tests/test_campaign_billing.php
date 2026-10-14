@@ -255,6 +255,10 @@ echo "\n── Yearly dues: annual (alter_campaign_billing_v4_annual.sql) ──
 $ty = date('Y'); $tm = date('m');
 ok('a one-year term bills once, in the join month',      mk_campaign_years('2026-07-01', '2027-06-30'), ['2026-07']);
 ok('a term ending on the anniversary bills that year too', mk_campaign_years('2026-07-01', '2027-07-01'), ['2026-07', '2027-07']);
+// Compared by DAY: Nikki's chamber, 10/14/2026 to 10/13/2027, is one year; the anniversary is a day late.
+ok('a term ending the day before the anniversary is ONE year', mk_campaign_years('2026-10-14', '2027-10-13'), ['2026-10']);
+ok('…and ending on the anniversary itself is two',           mk_campaign_years('2026-10-14', '2027-10-14'), ['2026-10', '2027-10']);
+ok('…ending later that month, still two',                    mk_campaign_years('2026-10-14', '2027-10-31'), ['2026-10', '2027-10']);
 ok('no end date keeps renewing through the current year', mk_campaign_years(($ty - 2) . '-03-01', null), [($ty - 2) . '-03', ($ty - 1) . '-03', $ty . '-03']);
 ok('…but only the anniversaries that have arrived',       mk_campaign_years(($ty - 1) . '-12-01', null, true), ($tm >= '12') ? [($ty - 1) . '-12', $ty . '-12'] : [($ty - 1) . '-12']);
 ok('a term that has not started shows nothing in Financials', mk_campaign_years(($ty + 1) . '-01-01', null, true), []);

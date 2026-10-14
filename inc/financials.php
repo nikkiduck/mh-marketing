@@ -124,25 +124,33 @@ function mk_campaign_months(?string $start, ?string $end, bool $started_only = f
 
 /**
  * Every YYYY-MM an `annual` placement bills in (membership dues, 2026-10-14):
- * the month of start_date and that same month every year after, up to and
- * including the month of end_date. No end date keeps renewing through the
- * current year. $started_only (Financials) leaves out an anniversary that
- * has not arrived; the card passes false to show the committed years.
- * End before start still yields the first year. Capped at 30.
+ * the month of start_date, and the month of each later anniversary of that
+ * DATE that falls on or before end_date. Compared by day, not by month: a
+ * term from 10/14/2026 to 10/13/2027 is one year, because the anniversary,
+ * 10/14/2027, is a day past the renewal date (the first version compared
+ * months and showed "2 years"; Nikki, 2026-10-14). No end date keeps
+ * renewing through today. $started_only (Financials) leaves out an
+ * anniversary that has not arrived; the card passes false to show the
+ * committed years. End before start still yields the first year. Capped
+ * at 30.
  */
 function mk_campaign_years(?string $start, ?string $end, bool $started_only = false): array {
     if (!$start) return [];
-    $cur  = substr($start, 0, 7);
-    $last = $end ? substr($end, 0, 7) : date('Y-m');
-    if ($started_only && $last > date('Y-m')) $last = date('Y-m');
-    if ($last < $cur) {
-        if ($started_only && $cur > date('Y-m')) return [];
-        $last = $cur;
+    $s = strtotime(substr($start, 0, 10));
+    if ($s === false) return [];
+    $today = strtotime(date('Y-m-d'));
+    $last  = $end ? strtotime(substr($end, 0, 10)) : $today;
+    if ($last === false) $last = $today;
+    if ($started_only && $last > $today) $last = $today;
+    if ($last < $s) {
+        if ($started_only && $s > $today) return [];
+        $last = $s;
     }
     $out = [];
-    while ($cur <= $last && count($out) < 30) {
-        $out[] = $cur;
-        $cur = date('Y-m', strtotime($cur . '-01 +12 months'));
+    for ($n = 0; $n < 30; $n++) {
+        $t = strtotime(date('Y-m-d', $s) . " +{$n} years");
+        if ($t === false || $t > $last) break;
+        $out[] = date('Y-m', $t);
     }
     return $out;
 }
