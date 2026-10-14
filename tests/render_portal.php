@@ -247,7 +247,8 @@ function scenario(array $over = []): array {
                 ['id' => 1,   'first_name' => 'Nikki', 'last_name' => 'Boxer', 'email' => 'nikki.boxer@monthaus.com', 'role' => 'super_admin', 'is_active' => 1, 'intake_id' => null],
             ],
             'intakes' => [
-                ['id' => 6,  'agent_name' => 'Jackson Horn', 'slug' => 'jackson-horn', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent', 'mh_email' => 'jackson.horn@monthaus.com', 'cell_phone' => '(970) 555-0100', 'web_status' => 'approved'],
+                ['id' => 6,  'agent_name' => 'Jackson Horn', 'slug' => 'jackson-horn', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent', 'mh_email' => 'jackson.horn@monthaus.com', 'cell_phone' => '(970) 555-0100', 'web_status' => 'approved',
+                 'email_forwarded' => 1, 'alt_email' => 'jackson.secret@gmail.com'],
                 ['id' => 7,  'agent_name' => 'Kimberlee Coates', 'slug' => 'kim-coates', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
                 ['id' => 8,  'agent_name' => 'Weber Boxer Group', 'slug' => '', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'team', 'initials' => 'WB'],
                 ['id' => 40, 'agent_name' => 'Sierrah Smith', 'slug' => 'sierrah-smith', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
@@ -412,6 +413,11 @@ req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'bad', 'action' => 'sav
 ok('a bad form token saves nothing', writes() === [] && mails() === [], json_encode(writes()));
 
 echo "\nMY PROFILE\n";
+[$c, , $b] = req('jackson', '/portal/profile.php');
+ok('a forwarded Mont Haus email says where it goes (Nikki, 2026-10-14); the service-areas hint no longer says one per line',
+   $c === 200 && has($b, 'Your Mont Haus email forwards to jackson.secret@gmail.com.') && !has($b, 'One area per line'), $b);
+[, , $b] = req('sierrah', '/portal/profile.php');
+ok('no forwarding, no note', !has($b, 'forwards to') && !has($b, 'jackson.secret'), $b);
 [$c, $loc] = req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'social',
     'social_instagram' => 'https://www.instagram.com/@jhorn/?hl=en', 'social_facebook' => 'www.facebook.com/monthaus/', 'social_linkedin' => 'https://www.linkedin.com/in/jackson-horn/',
     'social_tiktok' => '@jh', 'website_url' => 'jacksonhorn.com']);

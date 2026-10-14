@@ -152,6 +152,10 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
         <h2 class="pt-card-h"><?= ph($name) ?></h2>
         <?php if (trim((string)($me['agent_title'] ?? '')) !== ''): ?><p class="pt-card-sub"><?= ph(str_replace("\n", ' ', (string)$me['agent_title'])) ?></p><?php endif; ?>
         <p class="pt-card-sub"><?= ph($email_shown) ?><?= trim((string)($me['cell_phone'] ?? '')) !== '' ? ' · ' . ph(portal_phone($me['cell_phone'])) : '' ?></p>
+        <?php // The admin page's "Forwarded?" flag (marketing_intakes.email_forwarded, alt_email): say so here (Nikki, 2026-10-14).
+              if (!$is_team && !empty($me['email_forwarded'])): $alt = trim((string)($me['alt_email'] ?? '')); ?>
+          <p class="pt-card-sub pt-fwd" style="margin-top:4px"><?= $alt !== '' ? 'Your Mont Haus email forwards to ' . ph($alt) . '.' : 'Your Mont Haus email is forwarded to your other address.' ?></p>
+        <?php endif; ?>
         <?php if (trim((string)($me['slug'] ?? '')) !== '' && ($me['web_status'] ?? '') === 'approved'): ?>
           <p class="pt-card-sub" style="margin-top:6px"><a href="<?= ph(qr_profile_url((string)$me['slug'])) ?>" target="_blank" rel="noopener">View your page on monthaus.com ↗</a></p>
         <?php elseif (!$is_team): ?>
@@ -199,7 +203,7 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
   <!-- Service areas: editable, one per line -->
   <section class="pt-card pt-section" id="areas">
     <h2 class="pt-card-h">Service areas</h2>
-    <p class="pt-card-sub">Where you work, as it reads on your page on monthaus.com. One area per line.</p>
+    <p class="pt-card-sub">Where you work, as it reads on your page on monthaus.com.</p>
     <?= $flash_html($flash['areas']) ?>
     <form method="post" class="pt-form" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
       <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
