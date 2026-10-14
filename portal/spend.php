@@ -107,8 +107,8 @@ if ($month):
       $q = $sc['team'] ? ['team' => $sid] : [];
       if ($sc['team']): ?>
   <section class="pt-team" id="team-<?= $sid ?>">
-  <h2 class="pt-h2"><?= ph($sc['name']) ?></h2>
-  <p class="pt-lead">The team's marketing spend and what Mont Haus has covered. Every member of <?= ph($sc['name']) ?> sees the same figures.</p>
+  <h2 class="pt-h2"><?= ph($sc['short']) ?> Marketing Spend</h2>
+  <p class="pt-lead"><?= ph($sc['name']) ?>'s marketing spend and what Mont Haus has covered. Every member of the team sees the same figures.</p>
   <?php else: ?>
   <h1 class="pt-h1">Your marketing spend</h1>
   <p class="pt-lead">What you have spent on marketing and what Mont Haus has covered. Your bill comes from accounting separately and may include other items.</p>

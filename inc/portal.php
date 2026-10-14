@@ -224,12 +224,13 @@ function portal_context(mysqli $conn): array {
     // (advertising, print orders, spend, QR codes), seen by every member alike.
     $teams = [];
     if (($acct['entity_type'] ?? 'agent') !== 'team' && mk_table_exists($conn, 'team_members')) {
-        $st = $conn->prepare("SELECT t.id, t.agent_name FROM team_members tm JOIN marketing_intakes t ON t.id = tm.team_id
+        $st = $conn->prepare("SELECT t.id, t.agent_name, t.initials FROM team_members tm JOIN marketing_intakes t ON t.id = tm.team_id
                                WHERE tm.member_id = ? AND t.is_active = 1 AND t.status <> 'archived' ORDER BY t.agent_name, t.id");
         $mid = (int)$acct['id'];
         $st->bind_param('i', $mid);
         $st->execute();
-        foreach ($st->get_result()->fetch_all(MYSQLI_ASSOC) as $t) $teams[] = ['id' => (int)$t['id'], 'name' => (string)$t['agent_name']];
+        // 'short': the team's initials from its roster row ("WB"), else its name; headings read "WB Marketing Spend" (Nikki, 2026-10-14).
+        foreach ($st->get_result()->fetch_all(MYSQLI_ASSOC) as $t) $teams[] = ['id' => (int)$t['id'], 'name' => (string)$t['agent_name'], 'short' => trim((string)($t['initials'] ?? '')) ?: (string)$t['agent_name']];
         $st->close();
     }
 
@@ -249,8 +250,8 @@ function portal_context(mysqli $conn): array {
     // scopes: the accounts whose advertising, orders, spend and files this
     // portal shows, the person first, then each team. Every page scopes its
     // queries to these ids and nothing else.
-    $scopes = [['id' => (int)$acct['id'], 'name' => (string)$acct['agent_name'], 'team' => false]];
-    foreach ($teams as $t) $scopes[] = ['id' => $t['id'], 'name' => $t['name'], 'team' => true];
+    $scopes = [['id' => (int)$acct['id'], 'name' => (string)$acct['agent_name'], 'short' => '', 'team' => false]];
+    foreach ($teams as $t) $scopes[] = ['id' => $t['id'], 'name' => $t['name'], 'short' => $t['short'], 'team' => true];
 
     if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     return ['user' => $user, 'acct' => $acct, 'ids' => array_values(array_unique($ids)), 'preview' => $preview,

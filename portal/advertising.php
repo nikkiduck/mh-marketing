@@ -153,8 +153,8 @@ if ($want > 0 && !$one):
       $list = array_filter($campaigns, fn($c) => (int)$c['_scope']['id'] === $sid);
       if ($scope['team']): ?>
   <section class="pt-team" id="team-<?= $sid ?>">
-  <h2 class="pt-h2"><?= ph($scope['name']) ?></h2>
-  <p class="pt-lead">The team's ad placements, shared by every member of <?= ph($scope['name']) ?>.</p>
+  <h2 class="pt-h2"><?= ph($scope['short']) ?> Advertising</h2>
+  <p class="pt-lead"><?= ph($scope['name']) ?>'s ad placements, shared by every member of the team.</p>
   <?php else: ?>
   <h1 class="pt-h1">Your advertising</h1>
   <p class="pt-lead">Ad placements Mont Haus has run or is running for you with creative.</p>

@@ -144,8 +144,8 @@ if ($want > 0 && !$one):
       $list = array_filter($orders, fn($o) => (int)$o['_scope']['id'] === $sid);
       if ($scope['team']): ?>
   <section class="pt-team" id="team-<?= $sid ?>">
-  <h2 class="pt-h2"><?= ph($scope['name']) ?></h2>
-  <p class="pt-lead">The team's collateral, shared by every member of <?= ph($scope['name']) ?>.</p>
+  <h2 class="pt-h2"><?= ph($scope['short']) ?> Collateral</h2>
+  <p class="pt-lead"><?= ph($scope['name']) ?>'s collateral, shared by every member of the team.</p>
   <?php else: ?>
   <h1 class="pt-h1">Your collateral</h1>
   <p class="pt-lead">Business cards, signs, postcards and brochures Mont Haus has ordered for you.</p>

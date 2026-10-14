@@ -43,10 +43,11 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
     $ads = $n['ads']; $ord = $n['ord']; $fin = $n['fin']; $yr = $n['yr'];
     $q   = $scope['team'] ? ['team' => (int)$scope['id']] : [];
     $you = $scope['team'] ? 'The team has' : 'You have';
+    $pre = $scope['team'] ? $scope['short'] . ' ' : '';   // "WB Advertising", "WB Collateral", "WB Marketing Spend"
     $who = $scope['team'] ? 'the team has' : 'you\'ve';
     ?>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/advertising.php', $q)) ?>">
-      <h2 class="pt-card-h">Advertising</h2>
+      <h2 class="pt-card-h"><?= ph($pre) ?>Advertising</h2>
       <p class="pt-card-sub"><?php
         if ($ads['n'] === 0)       echo 'No ad placements yet.';
         elseif ($ads['now'] === 1) echo "{$you} 1 ad running now" . ($ads['n'] > 1 ? ', and ' . ($ads['n'] - 1) . ' more on record' : '') . '.';
@@ -56,7 +57,7 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
       <span class="pt-card-go">See advertising ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/orders.php', $q)) ?>">
-      <h2 class="pt-card-h">Collateral</h2>
+      <h2 class="pt-card-h"><?= ph($pre) ?>Collateral</h2>
       <p class="pt-card-sub"><?php
         if ($ord['n'] === 0)         echo 'No collateral yet.';
         elseif ($ord['moving'] === 1) echo "{$you} 1 order on the way" . ($ord['n'] > 1 ? ', and ' . ($ord['n'] - 1) . ' delivered' : '') . '.';
@@ -66,7 +67,7 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
       <span class="pt-card-go">See collateral ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/spend.php', $q)) ?>">
-      <h2 class="pt-card-h">Spend</h2>
+      <h2 class="pt-card-h"><?= $pre !== '' ? ph($pre) . 'Marketing Spend' : 'Spend' ?></h2>
       <p class="pt-card-sub"><?= $fin['months']
           ? "This year {$who} spent " . ph(portal_money($yr['broker'])) . ' and Mont Haus ' . ph(portal_money($yr['mh']))
             . ', for a total of ' . ph(portal_money($yr['broker'] + $yr['mh'])) . ' on marketing and advertising.'
@@ -108,6 +109,8 @@ portal_header($ctx, 'Home', 'home');
   <h2 class="pt-h2 pt-home-h">My Marketing</h2>
   <div class="pt-cards">
     <?php portal_home_cards($ctx, $ctx['scopes'][0], $own); ?>
+    <?php // A team's marketing sits here too, its cards prefixed with the team's initials (Nikki, 2026-10-14: a team is marketing, nothing more).
+          foreach ($ctx['teams'] as $t) portal_home_cards($ctx, portal_scope($ctx, $t['id']), portal_home_counts($conn, $t['id'])); ?>
   </div>
 
   <h2 class="pt-h2 pt-home-h">My Tools</h2>
@@ -136,13 +139,4 @@ portal_header($ctx, 'Home', 'home');
     </a>
   </div>
 
-  <?php foreach ($ctx['teams'] as $t): $scope = portal_scope($ctx, $t['id']); ?>
-  <section class="pt-team">
-    <h2 class="pt-h2"><?= ph($t['name']) ?></h2>
-    <p class="pt-lead">The team's shared advertising, print orders and spend. Every member of <?= ph($t['name']) ?> sees the same figures here.</p>
-    <div class="pt-cards">
-      <?php portal_home_cards($ctx, $scope, portal_home_counts($conn, $t['id'])); ?>
-    </div>
-  </section>
-  <?php endforeach; ?>
 <?php portal_footer();
