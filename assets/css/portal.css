@@ -20,7 +20,12 @@
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--paper); color: var(--text); font-family: var(--sans);
        font-size: 17px; line-height: 1.5; }
-a { color: var(--gold-deep); }
+/* Links: colour alone, underlined only on hover (Nikki, 2026-10-14). Buttons, the menus,
+   cards and list rows set their own look and stay plain on hover too. */
+a { color: var(--gold-deep); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.pt-btn:hover, .pt-nav-a:hover, .pt-sub a:hover, .pt-subnav a:hover, .pt-signout:hover,
+a.pt-card:hover, .pt-list-row:hover, .pt-back a:hover, .pt-fig > a:hover { text-decoration: none; }
 img { max-width: 100%; }
 
 /* ── Header ─────────────────────────────────────────────────────────────── */
