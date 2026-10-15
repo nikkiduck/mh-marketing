@@ -46,7 +46,7 @@ const SOCIAL_H = 1440;
 /**
  * The two Instagram sizes (Nikki, 2026-10-15; the size follows the template,
  * never a switch): a post, 1080 x 1440; a story,
- * 1080 x 1920 with a safe area of about 230 px at the top and 170 at the
+ * 1080 x 1920 with a safe area of about 190 px at the top and 170 at the
  * bottom that carries only the photo (Instagram's own chrome sits there), so
  * the label and words are inset by that much. A story carries no logo: a
  * large ghosted triangle mark bleeds off the lower right instead, like the
@@ -60,7 +60,7 @@ function social_format_height(string $format): int {
 }
 /** [top, bottom] insets in px. */
 function social_format_insets(string $format): array {
-    return $format === 'story' ? [230, 170] : [0, 0];
+    return $format === 'story' ? [190, 170] : [0, 0];
 }
 
 /**

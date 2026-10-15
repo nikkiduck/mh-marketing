@@ -2074,7 +2074,7 @@ words have the full width; a very long headline wraps, balanced. No agent headsh
 General and Open House (posts, 1080 x 1440) and Story (1080 x 1920; the
 size follows the template, never a switch; a Story Open House exists with
 `offered => false`: one Story, its lines free text, Nikki). A
-story keeps a photo-only safe area of 230 px at the top and 170 at the
+story keeps a photo-only safe area of 190 px at the top and 170 at the
 bottom (`social_template_format()`, `social_format_height()`,
 `social_format_insets()` in social_render.php), carries no logo top-right (an optional full logo above the rule instead,
 `story_logo`, on by default) and a WATERMARK lower right, the agent's pick
