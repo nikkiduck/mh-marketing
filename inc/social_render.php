@@ -44,10 +44,13 @@ const SOCIAL_W = 1080;
 const SOCIAL_H = 1440;
 
 /**
- * The two Instagram sizes (Nikki, 2026-10-15): a post, 1080 x 1440; a story,
- * 1080 x 1920 with a safe area of about 230 px at the top and 200 at the
+ * The two Instagram sizes (Nikki, 2026-10-15; the size follows the template,
+ * never a switch): a post, 1080 x 1440; a story,
+ * 1080 x 1920 with a safe area of about 230 px at the top and 170 at the
  * bottom that carries only the photo (Instagram's own chrome sits there), so
- * the label, logo and words are inset by that much.
+ * the label and words are inset by that much. A story carries no logo: a
+ * large ghosted triangle mark bleeds off the lower right instead, like the
+ * brochure cover, and the label pill sits upper right (Nikki, 2026-10-15).
  */
 function social_formats(): array {
     return ['post' => 'Post', 'story' => 'Story'];
@@ -57,7 +60,7 @@ function social_format_height(string $format): int {
 }
 /** [top, bottom] insets in px. */
 function social_format_insets(string $format): array {
-    return $format === 'story' ? [230, 200] : [0, 0];
+    return $format === 'story' ? [230, 170] : [0, 0];
 }
 
 /**
@@ -69,6 +72,8 @@ function social_templates(): array {
     return [
         'photo'           => ['name' => 'Listing General', 'blurb' => 'The photo fills the post; a headline and up to two lines over it.', 'offered' => true],
         'photo_openhouse' => ['name' => 'Open House',      'blurb' => 'The same, with the date and time above the headline.',             'offered' => true],
+        'story'           => ['name' => 'Story',           'blurb' => 'A 9:16 story: the photo fills it, a ghosted triangle lower right, the label upper right.', 'offered' => true],
+        'story_openhouse' => ['name' => 'Story Open House', 'blurb' => 'The story, with the date and time above the headline.', 'offered' => true],
         'featured'        => ['name' => 'Featured Listing',      'blurb' => 'Photo on top, a text block below: headline and up to four lines.', 'offered' => false],
         'openhouse'       => ['name' => 'Open House',            'blurb' => 'Photo on top; the date and time lead the text block.',            'offered' => false],
     ];
@@ -86,7 +91,12 @@ function social_is_openhouse(string $type): bool {
 
 /** True for the two full-photo templates. */
 function social_is_full(string $type): bool {
-    return str_starts_with($type, 'photo');
+    return str_starts_with($type, 'photo') || str_starts_with($type, 'story');
+}
+
+/** 'story' for the story templates (1080 x 1920), 'post' for the rest (1080 x 1440). */
+function social_template_format(string $type): string {
+    return str_starts_with($type, 'story') ? 'story' : 'post';
 }
 
 /** How many sub lines a template shows (the form hides the rest). */
@@ -121,8 +131,8 @@ function social_line_defaults(): array {
 }
 
 /** The photo's height for a template; the text block has the rest (the full-photo family: all of it). */
-function social_photo_height(string $type, string $format = 'post'): int {
-    if (social_is_full($type)) return social_format_height($format);
+function social_photo_height(string $type): int {
+    if (social_is_full($type)) return social_format_height(social_template_format($type));
     return social_is_openhouse($type) ? 900 : 960;
 }
 
@@ -200,9 +210,7 @@ function social_fit_size(string $text, int $size, array $steps): int {
 function social_render(array $p, ?string $base = null, bool $export = false): string {
     $base  = rtrim($base ?? (defined('SITE_URL') ? SITE_URL : ''), '/');
     $e     = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-    $format = isset(social_formats()[(string)($p['format'] ?? '')]) ? (string)$p['format'] : 'post';
-    $W = SOCIAL_W; $H = social_format_height($format);
-    [$top, $bot] = social_format_insets($format);   // the story's safe area: photo only
+    $W = SOCIAL_W;
 
     // Fonts: by URL for the preview; EMBEDDED for the export. The export page is
     // a local file and web fonts are the one resource a browser fetches under
@@ -222,7 +230,10 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $oh     = social_is_openhouse($type);
     $full   = social_is_full($type);
     $theme  = ($p['theme'] ?? 'dark') === 'light' ? 'light' : 'dark';
-    $photoH = social_photo_height($type, $format);
+    $format = social_template_format($type);   // the story templates are 1080 x 1920 with a photo-only safe area
+    $H = social_format_height($format);
+    [$top, $bot] = social_format_insets($format);
+    $photoH = social_photo_height($type);
     $bodyH  = $H - $photoH;
 
     // The photo frame: zoom 1 to 3, focus 0 to 100 on each axis (see the header).
@@ -261,6 +272,10 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // bottom fade's lighter twin, carries both the label and the logo instead.
         . ".photo::before{content:'';position:absolute;left:0;right:0;top:0;height:" . (320 + $top) . "px;z-index:1;background:linear-gradient(to bottom,{$c['topfade']})}"
         . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:132px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
+        . ($format === 'story'
+            ? ".pill{left:auto;right:64px}.body{z-index:2}"
+            . ".ghost{position:absolute;right:-90px;bottom:-150px;width:820px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
+            : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
@@ -338,6 +353,9 @@ CSS;
     // The full-photo family carries the logo at page level (top-right over the photo);
     // the split family keeps it inside the text block, bottom-right.
     $logoHtml = '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
+    if ($full && $format === 'story') {   // the story: a ghosted triangle lower right in place of the logo
+        $logoHtml = '<img class="ghost" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-black.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">';
+    }
     if (!$full) $body .= $logoHtml;
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'

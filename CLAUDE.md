@@ -2070,12 +2070,16 @@ Light, Italic Serif, Plain; a blank line takes no room), a label on the
 photo (solid gold pill; ready-made, none, or custom), the Mont Haus logo
 top-right on a soft top fade (2026-10-13; no drop shadow, Nikki), so the
 words have the full width; a very long headline wraps, balanced. No agent headshot or contact details
-(Nikki, 2026-10-12). Two sizes (Nikki, 2026-10-15): Post, 1080 x 1440, and
-Story, 1080 x 1920 with a safe area of 230 px at the top and 200 at the
-bottom that carries only the photo (`social_formats()`,
-`social_format_height()`, `social_format_insets()` in social_render.php;
-the label, logo, words and fades are inset by that much; the export window
-follows the format). Live preview, Download PNG (no Share button: tried and
+(Nikki, 2026-10-12). Four templates offered since 2026-10-15: Listing
+General and Open House (posts, 1080 x 1440) and Story and Story Open House
+(1080 x 1920; the size follows the template, never a switch: Nikki). A
+story keeps a photo-only safe area of 230 px at the top and 170 at the
+bottom (`social_template_format()`, `social_format_height()`,
+`social_format_insets()` in social_render.php), carries NO logo but a large
+ghosted triangle mark bleeding off the lower right
+(assets/images/triangle_mark-white.svg on dark, the black mark on light, at
+low opacity) and puts the label pill upper right; the export window follows
+the template. Live preview, Download PNG (no Share button: tried and
 removed 2026-10-12). Plan and
 mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
 - **One render path.** `social_render()` (inc/social_render.php, standalone)

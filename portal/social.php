@@ -72,11 +72,6 @@ portal_header($ctx, 'Social posts', 'social');
           <label class="sp-pillopt"><input type="radio" name="theme" value="<?= ph($k) ?>"<?= $k === 'dark' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
           <?php endforeach; ?>
         </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Size</span>
-          <label class="sp-pillopt"><input type="radio" name="format" value="post" checked><span>Post · 4:5</span></label>
-          <label class="sp-pillopt"><input type="radio" name="format" value="story"><span>Story · 9:16</span></label>
-        </div>
       </section>
 
       <section class="sp-step">
@@ -162,10 +157,9 @@ portal_header($ctx, 'Social posts', 'social');
 (function () {
   const L = <?= json_encode($listings, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
   const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>;
-  const PHOTO_H = <?= json_encode(['post' => array_map(fn($k) => social_photo_height($k, 'post'), array_combine(array_keys($templates), array_keys($templates))),
-                                   'story' => array_map(fn($k) => social_photo_height($k, 'story'), array_combine(array_keys($templates), array_keys($templates)))]) ?>;
-  const fmt = () => f('format').value, fmtH = () => fmt() === 'story' ? 1920 : 1440;
-  const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0;
+  const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
+  const fmt = () => (f('type').value.indexOf('story') === 0 ? 'story' : 'post'), fmtH = () => fmt() === 'story' ? 1920 : 1440;
+  const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0 || t.indexOf('story') === 0;
   const form = document.getElementById('spForm'), frame = document.getElementById('spFrame'),
         stage = document.getElementById('spStage'), photos = document.getElementById('spPhotos'),
         busy = document.getElementById('spBusy'),
@@ -189,7 +183,7 @@ portal_header($ctx, 'Social posts', 'social');
     form.querySelectorAll('.sp-only-openhouse').forEach(el => el.hidden = !isOH(t));
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = isFull(t));
     customWrap.hidden = labelSel.value !== '__custom';
-    framer.style.aspectRatio = '1080 / ' + PHOTO_H[fmt()][t];
+    framer.style.aspectRatio = '1080 / ' + PHOTO_H[t];
   }
   // The default label follows the template and the listing (a rental's is Featured
   // Rental, Nikki 2026-10-12) unless the agent chose something else.
@@ -306,8 +300,7 @@ portal_header($ctx, 'Social posts', 'social');
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'listing') { fill(listing()); labelForType(); loadPhotos(); return; }
-    if (n === 'type') { showGroups(); labelForType(); }
-    if (n === 'format') { showGroups(); scale(); }
+    if (n === 'type') { showGroups(); labelForType(); scale(); }
     if (n === 'label') showGroups();
     if (n === 'photo') framerSet(e.target.dataset.large);
     if (n === 'zoom') framerApply();

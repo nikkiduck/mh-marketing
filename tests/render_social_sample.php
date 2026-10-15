@@ -30,8 +30,8 @@ $posts = [
     'photo-openhouse' => $common + ['type' => 'photo_openhouse', 'label' => 'Open House'] + $when,
     'featured'        => $common + ['type' => 'featured', 'label' => 'Featured Listing', 'date_text' => '', 'time_text' => ''],
     'openhouse'       => $common + ['type' => 'openhouse', 'label' => 'Open House'] + $when,
-    'story'           => $common + ['type' => 'photo', 'format' => 'story', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
-    'story-openhouse' => $common + ['type' => 'photo_openhouse', 'format' => 'story', 'label' => 'Open House'] + $when,
+    'story'           => $common + ['type' => 'story', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
+    'story-openhouse' => $common + ['type' => 'story_openhouse', 'label' => 'Open House'] + $when,
 ];
 foreach ($posts as $k => $p) {
     foreach (['dark', 'light'] as $theme) {

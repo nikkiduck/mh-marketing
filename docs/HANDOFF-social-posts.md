@@ -144,12 +144,15 @@ at whatever size fits, the address and price larger. Templates in the menu
 is now a landing page (portal/templates.php) with the two tools, and each
 tool page switches to the other.
 
-## Story size (2026-10-15)
+## Story templates (2026-10-15)
 
-The Instagram tool has a Size switch beside Look: Post (1080 x 1440) or
-Story (1080 x 1920). Same templates, looks and controls; on a story the
-label, logo, words and both fades are inset by Instagram's chrome, about
-230 px at the top and 200 at the bottom, so those bands show only the photo
-(Nikki). `social_format_*()` in inc/social_render.php; the framing box, the
-preview frame and Chromium's window size follow the format; the file name
-gets "-story".
+Two more cards on the picker, Story and Story Open House (1080 x 1920): the
+size follows the template (a size switch was tried for an hour and dropped:
+"this is a totally different template", Nikki). Same looks and controls as
+the posts. The label, words and both fades are inset by Instagram's chrome,
+about 230 px at the top and 170 at the bottom, so those bands show only the
+photo; there is no logo: a large ghosted triangle mark bleeds off the lower
+right like the brochure cover, and the label pill sits upper right.
+`social_template_format()` and `social_format_*()` in inc/social_render.php;
+the framing box, the preview frame and Chromium's window size follow the
+template; the file name gets "-story".
