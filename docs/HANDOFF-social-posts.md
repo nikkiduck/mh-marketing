@@ -188,3 +188,9 @@ every line blank with no label. Open House is back on the story, with the
 date and time under the badge at upper right; on both sizes the date and
 time line is free text ("Today 11am-2pm"), built from the pickers until the
 agent types in it.
+
+Later on 2026-10-15: Other starts with the Mont Haus mountains photo
+(assets/images/social-placeholder.jpg, a selectable tile ahead of the
+uploads), "Alpine Roots. Global Vision." and "Mont Haus International
+Realty"; the story's date and time line is bold in the text colour with a
+soft radial shade behind that corner rather than a text shadow.

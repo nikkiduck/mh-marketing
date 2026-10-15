@@ -2088,11 +2088,14 @@ none; and puts the label pill upper right. **Pick Template since later on
 (Listing / Open House / Other) in place of cards; the JS composes the type
 key (photo, photo_openhouse, photo_other, story, story_openhouse,
 story_other; `social_template_kind()`). Other = no listing, the agent's
-uploads only (social_photos.php?listing=__none), every line blank, no
-label by default. Open House: the date and time line is free text
+uploads only (social_photos.php?listing=__none) plus the Mont Haus
+mountains placeholder (assets/images/social-placeholder.jpg, chosen until
+an upload is), headline "Alpine Roots. Global Vision." and Text 1 "Mont
+Haus International Realty" to start, no label by default. Open House: the date and time line is free text
 (`oh_when`, "Today 11am-2pm"), built from the pickers until the agent
-types in it; on a story it sits under the badge, upper right, 34 px
-(`.whentop`). The page is "Instagram Templates" and the Templates landing
+types in it; on a story it sits under the badge, upper right, 34 px bold in the text
+colour over a soft radial shade in that corner (`.whentop`,
+`.cornershade`; no text shadow, Nikki). The page is "Instagram Templates" and the Templates landing
 card "Instagram Post/Story"; git tag `templates-v1-20261015` is the
 version before this change, kept at Nikki's request; the export window follows
 the template. Live preview, Download PNG (no Share button: tried and

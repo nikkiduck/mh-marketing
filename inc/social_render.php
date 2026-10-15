@@ -264,11 +264,11 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // MH_vert-stack_brown.svg is the black file with its fill changed), and a fade that
         // starts higher and lands almost solid cream, because the words were hard to read.
         ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31',
-           'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none', 'topfade' => 'rgba(241,236,226,.62) 0%, rgba(241,236,226,0) 100%',
+           'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none', 'corner' => 'rgba(241,236,226,.62)', 'topfade' => 'rgba(241,236,226,.62) 0%, rgba(241,236,226,0) 100%',
            'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.72) 38%, rgba(241,236,226,.94) 62%, rgba(241,236,226,1) 100%', 'fullfrac' => 0.56,
            'logo' => $base . '/assets/images/MH_vert-stack_brown.svg', 'mark' => $base . '/assets/images/M-mark_brown.svg']
         : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da',
-           'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(12,11,9,.5) 0%, rgba(12,11,9,0) 100%',
+           'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'corner' => 'rgba(12,11,9,.5)', 'topfade' => 'rgba(12,11,9,.5) 0%, rgba(12,11,9,0) 100%',
            'fullfade' => 'rgba(0,0,0,0) 0%, rgba(12,11,9,.86) 100%', 'fullfrac' => 0.58,
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
 
@@ -289,7 +289,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
         . ".ghost.m{right:0;width:745px}"
         . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:140px;margin:0 0 32px}"
-            . ".whentop{position:absolute;right:64px;top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;text-align:right;font-size:34px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:{$c['text']};line-height:1.35;text-shadow:{$c['shadow']}}" : '')
+            . ".whentop{position:absolute;right:64px;top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;text-align:right;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
+            . ".cornershade{position:absolute;right:0;top:0;width:820px;height:" . (64 + $top + 92 + 330) . "px;z-index:1;background:radial-gradient(ellipse 100% 100% at 100% 0%,{$c['corner']} 0%,{$c['corner']} 35%,transparent 72%)}" : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
@@ -345,7 +346,7 @@ CSS;
             $when = trim((string)($p['when_text'] ?? ''));
             if ($when === '') $when = implode('  ·  ', array_filter([$date, $time], fn($s) => $s !== ''));
             // On a story the pickers' date and time go on two lines under the badge; the agent's own words wrap as they fall.
-            if ($when !== '' && $format === 'story') $whenTop = '<p class="whentop">' . (trim((string)($p['when_text'] ?? '')) === '' ? implode('<br>', array_map($e, array_filter([$date, $time], fn($x) => $x !== ''))) : $e($when)) . '</p>';
+            if ($when !== '' && $format === 'story') $whenTop = '<div class="cornershade"></div><p class="whentop">' . (trim((string)($p['when_text'] ?? '')) === '' ? implode('<br>', array_map($e, array_filter([$date, $time], fn($x) => $x !== ''))) : $e($when)) . '</p>';
             elseif ($when !== '') $body .= '<p class="whenline">' . $e($when) . '</p>';
         } else {
             if ($date !== '') $body .= '<h1 class="when" style="font-size:' . social_fit_size($date, 66, [24 => 56, 30 => 48]) . 'px">' . $e($date) . '</h1>';

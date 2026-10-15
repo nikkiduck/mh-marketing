@@ -175,6 +175,7 @@ portal_header($ctx, 'Social posts', 'social');
   const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
   const fmt = () => (f('type').value.indexOf('story') === 0 ? 'story' : 'post'), fmtH = () => fmt() === 'story' ? 1920 : 1440;
   const kind = () => f('kind').value, isOther = () => kind() === 'other';
+  const PLACEHOLDER = { id: 'placeholder', thumb: '/assets/images/social-placeholder.jpg', large: '/assets/images/social-placeholder.jpg', own: false };
   // The template key: size + kind (photo = a post).
   function setType() {
     const base = f('size').value === 'story' ? 'story' : 'photo';
@@ -207,7 +208,11 @@ portal_header($ctx, 'Social posts', 'social');
 
   // ── Words pre-filled from the listing (the first three sub lines; the fourth is the agent's) ──
   function fill(l) {
-    if (isOther()) { f('headline').value = ''; [0, 1, 2, 3].forEach(i => lineText(i).value = ''); return; }   // Other: every line is the agent's
+    if (isOther()) {   // Other: Mont Haus words to start, every line the agent's (Nikki, 2026-10-15)
+      f('headline').value = 'Alpine Roots. Global Vision.';
+      lineText(0).value = 'Mont Haus International Realty'; [1, 2, 3].forEach(i => lineText(i).value = '');
+      return;
+    }
     if (!l) return;
     f('headline').value = l.headline;
     lineText(0).value = l.town; lineText(1).value = l.price_text; lineText(2).value = l.specs_text;
@@ -265,8 +270,9 @@ portal_header($ctx, 'Social posts', 'social');
     const u = new URL(PHOTOS, location.origin); u.searchParams.set('listing', isOther() ? '__none' : l.id);
     let j = { photos: [] };
     try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
+    if (isOther()) j.photos = [PLACEHOLDER].concat(j.photos || []);   // the Mont Haus mountains first, selectable
     if (!j.photos || !j.photos.length) {
-      photos.innerHTML = '<div class="sp-wait">' + (isOther() ? 'Upload a photo below to start.' : 'This listing has no photos in the feed yet. Add your own below.') + '</div>';
+      photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Add your own below.</div>';
       framerSet(''); update(); return;
     }
     photos.innerHTML = j.photos.map((p, i) => photoTile(p, i === 0)).join('');

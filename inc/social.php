@@ -327,7 +327,10 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         if (!in_array($photo, $allowed, true)) $photo = (string)$l['primary_photo'];
         $photo_url = $photo !== '' ? social_img($photo, 1600) : '';
     } else {
-        $photo = '';   // Other without an upload yet: the placeholder mark
+        // Other: the Mont Haus mountains placeholder (assets/images/social-placeholder.jpg) until an upload is picked.
+        $photo = 'placeholder';
+        $photo_file = realpath(__DIR__ . '/../assets/images/social-placeholder.jpg') ?: null;
+        $photo_url  = rtrim(SITE_URL, '/') . '/assets/images/social-placeholder.jpg';
     }
 
     // The label on the photo: a ready-made one, none, or the agent's own words.
@@ -343,7 +346,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     // pre-filled words, and reading them promoted "5 Bed · 8 Bath" into view the
     // moment the price was cleared (Nikki, 2026-10-12).
     $styles = social_line_styles(); $defaults = social_line_defaults();
-    $texts = (array)($in['line_text'] ?? []); $kinds = (array)($in['line_style'] ?? []);
+    $texts = (array)($in['line_text'] ?? ($kind === 'other' ? ['Mont Haus International Realty'] : [])); $kinds = (array)($in['line_style'] ?? []);
     $lines = [];
     for ($i = 0; $i < social_line_count($type); $i++) {
         $s = (string)($kinds[$i] ?? $defaults[$i]);
@@ -364,7 +367,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'zoom'       => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
         'focus_x'    => max(0, min(100, (int)($in['focus_x'] ?? 50))),
         'focus_y'    => max(0, min(100, (int)($in['focus_y'] ?? 50))),
-        'headline'   => mb_substr(trim((string)($in['headline'] ?? ($l['headline'] ?? ''))), 0, 80),
+        'headline'   => mb_substr(trim((string)($in['headline'] ?? ($l['headline'] ?? ($kind === 'other' ? 'Alpine Roots. Global Vision.' : '')))), 0, 80),
         'lines'      => $lines,
         'date_text'  => '',
         'time_text'  => '',
