@@ -1577,6 +1577,31 @@ row, that wrapped button rows share one left edge, that nothing exceeds the
 viewport width. Reasoning about flex-wrap is not the same as seeing where it
 wrapped.
 
+### Phone pass, 2026-10-15 (portal and admin pages)
+
+Every portal page and the Users, Billing and Split-an-Invoice admin pages
+were walked at 375px from rendered snapshots (`PORTAL_SNAPSHOTS=<dir> php
+tests/render_portal.php`, served locally with python's http.server beside a
+copy of `assets/`). The portal was already phone first; two fixes went in:
+the Menu button's three bars are a grid (as a flex row they sat side by
+side, three dashes), and a `.pt-subnav` row that runs past the edge fades
+out on the right under 720px so it reads as scrollable. The Instagram tool's
+option rows (`.sp-look`) wrap and each pill keeps one line ("M mark" and
+"Upper right" broke mid-word). The Users and Split-an-Invoice tables scroll
+inside their wrapper on a phone (min-width), which is the intended
+behaviour. Not walked: index.php, agent.php (no harness; their measured
+pass above stands), the live Instagram and Flyer tools (sign-in needed;
+their form markup was checked against the real stylesheets instead).
+
+**Running the stub harnesses on the Mac (2026-10-15).** Homebrew's PHP
+compiles mysqli in, so the stub `class mysqli` cannot load there. A scratch
+copy of `tests/ portal/ inc/` with the stub class renamed (`class mysqli` to
+`class mh_mysqli`, `new mysqli(` likewise, every `mysqli $conn` type hint to
+`mh_mysqli $conn`, the `php -n -m` check removed, and the two MYSQLI_*
+constants guarded with `defined()`) runs all four harnesses locally with the
+same results. Only the scratch copy is patched; the repo's harnesses stay as
+they are for the servers.
+
 ## The one agent roster (Anyprop, feed to monthaus.com)
 
 `docs/AGENT_ROSTER_PLAN.md` is the plan and the runbook. The short version:
