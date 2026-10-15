@@ -146,13 +146,15 @@ tool page switches to the other.
 
 ## Story templates (2026-10-15)
 
-Two more cards on the picker, Story and Story Open House (1080 x 1920): the
-size follows the template (a size switch was tried for an hour and dropped:
+One more card on the picker, Story (1080 x 1920; a Story Open House is
+built but not offered, Nikki: one Story, its lines free text): the size
+follows the template (a size switch was tried for an hour and dropped:
 "this is a totally different template", Nikki). Same looks and controls as
 the posts. The label, words and both fades are inset by Instagram's chrome,
 about 230 px at the top and 170 at the bottom, so those bands show only the
-photo; there is no logo: a large ghosted triangle mark bleeds off the lower
-right like the brochure cover, and the label pill sits upper right.
+photo; there is no logo: a large ghosted triangle mark (970 px wide, base on the
+bottom edge, right corner at x = 1300) bleeds off the lower right like the
+brochure cover, and the label pill sits upper right.
 `social_template_format()` and `social_format_*()` in inc/social_render.php;
 the framing box, the preview frame and Chromium's window size follow the
 template; the file name gets "-story".

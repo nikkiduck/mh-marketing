@@ -2070,14 +2070,15 @@ Light, Italic Serif, Plain; a blank line takes no room), a label on the
 photo (solid gold pill; ready-made, none, or custom), the Mont Haus logo
 top-right on a soft top fade (2026-10-13; no drop shadow, Nikki), so the
 words have the full width; a very long headline wraps, balanced. No agent headshot or contact details
-(Nikki, 2026-10-12). Four templates offered since 2026-10-15: Listing
-General and Open House (posts, 1080 x 1440) and Story and Story Open House
-(1080 x 1920; the size follows the template, never a switch: Nikki). A
+(Nikki, 2026-10-12). Three templates offered since 2026-10-15: Listing
+General and Open House (posts, 1080 x 1440) and Story (1080 x 1920; the
+size follows the template, never a switch; a Story Open House exists with
+`offered => false`: one Story, its lines free text, Nikki). A
 story keeps a photo-only safe area of 230 px at the top and 170 at the
 bottom (`social_template_format()`, `social_format_height()`,
 `social_format_insets()` in social_render.php), carries NO logo but a large
-ghosted triangle mark bleeding off the lower right
-(assets/images/triangle_mark-white.svg on dark, the black mark on light, at
+ghosted triangle mark bleeding off the lower right (970 px wide, its
+base on the bottom edge, right corner at x = 1300; assets/images/triangle_mark-white.svg on dark, the black mark on light, at
 low opacity) and puts the label pill upper right; the export window follows
 the template. Live preview, Download PNG (no Share button: tried and
 removed 2026-10-12). Plan and
