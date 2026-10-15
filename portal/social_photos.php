@@ -14,6 +14,12 @@ social_gate();
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
+if ((string)($_GET['listing'] ?? '') === '__none') {   // the Other kind: the agent's uploads only (2026-10-15)
+    $out = [];
+    foreach (social_uploads($ctx) as $id) $out[] = ['id' => 'upload:' . $id, 'thumb' => social_upload_url($ctx, $id, 400), 'large' => social_upload_url($ctx, $id, 1600), 'own' => true];
+    echo json_encode(['listing' => '', 'count' => count($out), 'headline' => '', 'photos' => $out], JSON_UNESCAPED_SLASHES);
+    exit;
+}
 $l = social_listing($conn, $ctx, (string)($_GET['listing'] ?? ''));
 if (!$l) { http_response_code(404); echo json_encode(['error' => 'not one of your listings']); exit; }
 

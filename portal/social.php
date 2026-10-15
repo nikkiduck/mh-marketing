@@ -58,14 +58,19 @@ portal_header($ctx, 'Social posts', 'social');
 
       <section class="sp-step">
         <h2 class="sp-step-h"><span>1</span>Pick Template</h2>
-        <div class="sp-choices">
-          <?php foreach ($templates as $k => $t): ?>
-          <label class="sp-choice">
-            <input type="radio" name="type" value="<?= ph($k) ?>"<?= $k === array_key_first($templates) ? ' checked' : '' ?>>
-            <span class="sp-choice-in"><b><?= ph($t['name']) ?></b><small><?= ph($t['blurb']) ?></small></span>
-          </label>
-          <?php endforeach; ?>
+        <input type="hidden" name="type" value="photo">
+        <div class="sp-look">
+          <span class="sp-look-l">Size</span>
+          <label class="sp-pillopt"><input type="radio" name="size" value="post" checked><span>Post · 4:5</span></label>
+          <label class="sp-pillopt"><input type="radio" name="size" value="story"><span>Story · 9:16</span></label>
         </div>
+        <label class="sp-field sp-kind">Template
+          <select name="kind">
+            <option value="listing">Listing</option>
+            <option value="openhouse">Open House</option>
+            <option value="other">Other / General</option>
+          </select>
+        </label>
         <div class="sp-look">
           <span class="sp-look-l">Look</span>
           <?php foreach ($themes as $k => $t): ?>
@@ -83,7 +88,7 @@ portal_header($ctx, 'Social posts', 'social');
         </div>
       </section>
 
-      <section class="sp-step">
+      <section class="sp-step sp-only-listing">
         <h2 class="sp-step-h"><span>2</span>Listing</h2>
         <label class="sp-field">Which listing
           <select name="listing">
@@ -105,7 +110,7 @@ portal_header($ctx, 'Social posts', 'social');
         <h2 class="sp-step-h"><span>3</span>Photo</h2>
         <div class="sp-photos" id="spPhotos"><div class="sp-wait">Loading photos…</div></div>
         <div class="sp-drop" id="spDrop">
-          <span id="spDropMsg">Or use your own: drop a photo here, or <label class="sp-link" for="spFile">choose one</label>.</span>
+          <span id="spDropMsg" data-listing="Or use your own: drop a photo here, or <label class=&quot;sp-link&quot; for=&quot;spFile&quot;>choose one</label>." data-other="Upload your own photo: drop it here, or <label class=&quot;sp-link&quot; for=&quot;spFile&quot;>choose one</label>.">Or use your own: drop a photo here, or <label class="sp-link" for="spFile">choose one</label>.</span>
           <small>JPG, PNG or WEBP, up to 20 MB.</small>
           <input type="file" id="spFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
         </div>
@@ -134,6 +139,7 @@ portal_header($ctx, 'Social posts', 'social');
             <label class="sp-field">From <input type="time" name="oh_start" value="11:00" step="900"></label>
             <label class="sp-field">To <input type="time" name="oh_end" value="14:00" step="900"></label>
           </div>
+          <label class="sp-field sp-only-openhouse" hidden>Date and time, as it will read <input name="oh_when" maxlength="60" placeholder="Today 11am-2pm"></label>
           <label class="sp-field">Headline <input name="headline" maxlength="80"></label>
           <?php foreach ($line_names as $i => $nm): ?>
           <div class="sp-line<?= $i >= 2 ? ' sp-only-long' : '' ?>">
@@ -168,6 +174,24 @@ portal_header($ctx, 'Social posts', 'social');
   const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>;
   const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
   const fmt = () => (f('type').value.indexOf('story') === 0 ? 'story' : 'post'), fmtH = () => fmt() === 'story' ? 1920 : 1440;
+  const kind = () => f('kind').value, isOther = () => kind() === 'other';
+  // The template key: size + kind (photo = a post).
+  function setType() {
+    const base = f('size').value === 'story' ? 'story' : 'photo';
+    f('type').value = base + (kind() === 'listing' ? '' : '_' + kind());
+  }
+  // The date and time line, built from the pickers until the agent types their own ("Today 11am-2pm").
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  function tText(hm) { if (!/^\d{2}:\d{2}$/.test(hm)) return ''; const h = +hm.slice(0, 2), m = hm.slice(3); const h12 = ((h + 11) % 12) + 1, ap = h < 12 ? 'AM' : 'PM'; return m === '00' ? h12 + ' ' + ap : h12 + ':' + m + ' ' + ap; }
+  function whenFromPickers() {
+    const d = f('oh_date').value, parts = [];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) { const dt = new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)); parts.push(DAYS[dt.getDay()] + ', ' + MONTHS[dt.getMonth()] + ' ' + dt.getDate()); }
+    const s = tText(f('oh_start').value), e = tText(f('oh_end').value);
+    if (s && e) parts.push(s + ' to ' + e); else if (s) parts.push('From ' + s);
+    return parts.join('  ·  ');
+  }
+  function syncWhen() { if (!f('oh_when').dataset.touched) f('oh_when').value = whenFromPickers(); }
   const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0 || t.indexOf('story') === 0;
   const form = document.getElementById('spForm'), frame = document.getElementById('spFrame'),
         stage = document.getElementById('spStage'), photos = document.getElementById('spPhotos'),
@@ -183,6 +207,7 @@ portal_header($ctx, 'Social posts', 'social');
 
   // ── Words pre-filled from the listing (the first three sub lines; the fourth is the agent's) ──
   function fill(l) {
+    if (isOther()) { f('headline').value = ''; [0, 1, 2, 3].forEach(i => lineText(i).value = ''); return; }   // Other: every line is the agent's
     if (!l) return;
     f('headline').value = l.headline;
     lineText(0).value = l.town; lineText(1).value = l.price_text; lineText(2).value = l.specs_text;
@@ -190,6 +215,8 @@ portal_header($ctx, 'Social posts', 'social');
   function showGroups() {
     const t = f('type').value;
     form.querySelectorAll('.sp-only-openhouse').forEach(el => el.hidden = !isOH(t));
+    form.querySelectorAll('.sp-only-listing').forEach(el => el.hidden = isOther());
+    dropMsg.innerHTML = isOther() ? dropMsg.dataset.other : dropMsg.dataset.listing;
     form.querySelectorAll('.sp-only-story').forEach(el => el.hidden = t.indexOf('story') !== 0);
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = isFull(t));
     customWrap.hidden = labelSel.value !== '__custom';
@@ -197,9 +224,10 @@ portal_header($ctx, 'Social posts', 'social');
   }
   // The default label follows the template and the listing (a rental's is Featured
   // Rental, Nikki 2026-10-12) unless the agent chose something else.
-  const DEFAULT_LABELS = ['Featured Listing', 'Featured Rental', 'Open House'];
+  const DEFAULT_LABELS = ['Featured Listing', 'Featured Rental', 'Open House', '__none'];
   function defaultLabel() {
     if (isOH(f('type').value)) return 'Open House';
+    if (isOther()) return '__none';
     const l = listing();
     return (l && +l.is_rental) ? 'Featured Rental' : 'Featured Listing';
   }
@@ -232,13 +260,13 @@ portal_header($ctx, 'Social posts', 'social');
            (checked ? ' checked' : '') + '><img src="' + esc(p.thumb) + '" alt="" loading="lazy">' + (p.own ? '<i>Yours</i>' : '') + '</label>';
   }
   async function loadPhotos() {
-    const l = listing(); if (!l) return;
+    const l = listing(); if (!l && !isOther()) return;
     photos.innerHTML = '<div class="sp-wait">Loading photos…</div>';
-    const u = new URL(PHOTOS, location.origin); u.searchParams.set('listing', l.id);
+    const u = new URL(PHOTOS, location.origin); u.searchParams.set('listing', isOther() ? '__none' : l.id);
     let j = { photos: [] };
     try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
     if (!j.photos || !j.photos.length) {
-      photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Add your own below.</div>';
+      photos.innerHTML = '<div class="sp-wait">' + (isOther() ? 'Upload a photo below to start.' : 'This listing has no photos in the feed yet. Add your own below.') + '</div>';
       framerSet(''); update(); return;
     }
     photos.innerHTML = j.photos.map((p, i) => photoTile(p, i === 0)).join('');
@@ -310,7 +338,10 @@ portal_header($ctx, 'Social posts', 'social');
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'listing') { fill(listing()); labelForType(); loadPhotos(); return; }
-    if (n === 'type') { showGroups(); labelForType(); scale(); }
+    if (n === 'size') { setType(); showGroups(); scale(); }
+    if (n === 'kind') { setType(); showGroups(); labelForType(); fill(listing()); scale(); loadPhotos(); return; }
+    if (n === 'oh_when') f('oh_when').dataset.touched = '1';
+    if (n === 'oh_date' || n === 'oh_start' || n === 'oh_end') syncWhen();
     if (n === 'label') showGroups();
     if (n === 'photo') framerSet(e.target.dataset.large);
     if (n === 'zoom') framerApply();
@@ -322,7 +353,9 @@ portal_header($ctx, 'Social posts', 'social');
   form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), 10000); });
 
   new ResizeObserver(scale).observe(stage); scale();
+  setType();
   showGroups();
+  syncWhen();
   fill(listing());
   labelForType();
   loadPhotos();

@@ -2083,9 +2083,18 @@ bottom (`social_template_format()`, `social_format_height()`,
 triangle_mark-black.svg has air around the shape and floated) bleeding off the edge (970 px wide, its
 base on the bottom edge, right corner at x = 1300; assets/images/triangle_mark-white.svg on dark, the black mark on light, at
 low opacity), the M mark flush to the corner (745 px, never cut off), or
-none; and puts the label pill upper right. Picker names since 2026-10-15:
-Post: Listing, Post: Open House, Story; the page is "Instagram Templates"
-and the Templates landing card "Instagram Post/Story"; the export window follows
+none; and puts the label pill upper right. **Pick Template since later on
+2026-10-15 (Nikki):** a Size switch (Post / Story) and a Template dropdown
+(Listing / Open House / Other) in place of cards; the JS composes the type
+key (photo, photo_openhouse, photo_other, story, story_openhouse,
+story_other; `social_template_kind()`). Other = no listing, the agent's
+uploads only (social_photos.php?listing=__none), every line blank, no
+label by default. Open House: the date and time line is free text
+(`oh_when`, "Today 11am-2pm"), built from the pickers until the agent
+types in it; on a story it sits under the badge, upper right, 34 px
+(`.whentop`). The page is "Instagram Templates" and the Templates landing
+card "Instagram Post/Story"; git tag `templates-v1-20261015` is the
+version before this change, kept at Nikki's request; the export window follows
 the template. Live preview, Download PNG (no Share button: tried and
 removed 2026-10-12). Plan and
 mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:

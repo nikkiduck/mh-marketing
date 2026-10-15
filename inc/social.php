@@ -311,8 +311,9 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     $format = social_template_format($type);   // the story templates are 1080 x 1920
     $mark  = isset(social_marks()[(string)($in['mark'] ?? '')]) ? (string)$in['mark'] : 'triangle';   // the story's watermark
 
-    $l = social_listing($conn, $ctx, (string)($in['listing'] ?? ''));
-    if (!$l) return 'Choose one of your listings to see your post.';
+    $kind = social_template_kind($type);
+    $l = $kind === 'other' ? null : social_listing($conn, $ctx, (string)($in['listing'] ?? ''));   // Other: no listing, the agent's own photo and words
+    if ($kind !== 'other' && !$l) return 'Choose one of your listings to see your post.';
 
     // The photo: an upload of this account's, or a board photo the site listed for this listing.
     $photo = (string)($in['photo'] ?? '');
@@ -320,11 +321,13 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     if (str_starts_with($photo, 'upload:') && ($f = social_upload_file($ctx, substr($photo, 7)))) {
         $photo_url  = social_upload_url($ctx, substr($photo, 7), 1600);
         $photo_file = $f;
-    } else {
+    } elseif ($l) {
         $allowed = (array)($_SESSION['social_photos'][$l['id']] ?? []);
         if ((string)$l['primary_photo'] !== '') $allowed[] = (string)$l['primary_photo'];
         if (!in_array($photo, $allowed, true)) $photo = (string)$l['primary_photo'];
         $photo_url = $photo !== '' ? social_img($photo, 1600) : '';
+    } else {
+        $photo = '';   // Other without an upload yet: the placeholder mark
     }
 
     // The label on the photo: a ready-made one, none, or the agent's own words.
@@ -332,7 +335,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     if ($pick === '__custom')                       $label = mb_substr(trim((string)($in['label_custom'] ?? '')), 0, 28);
     elseif ($pick === '__none')                     $label = '';
     elseif (in_array($pick, social_labels(), true)) $label = $pick;
-    else                                            $label = social_is_openhouse($type) ? 'Open House' : 'Featured Listing';
+    else                                            $label = $kind === 'openhouse' ? 'Open House' : ($kind === 'other' ? '' : 'Featured Listing');
 
     // The template's line SLOTS (two on Full Photo, four on the split family), each
     // with a style; a blank slot is dropped by the renderer. Only the slots the
@@ -361,15 +364,19 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'zoom'       => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
         'focus_x'    => max(0, min(100, (int)($in['focus_x'] ?? 50))),
         'focus_y'    => max(0, min(100, (int)($in['focus_y'] ?? 50))),
-        'headline'   => mb_substr(trim((string)($in['headline'] ?? $l['headline'])), 0, 80),
+        'headline'   => mb_substr(trim((string)($in['headline'] ?? ($l['headline'] ?? ''))), 0, 80),
         'lines'      => $lines,
         'date_text'  => '',
         'time_text'  => '',
+        'when_text'  => '',
     ];
-    if (social_is_openhouse($type)) {
+    if ($kind === 'openhouse') {
+        // The date and time line is the agent's own words when they typed any ("Today 11am-2pm",
+        // Nikki 2026-10-15), else built from the date and time pickers.
         $p['date_text'] = social_date_text((string)($in['oh_date'] ?? ''));
         $p['time_text'] = social_time_range_text((string)($in['oh_start'] ?? ''), (string)($in['oh_end'] ?? ''));
-        if ($p['date_text'] === '') return 'Pick the open house date to see your post.';
+        $p['when_text'] = mb_substr(trim((string)($in['oh_when'] ?? '')), 0, 60);
+        if ($p['when_text'] === '' && $p['date_text'] === '') return 'Type or pick the open house date and time to see your post.';
     }
     return $p;
 }

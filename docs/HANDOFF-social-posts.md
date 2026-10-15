@@ -175,3 +175,16 @@ Also 2026-10-15 (Nikki): the watermark choice applies to the posts as well
 may carry the full logo above the rule (a checkbox, on by default); the
 light-look triangle uses a tight-canvas SVG (triangle_mark-dark.svg) so it
 sits on the edge like the white one.
+
+## Pick Template simplified (2026-10-15, evening)
+
+Tag `templates-v1-20261015` holds the version before this (Nikki: "save this
+spot"). Step 1 is now a Size switch (Post 4:5 / Story 9:16) and a Template
+dropdown (Listing / Open House / Other / General) in place of the cards; the
+look, watermark and story-logo choices follow. Listing and Open House work
+as before (listing dropdown, its photos and uploads, pre-filled words).
+Other hides the listing step, offers only the agent's uploads and leaves
+every line blank with no label. Open House is back on the story, with the
+date and time under the badge at upper right; on both sizes the date and
+time line is free text ("Today 11am-2pm"), built from the pickers until the
+agent types in it.

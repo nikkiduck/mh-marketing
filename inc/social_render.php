@@ -73,7 +73,9 @@ function social_templates(): array {
         'photo'           => ['name' => 'Post: Listing',    'blurb' => 'The photo fills the post; a headline and up to two lines over it.', 'offered' => true],
         'photo_openhouse' => ['name' => 'Post: Open House', 'blurb' => 'The same, with the date and time above the headline.',             'offered' => true],
         'story'           => ['name' => 'Story',            'blurb' => 'A 9:16 story: the photo fills it, a watermark lower right, the label upper right.', 'offered' => true],
-        'story_openhouse' => ['name' => 'Story Open House', 'blurb' => 'The story, with the date and time above the headline.', 'offered' => false],   // not offered (Nikki, 2026-10-15: one Story, the lines are free text)
+        'story_openhouse' => ['name' => 'Story: Open House', 'blurb' => 'The story, with the date and time under the badge.', 'offered' => true],
+        'photo_other'     => ['name' => 'Post: Other',      'blurb' => 'A post from your own photo; every line is yours.', 'offered' => true],
+        'story_other'     => ['name' => 'Story: Other',     'blurb' => 'A story from your own photo; every line is yours.', 'offered' => true],
         'featured'        => ['name' => 'Featured Listing',      'blurb' => 'Photo on top, a text block below: headline and up to four lines.', 'offered' => false],
         'openhouse'       => ['name' => 'Open House',            'blurb' => 'Photo on top; the date and time lead the text block.',            'offered' => false],
     ];
@@ -92,6 +94,12 @@ function social_is_openhouse(string $type): bool {
 /** True for the two full-photo templates. */
 function social_is_full(string $type): bool {
     return str_starts_with($type, 'photo') || str_starts_with($type, 'story');
+}
+
+/** 'listing', 'openhouse' or 'other' (no listing: the agent's own photo and words; Nikki, 2026-10-15). */
+function social_template_kind(string $type): string {
+    if (str_ends_with($type, '_other')) return 'other';
+    return social_is_openhouse($type) ? 'openhouse' : 'listing';
 }
 
 /** 'story' for the story templates (1080 x 1920), 'post' for the rest (1080 x 1440). */
@@ -280,7 +288,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".body{z-index:2}"
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
         . ".ghost.m{right:0;width:745px}"
-        . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:140px;margin:0 0 32px}" : '')
+        . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:140px;margin:0 0 32px}"
+            . ".whentop{position:absolute;right:64px;top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;text-align:right;font-size:34px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};line-height:1.3;text-shadow:{$c['shadow']}}" : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
@@ -327,12 +336,16 @@ CSS;
         $body .= '<img class="slogo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
     }
     $body .= '<div class="rule"></div>';
+    $whenTop = '';
     if ($oh) {
         $date = (string)($p['date_text'] ?? ''); $time = (string)($p['time_text'] ?? '');
         if ($full) {
-            // One gold line: "Saturday, October 18  ·  11 AM to 2 PM".
-            $when = implode('  ·  ', array_filter([$date, $time], fn($s) => $s !== ''));
-            if ($when !== '') $body .= '<p class="whenline">' . $e($when) . '</p>';
+            // One gold line, the agent's own words when given ("Today 11am-2pm"), else
+            // "Saturday, October 18  ·  11 AM to 2 PM". On a story it sits under the badge.
+            $when = trim((string)($p['when_text'] ?? ''));
+            if ($when === '') $when = implode('  ·  ', array_filter([$date, $time], fn($s) => $s !== ''));
+            if ($when !== '' && $format === 'story') $whenTop = '<p class="whentop">' . $e($when) . '</p>';
+            elseif ($when !== '') $body .= '<p class="whenline">' . $e($when) . '</p>';
         } else {
             if ($date !== '') $body .= '<h1 class="when" style="font-size:' . social_fit_size($date, 66, [24 => 56, 30 => 48]) . 'px">' . $e($date) . '</h1>';
             if ($time !== '') $body .= '<p class="time">' . $e($time) . '</p>';
@@ -381,7 +394,7 @@ CSS;
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
          . '<title>' . $e($headline !== '' ? $headline : 'Post') . '</title><style>' . $css . '</style></head><body>'
-         . '<div class="photo">' . $photoHtml . '</div>' . $pill . ($full ? $logoHtml : '') . ($full && $format !== 'story' ? $ghostHtml : '')
+         . '<div class="photo">' . $photoHtml . '</div>' . $pill . $whenTop . ($full ? $logoHtml : '') . ($full && $format !== 'story' ? $ghostHtml : '')
          . '<div class="body">' . $body . '</div>'
          . '</body></html>';
 }

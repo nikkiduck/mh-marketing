@@ -48,6 +48,8 @@
 .sp-choice input:checked + .sp-choice-in { border-color: var(--gold-deep); background: #fbf7ef; }
 .sp-choice input:focus-visible + .sp-choice-in, .sp-photo input:focus-visible + img, .sp-pillopt input:focus-visible + span { outline: 2px solid var(--gold-deep); outline-offset: 2px; }
 .sp-look { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+.sp-look:first-of-type { margin-top: 0; }
+.sp-kind { margin-top: 14px; max-width: 360px; }
 .sp-look-l { color: var(--muted); font-size: 15px; margin-right: 4px; }
 .sp-pillopt span { display: inline-block; padding: 7px 16px; border: 2px solid var(--line); border-radius: 999px; font-size: 15px; }
 .sp-pillopt input:checked + span { border-color: var(--gold-deep); background: #fbf7ef; color: var(--gold-deep); font-weight: 500; }
