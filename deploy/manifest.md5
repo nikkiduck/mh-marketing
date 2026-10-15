@@ -70,7 +70,7 @@ f69e92a4cc1632404c42761619aee4b4  portal/asset.php
 32d55d208d6c858e685bbe7a6e7fd466  portal/brand.php
 0f9c154074c6ffe5c3e60246a1c500cd  portal/contact.php
 034e7c38b450646eb5edfbf821a5bfe5  portal/elevation.php
-6cf40c859e80510c5d4746c6d1722bed  portal/flyer.php
+873a67717ba5e56a3b5b25bec90dc216  portal/flyer.php
 db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
@@ -80,14 +80,14 @@ e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
 bd1d3b37a7fcf713edb84313e59cddbb  portal/profile.php
 e6411bc80e28c79a013e475e5dc875eb  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
-8d44844ad9f7714dfcffa949d2907a97  portal/social.php
+a44438be75ed9543c120097c4c1ac287  portal/social.php
 b4178bb297c9b2f159e24c02f559ac7b  portal/social_asset.php
 cfea6b6cd41a82c90b01b321ee62d614  portal/social_export.php
 2d1bf94046c45ef9e5b05d415a10c278  portal/social_photos.php
 3b2ecd3bf5e7571ef9f9630e67208d3e  portal/social_render.php
 e6cafb63f213289c3e835aede4d2c27f  portal/social_upload.php
 2f6f6b397081287ed0190cebbd0b1bca  portal/spend.php
-4f11bac1aa511ac7452fbe20c3f2cd99  portal/templates.php
+61734f8313bd3af2b6502e8461ee606d  portal/templates.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 8e6d7d7742f6c9589b47c7a0e28b4d0d  qr_codes.php
 e154338096723d27e76e2b7dc979fe70  receipt.php
@@ -102,4 +102,4 @@ e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 7fd859de658b0e1f956e415e0831eced  assets/css/portal.css
-0a9803b1e556f8e1ab647ec2307d96ce  assets/css/social.css
+8cb6cbc726f9e374ee711432b669ea2c  assets/css/social.css
