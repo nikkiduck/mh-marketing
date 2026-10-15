@@ -158,3 +158,9 @@ brochure cover, and the label pill sits upper right.
 `social_template_format()` and `social_format_*()` in inc/social_render.php;
 the framing box, the preview frame and Chromium's window size follow the
 template; the file name gets "-story".
+
+Later on 2026-10-15 (Nikki): the page is "Instagram Templates", step 1 is
+"Pick Template" with Post: Listing, Post: Open House and Story; the
+Templates landing card reads "Instagram Post/Story". The Story has a
+Watermark choice (shown for the Story only): the ghosted triangle
+(default), the M mark flush to the lower-right corner, or none.

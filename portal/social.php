@@ -43,7 +43,7 @@ portal_header($ctx, 'Social posts', 'social');
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
   <p class="pt-soon">More templates coming soon.</p>
-  <h1 class="pt-h1">Instagram Post Template</h1>
+  <h1 class="pt-h1">Instagram Templates</h1>
   <p class="pt-lead">Pick a listing, choose and frame the photo, edit the text, and download. If you'd like to create a custom post, you may download the MH logos from the Brand Tools tab.</p>
   <p class="tp-switch"><a class="on" href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">Instagram Post</a><a href="<?= ph(portal_url($ctx, '/portal/flyer.php')) ?>">Listing Flyer</a></p>
 
@@ -57,7 +57,7 @@ portal_header($ctx, 'Social posts', 'social');
       <input type="hidden" name="focus_y" value="50">
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span>1</span>Template</h2>
+        <h2 class="sp-step-h"><span>1</span>Pick Template</h2>
         <div class="sp-choices">
           <?php foreach ($templates as $k => $t): ?>
           <label class="sp-choice">
@@ -70,6 +70,12 @@ portal_header($ctx, 'Social posts', 'social');
           <span class="sp-look-l">Look</span>
           <?php foreach ($themes as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="theme" value="<?= ph($k) ?>"<?= $k === 'dark' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look sp-only-story" hidden>
+          <span class="sp-look-l">Watermark</span>
+          <?php foreach (social_marks() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="mark" value="<?= ph($k) ?>"<?= $k === 'triangle' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
           <?php endforeach; ?>
         </div>
       </section>
@@ -181,6 +187,7 @@ portal_header($ctx, 'Social posts', 'social');
   function showGroups() {
     const t = f('type').value;
     form.querySelectorAll('.sp-only-openhouse').forEach(el => el.hidden = !isOH(t));
+    form.querySelectorAll('.sp-only-story').forEach(el => el.hidden = t.indexOf('story') !== 0);
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = isFull(t));
     customWrap.hidden = labelSel.value !== '__custom';
     framer.style.aspectRatio = '1080 / ' + PHOTO_H[t];

@@ -13,7 +13,7 @@ $ctx = portal_context($conn);
 social_gate();
 
 $cards = [
-    ['Instagram Post', '/portal/social.php', 'An Instagram-ready picture of one of your listings: pick a photo, check the text, download the PNG.', 'Make a post ›'],
+    ['Instagram Post/Story', '/portal/social.php', 'Create an Instagram or Facebook ready post or story.', 'Make a post ›'],
     ['Listing Flyer',  '/portal/flyer.php',  'A printed Letter-size flyer: up to six photos, the details, a banner, your contact lines and a QR code. Download the PDF.', 'Make a flyer ›'],
 ];
 

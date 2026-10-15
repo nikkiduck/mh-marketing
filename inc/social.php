@@ -309,6 +309,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     $type  = isset($offered[(string)($in['type'] ?? '')]) ? (string)$in['type'] : array_key_first($offered);
     $theme = isset(social_themes()[(string)($in['theme'] ?? '')]) ? (string)$in['theme'] : 'dark';
     $format = social_template_format($type);   // the story templates are 1080 x 1920
+    $mark  = isset(social_marks()[(string)($in['mark'] ?? '')]) ? (string)$in['mark'] : 'triangle';   // the story's watermark
 
     $l = social_listing($conn, $ctx, (string)($in['listing'] ?? ''));
     if (!$l) return 'Choose one of your listings to see your post.';
@@ -349,6 +350,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     $p = [
         'type'       => $type,
         'theme'      => $theme,
+        'mark'       => $mark,
         'format'     => $format,
         'listing'    => $l,
         'label'      => $label,

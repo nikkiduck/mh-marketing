@@ -70,9 +70,9 @@ function social_format_insets(string $format): array {
  */
 function social_templates(): array {
     return [
-        'photo'           => ['name' => 'Listing General', 'blurb' => 'The photo fills the post; a headline and up to two lines over it.', 'offered' => true],
-        'photo_openhouse' => ['name' => 'Open House',      'blurb' => 'The same, with the date and time above the headline.',             'offered' => true],
-        'story'           => ['name' => 'Story',           'blurb' => 'A 9:16 story: the photo fills it, a ghosted triangle lower right, the label upper right.', 'offered' => true],
+        'photo'           => ['name' => 'Post: Listing',    'blurb' => 'The photo fills the post; a headline and up to two lines over it.', 'offered' => true],
+        'photo_openhouse' => ['name' => 'Post: Open House', 'blurb' => 'The same, with the date and time above the headline.',             'offered' => true],
+        'story'           => ['name' => 'Story',            'blurb' => 'A 9:16 story: the photo fills it, a watermark lower right, the label upper right.', 'offered' => true],
         'story_openhouse' => ['name' => 'Story Open House', 'blurb' => 'The story, with the date and time above the headline.', 'offered' => false],   // not offered (Nikki, 2026-10-15: one Story, the lines are free text)
         'featured'        => ['name' => 'Featured Listing',      'blurb' => 'Photo on top, a text block below: headline and up to four lines.', 'offered' => false],
         'openhouse'       => ['name' => 'Open House',            'blurb' => 'Photo on top; the date and time lead the text block.',            'offered' => false],
@@ -102,6 +102,11 @@ function social_template_format(string $type): string {
 /** How many sub lines a template shows (the form hides the rest). */
 function social_line_count(string $type): int {
     return social_is_full($type) ? 2 : 4;
+}
+
+/** The story's watermark, lower right (Nikki, 2026-10-15): the ghosted triangle (default), the M mark flush to the corner, or none. */
+function social_marks(): array {
+    return ['triangle' => 'Triangle', 'mmark' => 'M mark', 'none' => 'None'];
 }
 
 /** The two looks. */
@@ -275,6 +280,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ($format === 'story'
             ? ".pill{left:auto;right:64px}.body{z-index:2}"
             . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
+            . ".ghost.m{right:0;width:520px}"
             : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
@@ -353,8 +359,14 @@ CSS;
     // The full-photo family carries the logo at page level (top-right over the photo);
     // the split family keeps it inside the text block, bottom-right.
     $logoHtml = '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
-    if ($full && $format === 'story') {   // the story: a ghosted triangle lower right in place of the logo
-        $logoHtml = '<img class="ghost" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-black.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">';
+    if ($full && $format === 'story') {   // the story: a ghosted watermark lower right in place of the logo
+        $mark = isset(social_marks()[(string)($p['mark'] ?? '')]) ? (string)$p['mark'] : 'triangle';
+        $tone = $theme === 'light' ? 'black' : 'white';
+        $logoHtml = match ($mark) {
+            'mmark' => '<img class="ghost m" src="' . $e($base . "/assets/images/M-mark_{$tone}.svg") . '" alt="">',
+            'none'  => '',
+            default => '<img class="ghost" src="' . $e($base . "/assets/images/triangle_mark-{$tone}.svg") . '" alt="">',
+        };
     }
     if (!$full) $body .= $logoHtml;
 
