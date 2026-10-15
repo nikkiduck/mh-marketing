@@ -290,7 +290,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".ghost.m{right:0;width:745px}"
         . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:140px;margin:0 0 32px}"
             . ".whentop{position:absolute;right:64px;top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;text-align:right;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
-            . ".cornershade{position:absolute;right:0;top:0;width:820px;height:" . (64 + $top + 92 + 330) . "px;z-index:1;background:radial-gradient(ellipse 100% 100% at 100% 0%,{$c['corner']} 0%,{$c['corner']} 35%,transparent 72%)}" : '')
+            // The shade is centred on the badge and the date lines, not the corner (Nikki, 2026-10-15: too high up).
+            . ".cornershade{position:absolute;right:0;top:" . ($top - 40) . "px;width:900px;height:600px;z-index:1;background:radial-gradient(ellipse 100% 100% at 100% 48%,{$c['corner']} 0%,{$c['corner']} 30%,transparent 72%)}" : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
