@@ -72,11 +72,14 @@ portal_header($ctx, 'Social posts', 'social');
           <label class="sp-pillopt"><input type="radio" name="theme" value="<?= ph($k) ?>"<?= $k === 'dark' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
           <?php endforeach; ?>
         </div>
-        <div class="sp-look sp-only-story" hidden>
+        <div class="sp-look">
           <span class="sp-look-l">Watermark</span>
           <?php foreach (social_marks() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="mark" value="<?= ph($k) ?>"<?= $k === 'triangle' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
           <?php endforeach; ?>
+        </div>
+        <div class="sp-look sp-only-story" hidden>
+          <label class="sp-check"><input type="hidden" name="story_logo_box" value="1"><input type="checkbox" name="story_logo" value="1" checked> Mont Haus logo above the text</label>
         </div>
       </section>
 

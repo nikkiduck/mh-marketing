@@ -351,6 +351,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'type'       => $type,
         'theme'      => $theme,
         'mark'       => $mark,
+        'story_logo' => !isset($in['story_logo_box']) || !empty($in['story_logo']),   // the story's logo above the text: on unless the box was unticked
         'format'     => $format,
         'listing'    => $l,
         'label'      => $label,

@@ -2076,10 +2076,13 @@ size follows the template, never a switch; a Story Open House exists with
 `offered => false`: one Story, its lines free text, Nikki). A
 story keeps a photo-only safe area of 230 px at the top and 170 at the
 bottom (`social_template_format()`, `social_format_height()`,
-`social_format_insets()` in social_render.php), carries NO logo but a WATERMARK lower right, the agent's pick
-(`social_marks()`, Story only): the ghosted triangle (default) bleeding off the edge (970 px wide, its
+`social_format_insets()` in social_render.php), carries no logo top-right (an optional full logo above the rule instead,
+`story_logo`, on by default) and a WATERMARK lower right, the agent's pick
+(`social_marks()`, posts too since later that day): the ghosted triangle
+(default; triangle_mark-dark.svg on light, a tight canvas, because
+triangle_mark-black.svg has air around the shape and floated) bleeding off the edge (970 px wide, its
 base on the bottom edge, right corner at x = 1300; assets/images/triangle_mark-white.svg on dark, the black mark on light, at
-low opacity), the M mark flush to the corner (520 px, never cut off), or
+low opacity), the M mark flush to the corner (745 px, never cut off), or
 none; and puts the label pill upper right. Picker names since 2026-10-15:
 Post: Listing, Post: Open House, Story; the page is "Instagram Templates"
 and the Templates landing card "Instagram Post/Story"; the export window follows

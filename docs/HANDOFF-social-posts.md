@@ -169,3 +169,9 @@ Also 2026-10-15 (Nikki): the Templates landing is in two groups, Instagram
 Templates and Print Templates (the Listing Flyer); the pill switch between
 the two tools is gone, each page has an "All templates" link back, and the
 flyer page carries a "Print Templates" eyebrow.
+
+Also 2026-10-15 (Nikki): the watermark choice applies to the posts as well
+(triangle default, M mark at 745 px flush to the corner, or none); a story
+may carry the full logo above the rule (a checkbox, on by default); the
+light-look triangle uses a tight-canvas SVG (triangle_mark-dark.svg) so it
+sits on the edge like the white one.

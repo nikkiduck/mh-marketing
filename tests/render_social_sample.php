@@ -32,6 +32,7 @@ $posts = [
     'openhouse'       => $common + ['type' => 'openhouse', 'label' => 'Open House'] + $when,
     'story'           => $common + ['type' => 'story', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'story-m'         => $common + ['type' => 'story', 'mark' => 'mmark', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
+    'story-logo'      => $common + ['type' => 'story', 'story_logo' => true, 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'story-openhouse' => $common + ['type' => 'story_openhouse', 'label' => 'Open House'] + $when,
 ];
 foreach ($posts as $k => $p) {

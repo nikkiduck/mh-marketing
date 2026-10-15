@@ -277,11 +277,10 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // bottom fade's lighter twin, carries both the label and the logo instead.
         . ".photo::before{content:'';position:absolute;left:0;right:0;top:0;height:" . (320 + $top) . "px;z-index:1;background:linear-gradient(to bottom,{$c['topfade']})}"
         . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:132px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
-        . ($format === 'story'
-            ? ".pill{left:auto;right:64px}.body{z-index:2}"
-            . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
-            . ".ghost.m{right:0;width:520px}"
-            : '')
+        . ".body{z-index:2}"
+        . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
+        . ".ghost.m{right:0;width:745px}"
+        . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:110px;margin:0 0 30px}" : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
@@ -323,7 +322,11 @@ CSS;
     $label = trim((string)($p['label'] ?? ''));
     $pill  = $label !== '' ? '<div class="pill">' . $e($label) . '</div>' : '';
 
-    $body = '<div class="rule"></div>';
+    $body = '';
+    if ($full && $format === 'story' && !empty($p['story_logo'])) {   // the full logo above the rule (Nikki, 2026-10-15; the agent can turn it off)
+        $body .= '<img class="slogo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
+    }
+    $body .= '<div class="rule"></div>';
     if ($oh) {
         $date = (string)($p['date_text'] ?? ''); $time = (string)($p['time_text'] ?? '');
         if ($full) {
@@ -359,20 +362,26 @@ CSS;
     // The full-photo family carries the logo at page level (top-right over the photo);
     // the split family keeps it inside the text block, bottom-right.
     $logoHtml = '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
-    if ($full && $format === 'story') {   // the story: a ghosted watermark lower right in place of the logo
+    // The full-photo families also carry a ghosted watermark lower right (Nikki, 2026-10-15:
+    // posts too): the triangle cut off by the edge, the M mark flush to the corner, or none.
+    // The dark triangle is triangle_mark-dark.svg (tight canvas); triangle_mark-black.svg has a
+    // square canvas with air around the shape, which floated it above the edge on light.
+    $ghostHtml = '';
+    if ($full) {
         $mark = isset(social_marks()[(string)($p['mark'] ?? '')]) ? (string)$p['mark'] : 'triangle';
-        $tone = $theme === 'light' ? 'black' : 'white';
-        $logoHtml = match ($mark) {
-            'mmark' => '<img class="ghost m" src="' . $e($base . "/assets/images/M-mark_{$tone}.svg") . '" alt="">',
+        $ghostHtml = match ($mark) {
+            'mmark' => '<img class="ghost m" src="' . $e($base . ($theme === 'light' ? '/assets/images/M-mark_black.svg' : '/assets/images/M-mark_white.svg')) . '" alt="">',
             'none'  => '',
-            default => '<img class="ghost" src="' . $e($base . "/assets/images/triangle_mark-{$tone}.svg") . '" alt="">',
+            default => '<img class="ghost" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-dark.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">',
         };
     }
+    if ($full && $format === 'story') $logoHtml = $ghostHtml;   // a story has no logo top-right
+    else $ghostHtml = $full ? $ghostHtml : '';
     if (!$full) $body .= $logoHtml;
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
          . '<title>' . $e($headline !== '' ? $headline : 'Post') . '</title><style>' . $css . '</style></head><body>'
-         . '<div class="photo">' . $photoHtml . '</div>' . $pill . ($full ? $logoHtml : '')
+         . '<div class="photo">' . $photoHtml . '</div>' . $pill . ($full ? $logoHtml : '') . ($full && $format !== 'story' ? $ghostHtml : '')
          . '<div class="body">' . $body . '</div>'
          . '</body></html>';
 }
