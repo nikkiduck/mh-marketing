@@ -142,8 +142,8 @@ portal_header($ctx, 'Home', 'home');
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">
       <h2 class="pt-card-h">Templates</h2>
-      <p class="pt-card-sub">Create Instagram posts for your listings. More templates coming soon.</p>
-      <span class="pt-card-go">Make a post ›</span>
+      <p class="pt-card-sub">Social templates: Instagram posts and stories for your listings. Print templates: a listing flyer. More coming soon.</p>
+      <span class="pt-card-go">See the templates ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/qr.php', $qr_n === 0 ? ['request' => 1] : [])) ?>">
       <h2 class="pt-card-h">QR Codes</h2>
