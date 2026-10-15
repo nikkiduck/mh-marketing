@@ -79,7 +79,7 @@ portal_header($ctx, 'Social posts', 'social');
           <?php endforeach; ?>
         </div>
         <div class="sp-look sp-only-story" hidden>
-          <label class="sp-check"><input type="hidden" name="story_logo_box" value="1"><input type="checkbox" name="story_logo" value="1" checked> Mont Haus logo above the text</label>
+          <label class="sp-check"><input type="hidden" name="story_logo_box" value="1"><input type="checkbox" name="story_logo" value="1" checked> Mont Haus logo</label>
         </div>
       </section>
 

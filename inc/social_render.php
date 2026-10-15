@@ -280,7 +280,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".body{z-index:2}"
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
         . ".ghost.m{right:0;width:745px}"
-        . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:110px;margin:0 0 30px}" : '')
+        . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:140px;margin:0 0 32px}" : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
