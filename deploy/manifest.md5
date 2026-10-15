@@ -52,8 +52,8 @@ f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 0f0bc7ca27dcdcaae3dc7a0d2ea6f75b  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-2e58061783b27780855de0100b8b8978  inc/social.php
-7d116ea0f1197d5d69c65ed993773fd8  inc/social_render.php
+e63d2bf7622f95b79a8ca65a9fed9cd4  inc/social.php
+a60f0d938278cdc60e452fef5354cb29  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 28d1e1b441155e361158410a23af9f2e  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
@@ -80,7 +80,7 @@ e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
 bd1d3b37a7fcf713edb84313e59cddbb  portal/profile.php
 e6411bc80e28c79a013e475e5dc875eb  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
-1c655fcdd1a52b42c47bc4063d50a037  portal/social.php
+900d04744cfd81ccdb717833e8a4fa2e  portal/social.php
 b4178bb297c9b2f159e24c02f559ac7b  portal/social_asset.php
 cfea6b6cd41a82c90b01b321ee62d614  portal/social_export.php
 495aa54c8c9311744632916fbba7a0df  portal/social_photos.php
