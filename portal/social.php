@@ -108,6 +108,7 @@ portal_header($ctx, 'Social posts', 'social');
 
       <section class="sp-step">
         <h2 class="sp-step-h"><span>3</span>Photo</h2>
+        <p class="sp-hint" id="spPhotoHint" data-other="Choose a stock photo or upload your own below." data-listing="Choose a listing photo or upload your own below.">Choose a listing photo or upload your own below.</p>
         <div class="sp-photos" id="spPhotos"><div class="sp-wait">Loading photos…</div></div>
         <div class="sp-drop" id="spDrop">
           <span id="spDropMsg" data-listing="Or use your own: drop a photo here, or <label class=&quot;sp-link&quot; for=&quot;spFile&quot;>choose one</label>." data-other="Upload your own photo: drop it here, or <label class=&quot;sp-link&quot; for=&quot;spFile&quot;>choose one</label>.">Or use your own: drop a photo here, or <label class="sp-link" for="spFile">choose one</label>.</span>
@@ -222,6 +223,7 @@ portal_header($ctx, 'Social posts', 'social');
     form.querySelectorAll('.sp-only-openhouse').forEach(el => el.hidden = !isOH(t));
     form.querySelectorAll('.sp-only-listing').forEach(el => el.hidden = isOther());
     dropMsg.innerHTML = isOther() ? dropMsg.dataset.other : dropMsg.dataset.listing;
+    const hint = document.getElementById('spPhotoHint'); hint.textContent = isOther() ? hint.dataset.other : hint.dataset.listing;
     form.querySelectorAll('.sp-only-story').forEach(el => el.hidden = t.indexOf('story') !== 0);
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = isFull(t));
     customWrap.hidden = labelSel.value !== '__custom';

@@ -55,6 +55,7 @@
 .sp-pillopt input:checked + span { border-color: var(--gold-deep); background: #fbf7ef; color: var(--gold-deep); font-weight: 500; }
 
 /* Photo picker, the drop zone, the framing box */
+.sp-hint { color: var(--muted); font-size: 14px; margin: -4px 0 12px; }
 .sp-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 @media (min-width: 560px) { .sp-photos { grid-template-columns: repeat(4, 1fr); } }
 .sp-photo img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; border: 3px solid transparent; transition: border-color .15s; background: #e8e2d6; }
