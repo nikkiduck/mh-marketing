@@ -2070,7 +2070,13 @@ Light, Italic Serif, Plain; a blank line takes no room), a label on the
 photo (solid gold pill; ready-made, none, or custom), the Mont Haus logo
 top-right on a soft top fade (2026-10-13; no drop shadow, Nikki), so the
 words have the full width; a very long headline wraps, balanced. No agent headshot or contact details
-(Nikki, 2026-10-12). Live preview, Download PNG, Share… on phones. Plan and
+(Nikki, 2026-10-12). Two sizes (Nikki, 2026-10-15): Post, 1080 x 1440, and
+Story, 1080 x 1920 with a safe area of 230 px at the top and 200 at the
+bottom that carries only the photo (`social_formats()`,
+`social_format_height()`, `social_format_insets()` in social_render.php;
+the label, logo, words and fades are inset by that much; the export window
+follows the format). Live preview, Download PNG (no Share button: tried and
+removed 2026-10-12). Plan and
 mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
 - **One render path.** `social_render()` (inc/social_render.php, standalone)
   makes the HTML; the preview iframe shows it and headless Chromium

@@ -143,3 +143,13 @@ theirs so a listing change does not overwrite it), the headline on one line
 at whatever size fits, the address and price larger. Templates in the menu
 is now a landing page (portal/templates.php) with the two tools, and each
 tool page switches to the other.
+
+## Story size (2026-10-15)
+
+The Instagram tool has a Size switch beside Look: Post (1080 x 1440) or
+Story (1080 x 1920). Same templates, looks and controls; on a story the
+label, logo, words and both fades are inset by Instagram's chrome, about
+230 px at the top and 200 at the bottom, so those bands show only the photo
+(Nikki). `social_format_*()` in inc/social_render.php; the framing box, the
+preview frame and Chromium's window size follow the format; the file name
+gets "-story".

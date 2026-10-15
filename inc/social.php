@@ -308,6 +308,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     $offered = social_templates_offered();
     $type  = isset($offered[(string)($in['type'] ?? '')]) ? (string)$in['type'] : array_key_first($offered);
     $theme = isset(social_themes()[(string)($in['theme'] ?? '')]) ? (string)$in['theme'] : 'dark';
+    $format = isset(social_formats()[(string)($in['format'] ?? '')]) ? (string)$in['format'] : 'post';   // post 1080x1440, story 1080x1920
 
     $l = social_listing($conn, $ctx, (string)($in['listing'] ?? ''));
     if (!$l) return 'Choose one of your listings to see your post.';
@@ -348,6 +349,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     $p = [
         'type'       => $type,
         'theme'      => $theme,
+        'format'     => $format,
         'listing'    => $l,
         'label'      => $label,
         'photo'      => $photo,
@@ -373,7 +375,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
 function social_filename(array $p): string {
     $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string)$p['headline']), '-')) ?: 'post';
     $kind = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string)($p['label'] ?: $p['type'])), '-')) ?: 'post';
-    return mb_substr($slug, 0, 60) . '-' . $kind . '-' . date('Ymd-Hi') . '.png';
+    return mb_substr($slug, 0, 60) . '-' . $kind . (($p['format'] ?? 'post') === 'story' ? '-story' : '') . '-' . date('Ymd-Hi') . '.png';
 }
 
 /**
@@ -381,7 +383,7 @@ function social_filename(array $p): string {
  * screenshotted by headless Chromium at exactly SOCIAL_W x SOCIAL_H. Null when
  * Chromium failed (logged to the PHP error log with its last lines).
  */
-function social_export_png(string $html): ?string {
+function social_export_png(string $html, int $height = SOCIAL_H): ?string {
     $dir = rtrim(sys_get_temp_dir(), '/') . '/mh-social';
     if (!is_dir($dir) && !@mkdir($dir, 0700, true)) { error_log('social_export: cannot create ' . $dir); return null; }
     $id  = bin2hex(random_bytes(8));
@@ -395,7 +397,7 @@ function social_export_png(string $html): ?string {
     $cmd = 'HOME=' . escapeshellarg($dir) . ' /usr/bin/timeout 60 ' . escapeshellarg(SOCIAL_CHROMIUM)
          . ' --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run'
          . ' --disable-extensions --mute-audio --force-device-scale-factor=1'
-         . ' --window-size=' . SOCIAL_W . ',' . SOCIAL_H . ' --virtual-time-budget=10000'
+         . ' --window-size=' . SOCIAL_W . ',' . $height . ' --virtual-time-budget=10000'
          . ' --user-data-dir=' . escapeshellarg("{$dir}/profile")
          . ' --screenshot=' . escapeshellarg($out) . ' ' . escapeshellarg('file://' . $in) . ' 2>&1';
     exec($cmd, $lines, $rc);

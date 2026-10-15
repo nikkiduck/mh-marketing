@@ -44,6 +44,23 @@ const SOCIAL_W = 1080;
 const SOCIAL_H = 1440;
 
 /**
+ * The two Instagram sizes (Nikki, 2026-10-15): a post, 1080 x 1440; a story,
+ * 1080 x 1920 with a safe area of about 230 px at the top and 200 at the
+ * bottom that carries only the photo (Instagram's own chrome sits there), so
+ * the label, logo and words are inset by that much.
+ */
+function social_formats(): array {
+    return ['post' => 'Post', 'story' => 'Story'];
+}
+function social_format_height(string $format): int {
+    return $format === 'story' ? 1920 : SOCIAL_H;
+}
+/** [top, bottom] insets in px. */
+function social_format_insets(string $format): array {
+    return $format === 'story' ? [230, 200] : [0, 0];
+}
+
+/**
  * Every template, in menu order. `offered` = on the picker. The split
  * family (photo on top, text block below) is kept but not offered since
  * 2026-10-12 (Nikki: keep the full-photo versions, hide the others for now).
@@ -104,8 +121,8 @@ function social_line_defaults(): array {
 }
 
 /** The photo's height for a template; the text block has the rest (the full-photo family: all of it). */
-function social_photo_height(string $type): int {
-    if (social_is_full($type)) return SOCIAL_H;
+function social_photo_height(string $type, string $format = 'post'): int {
+    if (social_is_full($type)) return social_format_height($format);
     return social_is_openhouse($type) ? 900 : 960;
 }
 
@@ -183,7 +200,9 @@ function social_fit_size(string $text, int $size, array $steps): int {
 function social_render(array $p, ?string $base = null, bool $export = false): string {
     $base  = rtrim($base ?? (defined('SITE_URL') ? SITE_URL : ''), '/');
     $e     = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-    $W = SOCIAL_W; $H = SOCIAL_H;
+    $format = isset(social_formats()[(string)($p['format'] ?? '')]) ? (string)$p['format'] : 'post';
+    $W = SOCIAL_W; $H = social_format_height($format);
+    [$top, $bot] = social_format_insets($format);   // the story's safe area: photo only
 
     // Fonts: by URL for the preview; EMBEDDED for the export. The export page is
     // a local file and web fonts are the one resource a browser fetches under
@@ -203,7 +222,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $oh     = social_is_openhouse($type);
     $full   = social_is_full($type);
     $theme  = ($p['theme'] ?? 'dark') === 'light' ? 'light' : 'dark';
-    $photoH = social_photo_height($type);
+    $photoH = social_photo_height($type, $format);
     $bodyH  = $H - $photoH;
 
     // The photo frame: zoom 1 to 3, focus 0 to 100 on each axis (see the header).
@@ -222,11 +241,11 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // starts higher and lands almost solid cream, because the words were hard to read.
         ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31',
            'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none', 'topfade' => 'rgba(241,236,226,.62) 0%, rgba(241,236,226,0) 100%',
-           'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.72) 38%, rgba(241,236,226,.94) 62%, rgba(241,236,226,1) 100%', 'fullh' => '56%',
+           'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.72) 38%, rgba(241,236,226,.94) 62%, rgba(241,236,226,1) 100%', 'fullfrac' => 0.56,
            'logo' => $base . '/assets/images/MH_vert-stack_brown.svg', 'mark' => $base . '/assets/images/M-mark_brown.svg']
         : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da',
            'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(12,11,9,.5) 0%, rgba(12,11,9,0) 100%',
-           'fullfade' => 'rgba(0,0,0,0) 0%, rgba(12,11,9,.86) 100%', 'fullh' => '58%',
+           'fullfade' => 'rgba(0,0,0,0) 0%, rgba(12,11,9,.86) 100%', 'fullfrac' => 0.58,
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
 
     // Open House text under a date block runs a size smaller (the split layout only).
@@ -235,13 +254,13 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
 
     // The text block: under the photo (split family) or over its bottom (full family).
     $bodyCss = $full
-        ? ".body{position:absolute;left:0;right:0;bottom:0;padding:0 64px 64px;box-sizing:border-box;text-shadow:{$c['shadow']}}"
-        . ".photo::after{height:{$c['fullh']};background:linear-gradient(to bottom,{$c['fullfade']})}"
+        ? ".body{position:absolute;left:0;right:0;bottom:0;padding:0 64px " . (64 + $bot) . "px;box-sizing:border-box;text-shadow:{$c['shadow']}}"
+        . ".photo::after{height:" . (round(SOCIAL_H * $c['fullfrac']) + $bot) . "px;background:linear-gradient(to bottom,{$c['fullfade']})}"
         // The logo sits top-right over the photo (Nikki, 2026-10-13) so the words have the
         // full width. No drop shadow (Nikki): a soft fade across the top of the photo, the
         // bottom fade's lighter twin, carries both the label and the logo instead.
-        . ".photo::before{content:'';position:absolute;left:0;right:0;top:0;height:320px;z-index:1;background:linear-gradient(to bottom,{$c['topfade']})}"
-        . ".logo{top:64px;right:64px;bottom:auto;height:132px;z-index:2}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
+        . ".photo::before{content:'';position:absolute;left:0;right:0;top:0;height:" . (320 + $top) . "px;z-index:1;background:linear-gradient(to bottom,{$c['topfade']})}"
+        . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:132px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS

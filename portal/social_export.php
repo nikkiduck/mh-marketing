@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
 $p = social_post_from_request($conn, $ctx, $_POST);
 if (is_string($p)) portal_stop('Nothing to download yet', ph($p));
 
-$png = social_export_png(social_render($p, null, true));
+$png = social_export_png(social_render($p, null, true), social_format_height($p['format']));
 if ($png === null) {
     portal_stop('The picture could not be made', 'Something went wrong making the PNG. Please try again in a minute; if it keeps happening, email '
         . PORTAL_MARKETING_EMAIL . ' and we will sort it out.');
