@@ -67,7 +67,15 @@ img { max-width: 100%; }
 .pt-subnav a.on { color: var(--text); border-bottom-color: var(--gold); }
 .pt-subnav a:hover { color: var(--text); }
 @media (max-width: 719px) {
-  .pt-menu-btn { display: flex; }
+  /* The three bars stack (2026-10-15: as a flex row they sat side by side, three dashes). */
+  .pt-menu-btn { display: grid; grid-template-columns: 18px auto; grid-template-rows: repeat(3, 2px); row-gap: 4px; column-gap: 0; align-items: center; }
+  .pt-menu-btn span + span { margin-top: 0; }
+  .pt-menu-btn b { grid-column: 2; grid-row: 1 / 4; align-self: center; }
+  /* A row of tabs that runs past the edge fades out on the right, so it reads as scrollable. */
+  .pt-subnav-wrap { position: relative; }
+  .pt-subnav-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 1px; width: 28px; pointer-events: none;
+                           background: linear-gradient(90deg, rgba(255,255,255,0), #fff 80%); }
+  .pt-subnav { padding-right: 24px; }
   .pt-nav { display: none; flex-direction: column; gap: 0; padding: 0 0 8px; border-top: 1px solid #3a352c; }
   body.pt-nav-open .pt-nav { display: flex; }
   .pt-nav-a { padding: 14px 20px; font-size: 17px; border-bottom: 0; border-left: 3px solid transparent; width: 100%; text-align: left; }
