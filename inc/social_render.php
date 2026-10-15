@@ -289,7 +289,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
         . ".ghost.m{right:0;width:745px}"
         . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:140px;margin:0 0 32px}"
-            . ".whentop{position:absolute;right:64px;top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;text-align:right;font-size:34px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};line-height:1.3;text-shadow:{$c['shadow']}}" : '')
+            . ".whentop{position:absolute;right:64px;top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;text-align:right;font-size:34px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:{$c['text']};line-height:1.35;text-shadow:{$c['shadow']}}" : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
@@ -344,7 +344,8 @@ CSS;
             // "Saturday, October 18  ·  11 AM to 2 PM". On a story it sits under the badge.
             $when = trim((string)($p['when_text'] ?? ''));
             if ($when === '') $when = implode('  ·  ', array_filter([$date, $time], fn($s) => $s !== ''));
-            if ($when !== '' && $format === 'story') $whenTop = '<p class="whentop">' . $e($when) . '</p>';
+            // On a story the pickers' date and time go on two lines under the badge; the agent's own words wrap as they fall.
+            if ($when !== '' && $format === 'story') $whenTop = '<p class="whentop">' . (trim((string)($p['when_text'] ?? '')) === '' ? implode('<br>', array_map($e, array_filter([$date, $time], fn($x) => $x !== ''))) : $e($when)) . '</p>';
             elseif ($when !== '') $body .= '<p class="whenline">' . $e($when) . '</p>';
         } else {
             if ($date !== '') $body .= '<h1 class="when" style="font-size:' . social_fit_size($date, 66, [24 => 56, 30 => 48]) . 'px">' . $e($date) . '</h1>';

@@ -33,7 +33,7 @@ $posts = [
     'story'           => $common + ['type' => 'story', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'story-m'         => $common + ['type' => 'story', 'mark' => 'mmark', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'story-logo'      => $common + ['type' => 'story', 'story_logo' => true, 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
-    'story-oh'        => $common + ['type' => 'story_openhouse', 'story_logo' => true, 'label' => 'Open House', 'when_text' => 'Saturday, October 18  ·  11 AM to 2 PM'] + $when,
+    'story-oh'        => $common + ['type' => 'story_openhouse', 'story_logo' => true, 'label' => 'Open House', 'when_text' => ''] + $when,
     'post-other'      => ['type' => 'photo_other', 'label' => '', 'photo_url' => '', 'zoom' => 1, 'focus_x' => 50, 'focus_y' => 50, 'headline' => 'Thinking of selling?', 'lines' => [['text' => 'Let\'s talk this fall', 'style' => 'note']], 'date_text' => '', 'time_text' => ''],
     'story-openhouse' => $common + ['type' => 'story_openhouse', 'label' => 'Open House'] + $when,
 ];
