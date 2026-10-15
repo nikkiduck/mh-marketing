@@ -248,6 +248,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     [$top, $bot] = social_format_insets($format);
     $photoH = social_photo_height($type);
     $bodyH  = $H - $photoH;
+    $storyLogo = in_array((string)($p['story_logo'] ?? ''), ['top', 'bottom', 'none'], true) ? (string)$p['story_logo'] : (!empty($p['story_logo']) ? 'bottom' : 'none');   // the story's logo: upper right, lower left, none
 
     // The photo frame: zoom 1 to 3, focus 0 to 100 on each axis (see the header).
     $zoom = max(1.0, min(3.0, (float)($p['zoom'] ?? 1)));
@@ -288,8 +289,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".body{z-index:2}"
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
         . ".ghost.m{right:0;width:745px}"
-        . ($format === 'story' ? ".pill{left:auto;right:64px}.slogo{display:block;height:140px;margin:0 0 32px}"
-            . ".whentop{position:absolute;right:64px;top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;text-align:right;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
+        . ($format === 'story' ? ($storyLogo === 'top' ? '' : ".pill{left:auto;right:64px}") . ".slogo{display:block;height:140px;margin:0 0 32px}"
+            . ".whentop{position:absolute;" . ($storyLogo === 'top' ? 'left:64px;text-align:left' : 'right:64px;text-align:right') . ";top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
             : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
@@ -333,7 +334,7 @@ CSS;
     $pill  = $label !== '' ? '<div class="pill">' . $e($label) . '</div>' : '';
 
     $body = '';
-    if ($full && $format === 'story' && !empty($p['story_logo'])) {   // the full logo above the rule (Nikki, 2026-10-15; the agent can turn it off)
+    if ($full && $format === 'story' && $storyLogo === 'bottom') {   // the full logo above the rule, lower left (Nikki, 2026-10-15)
         $body .= '<img class="slogo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
     }
     $body .= '<div class="rule"></div>';
@@ -394,13 +395,13 @@ CSS;
             default => '<img class="ghost" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-dark.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">',
         };
     }
-    if ($full && $format === 'story') $logoHtml = $ghostHtml;   // a story has no logo top-right
-    else $ghostHtml = $full ? $ghostHtml : '';
+    // Top-right logo: every post, and a story whose logo is set to upper right.
+    $topLogo = ($full && ($format !== 'story' || $storyLogo === 'top')) ? $logoHtml : '';
     if (!$full) $body .= $logoHtml;
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
          . '<title>' . $e($headline !== '' ? $headline : 'Post') . '</title><style>' . $css . '</style></head><body>'
-         . '<div class="photo">' . $photoHtml . '</div>' . $pill . $whenTop . ($full ? $logoHtml : '') . ($full && $format !== 'story' ? $ghostHtml : '')
+         . '<div class="photo">' . $photoHtml . '</div>' . $pill . $whenTop . $topLogo . ($full ? $ghostHtml : '')
          . '<div class="body">' . $body . '</div>'
          . '</body></html>';
 }

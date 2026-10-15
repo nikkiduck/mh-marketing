@@ -84,7 +84,10 @@ portal_header($ctx, 'Social posts', 'social');
           <?php endforeach; ?>
         </div>
         <div class="sp-look sp-only-story" hidden>
-          <label class="sp-check"><input type="hidden" name="story_logo_box" value="1"><input type="checkbox" name="story_logo" value="1" checked> Mont Haus logo</label>
+          <span class="sp-look-l">Mont Haus logo</span>
+          <label class="sp-pillopt"><input type="radio" name="story_logo" value="top"><span>Upper right</span></label>
+          <label class="sp-pillopt"><input type="radio" name="story_logo" value="bottom" checked><span>Lower left</span></label>
+          <label class="sp-pillopt"><input type="radio" name="story_logo" value="none"><span>None</span></label>
         </div>
       </section>
 

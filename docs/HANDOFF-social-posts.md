@@ -206,3 +206,7 @@ picker shows as a hover tooltip. The images are git-ignored (45 MB); the
 manifest is tracked. Colorado and abroad alike (Nikki: a global mountain
 real estate company based in Colorado). To add one: a 2048 jpg, a 400
 thumb, a line in stock.json, scp all three.
+
+Also 2026-10-15: the story's Mont Haus logo is a three-way choice, upper
+right (badge moves to upper left, date line under it at the left), lower
+left above the rule (default), or none; the checkbox is gone.

@@ -2076,8 +2076,9 @@ size follows the template, never a switch; a Story Open House exists with
 `offered => false`: one Story, its lines free text, Nikki). A
 story keeps a photo-only safe area of 190 px at the top and 170 at the
 bottom (`social_template_format()`, `social_format_height()`,
-`social_format_insets()` in social_render.php), carries no logo top-right (an optional full logo above the rule instead,
-`story_logo`, on by default) and a WATERMARK lower right, the agent's pick
+`social_format_insets()` in social_render.php), places its logo by `story_logo`: upper right (the badge then moves to
+upper left, like a post, and the date line sits under it at the left),
+lower left above the rule (default), or none and a WATERMARK lower right, the agent's pick
 (`social_marks()`, posts too since later that day): the ghosted triangle
 (default; triangle_mark-dark.svg on light, a tight canvas, because
 triangle_mark-black.svg has air around the shape and floated) bleeding off the edge (970 px wide, its

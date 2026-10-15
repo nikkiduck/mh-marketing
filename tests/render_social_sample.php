@@ -32,8 +32,9 @@ $posts = [
     'openhouse'       => $common + ['type' => 'openhouse', 'label' => 'Open House'] + $when,
     'story'           => $common + ['type' => 'story', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'story-m'         => $common + ['type' => 'story', 'mark' => 'mmark', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
-    'story-logo'      => $common + ['type' => 'story', 'story_logo' => true, 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
-    'story-oh'        => $common + ['type' => 'story_openhouse', 'story_logo' => true, 'label' => 'Open House', 'when_text' => ''] + $when,
+    'story-logo'      => $common + ['type' => 'story', 'story_logo' => 'bottom', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
+    'story-logotop'   => $common + ['type' => 'story_openhouse', 'story_logo' => 'top', 'label' => 'Open House', 'when_text' => ''] + $when,
+    'story-oh'        => $common + ['type' => 'story_openhouse', 'story_logo' => 'bottom', 'label' => 'Open House', 'when_text' => ''] + $when,
     'post-other'      => ['type' => 'photo_other', 'label' => '', 'photo_url' => 'https://marketing.monthaus.com/assets/images/social-placeholder.jpg', 'zoom' => 1, 'focus_x' => 50, 'focus_y' => 50, 'headline' => 'Alpine Roots. Global Vision.', 'lines' => [['text' => 'Mont Haus International Realty', 'style' => 'town']], 'date_text' => '', 'time_text' => ''],
     'story-openhouse' => $common + ['type' => 'story_openhouse', 'label' => 'Open House'] + $when,
 ];
