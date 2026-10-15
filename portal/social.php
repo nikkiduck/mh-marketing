@@ -139,7 +139,7 @@ portal_header($ctx, 'Social posts', 'social');
             <label class="sp-field">From <input type="time" name="oh_start" value="11:00" step="900"></label>
             <label class="sp-field">To <input type="time" name="oh_end" value="14:00" step="900"></label>
           </div>
-          <label class="sp-field sp-only-openhouse" hidden>Date and time, as it will read <input name="oh_when" maxlength="60" placeholder="Today 11am-2pm"></label>
+          <label class="sp-field sp-only-openhouse" hidden>Date and time, as it will read (press Enter for a new line) <textarea name="oh_when" maxlength="90" rows="2" placeholder="Today 11am-2pm"></textarea></label>
           <label class="sp-field">Headline <input name="headline" maxlength="80"></label>
           <?php foreach ($line_names as $i => $nm): ?>
           <div class="sp-line<?= $i >= 2 ? ' sp-only-long' : '' ?>">
@@ -190,7 +190,7 @@ portal_header($ctx, 'Social posts', 'social');
     if (/^\d{4}-\d{2}-\d{2}$/.test(d)) { const dt = new Date(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)); parts.push(DAYS[dt.getDay()] + ', ' + MONTHS[dt.getMonth()] + ' ' + dt.getDate()); }
     const s = tText(f('oh_start').value), e = tText(f('oh_end').value);
     if (s && e) parts.push(s + ' to ' + e); else if (s) parts.push('From ' + s);
-    return parts.join('  ·  ');
+    return parts.join(fmt() === 'story' ? '\n' : '  ·  ');   // a story: the time under the date
   }
   function syncWhen() { if (!f('oh_when').dataset.touched) f('oh_when').value = whenFromPickers(); }
   const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0 || t.indexOf('story') === 0;
@@ -344,7 +344,7 @@ portal_header($ctx, 'Social posts', 'social');
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'listing') { fill(listing()); labelForType(); loadPhotos(); return; }
-    if (n === 'size') { setType(); showGroups(); scale(); }
+    if (n === 'size') { setType(); showGroups(); scale(); syncWhen(); }
     if (n === 'kind') { setType(); showGroups(); labelForType(); fill(listing()); scale(); loadPhotos(); return; }
     if (n === 'oh_when') f('oh_when').dataset.touched = '1';
     if (n === 'oh_date' || n === 'oh_start' || n === 'oh_end') syncWhen();

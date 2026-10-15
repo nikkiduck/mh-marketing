@@ -378,7 +378,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         // Nikki 2026-10-15), else built from the date and time pickers.
         $p['date_text'] = social_date_text((string)($in['oh_date'] ?? ''));
         $p['time_text'] = social_time_range_text((string)($in['oh_start'] ?? ''), (string)($in['oh_end'] ?? ''));
-        $p['when_text'] = mb_substr(trim((string)($in['oh_when'] ?? '')), 0, 60);
+        $p['when_text'] = mb_substr(trim(str_replace("\r", '', (string)($in['oh_when'] ?? ''))), 0, 90);   // a textarea: Enter = a line break on the post
         if ($p['when_text'] === '' && $p['date_text'] === '') return 'Type or pick the open house date and time to see your post.';
     }
     return $p;

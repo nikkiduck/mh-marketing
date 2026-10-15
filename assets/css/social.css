@@ -85,7 +85,7 @@
 /* Words */
 .sp-fields { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .sp-field { display: block; font-size: 14px; color: var(--muted); }
-.sp-field input, .sp-field select { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 17px; color: var(--text);
+.sp-field input, .sp-field select, .sp-field textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 17px; color: var(--text); resize: vertical;
                                     padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
 .sp-field input:focus, .sp-field select:focus { outline: none; border-color: var(--gold-deep); box-shadow: 0 0 0 3px rgba(138,109,54,.15); }
 .sp-two, .sp-when, .sp-line { display: grid; grid-template-columns: 1fr; gap: 12px; }

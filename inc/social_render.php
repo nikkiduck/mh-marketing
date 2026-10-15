@@ -312,7 +312,7 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .rule{width:72px;height:3px;background:{$c['accent']};margin:0 0 26px}
 .when{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 8px;white-space:nowrap;overflow:hidden}
 .time{font-size:30px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 28px;white-space:nowrap;overflow:hidden}
-.whenline{font-size:28px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 18px;white-space:nowrap;overflow:hidden}
+.whenline{font-size:28px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 18px;white-space:nowrap;overflow:hidden;line-height:1.35}
 .addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.12;margin:0 0 14px;padding-right:260px;overflow-wrap:anywhere;text-wrap:balance}
 .lines{padding-right:220px}
 .ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.25}
@@ -343,12 +343,15 @@ CSS;
         if ($full) {
             // One gold line, the agent's own words when given ("Today 11am-2pm"), else
             // "Saturday, October 18  ·  11 AM to 2 PM". On a story it sits under the badge.
+            // The agent's own words break where they pressed Enter (a textarea, Nikki 2026-10-15);
+            // without any, a story gets the date over the time and a post one line with a dot.
             $when = trim((string)($p['when_text'] ?? ''));
-            if ($when === '') $when = implode('  ·  ', array_filter([$date, $time], fn($s) => $s !== ''));
-            // On a story the pickers' date and time go on two lines under the badge; the agent's own words wrap as they fall.
-            // On a story the date and the time go on two lines under the badge: the text breaks at its dot (Nikki, 2026-10-15).
-            if ($when !== '' && $format === 'story') $whenTop = '<div class="cornershade"></div><p class="whentop">' . implode('<br>', array_map($e, array_filter(preg_split('/\s*·\s*/u', $when), fn($x) => $x !== ''))) . '</p>';
-            elseif ($when !== '') $body .= '<p class="whenline">' . $e($when) . '</p>';
+            $whenLines = $when !== ''
+                ? array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $when)), fn($x) => $x !== ''))
+                : ($format === 'story' ? array_values(array_filter([$date, $time], fn($s) => $s !== '')) : array_filter([implode('  ·  ', array_filter([$date, $time], fn($s) => $s !== ''))], fn($s) => $s !== ''));
+            $whenHtml = implode('<br>', array_map($e, $whenLines));
+            if ($whenHtml !== '' && $format === 'story') $whenTop = '<div class="cornershade"></div><p class="whentop">' . $whenHtml . '</p>';
+            elseif ($whenHtml !== '') $body .= '<p class="whenline">' . $whenHtml . '</p>';
         } else {
             if ($date !== '') $body .= '<h1 class="when" style="font-size:' . social_fit_size($date, 66, [24 => 56, 30 => 48]) . 'px">' . $e($date) . '</h1>';
             if ($time !== '') $body .= '<p class="time">' . $e($time) . '</p>';
