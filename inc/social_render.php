@@ -346,7 +346,8 @@ CSS;
             $when = trim((string)($p['when_text'] ?? ''));
             if ($when === '') $when = implode('  ·  ', array_filter([$date, $time], fn($s) => $s !== ''));
             // On a story the pickers' date and time go on two lines under the badge; the agent's own words wrap as they fall.
-            if ($when !== '' && $format === 'story') $whenTop = '<div class="cornershade"></div><p class="whentop">' . (trim((string)($p['when_text'] ?? '')) === '' ? implode('<br>', array_map($e, array_filter([$date, $time], fn($x) => $x !== ''))) : $e($when)) . '</p>';
+            // On a story the date and the time go on two lines under the badge: the text breaks at its dot (Nikki, 2026-10-15).
+            if ($when !== '' && $format === 'story') $whenTop = '<div class="cornershade"></div><p class="whentop">' . implode('<br>', array_map($e, array_filter(preg_split('/\s*·\s*/u', $when), fn($x) => $x !== ''))) . '</p>';
             elseif ($when !== '') $body .= '<p class="whenline">' . $e($when) . '</p>';
         } else {
             if ($date !== '') $body .= '<h1 class="when" style="font-size:' . social_fit_size($date, 66, [24 => 56, 30 => 48]) . 'px">' . $e($date) . '</h1>';
