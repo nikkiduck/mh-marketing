@@ -46,3 +46,8 @@ Thumbs.db
 
 # NOTE: vendor/ is deliberately NOT ignored. There is no Composer on the
 # server, so PHPMailer has to arrive with the repo. It is ~676K.
+
+# Stock mountain photos (2026-10-15): the web copies live on the server only; the originals are in Nikki's
+# "Mont Haus/Mtn Photos" folder and assets/stock/stock.json (tracked) carries the captions.
+assets/stock/*.jpg
+assets/stock/thumbs/*.jpg

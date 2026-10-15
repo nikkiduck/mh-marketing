@@ -294,6 +294,39 @@ function social_store_upload(array $ctx, string $field): array {
     return ['id' => $id];
 }
 
+// ── The stock mountain photos (2026-10-15) ────────────────────────────────────
+
+/**
+ * The Mont Haus stock library for the Other template: assets/stock/<name>.jpg
+ * (2048 px) + thumbs/<name>.jpg (400 px), captions in assets/stock/stock.json
+ * (name => "Aspen from the air, fall"), built from Nikki's "Mont Haus/Mtn
+ * Photos" folder (the Adobe Stock ID is the number at the end of a name).
+ * The images are on the server only (git-ignored); the manifest is tracked.
+ * [name => caption], only names whose file exists.
+ */
+function social_stock(): array {
+    static $cache = null;
+    if ($cache !== null) return $cache;
+    $cache = [];
+    $dir = __DIR__ . '/../assets/stock';
+    $j = is_file("$dir/stock.json") ? json_decode((string)file_get_contents("$dir/stock.json"), true) : null;
+    foreach ((array)$j as $name => $caption) {
+        if (preg_match('/^[a-z0-9-]+$/', (string)$name) && is_file("$dir/$name.jpg")) $cache[$name] = (string)$caption;
+    }
+    return $cache;
+}
+
+/** A stock photo's file on disk, or null. */
+function social_stock_file(string $name): ?string {
+    if (!isset(social_stock()[$name])) return null;
+    return realpath(__DIR__ . '/../assets/stock/' . $name . '.jpg') ?: null;
+}
+
+/** A stock photo's URL (400 = the thumbnail, else the 2048 copy). */
+function social_stock_url(string $name, int $w): string {
+    return rtrim(SITE_URL, '/') . '/assets/stock/' . ($w <= 400 ? 'thumbs/' : '') . $name . '.jpg';
+}
+
 // ── The post ─────────────────────────────────────────────────────────────────
 
 /**
@@ -326,8 +359,12 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         if ((string)$l['primary_photo'] !== '') $allowed[] = (string)$l['primary_photo'];
         if (!in_array($photo, $allowed, true)) $photo = (string)$l['primary_photo'];
         $photo_url = $photo !== '' ? social_img($photo, 1600) : '';
+    } elseif (str_starts_with($photo, 'stock:') && ($f = social_stock_file(substr($photo, 6)))) {
+        // Other: one of the stock mountain photos (2026-10-15).
+        $photo_url  = social_stock_url(substr($photo, 6), 2048);
+        $photo_file = $f;
     } else {
-        // Other: the Mont Haus mountains placeholder (assets/images/social-placeholder.jpg) until an upload is picked.
+        // Other: the Mont Haus mountains placeholder (assets/images/social-placeholder.jpg) until a photo is picked.
         $photo = 'placeholder';
         $photo_file = realpath(__DIR__ . '/../assets/images/social-placeholder.jpg') ?: null;
         $photo_url  = rtrim(SITE_URL, '/') . '/assets/images/social-placeholder.jpg';

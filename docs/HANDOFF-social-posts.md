@@ -194,3 +194,15 @@ Later on 2026-10-15: Other starts with the Mont Haus mountains photo
 uploads), "Alpine Roots. Global Vision." and "Mont Haus International
 Realty"; the story's date and time line is bold in the text colour with a
 soft radial shade behind that corner rather than a text shadow.
+
+## Stock mountain photos (2026-10-15)
+
+The Other template offers the Mont Haus stock library after the agent's own
+uploads: 40 Adobe Stock photos from Nikki's "Mont Haus/Mtn Photos" folder
+(renamed there by location, season and stock ID the same day), copied to
+the server as assets/stock/<name>.jpg (2048 px, q82) and thumbs/<name>.jpg
+(400 px), with assets/stock/stock.json holding a caption per name that the
+picker shows as a hover tooltip. The images are git-ignored (45 MB); the
+manifest is tracked. Colorado and abroad alike (Nikki: a global mountain
+real estate company based in Colorado). To add one: a 2048 jpg, a 400
+thumb, a line in stock.json, scp all three.

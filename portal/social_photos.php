@@ -17,6 +17,8 @@ header('Cache-Control: no-store');
 if ((string)($_GET['listing'] ?? '') === '__none') {   // the Other kind: the agent's uploads only (2026-10-15)
     $out = [];
     foreach (social_uploads($ctx) as $id) $out[] = ['id' => 'upload:' . $id, 'thumb' => social_upload_url($ctx, $id, 400), 'large' => social_upload_url($ctx, $id, 1600), 'own' => true];
+    // Then the Mont Haus stock library, each with its caption for the tooltip (2026-10-15).
+    foreach (social_stock() as $name => $caption) $out[] = ['id' => 'stock:' . $name, 'thumb' => social_stock_url($name, 400), 'large' => social_stock_url($name, 2048), 'own' => false, 'caption' => $caption];
     echo json_encode(['listing' => '', 'count' => count($out), 'headline' => '', 'photos' => $out], JSON_UNESCAPED_SLASHES);
     exit;
 }

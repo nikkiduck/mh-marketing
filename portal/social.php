@@ -175,7 +175,7 @@ portal_header($ctx, 'Social posts', 'social');
   const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
   const fmt = () => (f('type').value.indexOf('story') === 0 ? 'story' : 'post'), fmtH = () => fmt() === 'story' ? 1920 : 1440;
   const kind = () => f('kind').value, isOther = () => kind() === 'other';
-  const PLACEHOLDER = { id: 'placeholder', thumb: '/assets/images/social-placeholder.jpg', large: '/assets/images/social-placeholder.jpg', own: false };
+  const PLACEHOLDER = { id: 'placeholder', thumb: '/assets/images/social-placeholder.jpg', large: '/assets/images/social-placeholder.jpg', own: false, caption: 'Aspen Highlands and the Maroon Bells, early snow on fall colour' };
   // The template key: size + kind (photo = a post).
   function setType() {
     const base = f('size').value === 'story' ? 'story' : 'photo';
@@ -261,8 +261,9 @@ portal_header($ctx, 'Social posts', 'social');
 
   // ── Photos: the listing's, then the agent's own ──
   function photoTile(p, checked) {
-    return '<label class="sp-photo' + (p.own ? ' own' : '') + '"><input type="radio" name="photo" value="' + esc(p.id) + '" data-large="' + esc(p.large) + '"' +
-           (checked ? ' checked' : '') + '><img src="' + esc(p.thumb) + '" alt="" loading="lazy">' + (p.own ? '<i>Yours</i>' : '') + '</label>';
+    // A stock photo carries its caption as the tooltip (hover) so the agent knows where it is (Nikki, 2026-10-15).
+    return '<label class="sp-photo' + (p.own ? ' own' : '') + '"' + (p.caption ? ' title="' + esc(p.caption) + '"' : '') + '><input type="radio" name="photo" value="' + esc(p.id) + '" data-large="' + esc(p.large) + '"' +
+           (checked ? ' checked' : '') + '><img src="' + esc(p.thumb) + '" alt="' + esc(p.caption || '') + '" loading="lazy">' + (p.own ? '<i>Yours</i>' : '') + '</label>';
   }
   async function loadPhotos() {
     const l = listing(); if (!l && !isOther()) return;

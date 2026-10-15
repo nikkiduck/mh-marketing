@@ -2087,8 +2087,13 @@ none; and puts the label pill upper right. **Pick Template since later on
 2026-10-15 (Nikki):** a Size switch (Post / Story) and a Template dropdown
 (Listing / Open House / Other) in place of cards; the JS composes the type
 key (photo, photo_openhouse, photo_other, story, story_openhouse,
-story_other; `social_template_kind()`). Other = no listing, the agent's
-uploads only (social_photos.php?listing=__none) plus the Mont Haus
+story_other; `social_template_kind()`). Other = no listing: the agent's
+uploads (social_photos.php?listing=__none), the Mont Haus STOCK LIBRARY
+(assets/stock/<name>.jpg at 2048 px + thumbs/ at 400, captions in the
+tracked assets/stock/stock.json, images server-only and git-ignored,
+built 2026-10-15 from Nikki's "Mont Haus/Mtn Photos" folder, 40 photos,
+Colorado and abroad; `social_stock()`, a tile's caption is its hover
+tooltip; a new photo = a 2048 jpg + a 400 thumb + a caption line) plus the Mont Haus
 mountains placeholder (assets/images/social-placeholder.jpg, chosen until
 an upload is), headline "Alpine Roots. Global Vision." and Text 1 "Mont
 Haus International Realty" to start, no label by default. Open House: the date and time line is free text
