@@ -53,7 +53,7 @@ f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 0f0bc7ca27dcdcaae3dc7a0d2ea6f75b  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 df27e36bd2eecdae3e92ed3886dbdfb5  inc/social.php
-d3da0e190e6ab23f2b6c8ab63936c1fa  inc/social_render.php
+dcbaeb762683e0ca6c261c0927b6c89d  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 28d1e1b441155e361158410a23af9f2e  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
