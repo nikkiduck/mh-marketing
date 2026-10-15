@@ -274,7 +274,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:132px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
         . ($format === 'story'
             ? ".pill{left:auto;right:64px}.body{z-index:2}"
-            . ".ghost{position:absolute;right:-90px;bottom:-150px;width:820px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
+            . ".ghost{position:absolute;right:-300px;bottom:-200px;width:1100px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
             : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
