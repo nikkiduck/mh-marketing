@@ -45,7 +45,7 @@ portal_header($ctx, 'Social posts', 'social');
   <p class="pt-soon">More templates coming soon.</p>
   <h1 class="pt-h1">Instagram Templates</h1>
   <p class="pt-lead">Pick a listing, choose and frame the photo, edit the text, and download. If you'd like to create a custom post, you may download the MH logos from the Brand Tools tab.</p>
-  <p class="tp-switch"><a class="on" href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">Instagram Post</a><a href="<?= ph(portal_url($ctx, '/portal/flyer.php')) ?>">Listing Flyer</a></p>
+  <p class="tp-back"><a href="<?= ph(portal_url($ctx, '/portal/templates.php')) ?>">‹ All templates</a></p>
 
 <?php if (!$listings): ?>
   <div class="pt-flash err">We do not see any live listings under your name yet. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</div>

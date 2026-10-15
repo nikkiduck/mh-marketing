@@ -8,10 +8,12 @@
    House date showed on every template). */
 .sp-form [hidden] { display: none !important; }
 
-/* The switch between the two template tools, under each page's lead (2026-10-13). */
-.tp-switch { display: flex; gap: 8px; margin: -8px 0 22px; }
-.tp-switch a { display: inline-block; padding: 8px 18px; border: 2px solid var(--line); border-radius: 999px; font-size: 15px; color: var(--text); text-decoration: none; }
-.tp-switch a.on { border-color: var(--gold-deep); background: #fbf7ef; color: var(--gold-deep); font-weight: 500; }
+/* Templates: the landing's group headings and each tool's way back (2026-10-15; the tool-to-tool switch is gone). */
+.tp-group { font-family: var(--serif); font-size: 24px; font-weight: 500; margin: 26px 0 12px; }
+.tp-group:first-of-type { margin-top: 4px; }
+.tp-back { margin: -8px 0 22px; font-size: 15px; }
+.tp-back a { color: var(--gold-deep); text-decoration: none; }
+.tp-back a:hover { text-decoration: underline; }
 
 .sp-grid { display: grid; grid-template-columns: 1fr; gap: 24px; }
 .sp-preview { order: -1; }

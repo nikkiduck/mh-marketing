@@ -164,3 +164,8 @@ Later on 2026-10-15 (Nikki): the page is "Instagram Templates", step 1 is
 Templates landing card reads "Instagram Post/Story". The Story has a
 Watermark choice (shown for the Story only): the ghosted triangle
 (default), the M mark flush to the lower-right corner, or none.
+
+Also 2026-10-15 (Nikki): the Templates landing is in two groups, Instagram
+Templates and Print Templates (the Listing Flyer); the pill switch between
+the two tools is gone, each page has an "All templates" link back, and the
+flyer page carries a "Print Templates" eyebrow.

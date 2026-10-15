@@ -2145,9 +2145,11 @@ the last clause break before 52 characters; the site's photos scope
 carries `remarks` since 2026-10-13, kept in the session beside the photo
 list) and shrinks to stay on one line; the address and price are large
 (`$fit()` in flyer_render.php sizes both to the column). **Nav (Nikki,
-2026-10-13):** My Tools > Templates is `portal/templates.php`, a landing
-with the two tools; each tool page carries a switch to the other
-(`.tp-switch`); both pass 'social' as the active key.
+2026-10-13, regrouped 2026-10-15):** My Tools > Templates is
+`portal/templates.php`, a landing in two groups, Instagram Templates
+(portal/social.php) and Print Templates (portal/flyer.php: the flyer is
+not an Instagram thing, so the tool-to-tool switch is gone); each tool
+page links back with `.tp-back`; both pass 'social' as the active key.
 - `inc/flyer_render.php` (standalone layout at 612 x 792 pt, Jost) and
   `inc/flyer.php` (rules, QR, PDF export) sit on the Instagram tool's data
   layer: `social_listings()` (now with `url`), `social_photos()`,

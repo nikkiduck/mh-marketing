@@ -39,9 +39,10 @@ portal_header($ctx, 'Listing Flyer', 'social');   // under Templates in the menu
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
 <link rel="stylesheet" href="/assets/css/flyer.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/flyer.css') ?>">
+  <p class="pt-soon">Print Templates</p>
   <h1 class="pt-h1">Listing Flyer</h1>
   <p class="pt-lead">A printed flyer of one of your listings, Letter size. Pick the listing and up to six photos, check the text, and download the PDF.</p>
-  <p class="tp-switch"><a href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">Instagram Post</a><a class="on" href="<?= ph(portal_url($ctx, '/portal/flyer.php')) ?>">Listing Flyer</a></p>
+  <p class="tp-back"><a href="<?= ph(portal_url($ctx, '/portal/templates.php')) ?>">‹ All templates</a></p>
 
 <?php if (!$listings): ?>
   <div class="pt-flash err">We do not see any live listings under your name yet. If that is wrong, email <a href="mailto:<?= PORTAL_MARKETING_EMAIL ?>"><?= PORTAL_MARKETING_EMAIL ?></a>.</div>
