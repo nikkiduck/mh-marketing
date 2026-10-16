@@ -586,6 +586,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     @media (max-width:480px)  { .agent-grid { grid-template-columns:1fr; } }
     .agent-card { background:#fff; border-radius:6px; padding:14px; box-shadow:0 1px 3px rgba(0,0,0,.08); display:flex; flex-direction:column; gap:8px; min-width:0; }
     .agent-card.to-onboard { border:1px dashed #d1d5db; box-shadow:none; }
+    .phone-only { display:none; }   /* rendered for the phone card; the 620px block shows it */
     .card-top { display:flex; align-items:center; gap:10px; min-width:0; }
     .card-foot { display:flex; align-items:center; gap:6px; border-top:1px solid #f3f4f6; padding-top:9px; margin-top:auto; }
     .card-foot .spacer { flex:1; }
@@ -631,6 +632,17 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       .hdr-actions { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; width:100%; }
       .hdr-actions .btn { width:100%; min-width:0; justify-content:center; padding:9px 8px; font-size:12px; letter-spacing:0; text-transform:none; }
       .agent-card .boards { white-space:normal; }   /* "Vail · Altitude · REColorado" nowrap widened the page to 402px */
+      /* A phone card is one line per agent (Nikki, 2026-10-16): avatar, name,
+         the Active / Inactive pill, the eye and the offboard icon. Boards,
+         the website tick, task and balance badges and the checklist icon
+         stay on the desktop views. */
+      .agent-card { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:4px 10px; padding:10px 12px; }
+      .agent-card > div:nth-child(2), .agent-card .web-mark, .card-foot .tasks-badge, .card-foot .balance-badge,
+      .card-foot .spacer, .card-foot form:has(.ti-checks) { display:none; }
+      .agent-card > .card-top { grid-column:1; }
+      .card-foot { grid-column:2; grid-row:1 / span 2; border:0; padding:0; margin:0; gap:2px; }
+      .card-foot .btn-ghost { font-size:19px; padding:9px 8px; }
+      .phone-only { display:inline; }
       .hdr-actions form { display:contents; }
       .hdr-actions form:last-child .btn { grid-column:1 / -1; grid-row:1; }
       .attn { flex-direction:column; gap:6px; }
@@ -867,7 +879,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
           <div><?= $boards_html($x) ?></div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
             <?= $x['_web'] ? $web_html($x) : '' ?>
-            <?= $x['_status'] !== 'active' || $x['_onb'] ? $status_html($x) : '' ?>
+            <?php // Desktop shows the pill only when there is something to say; a phone card always shows it (Nikki, 2026-10-16). ?>
+            <span class="card-status<?= $x['_status'] !== 'active' || $x['_onb'] ? '' : ' phone-only' ?>"><?= $status_html($x) ?></span>
           </div>
           <div class="card-foot">
             <?= (int)$x['open_tasks'] > 0 ? '<span class="tasks-badge"><i class="ti ti-list-check"></i> ' . (int)$x['open_tasks'] . '</span>' : '' ?>
