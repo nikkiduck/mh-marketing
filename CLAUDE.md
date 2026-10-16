@@ -2384,6 +2384,12 @@ goes at the docroot and is reachable — check whether it should be.
 
 ## Follow Up Boss on the agent profile (2026-10-06)
 
+**2026-10-16 (Nikki): the card shows only the standing pill (Active / Invited
+/ Not a FUB user / Unknown), the "In the FUB lead rotation" box and the
+service-area boxes.** The explanations (which email FUB was matched on, when
+the website last checked, what opting in does, how the town list works) are
+gone from the page; this section is where that knowledge lives now.
+
 The public site is the only system that talks to Follow Up Boss (its key,
 its sync, its lead push). This portal holds no FUB key and no FUB ids. The
 "Follow Up Boss" card on the Profile tab (agent.php, action `update_fub`) has:

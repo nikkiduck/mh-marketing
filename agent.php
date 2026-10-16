@@ -2957,34 +2957,25 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <span class="fld-label">FUB account</span>
             <?php if ($fub_me === null): ?>
               <span class="pill w-inactive">Unknown</span>
-              <span class="hint" style="margin-left:8px;"><?= htmlspecialchars((string)($fub_site['error'] ?: 'The website has not checked yet.')) ?></span>
             <?php elseif ($fub_me['fub_user_id'] > 0 && $fub_me['status'] === 'Active'): ?>
               <span class="pill w-approved">Active</span>
-              <span class="hint" style="margin-left:8px;">Invitation accepted, as <?= htmlspecialchars($fub_me['email']) ?>.</span>
             <?php elseif ($fub_me['fub_user_id'] > 0): ?>
               <span class="pill w-pending"><?= htmlspecialchars($fub_me['status'] ?: 'Invited') ?></span>
-              <span class="hint" style="margin-left:8px;">Added in FUB as <?= htmlspecialchars($fub_me['email']) ?>, but the invitation has not been accepted. Leads cannot be assigned to them until it is.</span>
             <?php else: ?>
               <span class="pill w-inactive">Not a FUB user</span>
-              <span class="hint" style="margin-left:8px;">No FUB user has <?= htmlspecialchars($fub_email ?: 'an email on this profile') ?>. Add them in Follow Up Boss with that email, then they accept the invitation.</span>
             <?php endif; ?>
           </div>
-          <p class="hint" style="margin:4px 0 12px;">
-            <?= $fub_checked ? 'Checked by the website ' . htmlspecialchars($fub_checked) . ($fub_site['source'] === 'cache' ? ' (from the hourly copy; the website did not answer just now)' : '') . '; it checks every hour.' : 'The website checks Follow Up Boss every hour.' ?>
-            FUB bills per user, so only agents who will work website leads are added there.
-          </p>
+          <?php // The explanations that sat here (who has a FUB user, when the website last checked, what opting in does, how the town list works) were removed 2026-10-16 (Nikki): the pill, the checkbox and the town boxes say enough. ?>
 
           <form method="POST">
             <input type="hidden" name="_action" value="update_fub">
-            <label class="admin-check" style="display:flex;align-items:center;gap:8px;margin:4px 0 4px;">
+            <label class="admin-check" style="display:flex;align-items:center;gap:8px;margin:4px 0 12px;">
               <input type="checkbox" name="in_fub" value="1" <?= !empty($agent['in_fub']) ? 'checked' : '' ?>> In the FUB lead rotation
             </label>
-            <p class="hint" style="margin:0 0 12px;">Opted in and Active in FUB: inquiries on their own listings are assigned to them in FUB, and they take leads on other brokerages' listings in the areas ticked below. Opted out: inquiries on their listings reach them by email and FUB never sees them.</p>
 
             <?php if ($fub_areas_ok): ?>
               <?php $fub_area_list = mk_areas(); ?>
               <div class="fld-label" style="margin-bottom:6px;">Service areas</div>
-              <p class="hint" style="margin:0 0 10px;">Which towns they take leads in on other brokerages' listings. Tick an area name to tick all of its towns; an agent with a WHOLE area ticked also gets that area's smaller towns the list does not name. The list is edited on the website (its Communities menu).</p>
               <div id="fubAreas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px 22px;margin-bottom:14px;">
                 <?php foreach ($fub_area_list as $ai => $area): $akeys = array_column($area['towns'], 'key'); $all_on = $akeys && !array_diff($akeys, $fub_ticked); ?>
                   <div>
