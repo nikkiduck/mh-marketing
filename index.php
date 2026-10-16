@@ -628,8 +628,9 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
          rows, the tab row fades on the right to read as scrollable. */
       .wrap { margin-top:16px; padding:0 16px 60px; }
       .mk-page-header { margin-bottom:14px; }
-      .hdr-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
-      .hdr-actions .btn { width:100%; justify-content:center; padding:9px 10px; }
+      .hdr-actions { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; width:100%; }
+      .hdr-actions .btn { width:100%; min-width:0; justify-content:center; padding:9px 8px; font-size:12px; letter-spacing:0; text-transform:none; }
+      .agent-card .boards { white-space:normal; }   /* "Vail · Altitude · REColorado" nowrap widened the page to 402px */
       .hdr-actions form { display:contents; }
       .hdr-actions form:last-child .btn { grid-column:1 / -1; grid-row:1; }
       .attn { flex-direction:column; gap:6px; }

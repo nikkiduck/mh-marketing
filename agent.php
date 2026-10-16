@@ -2489,6 +2489,20 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     @media (max-width: 700px) {
       .card { padding:16px 14px; }
 
+      /* Phone pass, 2026-10-15: the page laid out at 490px on a 375px phone.
+         The header's View portal button could not shrink beside the name, the
+         Website status row (label, chip, two buttons) and the Follow Up Boss
+         town labels were nowrap, and a fixed-width input or two did the rest.
+         Everything that can wrap now wraps; measured back to 375px. */
+      .agent-header { flex-wrap:wrap; padding:16px 14px; gap:12px 14px; }
+      .agent-header-actions { width:100%; flex-wrap:wrap; }
+      .fld, .btn-row, .form-row, .agent-meta-row, .fwd-form { flex-wrap:wrap; }
+      label, .boards, .info-value { white-space:normal; }
+      .form-row label.grow { min-width:0; }
+      .form-input { max-width:100%; }
+      .card { overflow-wrap:anywhere; }
+      #fubAreas { grid-template-columns:repeat(2, minmax(0,1fr)) !important; gap:10px 12px !important; }   /* the inline auto-fill grid fell to one column: 1,500px of towns */
+
       /* ── Collateral ───────────────────────────────────────────────────── */
 
       /* The status chip ("ORDERED") sat after a flex:1 title block, which put
