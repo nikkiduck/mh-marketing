@@ -3091,7 +3091,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                     <?php if ($i['member_status'] === 'Other brokerage'): ?><span class="pill w-inactive" style="margin-left:6px;" title="The board still lists this agent under their previous brokerage. Captured for reference; not sent to the website until the board moves them to Mont Haus.">Other brokerage</span><?php elseif ($i['member_status'] !== 'Active'): ?><span class="pill w-inactive" style="margin-left:6px;">Off the feed</span><?php endif; ?>
                   </td>
                   <td style="text-align:right;color:#9ca3af;font-size:12px;">
-                    <?= $i['last_seen_at'] ? 'seen ' . htmlspecialchars(date('M j', strtotime($i['last_seen_at']))) : 'added by hand' ?>
+                    <?= $i['last_seen_at'] ? 'as of ' . htmlspecialchars(date('M j', strtotime($i['last_seen_at']))) : 'added by hand' ?><?php // "as of" = the last hourly roster sync that found this id in the board's feed (Nikki, 2026-10-16: "seen" read oddly) ?>
                   </td>
                   <td style="text-align:right;width:28px;">
                     <form method="POST" style="margin:0;" onsubmit="return confirm('Remove this MLS ID from <?= e_attr(addslashes($agent['agent_name'] ?? '')) ?>?');">
