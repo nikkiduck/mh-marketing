@@ -1586,9 +1586,12 @@ function e_attr($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
 $agent_slug = trim((string)($agent['slug'] ?? ''));
 $web_status = (string)($agent['web_status'] ?? 'pending');
 $web_label  = ['approved' => 'On the website', 'pending' => 'Waiting for approval', 'inactive' => 'Off the website'];
-$web_actions = ['approved' => 'Put on the site', 'pending' => 'Back to waiting', 'inactive' => 'Take off the site'];
+// One move each way (Nikki, 2026-10-16): on the site -> "Remove"; off it or
+// still waiting -> "Put on the site". "Back to waiting" (approved -> pending)
+// was dropped; pending now only ever means a new agent not yet approved.
+$web_actions = ['approved' => 'Put on the site', 'inactive' => 'Remove'];
 unset($web_actions[$web_status]);
-if ($web_status === 'pending') unset($web_actions['inactive']);   // one step at a time
+if ($web_status === 'pending') unset($web_actions['inactive']);   // a waiting agent is put on, not removed
 
 // What the website still wants from us.
 $hosted = fn($u) => $u && (str_starts_with((string)$u, 'photo.php') || str_starts_with((string)$u, rtrim(SITE_URL, '/') . '/'));
