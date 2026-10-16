@@ -618,9 +618,27 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       .search-wrap { max-width:none; }
       #agentSearch { font-size:16px; padding:9px 10px 9px 32px; }   /* 16px: iOS zooms below it */
       .view-toggle { margin-left:0; align-self:flex-start; }
-      .filter-bar { overflow-x:auto; scrollbar-width:none; }
+      .filter-bar { overflow-x:auto; scrollbar-width:none; position:relative; }
       .filter-bar::-webkit-scrollbar { display:none; }
       .filter-tab { flex:none; padding:8px 12px; }
+      /* Phone pass, 2026-10-15. Cards are the phone view (the stacked table
+         showed a lone tick and empty lines per agent; the script forces cards
+         under 620px and the toggle goes). The seven header buttons become a
+         two-column block with New Agent on top, the attention chips full-width
+         rows, the tab row fades on the right to read as scrollable. */
+      .wrap { margin-top:16px; padding:0 16px 60px; }
+      .mk-page-header { margin-bottom:14px; }
+      .hdr-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%; }
+      .hdr-actions .btn { width:100%; justify-content:center; padding:9px 10px; }
+      .hdr-actions form { display:contents; }
+      .hdr-actions form:last-child .btn { grid-column:1 / -1; grid-row:1; }
+      .attn { flex-direction:column; gap:6px; }
+      .attn-chip { justify-content:flex-start; text-align:left; }
+      .filter-bar::after { content:''; position:sticky; right:0; top:0; flex:none; width:28px; margin-left:-28px; pointer-events:none;
+                           background:linear-gradient(90deg, rgba(253,251,246,0), #fdfbf6 80%); }
+      .view-toggle { display:none; }
+      .agent-grid { gap:10px; }
+      .card-foot .btn-ghost { font-size:17px; padding:8px 9px; }
     }
   </style>
 </head>
@@ -887,6 +905,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
   // throw (private windows), and the page works the same without it.
   var view = 'table';
   try { view = localStorage.getItem('mk_roster_view') === 'cards' ? 'cards' : 'table'; } catch (e) {}
+  // A phone always gets the cards (2026-10-15): the stacked table is unreadable there.
+  if (window.matchMedia && window.matchMedia('(max-width: 619.98px)').matches) view = 'cards';
 
   function rowsIn(el) { return Array.prototype.slice.call(el.querySelectorAll('.agent-row')); }
 
