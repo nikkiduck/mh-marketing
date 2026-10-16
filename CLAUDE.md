@@ -1589,9 +1589,19 @@ out on the right under 720px so it reads as scrollable. The Instagram tool's
 option rows (`.sp-look`) wrap and each pill keeps one line ("M mark" and
 "Upper right" broke mid-word). The Users and Split-an-Invoice tables scroll
 inside their wrapper on a phone (min-width), which is the intended
-behaviour. Not walked: index.php, agent.php (no harness; their measured
-pass above stands), the live Instagram and Flyer tools (sign-in needed;
-their form markup was checked against the real stylesheets instead).
+behaviour. Later that day, signed in: the roster (index.php) and the agent
+page (agent.php) were walked live. Roster under 620px: cards are the phone
+view (the script forces them; the toggle is hidden), the seven header
+buttons are a two-column block with New Agent on top (minmax columns,
+plain case, so they shrink), attention chips are full-width rows, the tab
+row fades on the right, a card's board list wraps. Agent page under 700px:
+the page laid out at 490px on a 375px phone (the layout viewport grows to
+fit nowrap content, which is what to look for when a page "zooms out" on
+a phone: `innerWidth` above the device width); the header, the Website
+status row, form rows and the FUB town labels now wrap, the towns sit in
+two columns. All seven tabs measure 375px. Not walked: the live Instagram
+and Flyer tools (their form markup was checked against the real
+stylesheets instead).
 
 **Running the stub harnesses on the Mac (2026-10-15).** Homebrew's PHP
 compiles mysqli in, so the stub `class mysqli` cannot load there. A scratch
