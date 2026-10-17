@@ -32,7 +32,7 @@ function mkt_seed_onboarding_tasks(mysqli $conn, int $intake_id): void {
     // Using sort_order in multiples of 10 so future items can be inserted between.
     $t1 = $ins('Email Setup',                null, 10);
     $t2 = $ins('Email Signature',            null, 20);
-    $t3 = $ins('QR Code',                    null, 30);
+    // "QR Code" (sort 30) was removed from the defaults 2026-10-17 (Nikki); codes are requested from the portal when needed.
     $t4 = $ins('Marketing Overview Meeting', null, 40);  // date picker on parent
     // Ticking this subscribes them (agent.php → mk_hs_subscribe). Nikki,
     // 2026-09-22: no automatic subscription; she explains the Hot Sheets in
@@ -44,6 +44,6 @@ function mkt_seed_onboarding_tasks(mysqli $conn, int $intake_id): void {
     $t8 = $ins('Instagram Announcement',     null, 80);  // date picker on parent
     $t9 = $ins('B2B Announcement',           null, 90);  // date picker on parent
 
-    // No sub-tasks. The checklist is a flat list of 10 items.
+    // No sub-tasks. The checklist is a flat list of 9 items.
     // File links (email signature, QR code SVG, headshots) live on the Assets tab.
 }
