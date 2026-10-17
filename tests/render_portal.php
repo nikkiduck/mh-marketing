@@ -42,7 +42,7 @@ $SB = sys_get_temp_dir() . '/pt_render_' . bin2hex(random_bytes(4));
 mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
 foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php', 'portal/memberships.php',
-          'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'portal/profile.php', 'portal/elevation.php', 'portal/contact.php', 'inc/portal.php', 'inc/portal_hotsheets.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
+          'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'portal/profile.php', 'portal/elevation.php', 'portal/elevation_save.php', 'portal/elevation_print.php', 'portal/elevation_pdf.php', 'portal/contact.php', 'inc/portal.php', 'inc/elevation.php', 'inc/portal_hotsheets.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
           'inc/creatives.php', 'inc/boards.php', 'inc/agent_lifecycle.php', 'inc/_onboarding.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
@@ -224,6 +224,21 @@ class mysqli {
         if (preg_match('/INSERT INTO hs_subscribers/', $sql)) { $this->insert_id = 601; $this->write('hs_subscribe', $p); return []; }
         if (preg_match('/UPDATE hs_subscribers SET/', $sql))  { $this->write('hs_update', $p); return []; }
         if (preg_match('/UPDATE marketing_tasks SET/', $sql)) { return []; }
+        // Elevation Planner (sql/elevation_plans_v1.sql, 2026-10-17): the person's own rows only. Every read binds the
+        // owner, so a plan id with someone else's owner is simply not found; writes are logged for the assertions.
+        if (preg_match("/FROM elevation_plans WHERE intake_id = \\? AND kind = 'working'/", $sql)) {
+            return self::s(array_values(array_filter($D['plans'] ?? [], fn($x) => (int)$x['intake_id'] === (int)$p[0] && $x['kind'] === 'working')));
+        }
+        if (preg_match("/FROM elevation_plans WHERE intake_id = \\? AND kind = 'saved'/", $sql)) {
+            return self::s(array_values(array_filter($D['plans'] ?? [], fn($x) => (int)$x['intake_id'] === (int)$p[0] && $x['kind'] === 'saved')));
+        }
+        if (preg_match('/FROM elevation_plans WHERE id = \\? AND intake_id = \\?/', $sql)) {
+            return self::s(array_values(array_filter($D['plans'] ?? [], fn($x) => (int)$x['id'] === (int)$p[0] && (int)$x['intake_id'] === (int)$p[1])));
+        }
+        if (preg_match('/^INSERT INTO elevation_plans/', $sql))        { $this->insert_id = 801; $this->write('plan_insert', $p); return []; }
+        if (preg_match('/^UPDATE elevation_plans SET plan = /', $sql)) { $this->write('plan_update', $p); return []; }
+        if (preg_match('/^UPDATE elevation_plans SET name = /', $sql)) { $this->write('plan_rename', $p); return []; }
+        if (preg_match('/^DELETE FROM elevation_plans/', $sql))        { $this->write('plan_delete', $p); return []; }
         throw new RuntimeException("stub mysqli: no fixture for SQL:\n" . trim($sql));
     }
     public function query(string $sql) { return new mh_result($this->run($sql, [])); }
@@ -324,6 +339,16 @@ function scenario(array $over = []): array {
                 ['id' => 42, 'intake_id' => 7, 'address' => 'KC Secret Pocket Rd', 'city' => 'Vail', 'list_price' => 9999999, 'beds' => null, 'baths' => null, 'sqft' => null, 'is_rental' => 0, 'status' => 'available', 'notes' => '',
                  'photo_file' => 'KCPKT.jpg', 'photo_orig_name' => 'kc.jpg', 'photo_thumb' => null, 'photo_uploaded_at' => null],
             ],
+            // Elevation plans (sql/elevation_plans_v1.sql): Jackson's working plan and one he saved; Kim's, never his.
+            'plans' => [
+                ['id' => 81, 'intake_id' => 6, 'kind' => 'working', 'name' => '', 'plan' => '{"goal":450000,"tax":30,"expenses":60000,"split":70,"price":4000000,"rate":2.5,"weeks":48,"apptRate":10,"agreeRate":40,"closeRate":75,"q1":20,"q2":25,"q3":30,"q4":25,"markets":["Aspen"],"n1":"JH WORKING NOTE","n2":"","n3":""}',
+                 'leads' => '{"need":350,"budget":15000,"weeks":48,"channels":[{"id":"social","name":"Social media","custom":false,"hint":"","rows":[{"id":"r1","name":"DMs","qty":40,"unit":"messages","hours":6,"cost":0,"conv":3,"note":""}]}],"tools":[]}',
+                 'created_at' => '2026-10-17 09:00:00', 'updated_at' => '2026-10-17 10:00:00'],
+                ['id' => 82, 'intake_id' => 6, 'kind' => 'saved', 'name' => 'JH 2027 plan', 'plan' => '{"goal":400000,"tax":30,"expenses":60000,"split":70,"price":4000000,"rate":2.5,"weeks":48,"apptRate":10,"agreeRate":40,"closeRate":75,"q1":20,"q2":25,"q3":30,"q4":25,"markets":["Vail"],"n1":"","n2":"","n3":""}',
+                 'leads' => '{"need":350,"budget":15000,"weeks":48,"channels":[],"tools":[]}', 'created_at' => '2026-10-16 09:00:00', 'updated_at' => '2026-10-16 09:00:00'],
+                ['id' => 83, 'intake_id' => 7, 'kind' => 'saved', 'name' => 'KC SECRET PLAN', 'plan' => '{"goal":999,"tax":30,"expenses":0,"split":70,"price":1,"rate":2.5,"weeks":48,"apptRate":10,"agreeRate":40,"closeRate":75,"q1":25,"q2":25,"q3":25,"q4":25,"markets":[],"n1":"KC SECRET NOTE","n2":"","n3":""}',
+                 'leads' => '{"need":1,"budget":1,"weeks":48,"channels":[],"tools":[]}', 'created_at' => '2026-10-16 09:00:00', 'updated_at' => '2026-10-16 09:00:00'],
+            ],
             'qr' => [
                 ['id' => 1, 'code' => 'jhorn-yard', 'intake_id' => 6,  'label' => 'JH Yard Sign',     'dest_type' => 'profile', 'dest_url' => null, 'is_active' => 1, 'scan_count' => 4],
                 ['id' => 5, 'code' => 'jhorn-oh',   'intake_id' => 6,  'label' => 'JH Open House',    'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/oh', 'is_active' => 0, 'scan_count' => 0],
@@ -400,8 +425,46 @@ ok('the menu: Home, My Profile, My Marketing (Spend, Advertising, Collateral), M
    && has($b, '>Elevation Planner<') && has($b, '>Templates<') && has($b, '>QR Codes<') && has($b, '>Brand Tools<') && has($b, 'pt-menu-btn') && !has($b, 'Internal Hot Sheets</a>') && !has($b, 'Social Templates'), $b);
 [$c, , $b] = req('jackson', '/portal/advertising.php');
 ok('a page in a group shows the group\'s sub-tabs with its own tab on', has($b, 'pt-subnav') && preg_match('#<a href="/portal/advertising.php" class="on">Advertising</a>#', $b) && has($b, '/portal/orders.php" class="">Collateral'), $b);
+// Elevation Planner (2026-10-17): the page embeds the person's working plan and their saved plans, never anyone else's;
+// every save names the owner; print and PDF answer only for the owner's ids. The old demo link is gone.
 [$c, , $b] = req('jackson', '/portal/elevation.php');
-ok('Elevation Planner: a tab for now, with the demo in a new tab', $c === 200 && no_fatal($b) && has($b, 'elevation-plan/') && has($b, 'target="_blank"'), $b);
+ok('Elevation Planner: the three tabs, with Jackson\'s working plan and saved list embedded', $c === 200 && no_fatal($b)
+   && has($b, 'id="ev-tab-planner"') && has($b, 'id="ev-tab-leads"') && has($b, 'id="ev-tab-saved"') && has($b, '"ready":true') && has($b, '"preview":false')
+   && has($b, '"goal":450000') && has($b, 'JH WORKING NOTE') && has($b, 'JH 2027 plan') && has($b, '/assets/js/elevation.js') && !has($b, 'elevation-plan/'), $b);
+ok('Jackson sees NOTHING of Kim\'s plans', !has($b, 'KC SECRET'), $b);
+[$c, , $b] = req('nikki', '/portal/elevation.php?preview=6');
+ok('an admin preview shows the agent\'s plan read-only', $c === 200 && no_fatal($b) && has($b, 'Preview: you can look through') && has($b, '"preview":true') && has($b, 'JH 2027 plan'), $b);
+[$c, , $b] = req('nikki', '/portal/elevation_save.php?preview=6', ['csrf_token' => 'tok', 'action' => 'working', 'plan' => '{}', 'leads' => '{}']);
+ok('a preview cannot save', $c === 403 && has($b, 'Preview') && !writes(), $b);
+[$c, , $b] = req('jackson', '/portal/elevation_save.php', ['action' => 'working', 'plan' => '{}', 'leads' => '{}']);
+ok('a save without the token is refused', $c === 400 && !writes(), $b);
+$plan = '{"goal":500000,"tax":30,"expenses":60000,"split":70,"price":4000000,"rate":2.5,"weeks":48,"apptRate":10,"agreeRate":40,"closeRate":75,"q1":20,"q2":25,"q3":30,"q4":25,"markets":["Aspen","Vail"],"n1":"x","n2":"","n3":""}';
+$leads = '{"need":350,"budget":15000,"weeks":48,"channels":[{"id":"social","name":"Social media","custom":false,"hint":"","rows":[{"id":"r1","name":"DMs","qty":40,"unit":"messages","hours":6,"cost":0,"conv":3,"note":""}]}],"tools":[{"id":"t1","name":"CRM","use":"","cost":99}]}';
+[$c, , $b] = req('jackson', '/portal/elevation_save.php', ['csrf_token' => 'tok', 'action' => 'working', 'plan' => $plan, 'leads' => $leads]);
+$w = writes();
+ok('the working plan is rewritten on Jackson\'s own row', $c === 200 && has($b, '"ok":true') && count($w) === 1 && $w[0][0] === 'plan_update'
+   && (int)$w[0][1][2] === 81 && (int)$w[0][1][3] === 6 && has($w[0][1][0], '"goal":500000') && has($w[0][1][1], '"name":"CRM"'), $b . json_encode($w));
+[$c, , $b] = req('jackson', '/portal/elevation_save.php', ['csrf_token' => 'tok', 'action' => 'snapshot', 'name' => '  My   2027 plan ', 'plan' => $plan, 'leads' => $leads]);
+$w = writes();
+ok('a snapshot inserts a saved row for Jackson with the trimmed name', $c === 200 && has($b, '"ok":true') && count($w) === 1 && $w[0][0] === 'plan_insert'
+   && (int)$w[0][1][0] === 6 && $w[0][1][1] === 'My 2027 plan', $b . json_encode($w));
+[$c, , $b] = req('jackson', '/portal/elevation_save.php', ['csrf_token' => 'tok', 'action' => 'snapshot', 'plan' => 'not json', 'leads' => $leads]);
+ok('a plan that is not a plan is refused', $c === 422 && !writes(), $b);
+[$c, , $b] = req('jackson', '/portal/elevation_save.php', ['csrf_token' => 'tok', 'action' => 'rename', 'id' => 83, 'name' => 'Mine now']);
+ok('renaming Kim\'s plan: not found, nothing written', $c === 404 && !writes(), $b);
+[$c, , $b] = req('jackson', '/portal/elevation_save.php', ['csrf_token' => 'tok', 'action' => 'delete', 'id' => 83]);
+ok('deleting Kim\'s plan: not found, nothing written', $c === 404 && !writes(), $b);
+[$c, , $b] = req('jackson', '/portal/elevation_save.php', ['csrf_token' => 'tok', 'action' => 'delete', 'id' => 82]);
+$w = writes();
+ok('deleting his own plan binds his id and owner', $c === 200 && count($w) === 1 && $w[0][0] === 'plan_delete' && (int)$w[0][1][0] === 82 && (int)$w[0][1][1] === 6, $b);
+[$c, , $b] = req('jackson', '/portal/elevation_print.php?id=82');
+ok('the print view of his own saved plan', $c === 200 && no_fatal($b) && has($b, 'JH 2027 plan') && has($b, 'renderDocument') && has($b, 'Download PDF') && !has($b, 'KC SECRET'), $b);
+[$c, , $b] = req('jackson', '/portal/elevation_print.php?id=working');
+ok('the print view of the working plan', $c === 200 && no_fatal($b) && has($b, 'JH WORKING NOTE') && has($b, 'Working plan'), $b);
+[$c, , $b] = req('jackson', '/portal/elevation_print.php?id=83');
+ok('Kim\'s plan id on the print view: refused, nothing of hers shown', $c !== 200 && !has($b, 'KC SECRET'), $b);
+[$c, , $b] = req('jackson', '/portal/elevation_pdf.php?id=83');
+ok('Kim\'s plan id on the PDF: refused, nothing of hers shown', $c !== 200 && !has($b, 'KC SECRET'), $b);
 [$c, , $b] = req('jackson', '/portal/brand.php');
 ok('Brand & templates: guidelines with the logo downloads, card and sign templates, each in a new tab (2026-10-10)', $c === 200 && no_fatal($b)
    && has($b, 'href="/brand-guidelines/#downloads"') && has($b, 'Download the logos') && has($b, 'href="/brand-guidelines/business-cards/"') && has($b, 'href="/brand-guidelines/yard-signs/"')

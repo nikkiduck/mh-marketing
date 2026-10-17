@@ -1,0 +1,79 @@
+/* elevation-print.css — the Elevation Plan as a Letter document (2026-10-17).
+   Inlined by inc/elevation.php elevation_render() after elevation.css (the .ev-s-* summary
+   blocks live there, shared with the page), for the print view in the browser
+   (portal/elevation_print.php) and the PDF Chromium prints (portal/elevation_pdf.php).
+   Tokens repeat portal.css because the document loads no other stylesheet. No headshot
+   and no contact block: a personal tool (Nikki, 2026-10-17). */
+
+:root {
+  --ink: #0d0c0a; --gold: #c9a96a; --gold-deep: #8a6d36; --paper: #faf8f4; --card: #ffffff; --line: #e8e2d6;
+  --text: #1c1a17; --muted: #6f6857; --ok: #2f6b45; --warn: #8a5a12;
+  --serif: 'Cormorant Garamond', Georgia, serif; --sans: 'Jost', 'Helvetica Neue', Arial, sans-serif;
+}
+@page { size: Letter; margin: 0.6in 0.65in 0.7in; }
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { background: #e9e5dd; color: var(--text); font: 14.5px/1.5 var(--sans); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body.ev-export { background: #fff; }
+
+/* The browser view: a sheet on a grey desk, with the toolbar the printer never sees. */
+.ev-toolbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; background: var(--ink); color: #cfc6b3; padding: 10px 16px; font-size: 14px; }
+.ev-tb-back { color: #cfc6b3; text-decoration: none; }
+.ev-tb-back:hover { color: #fff; }
+.ev-tb-sp { flex: 1; }
+.ev-tb-btn { font: 500 14px var(--sans); color: #fff; background: transparent; border: 1px solid #3a352c; border-radius: 10px; padding: 8px 14px; cursor: pointer; text-decoration: none; }
+.ev-tb-btn:hover { border-color: #cfc6b3; }
+.ev-tb-btn.main { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.ev-doc { max-width: 8.5in; margin: 24px auto; background: #fff; padding: 0.6in 0.65in 0.7in; box-shadow: 0 2px 16px rgba(0,0,0,.12); }
+body.ev-export .ev-doc { max-width: none; margin: 0; padding: 0; box-shadow: none; }
+@media (max-width: 700px) { .ev-doc { margin: 0; padding: 20px 16px 32px; box-shadow: none; } }
+
+/* ── Document parts ─────────────────────────────────────────────────────── */
+.ev-d-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 32px; padding-bottom: 16px; border-bottom: 2px solid var(--ink); margin-bottom: 26px; flex-wrap: wrap-reverse; }
+.ev-d-logo { height: 34px; width: auto; display: block; }
+.ev-d-title h1 { font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.05; margin: 2px 0 4px; }
+.ev-d-by { margin: 0; color: var(--muted); font-size: 14px; }
+.ev-d-part { display: flex; flex-direction: column; gap: 16px; }
+/* Part two follows part one on the sheet (a forced page break left a near-empty page when the notes ran over); headings keep their first block. */
+.ev-d-part.break { margin-top: 36px; }
+.ev-s-h2, .ev-s-h3, .ev-d-lede, .ev-s-sourcehead { break-after: avoid; page-break-after: avoid; }
+.ev-s-tile, .ev-s-notebox, .ev-s-kvs, .ev-s-pace { break-inside: avoid; page-break-inside: avoid; }
+.ev-d-lede { margin: -6px 0 2px; color: var(--muted); max-width: 70ch; }
+.ev-d-foot { margin-top: 34px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+
+/* Tighter than the page: five tiles across a Letter column, tables that stay on the sheet. */
+.ev-s-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.ev-s-tiles.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.ev-s-tile { padding: 10px 10px 9px; border-radius: 10px; }
+.ev-s-value { font-size: 18px; letter-spacing: -0.01em; }
+.ev-s-sub { font-size: 11.5px; }
+.ev-s-tile .ev-s-label { font-size: 10px; letter-spacing: .07em; }
+.ev-s-table { font-size: 12.5px; }
+.ev-s-table th, .ev-s-table td { padding: 6px 6px; }
+.ev-s-cols { grid-template-columns: minmax(0, 0.84fr) minmax(0, 1.16fr); gap: 14px 18px; }
+.ev-s-table thead th { letter-spacing: .04em; font-size: 10.5px; }
+.ev-s-flag { white-space: nowrap; }
+.ev-s-table td.each { font-size: 11.5px; white-space: normal; min-width: 11em; }
+.ev-s-specifics { font-size: 11.5px; }
+.ev-s-kv { font-size: 12.5px; padding: 4px 0; }
+.ev-s-kvs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.ev-s-notebox { font-size: 12.5px; }
+.ev-s-h3 { font-size: 19px; }
+.ev-s-note { font-size: 12px; }
+.ev-s-cols { break-inside: avoid; }
+.ev-s-table tr { break-inside: avoid; }
+@media (max-width: 700px) {
+  .ev-s-tiles, .ev-s-tiles.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ev-s-cols { grid-template-columns: minmax(0, 1fr); }
+  .ev-s-kvs { grid-template-columns: minmax(0, 1fr); }
+  .ev-d-head { flex-direction: column-reverse; align-items: flex-start; }
+}
+@media print {
+  body { background: #fff; }
+  .ev-toolbar { display: none; }
+  .ev-doc { max-width: none; margin: 0; padding: 0; box-shadow: none; }
+  .ev-s-tiles, .ev-s-tiles.four { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .ev-s-tiles.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ev-s-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ev-s-kvs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

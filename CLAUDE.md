@@ -2078,9 +2078,8 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   marketing_notes). The website picks the fields up from the roster feed
   within the hour. The Hot Sheets form lives on the profile
   (inc/portal_hotsheets.php renders it); portal/hotsheets.php only takes
-  the POST and sends a GET to the profile. `portal/elevation.php` is a tab
-  for now (Nikki: built with her later): a word on the planner and a button
-  to the website's demo at /elevation-plan/.
+  the POST and sends a GET to the profile. `portal/elevation.php` is the
+  Elevation Planner (its own section below, 2026-10-17).
 - Pilot access = ACCESS_ALLOWLIST entry + role `agent` (or admin) +
   `users.intake_id`. Pilot (Nikki, 2026-10-06): Weber Boxer Group
   (Jonathan -> 30, Scott -> 21, Sara -> 23; the team row 8 is their
@@ -2227,6 +2226,60 @@ page links back with `.tp-back`; both pass 'social' as the active key.
 - Everything posted is checked in `flyer_post_from_request()`: the
   account's listing, photos from the site's list for it or the account's
   uploads (six at most), the QR choice from `flyer_qr_options()`, lengths.
+
+### Elevation Planner (portal/elevation.php, 2026-10-17)
+
+The broker business-planning tool, built into the portal from the standalone
+pages JB had made as Claude artifacts (`/Users/nikkiduck/Mont Haus
+Master/elevation-plan-project`, whose CLAUDE.md holds the formulas and the
+expected figures: the example plan gives $902,041 commission, 10 closings,
+350 conversations, 7.3 a week; the example lead sources 324 conversations,
+$12,096, $37 each). Nikki, 2026-10-17: both tools in ONE page, one saved
+plan holds both, agent only (plus admin preview), Jost throughout with
+Cormorant on the headings only, a Letter PDF with no headshot or contact
+block (a personal tool). The website's static demo at /elevation-plan/ was
+retired the same day and 301s here.
+- Three tabs: Planner (part one: a take-home goal worked back to
+  commission, closings, sales volume and weekly conversations, quarters,
+  focus markets, three prompts), Lead Sources (part two: a typical month of
+  outreach per source, software, pace against part one's target, which the
+  "Use the target from my Planner" button copies across) and Saved Plans.
+  Every number and every summary comes from `assets/js/elevation.js`
+  (`MHElevation.calc`, `.compute`, `.planTarget`, the plain-text and the
+  drawn summaries, `renderDocument`); `assets/js/elevation-page.js` drives
+  the page; `assets/css/elevation.css` (scoped `.ev-*`, portal tokens) and
+  `assets/css/elevation-print.css` (the sheet). Keep `calc` and `compute`
+  as they are: the figures above are the test.
+- Saving: `elevation_plans` (sql/elevation_plans_v1.sql), per PERSON
+  (`elevation_owner()` = the account id, never a team), two kinds: ONE
+  `working` row rewritten 0.9 s after each change (POST
+  portal/elevation_save.php action=working; `navigator.sendBeacon` on the
+  way out), and `saved` snapshots from "Save this plan" (a `<dialog>` asks
+  the name; default "Elevation Plan, Oct 17, 2026"), which Saved Plans
+  opens (two-click, it replaces the working plan), prints, renames or
+  deletes. `inc/elevation.php` cleans everything posted
+  (`elevation_clean_plan()` / `elevation_clean_leads()`: shape, lengths,
+  counts, numbers from 0 up) before it is stored, and every read binds the
+  owner, so anyone else's id is simply not found. The browser's
+  localStorage (`mh-elevation-v1`) mirrors the state: it is what the page
+  uses before the migration has run (`elevation_ready()` false: the page
+  says so and the endpoint refuses), when a save fails, and on a first
+  visit it is moved into the account. An admin preview can look but not
+  save (the endpoint answers 403; the page says so).
+- Print and PDF: `elevation_render()` in inc/elevation.php is ONE render
+  path, a self-contained Letter document (header with the horizontal logo,
+  the plan's name, the agent and the date; part one, then part two; the
+  figures drawn by `MHElevation.renderDocument()` from the row's two JSON
+  states). portal/elevation_print.php shows it in the browser with Print
+  and Download PDF; portal/elevation_pdf.php prints it with the flyer's
+  Chromium call (`flyer_export_pdf()`, fonts and logo inlined as data URIs
+  because Chromium opens a file with no session) and downloads
+  `Elevation-Plan-{slug}-{date}.pdf`; `?id=working` or a saved id. No
+  forced page break between the parts (it left a near-empty page when the
+  prompts ran over); headings keep their first block.
+- Tests: `tests/render_portal.php` (the plans fixtures: Jackson's working
+  and saved rows, Kim's, and the save, rename, delete, print and PDF
+  refusals), run on a server like the other harnesses.
 
 ### Render harnesses: run them on a server
 The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`
