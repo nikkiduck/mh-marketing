@@ -393,7 +393,7 @@ ok('plain words for a profile destination', has($b, 'Your profile page on montha
 ok('Jackson home renders and counts only his codes', $c === 200 && no_fatal($b) && has($b, 'You have 2 QR codes'), $b);
 ok('home (2026-10-12): My Profile card with the Hot Sheet line, My Marketing and My Tools sections', has($b, 'My Profile') && has($b, 'See and update')
    && has($b, 'Your public-facing info, Hot Sheet subscriptions, service areas and MLS boards.') && has($b, '>My Marketing<') && has($b, '>My Tools<') && has($b, 'Elevation Planner') && has($b, '>Templates<') && has($b, 'More templates coming soon') && has($b, 'Brand Tools')
-   && has($b, 'jackson.horn@monthaus.com · 970.555.0100') && !has($b, 'Your marketing at Mont Haus') && !has($b, 'See the creative'), $b);
+   && has($b, 'href="mailto:jackson.horn@monthaus.com">jackson.horn@monthaus.com<') && has($b, 'href="tel:9705550100">970.555.0100<') && !has($b, 'Your marketing at Mont Haus') && !has($b, 'See the creative'), $b);
 ok('every page ends with the Contact marketing form, posting back to the page it is on', has($b, 'action="/portal/contact.php"') && has($b, 'name="subject"') && has($b, 'name="back" value="/portal/"'), $b);
 ok('the menu: Home, My Profile, My Marketing (Spend, Advertising, Collateral), My Tools (Elevation Planner, Social Templates, QR Codes, Brand Tools)',
    has($b, 'class="pt-group ') && substr_count($b, 'class="pt-nav-a pt-group-btn"') === 2 && has($b, '>Spend<') && has($b, '>Advertising<') && has($b, '>Collateral<')
@@ -709,9 +709,9 @@ echo "\nHOME CARDS\n";
 ok('home counts his advertising and orders in plain words', has($b, 'You have 1 ad running now') && has($b, 'You have 1 order on the way, and 1 delivered'), $b);
 ok('…and his membership on its own card, not among the ads', has($b, 'You are a member of Ridgway Chamber of Commerce.') && has($b, 'See memberships ›') && !has($b, '2 ad'), $b);
 [, , $b] = req('jon', '/portal/');
-ok('Jonathan\'s home: nothing of his own, the team\'s placement and order in the team section', has($b, 'No ad placements yet.') && has($b, 'The team has 1 ad placement on record') && has($b, 'The team has 1 order on the way.'), $b);
+ok('Jonathan\'s home: one line for nothing of his own (2026-10-17), the team\'s placement and order in the team section', has($b, 'No advertising, collateral, memberships or marketing spend yet.') && has($b, 'The team has 1 ad placement on record') && has($b, 'The team has 1 order on the way.'), $b);
 [, , $b] = req('sierrah', '/portal/');
-ok('nothing yet: the cards say so, no dead ends', has($b, 'No ad placements yet.') && has($b, 'No collateral yet.') && has($b, 'No memberships yet.'), $b);
+ok('nothing yet: one line in place of four empty cards (2026-10-17)', has($b, 'No advertising, collateral, memberships or marketing spend yet.') && !has($b, 'See advertising') && !has($b, 'See collateral') && !has($b, 'See memberships'), $b);
 
 echo "\nPREVIEW AND REFUSALS\n";
 [, , $b] = req('jackson', '/portal/qr.php?preview=8');

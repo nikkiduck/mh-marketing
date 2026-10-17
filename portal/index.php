@@ -54,7 +54,17 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
     $you = $scope['team'] ? 'The team has' : 'You have';
     $pre = $scope['team'] ? $scope['short'] . ' ' : '';   // "WB Advertising", "WB Collateral", "WB Marketing Spend"
     $who = $scope['team'] ? 'the team has' : 'you\'ve';
+    // An empty card is scrolling for nothing (Nikki, 2026-10-17): the kinds with
+    // nothing in them become one line under the cards that have something.
+    $empty = [];
+    if ($ads['n'] === 0) $empty[] = 'advertising';
+    if ($ord['n'] === 0) $empty[] = 'collateral';
+    if ($mem['n'] === 0) $empty[] = 'memberships';
+    if (!$fin['months']) $empty[] = 'marketing spend';
+    $none = $empty ? 'No ' . (count($empty) > 1 ? implode(', ', array_slice($empty, 0, -1)) . ' or ' . end($empty) : $empty[0]) . ' yet.' : '';
+    if ($scope['team'] && $none !== '') $none = $scope['short'] . ': ' . lcfirst($none);
     ?>
+    <?php if ($ads['n'] > 0): ?>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/advertising.php', $q)) ?>">
       <h2 class="pt-card-h"><?= ph($pre) ?>Advertising</h2>
       <p class="pt-card-sub"><?php
@@ -65,6 +75,8 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
       ?></p>
       <span class="pt-card-go">See advertising ›</span>
     </a>
+    <?php endif; ?>
+    <?php if ($ord['n'] > 0): ?>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/orders.php', $q)) ?>">
       <h2 class="pt-card-h"><?= ph($pre) ?>Collateral</h2>
       <p class="pt-card-sub"><?php
@@ -75,6 +87,8 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
       ?></p>
       <span class="pt-card-go">See collateral ›</span>
     </a>
+    <?php endif; ?>
+    <?php if ($mem['n'] > 0): ?>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/memberships.php', $q)) ?>">
       <h2 class="pt-card-h"><?= ph($pre) ?>Memberships</h2>
       <p class="pt-card-sub"><?php
@@ -86,6 +100,8 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
       ?></p>
       <span class="pt-card-go">See memberships ›</span>
     </a>
+    <?php endif; ?>
+    <?php if ($fin['months']): ?>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/spend.php', $q)) ?>">
       <h2 class="pt-card-h"><?= $pre !== '' ? ph($pre) . 'Marketing Spend' : 'Spend' ?></h2>
       <p class="pt-card-sub"><?= $fin['months']
@@ -94,6 +110,8 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
           : 'No marketing spend yet.' ?></p>
       <span class="pt-card-go">See details ›</span>
     </a>
+    <?php endif; ?>
+    <?php if ($none !== ''): ?><p class="pt-none"><?= ph($none) ?></p><?php endif; ?>
     <?php
 }
 
@@ -113,7 +131,12 @@ portal_header($ctx, 'Home', 'home');
     <?php if ($photo !== ''): ?><img class="pt-avatar" src="<?= ph($photo) ?>" alt=""><?php endif; ?>
     <div>
       <h1 class="pt-h1">Hello, <?= ph(portal_greeting_name($ctx)) ?></h1>
-      <p class="pt-lead" style="margin:0"><?= $is_team ? 'Your team\'s marketing at Mont Haus.' : ph($email) . ($phone !== '' ? ' · ' . ph($phone) : '') ?></p>
+      <?php // Email and phone are links in the page's own colour, no underline; a phone shows them on two lines (Nikki, 2026-10-17). ?>
+      <p class="pt-lead pt-contact" style="margin:0"><?php if ($is_team): ?>Your team's marketing at Mont Haus.<?php else: ?>
+        <?php if ($email !== ''): ?><a href="mailto:<?= ph($email) ?>"><?= ph($email) ?></a><?php endif; ?>
+        <?php if ($email !== '' && $phone !== ''): ?><span class="pt-dot"> · </span><?php endif; ?>
+        <?php if ($phone !== ''): ?><a href="tel:<?= ph(preg_replace('/[^0-9+]/', '', $phone)) ?>"><?= ph($phone) ?></a><?php endif; ?>
+      <?php endif; ?></p>
     </div>
   </div>
 
