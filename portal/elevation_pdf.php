@@ -12,7 +12,7 @@ if (!elevation_ready($conn)) portal_stop('Not yet', 'Saving plans to your accoun
 
 $owner = elevation_owner($ctx);
 $id    = (string)($_GET['id'] ?? 'working');
-$row   = $id === 'working' ? elevation_working($conn, $owner) : (ctype_digit($id) ? elevation_get($conn, $owner, (int)$id) : null);
+$row   = $id === 'working' ? elevation_working($conn, $owner) : (preg_match('/^\d{1,10}$/', $id) ? elevation_get($conn, $owner, (int)$id) : null);
 if (!$row || $row['plan'] === null || $row['leads'] === null) {
     http_response_code(404);
     portal_stop('Plan not found', 'That plan was not found among your saved plans.');

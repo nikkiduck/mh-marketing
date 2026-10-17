@@ -232,7 +232,7 @@ class mysqli {
         if (preg_match("/FROM elevation_plans WHERE intake_id = \\? AND kind = 'saved'/", $sql)) {
             return self::s(array_values(array_filter($D['plans'] ?? [], fn($x) => (int)$x['intake_id'] === (int)$p[0] && $x['kind'] === 'saved')));
         }
-        if (preg_match('/FROM elevation_plans WHERE id = \\? AND intake_id = \\?/', $sql)) {
+        if (preg_match('/^SELECT .* FROM elevation_plans WHERE id = \\? AND intake_id = \\?/', $sql)) {   // ^SELECT: the DELETE carries the same WHERE
             return self::s(array_values(array_filter($D['plans'] ?? [], fn($x) => (int)$x['id'] === (int)$p[0] && (int)$x['intake_id'] === (int)$p[1])));
         }
         if (preg_match('/^INSERT INTO elevation_plans/', $sql))        { $this->insert_id = 801; $this->write('plan_insert', $p); return []; }
@@ -417,7 +417,7 @@ ok('plain words for a profile destination', has($b, 'Your profile page on montha
 [$c, , $b] = req('jackson', '/portal/');
 ok('Jackson home renders and counts only his codes', $c === 200 && no_fatal($b) && has($b, 'You have 2 QR codes'), $b);
 ok('home (2026-10-12): My Profile card with the Hot Sheet line, My Marketing and My Tools sections', has($b, 'My Profile') && has($b, 'See and update')
-   && has($b, 'Your public-facing info, Hot Sheet subscriptions, service areas and MLS boards.') && has($b, '>My Marketing<') && has($b, '>My Tools<') && has($b, 'Elevation Planner') && has($b, '>Templates<') && has($b, 'More templates coming soon') && has($b, 'Brand Tools')
+   && has($b, 'Your public-facing info, Hot Sheet subscriptions, service areas and MLS boards.') && has($b, '>My Marketing<') && has($b, '>My Tools<') && has($b, 'Elevation Planner') && has($b, '>Templates<') && has($b, 'More coming soon') && has($b, 'Brand Tools')
    && has($b, 'href="mailto:jackson.horn@monthaus.com">jackson.horn@monthaus.com<') && has($b, 'href="tel:9705550100">970.555.0100<') && !has($b, 'Your marketing at Mont Haus') && !has($b, 'See the creative'), $b);
 ok('every page ends with the Contact marketing form, posting back to the page it is on', has($b, 'action="/portal/contact.php"') && has($b, 'name="subject"') && has($b, 'name="back" value="/portal/"'), $b);
 ok('the menu: Home, My Profile, My Marketing (Spend, Advertising, Collateral), My Tools (Elevation Planner, Social Templates, QR Codes, Brand Tools)',

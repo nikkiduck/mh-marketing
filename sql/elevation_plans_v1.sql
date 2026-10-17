@@ -1,4 +1,4 @@
--- STATUS: not yet run
+-- STATUS: run
 --
 -- elevation_plans_v1.sql — the Elevation Planner's saved plans on the agent
 -- portal (portal/elevation.php, 2026-10-17). One plan = the Planner (part
