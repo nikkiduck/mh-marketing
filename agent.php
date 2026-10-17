@@ -2505,6 +2505,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       .form-input { max-width:100%; }
       .card { overflow-wrap:anywhere; }
       #fubAreas { grid-template-columns:repeat(2, minmax(0,1fr)) !important; gap:10px 12px !important; }   /* the inline auto-fill grid fell to one column: 1,500px of towns */
+      /* Add Task (Nikki, 2026-10-17): the title on a line of its own, then
+         Category / Priority / Due date share the next line; Notes full width. */
+      .add-form .form-row > label.grow { flex:0 0 100%; }
+      .add-form .form-row > label:not(.grow) { flex:1 1 calc(33.33% - 7px); min-width:0; }
+      .add-form .form-row .form-input { width:100%; min-width:0; }
 
       /* ── Collateral ───────────────────────────────────────────────────── */
 
