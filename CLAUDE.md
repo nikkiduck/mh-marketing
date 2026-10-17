@@ -1931,7 +1931,8 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   scopes and labels a team's section with its name, "The team paid" in
   place of "You paid", and a detail page carries the team's name. **A team
   is marketing, nothing more (Nikki, 2026-10-14):** on a member's Home the
-  team's three cards sit inside My Marketing after their own, and every team
+  team's cards follow their own under a heading of their own, "WB Marketing"
+  (2026-10-17; they used to sit inside My Marketing), and every team
   heading carries the team's initials from its roster row (`scope['short']`:
   "WB Marketing Spend", "WB Advertising", "WB Collateral"; the name when the
   row has no initials). Every

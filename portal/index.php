@@ -62,7 +62,6 @@ function portal_home_cards(array $ctx, array $scope, array $n): void {
     if ($mem['n'] === 0) $empty[] = 'memberships';
     if (!$fin['months']) $empty[] = 'marketing spend';
     $none = $empty ? 'No ' . (count($empty) > 1 ? implode(', ', array_slice($empty, 0, -1)) . ' or ' . end($empty) : $empty[0]) . ' yet.' : '';
-    if ($scope['team'] && $none !== '') $none = $scope['short'] . ': ' . lcfirst($none);
     ?>
     <?php if ($ads['n'] > 0): ?>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/advertising.php', $q)) ?>">
@@ -152,9 +151,14 @@ portal_header($ctx, 'Home', 'home');
   <h2 class="pt-h2 pt-home-h">My Marketing</h2>
   <div class="pt-cards">
     <?php portal_home_cards($ctx, $ctx['scopes'][0], $own); ?>
-    <?php // A team's marketing sits here too, its cards prefixed with the team's initials (Nikki, 2026-10-14: a team is marketing, nothing more).
-          foreach ($ctx['teams'] as $t) portal_home_cards($ctx, portal_scope($ctx, $t['id']), portal_home_counts($conn, $t['id'])); ?>
   </div>
+  <?php // A team's marketing follows under its own heading, "WB Marketing" (Nikki, 2026-10-17); the cards keep the initials (2026-10-14).
+        foreach ($ctx['teams'] as $t): $ts = portal_scope($ctx, $t['id']); ?>
+  <h2 class="pt-h2 pt-home-h"><?= ph($ts['short']) ?> Marketing</h2>
+  <div class="pt-cards">
+    <?php portal_home_cards($ctx, $ts, portal_home_counts($conn, $t['id'])); ?>
+  </div>
+  <?php endforeach; ?>
 
   <h2 class="pt-h2 pt-home-h">My Tools</h2>
   <div class="pt-cards">

@@ -709,7 +709,7 @@ echo "\nHOME CARDS\n";
 ok('home counts his advertising and orders in plain words', has($b, 'You have 1 ad running now') && has($b, 'You have 1 order on the way, and 1 delivered'), $b);
 ok('…and his membership on its own card, not among the ads', has($b, 'You are a member of Ridgway Chamber of Commerce.') && has($b, 'See memberships ›') && !has($b, '2 ad'), $b);
 [, , $b] = req('jon', '/portal/');
-ok('Jonathan\'s home: one line for nothing of his own (2026-10-17), the team\'s placement and order in the team section', has($b, 'No advertising, collateral, memberships or marketing spend yet.') && has($b, 'The team has 1 ad placement on record') && has($b, 'The team has 1 order on the way.'), $b);
+ok('Jonathan\'s home: one line for nothing of his own (2026-10-17), the team\'s placement and order in the team section', has($b, 'No advertising, collateral, memberships or marketing spend yet.') && has($b, '>WB Marketing<') && has($b, 'The team has 1 ad placement on record') && has($b, 'The team has 1 order on the way.'), $b);
 [, , $b] = req('sierrah', '/portal/');
 ok('nothing yet: one line in place of four empty cards (2026-10-17)', has($b, 'No advertising, collateral, memberships or marketing spend yet.') && !has($b, 'See advertising') && !has($b, 'See collateral') && !has($b, 'See memberships'), $b);
 
