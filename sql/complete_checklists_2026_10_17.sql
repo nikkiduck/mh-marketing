@@ -1,4 +1,4 @@
--- STATUS: not yet run (written 2026-10-17; Nikki runs it as master in TablePlus)
+-- STATUS: already run 2026-10-17 (Nikki, TablePlus; without the optional Hot Sheets statement)
 --
 -- Every current agent's marketing checklist is marked complete (Nikki,
 -- 2026-10-17): agents onboarded from here on start with a fresh list.
