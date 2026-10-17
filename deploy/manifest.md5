@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-17 10:56 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-17 15:41 from git HEAD in the Mont Haus Master folder.
 20a0b03146f151869668b3ef7834b245  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -33,6 +33,7 @@ b8e198e7cc0617a6128cf965b5c1cdc0  inc/boards.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 3c25b2f69d20d7bec56a4ef84b11b9b2  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
+ea689c25191d1199db89c8337c14a725  inc/elevation.php
 13958d7c888d48b801e84186ed7ec2f2  inc/financials.php
 758035c7cd19b89138d0551975b9f411  inc/flyer.php
 68def6579f0fb2b41872ad289c35c550  inc/flyer_render.php
@@ -69,7 +70,10 @@ dce6b022a8146453bb2054adcd6a5144  portal/advertising.php
 f69e92a4cc1632404c42761619aee4b4  portal/asset.php
 32d55d208d6c858e685bbe7a6e7fd466  portal/brand.php
 0f9c154074c6ffe5c3e60246a1c500cd  portal/contact.php
-034e7c38b450646eb5edfbf821a5bfe5  portal/elevation.php
+ad3c5476adbdec87297e3849dc78af99  portal/elevation.php
+e45b989db2cf856359fe227fa5d104d4  portal/elevation_pdf.php
+09461d1360cecd4f1006dcb7fc3c58fc  portal/elevation_print.php
+c631051215ccc3c7f229af2015586264  portal/elevation_save.php
 873a67717ba5e56a3b5b25bec90dc216  portal/flyer.php
 db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
@@ -103,3 +107,7 @@ d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 f68608a395816de5e9bd156ad122cf2c  assets/css/portal.css
 7cc748c1a6ca7abdcba3c0b4ccb58e71  assets/css/social.css
+f7501d5ec5e2e0434730edd949edbe6d  assets/css/elevation.css
+72e69ed1b490cf357ff8fd1b64ae3521  assets/css/elevation-print.css
+e6fdab0434d3ea859d03c103d2af5752  assets/js/elevation.js
+cfadfab025fb171cd88bac4070ca2e11  assets/js/elevation-page.js
