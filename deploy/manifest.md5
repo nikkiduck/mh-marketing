@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-18 09:39 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-18 10:09 from git HEAD in the Mont Haus Master folder.
 20a0b03146f151869668b3ef7834b245  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -22,7 +22,7 @@ da62007ac84d4e02444e4aa252bb3ca3  cron/send_hot_sheet.php
 dc625ba4ad1cfcb4c13d0067bc8fe4ce  cron/sync_mh_brokers.php
 d0ad5afb6111332d04df7a99464fae2c  cron/sync_roster.php
 dfb28c4e16681b9f76c7e592fbaf96ed  forgot-password.php
-01298acc7f29e749cccf13f3dc872edc  hot_sheet_preview.php
+a6a3971facdec016ebdc1fa67660751e  hot_sheet_preview.php
 4ba218c544f473278a06edf382693d3e  inc/_footer.php
 f493ed168df273fe3551432c3f5a6c39  inc/_nav.php
 8cf7fab783d903989871994744bd76a0  inc/_onboarding.php
@@ -57,7 +57,7 @@ f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 1ba02195b159e28cad43450d9b859160  inc/social.php
 a60f0d938278cdc60e452fef5354cb29  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-f2c925f2dae39af2e75f48b71044327c  index.php
+cd5d1a1e5cdc93541dbb07ecad77258c  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
 8bce1a103a42a7e017e711547c910e10  leadership.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php
@@ -104,7 +104,7 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 cc53d974b2ea12ac47bb365dc8eb73cc  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 a42b13cfa61eb0ba3b0e26baac3d969e  spark_debug.php
-6ec252a282247f271cce5f619792f53c  subscribers.php
+a0002a748704eb7f6b3f572df32895ed  subscribers.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 8780274663695d9cfb5111cbedf31a6e  users.php
 90750ac4905fdab022c241560911f5ba  website_order.php
