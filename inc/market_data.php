@@ -193,29 +193,53 @@ function market_boot(array $data, array $urls): array {
 // ── Snapshot posts ───────────────────────────────────────────────────────────
 
 /**
- * One card per market, as JB's seven were drawn. layout: hero (one county),
- * list (two or three counties), metro (REcolorado's own figures). photo: the
- * stock photo suggested as a backdrop (assets/stock, see social_stock()).
+ * One card per PLACE (Nikki, 2026-10-18, after the first version's seven
+ * market cards: "one city or county at a time", Summit and Steamboat apart):
+ * every county in county.json, every Aspen Glenwood MLS town in towns.json,
+ * and the Denver Metro figures from front_range.json. Keyed by a slug the
+ * builder posts back. market: the board it belongs to (the picker groups
+ * by it, and the report's "Snapshot post for this market" link opens the
+ * market's first card). photo: the suggested stock backdrop (assets/stock).
  */
 function market_card_defs(): array {
     return [
-        'aspen'      => ['title' => 'Aspen & Snowmass', 'layout' => 'hero', 'county' => 'Pitkin County',
-                         'credit_mls' => 'the Aspen/Glenwood Springs MLS Inc.', 'photo' => 'aspen-aerial-fall-1110909378'],
-        'vail'       => ['title' => 'Vail Valley', 'layout' => 'hero', 'county' => 'Eagle County',
-                         'credit_mls' => 'the Vail Multi List Service', 'photo' => 'vail-aspens-fall-1746156502'],
-        'telluride'  => ['title' => 'Telluride', 'layout' => 'hero', 'county' => 'San Miguel County',
-                         'credit_mls' => 'the Telluride MLS', 'photo' => 'telluride-aerial-main-street-fall-1111462754'],
-        'cren'       => ['title' => 'Montrose, Ridgway & Durango', 'layout' => 'list',
-                         'rows' => [['Montrose County', ''], ['Ouray County', 'Ridgway & Ouray'], ['La Plata County', 'Durango']],
-                         'credit_mls' => 'the Colorado Real Estate Network (CREN)', 'photo' => 'ridgway-mount-sneffels-fall-198784448'],
-        'altitude'   => ['title' => 'Summit County & Steamboat', 'layout' => 'list', 'other_line' => true,
-                         'rows' => [['Summit County', 'Breckenridge, Keystone, Frisco'], ['Routt County', 'Steamboat Springs']],
-                         'credit_mls' => 'Altitude MLS', 'photo' => 'breckenridge-town-winter-dusk-382409211'],
-        'recolorado' => ['title' => 'Denver Metro', 'layout' => 'metro', 'county' => 'Denver County',
-                         'credit_mls' => 'REcolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
-        'elevate'    => ['title' => 'Colorado Springs', 'layout' => 'hero', 'county' => 'El Paso County', 'foot' => 'ppar',
-                         'credit_mls' => 'elevateMLS', 'photo' => null],
+        // Aspen Glenwood MLS
+        'pitkin'          => ['title' => 'Aspen & Snowmass',     'place' => 'Pitkin County',   'county' => 'Pitkin County',     'market' => 'aspen',      'photo' => 'aspen-aerial-fall-1110909378'],
+        'garfield'        => ['title' => 'Garfield County',      'place' => 'Glenwood Springs, Carbondale', 'county' => 'Garfield County', 'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-aspen'      => ['title' => 'Aspen',                'place' => 'Town report',     'town' => 'Aspen',               'market' => 'aspen',      'photo' => 'aspen-buttermilk-fall-snow-542481942'],
+        'town-snowmass'   => ['title' => 'Snowmass Village',     'place' => 'Town report',     'town' => 'Snowmass Village',    'market' => 'aspen',      'photo' => 'snowmass-ski-slopes-winter-panorama-410667845'],
+        'town-woody-creek'=> ['title' => 'Woody Creek',          'place' => 'Town report',     'town' => 'Woody Creek',         'market' => 'aspen',      'photo' => 'aspen-aerial-fall-1110909378'],
+        'town-old-snowmass' => ['title' => 'Old Snowmass',       'place' => 'Town report',     'town' => 'Old Snowmass',        'market' => 'aspen',      'photo' => 'snowmass-ski-slopes-winter-panorama-410667845'],
+        'town-basalt'     => ['title' => 'Basalt',               'place' => 'Town report',     'town' => 'Basalt',              'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-missouri-heights' => ['title' => 'Missouri Heights', 'place' => 'Town report',   'town' => 'Missouri Heights',    'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-carbondale' => ['title' => 'Carbondale',           'place' => 'Town report',     'town' => 'Carbondale',          'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-glenwood'   => ['title' => 'Glenwood Springs',     'place' => 'Town report',     'town' => 'Glenwood Springs',    'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
+        // Vail MLS
+        'eagle'           => ['title' => 'Vail Valley',          'place' => 'Eagle County',    'county' => 'Eagle County',      'market' => 'vail',       'photo' => 'vail-aspens-fall-1746156502'],
+        // Telluride MLS
+        'san-miguel'      => ['title' => 'Telluride',            'place' => 'San Miguel County', 'county' => 'San Miguel County', 'market' => 'telluride', 'photo' => 'telluride-aerial-main-street-fall-1111462754'],
+        // CREN
+        'montrose'        => ['title' => 'Montrose',             'place' => 'Montrose County', 'county' => 'Montrose County',   'market' => 'cren',       'photo' => 'ridgway-mount-sneffels-summer-198784289'],
+        'ouray'           => ['title' => 'Ridgway & Ouray',      'place' => 'Ouray County',    'county' => 'Ouray County',      'market' => 'cren',       'photo' => 'ridgway-mount-sneffels-fall-198784448'],
+        'la-plata'        => ['title' => 'Durango',              'place' => 'La Plata County', 'county' => 'La Plata County',   'market' => 'cren',       'photo' => 'ridgway-san-juans-fall-sunrise-256750697'],
+        // Altitude MLS
+        'summit'          => ['title' => 'Summit County',        'place' => 'Breckenridge, Keystone, Frisco', 'county' => 'Summit County', 'market' => 'altitude', 'photo' => 'breckenridge-town-winter-dusk-382409211'],
+        'routt'           => ['title' => 'Steamboat Springs',    'place' => 'Routt County',    'county' => 'Routt County',      'market' => 'altitude',   'photo' => 'steamboat-ski-resort-winter-503720128'],
+        // REcolorado
+        'denver-metro'    => ['title' => 'Denver Metro',         'place' => '11-county metro · All residential', 'metro' => 'recolorado', 'market' => 'recolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
+        'denver'          => ['title' => 'Denver',               'place' => 'Denver County',   'county' => 'Denver County',     'market' => 'recolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
+        // elevateMLS
+        'el-paso'         => ['title' => 'Colorado Springs',     'place' => 'El Paso County',  'county' => 'El Paso County',    'market' => 'elevate',    'photo' => null],
+        'teller'          => ['title' => 'Teller County',        'place' => 'Woodland Park, Cripple Creek', 'county' => 'Teller County', 'market' => 'elevate', 'photo' => null],
     ];
+}
+
+/** The card key for a request: a card key as is, a market id (the report's links) to its first card, else the first card. */
+function market_card_key(string $want): string {
+    $defs = market_card_defs();
+    if (isset($defs[$want])) return $want;
+    foreach ($defs as $k => $d) if ($d['market'] === $want) return $k;
+    return array_key_first($defs);
 }
 
 /** The two looks, as the Instagram posts have them. */
@@ -234,6 +258,12 @@ function market_county_row(array $data, string $county, string $pt): ?array {
     return null;
 }
 
+/** A town row from towns.json (the Aspen Glenwood MLS town reports), or null. */
+function market_town_row(array $data, string $town, string $pt): ?array {
+    foreach ($data['towns'] as $r) if (($r['key'] ?? '') === "$town|$pt") return $r;
+    return null;
+}
+
 /** The front_range.json row for a market, or null. */
 function market_front_row(array $data, string $market): ?array {
     foreach ($data['front_range'] as $r) if (($r['market'] ?? '') === $market) return $r;
@@ -243,139 +273,90 @@ function market_front_row(array $data, string $market): ?array {
 /** Fewer than 10 closed sales in the month: show year to date (the artifact's rule 4). */
 function market_thin(?array $r): bool { return $r !== null && (int)($r['sold'] ?? 0) < 10; }
 
-/** "Single-family homes" / "Townhomes & condos", and the short "Townhomes & condos" line opener for the OTHER type. */
+/** "Single-family homes" / "Townhomes & condos". */
 function market_ptype_words(string $pt): string { return $pt === 'TC' ? 'Townhomes & condos' : 'Single-family homes'; }
 
 /**
  * Everything the card shows, built from the month's data (no HTML; the
- * renderer draws it). $opts: ptype SF|TC. Null for a market with no card or
- * no county row this month.
+ * renderer draws it). One place, one property type, the median large and
+ * three figures under it; nothing else on the card (Nikki, 2026-10-18: the
+ * other type's line and the source block are gone; the words were too small
+ * to read on a phone). $opts: ptype SF|TC. Null when the month has no row.
  *
- * ['eyebrow', 'title', 'sub', 'layout', 'hero' => [label, value, change, dir],
- *  'stats' => [[label, value, note], x4], 'rows' => [[title, value, change, dir, lines[]]],
- *  'foot', 'credit']
+ * ['key', 'eyebrow' (short: the month is in sub), 'title', 'sub', 'hero' => [label, value, change, dir],
+ *  'stats' => [[label, value, note] x3], 'credit' (kept for the record, not drawn)]
  */
-function market_card_model(array $data, string $market, array $opts = []): ?array {
+function market_card_model(array $data, string $key, array $opts = []): ?array {
     $defs = market_card_defs();
-    if (!isset($defs[$market])) return null;
-    $d  = $defs[$market];
+    if (!isset($defs[$key])) return null;
+    $d  = $defs[$key];
     $pt = ($opts['ptype'] ?? 'SF') === 'TC' ? 'TC' : 'SF';
-    $ot = $pt === 'TC' ? 'SF' : 'TC';
     $m  = $data['month'];
-    $month = market_month_label($m);                 // September 2026
+    $month = market_month_label($m);                  // September 2026
+    $lyLab = market_month_label(market_month_ly($m)); // September 2025
     $lyMon = market_month_short(market_month_ly($m)); // Sep 2025
     $lyYr  = market_year(market_month_ly($m));
     $yr    = market_year($m);
-    $card  = ['market' => $market, 'layout' => $d['layout'], 'title' => $d['title'],
-              'eyebrow' => "Market snapshot · {$month}", 'sub' => '', 'hero' => null, 'stats' => [], 'rows' => [], 'foot' => '', 'credit' => ''];
-
-    // One county's "other type" line: "Townhomes & condos: $5.05M median on 13 sales" (YTD when thin).
-    $otherLine = function (?array $o) use ($ot): string {
-        if (!$o || ($o['sold'] ?? null) === null) return '';
-        $w = $ot === 'TC' ? 'Townhomes & condos' : 'Single-family homes';
-        if (market_thin($o)) return "{$w} YTD: " . market_money($o['ytd_median']) . ' median on ' . market_int($o['ytd_sold']) . ' sales';
-        return "{$w}: " . market_money($o['median']) . ' median on ' . market_int($o['sold']) . ' sales';
+    $card  = ['key' => $key, 'market' => $d['market'], 'title' => $d['title'], 'eyebrow' => 'Market snapshot', 'sub' => '', 'hero' => null, 'stats' => [], 'credit' => ''];
+    $vs = function (?float $f, string $when) {   // "+19% vs September 2025", "Even with …", "" for none
+        if ($f === null) return '';
+        $t = market_change_text($f);
+        return $t === 'Even' ? "Even with {$when}" : "{$t} vs {$when}";
     };
 
-    if ($d['layout'] === 'hero') {
-        $r = market_county_row($data, $d['county'], $pt);
-        if (!$r) return null;
-        $o = market_county_row($data, $d['county'], $ot);
-        if (market_thin($r)) {
-            $ch = market_change($r['ytd_median'] ?? null, $r['ytd_median_ly'] ?? null);
-            $card['eyebrow'] = "Market snapshot · Year to date, {$month}";
-            $card['sub']  = "{$d['county']} · " . market_ptype_words($pt);
-            $card['hero'] = ['label' => 'Median sale price, January to ' . market_month_name($m), 'value' => market_money($r['ytd_median'] ?? null),
-                             'change' => $ch === null ? '' : (market_change_text($ch) === 'Even' ? "Even with the same period of {$lyYr}" : market_change_text($ch) . " vs the same period of {$lyYr}"), 'dir' => market_dir($ch)];
-            $card['stats'] = [
-                ['Closed sales, YTD',    market_int($r['ytd_sold'] ?? null),            market_int($r['ytd_sold_ly'] ?? null) . " in {$lyYr}"],
-                ['Days on market, YTD',  market_int($r['ytd_days_on_market'] ?? null),  market_int($r['ytd_days_on_market_ly'] ?? null) . " in {$lyYr}"],
-                ['Of list price, YTD',   market_dec1($r['ytd_pct_of_list'] ?? null) . '%', market_dec1($r['ytd_pct_of_list_ly'] ?? null) . "% in {$lyYr}"],
-                ['Months of supply',     market_dec1($r['months_supply'] ?? null),      market_int($r['inventory'] ?? null) . ' homes for sale'],
-            ];
-        } else {
-            $ch = market_change($r['median'] ?? null, $r['median_ly'] ?? null);
-            $sc = market_change($r['sold'] ?? null, $r['sold_ly'] ?? null);
-            $card['sub']  = "{$d['county']} · " . market_ptype_words($pt);
-            $card['hero'] = ['label' => 'Median sale price', 'value' => market_money($r['median'] ?? null),
-                             'change' => $ch === null ? "No sales in {$lyMon}" : (market_change_text($ch) === 'Even' ? "Even with " . market_month_label(market_month_ly($m)) : market_change_text($ch) . ' vs ' . market_month_label(market_month_ly($m))), 'dir' => market_dir($ch)];
-            $card['stats'] = [
-                ['Closed sales',           market_int($r['sold'] ?? null),           $sc === null ? "None in {$lyMon}" : (market_change_text($sc) === 'Even' ? "Even with {$lyMon}" : market_change_text($sc) . " vs {$lyMon}")],
-                ['Days on market',         market_int($r['days_on_market'] ?? null), market_int($r['days_on_market_ly'] ?? null) . ' a year ago'],
-                ['Of list price received', market_dec1($r['pct_of_list'] ?? null) . '%', market_dec1($r['pct_of_list_ly'] ?? null) . '% a year ago'],
-                ['Months of supply',       market_dec1($r['months_supply'] ?? null), market_dec1($r['months_supply_ly'] ?? null) . ' a year ago'],
-            ];
-        }
-        if (($d['foot'] ?? '') === 'ppar') {
-            $f = market_front_row($data, 'elevate');
-            $card['foot'] = $f ? 'Pikes Peak region, all property types: ' . market_int($f['closed'] ?? null) . ' sales, ' . market_money($f['median'] ?? null, true) . ' median' : $otherLine($o);
-            $card['credit'] = "Source: Colorado Association of REALTORS® Local Market Update, {$d['county']}, {$month}, data from Colorado MLSs including {$d['credit_mls']}, report © {$yr} ShowingTime Plus, LLC. Region figures: Pikes Peak Association of REALTORS®, elevateMLS.";
-        } else {
-            $card['foot'] = $otherLine($o);
-            $card['credit'] = "Source: Colorado Association of REALTORS® Local Market Update, {$d['county']}, {$month}. Data from Colorado MLSs including {$d['credit_mls']}. Report © {$yr} ShowingTime Plus, LLC.";
-        }
-        return $card;
-    }
-
-    if ($d['layout'] === 'metro') {
-        $f = market_front_row($data, $market);
+    if (!empty($d['metro'])) {
+        $f = market_front_row($data, $d['metro']);
         if (!$f) return null;
-        $r = market_county_row($data, $d['county'], $pt);
         $mc = $f['median_change_pct'] ?? null;
-        $card['sub']  = (string)($f['region'] ?? '') === 'Denver Metro (11 counties)' ? '11-county metro · All residential' : trim((string)($f['region'] ?? '') . ' · ' . (string)($f['scope'] ?? ''), ' ·');
+        $card['sub']  = "{$month} · {$d['place']}";
         $card['hero'] = ['label' => 'Median closed price', 'value' => market_money($f['median'] ?? null, true),
-                         'change' => $mc === null ? '' : (market_whole_pct_text($mc) === 'Even' ? 'Even with ' . market_month_label(market_month_ly($m)) : market_whole_pct_text($mc) . ' vs ' . market_month_label(market_month_ly($m))),
+                         'change' => $mc === null ? '' : (market_whole_pct_text($mc) === 'Even' ? "Even with {$lyLab}" : market_whole_pct_text($mc) . " vs {$lyLab}"),
                          'dir' => market_dir($mc === null ? null : (float)$mc)];
         $dc = $f['days_change'] ?? null;
         $daysNote = $dc === null ? '' : ((float)$dc < 0 ? market_int(abs((float)$dc)) . " days faster than {$lyMon}" : ((float)$dc > 0 ? market_int($dc) . " days slower than {$lyMon}" : "Same as {$lyMon}"));
+        $cc = market_whole_pct_text($f['closed_change_pct'] ?? null);
+        $ac = market_whole_pct_text($f['active_change_pct'] ?? null);
         $card['stats'] = [
-            ['Closed sales',        market_int($f['closed'] ?? null), ($t = market_whole_pct_text($f['closed_change_pct'] ?? null)) === '' ? '' : ($t === 'Even' ? "Even with {$lyMon}" : "{$t} vs {$lyMon}")],
-            ['Median days in MLS',  market_int($f['median_days_in_mls'] ?? null), $daysNote],
-            ['Active listings',     market_int($f['active'] ?? null), trim(market_whole_pct_text($f['active_change_pct'] ?? null) . (($f['weeks_of_inventory'] ?? null) !== null ? ' · ' . market_int($f['weeks_of_inventory']) . ' weeks of inventory' : ''), ' ·')],
-            ['New listings',        market_int($f['new_listings'] ?? null), ($t = market_whole_pct_text($f['new_listings_change_pct'] ?? null)) === '' ? '' : ($t === 'Even' ? "Even with {$lyMon}" : "{$t} vs {$lyMon}")],
+            ['Closed sales',       market_int($f['closed'] ?? null),             $cc === '' ? '' : ($cc === 'Even' ? "Even with {$lyMon}" : "{$cc} vs {$lyMon}")],
+            ['Median days in MLS', market_int($f['median_days_in_mls'] ?? null), $daysNote],
+            ['Active listings',    market_int($f['active'] ?? null),             $ac === '' ? '' : ($ac === 'Even' ? "Even with {$lyMon}" : "{$ac} vs {$lyMon}")],
         ];
-        if ($r) {
-            $ch = market_change($r['median'] ?? null, $r['median_ly'] ?? null);
-            $card['foot'] = "{$d['county']} " . ($pt === 'TC' ? 'townhome & condo' : 'single-family') . ' median: ' . market_money($r['median'] ?? null, true) . ($ch !== null ? ', ' . market_change_text($ch) : '');
-        }
-        $card['credit'] = "Source: REcolorado Market Watch, {$month}. Data courtesy of REcolorado. {$d['county']} figure: Colorado Association of REALTORS® Local Market Update. Report © {$yr} ShowingTime Plus, LLC.";
+        $card['credit'] = "Source: REcolorado Market Watch, {$month}. Data courtesy of REcolorado.";
         return $card;
     }
 
-    // list: two or three counties, the median large on each row
-    $card['sub'] = ($pt === 'TC' ? 'Townhome & condo' : 'Single-family') . ' median sale price' . (count($d['rows']) > 2 ? ' by county' : '');
-    $names = [];
-    foreach ($d['rows'] as [$county, $sub]) {
-        $r = market_county_row($data, $county, $pt);
-        if (!$r) continue;
-        $names[] = preg_replace('/\s+County$/', '', $county);
+    $r = !empty($d['town']) ? market_town_row($data, $d['town'], $pt) : market_county_row($data, $d['county'], $pt);
+    if (!$r || ($r['sold'] ?? null) === null) return null;
+    $card['sub'] = "{$month} · {$d['place']} · " . market_ptype_words($pt);
+    if (market_thin($r)) {
+        $ch = market_change($r['ytd_median'] ?? null, $r['ytd_median_ly'] ?? null);
+        $card['eyebrow'] = 'Market snapshot · Year to date';
+        $card['hero'] = ['label' => 'Median sale price, January to ' . market_month_name($m), 'value' => market_money($r['ytd_median'] ?? null),
+                         'change' => $vs($ch, "the same period of {$lyYr}"), 'dir' => market_dir($ch)];
+        $card['stats'] = [
+            ['Closed sales, year to date',   market_int($r['ytd_sold'] ?? null),           market_int($r['ytd_sold_ly'] ?? null) . " in {$lyYr}"],
+            ['Days on market, year to date', market_int($r['ytd_days_on_market'] ?? null), market_int($r['ytd_days_on_market_ly'] ?? null) . " in {$lyYr}"],
+            ['Months of supply',             market_dec1($r['months_supply'] ?? null),     market_int($r['inventory'] ?? null) . ' homes for sale'],
+        ];
+    } else {
         $ch = market_change($r['median'] ?? null, $r['median_ly'] ?? null);
-        $lines = [];
-        if (market_thin($r)) {
-            $lines[] = market_int($r['sold']) . ' sales · year to date ' . market_money($r['ytd_median'] ?? null, true) . ' median on ' . market_int($r['ytd_sold'] ?? null) . ' sales';
-        } else {
-            $lines[] = market_int($r['sold']) . ' sales · ' . market_int($r['days_on_market'] ?? null) . ' days on market · ' . market_dec1($r['months_supply'] ?? null) . ' months of supply';
-        }
-        if (!empty($d['other_line'])) {
-            $o = market_county_row($data, $county, $ot);
-            if ($o && ($o['sold'] ?? null) !== null) {
-                $oc = market_change($o['median'] ?? null, $o['median_ly'] ?? null);
-                $lines[] = $otherLine($o) . ($oc !== null && !market_thin($o) ? ', ' . market_change_text($oc) : '');
-            }
-        }
-        $card['rows'][] = ['title' => $county . ($sub !== '' ? " · {$sub}" : ''), 'value' => market_money($r['median'] ?? null, true),
-                           'change' => $ch === null ? "No sales in {$lyMon}" : (market_change_text($ch) === 'Even' ? "Even with {$lyMon}" : market_change_text($ch) . " vs {$lyMon}"),
-                           'dir' => market_dir($ch), 'lines' => $lines];
+        $sc = market_change($r['sold'] ?? null, $r['sold_ly'] ?? null);
+        $card['hero'] = ['label' => 'Median sale price', 'value' => market_money($r['median'] ?? null),
+                         'change' => $ch === null ? "No sales in {$lyMon}" : $vs($ch, $lyLab), 'dir' => market_dir($ch)];
+        $card['stats'] = [
+            ['Closed sales',     market_int($r['sold'] ?? null),           $sc === null ? "None in {$lyMon}" : $vs($sc, $lyMon)],
+            ['Days on market',   market_int($r['days_on_market'] ?? null), market_int($r['days_on_market_ly'] ?? null) . ' a year ago'],
+            ['Months of supply', market_dec1($r['months_supply'] ?? null), market_dec1($r['months_supply_ly'] ?? null) . ' a year ago'],
+        ];
     }
-    if (!$card['rows']) return null;
-    $list = count($names) > 1 ? implode(', ', array_slice($names, 0, -1)) . ' and ' . end($names) . ' counties' : $names[0] . ' County';
-    $card['credit'] = "Source: Colorado Association of REALTORS® Local Market Updates, {$list}, {$month}. Data from Colorado MLSs including {$d['credit_mls']}. Report © {$yr} ShowingTime Plus, LLC.";
+    $card['credit'] = !empty($d['town'])
+        ? "Source: Aspen/Glenwood Springs MLS Inc. Local Market Update, {$d['town']}, {$month}. Report © {$yr} ShowingTime Plus, LLC."
+        : "Source: Colorado Association of REALTORS® Local Market Update, {$d['county']}, {$month}. Report © {$yr} ShowingTime Plus, LLC.";
     return $card;
 }
 
-/** "market-snapshot-aspen-sep-2026.png" (a story adds -story). */
+/** "market-snapshot-pitkin-sep-2026.png" (a story adds -story, condos add -condos). */
 function market_card_filename(array $o): string {
     return 'market-snapshot-' . $o['market'] . ($o['ptype'] === 'TC' ? '-condos' : '') . '-' . strtolower(str_replace(' ', '-', market_month_short($o['month'])))
          . ($o['format'] === 'story' ? '-story' : '') . '.png';
 }
-

@@ -28,14 +28,12 @@ echo "Month {$month} (" . market_month_label($month) . ")\n";
 
 $files = [];
 foreach (array_keys(market_card_defs()) as $market) {
-    foreach (['SF', 'TC'] as $pt) {
+    foreach (['SF'] as $pt) {
         $card = market_card_model($data, $market, ['ptype' => $pt]);
         if (!$card) { echo "  {$market} {$pt}: no card\n"; continue; }
         if ($pt === 'SF') {
-            echo "  {$market}: {$card['title']} | " . ($card['hero'] ? $card['hero']['value'] . ' ' . $card['hero']['change'] : count($card['rows']) . ' rows') . "\n";
+            echo "  {$market}: {$card['title']} | {$card['hero']['value']} {$card['hero']['change']}\n";
             foreach ($card['stats'] as [$l, $v, $n]) echo "      {$l}: {$v} ({$n})\n";
-            foreach ($card['rows'] as $r) echo "      {$r['title']}: {$r['value']} {$r['change']} | " . implode(' | ', $r['lines']) . "\n";
-            if ($card['foot'] !== '') echo "      foot: {$card['foot']}\n";
         }
         foreach (['dark', 'light'] as $theme) {
             $name = "{$market}-{$pt}-{$theme}.html";
@@ -75,7 +73,7 @@ echo "Wrote " . (count($files) + 2) . " files to {$out}\n";
 // frame shows the server's 501 page and the form is still there to look at).
 require_once dirname(__DIR__) . '/inc/social_render.php';   // social_marks(), standalone
 $render_url = '/__render'; $export_url = '/__render'; $report_url = 'report.html'; $csrf = 'sample';
-$months = $data['months']; $market = 'aspen';
+$months = $data['months']; $market = 'pitkin'; $board_names = array_column($data['boards'], 'name', 'market');
 $stock = ['social-placeholder' => 'Mont Haus mountains (the placeholder photo; the stock library is on the server)'];
 ob_start();
 include dirname(__DIR__) . '/inc/market_post_body.php';
@@ -83,5 +81,5 @@ $body = ob_get_clean();
 file_put_contents("$out/builder.html", '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
     . '<title>Market Snapshot sample</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">'
     . '<link rel="stylesheet" href="/assets/css/portal.css"></head><body><main class="pt-main"><p class="pt-soon">From the Market Report.</p><h1 class="pt-h1">Market Snapshot</h1>'
-    . '<p class="pt-lead">One market\'s month on a card: the median, closed sales, days on market and supply, credited to its MLS. Pick the market and the look, then download.</p>' . $body . '</main></body></html>');
+    . '<p class="pt-lead">One place\'s month on a card: the median, closed sales, days on market and supply, Pick the place and the look, then download.</p>' . $body . '</main></body></html>');
 echo "Wrote builder.html\n";

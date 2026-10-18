@@ -34,8 +34,7 @@ function market_gate(mysqli $conn): ?array {
  * backdrop ('' or a stock photo name). Everything else is dropped.
  */
 function market_card_options_from_request(array $in): array {
-    $market = (string)($in['market'] ?? 'aspen');
-    if (!isset(market_card_defs()[$market])) $market = 'aspen';
+    $market = market_card_key((string)($in['market'] ?? ''));   // a card key, or a market id from the report's links
     $format = isset(market_card_formats()[(string)($in['format'] ?? '')]) ? (string)$in['format'] : 'post';
     $theme  = isset(market_card_themes()[(string)($in['theme'] ?? '')]) ? (string)$in['theme'] : 'dark';
     $ptype  = (string)($in['ptype'] ?? 'SF') === 'TC' ? 'TC' : 'SF';
@@ -68,7 +67,7 @@ function market_card_html(array $o, bool $export = false): string|array {
     $data = market_load($o['month']);
     if (!$data) return 'The data for ' . market_month_label($o['month']) . ' could not be read.';
     $card = market_card_model($data, $o['market'], ['ptype' => $o['ptype']]);
-    if (!$card) return 'There is no ' . (market_card_defs()[$o['market']]['title'] ?? $o['market']) . ' card for ' . market_month_label($o['month']) . '.';
+    if (!$card) return (market_card_defs()[$o['market']]['title'] ?? $o['market']) . ' has no figures for ' . market_month_label($o['month']) . '.';
     $html = market_card_render($card, ['format' => $o['format'], 'theme' => $o['theme'], 'mark' => $o['mark'], 'logo' => $o['logo'],
                                        'backdrop' => market_backdrop_src($o['backdrop'], $export)], null, $export);
     return ['html' => $html, 'card' => $card];

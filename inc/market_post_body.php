@@ -7,7 +7,11 @@
  * Expects: $render_url, $export_url (POST endpoints), $report_url (the
  * report, for the way back), $csrf, $months (market_months()), $month (the
  * one preselected), $market (preselected card), $stock (social_stock():
- * name => caption; empty on a Mac, where the photos are not on disk).
+ * name => caption; empty on a Mac, where the photos are not on disk),
+ * $board_names (market id => name, the picker's groups). $market is a card
+ * key (market_card_key() turns the report's market ids into one). The places
+ * are a dropdown grouped by board (21 of them since the one-place-per-card
+ * redesign of 2026-10-18).
  *
  * Like the Instagram tool: the form on the left, a live preview on the right
  * (an iframe whose srcdoc is what portal/market_render.php returns for the
@@ -18,15 +22,14 @@
 $v = fn(string $f) => (int)@filemtime(__DIR__ . '/../' . $f);
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $defs = market_card_defs();
-if (!isset($defs[$market])) $market = array_key_first($defs);
+$market = market_card_key($market);
+$boards = (array)($board_names ?? []);
 $suggest = [];   // market => its suggested backdrop, when that photo is on the server
 foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']])) $suggest[$k] = $d['photo'];
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= $v('assets/css/social.css') ?>">
 <style>
-  .mp-markets { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  @media (min-width: 560px) { .mp-markets { grid-template-columns: 1fr 1fr 1fr; } }
-  .mp-markets .sp-pillopt span { display: block; text-align: center; border-radius: 12px; padding: 10px 12px; white-space: normal; line-height: 1.25; }
+  .sp-kind:first-of-type { margin-top: 0; }
   .mp-note { color: var(--muted, #6f6857); font-size: 14px; margin: 12px 0 0; }
   .mp-note a { color: var(--gold-deep, #8a6d36); }
   .sp-stage.story { max-width: 300px; }
@@ -36,12 +39,19 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
       <input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>">
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span>1</span>Market</h2>
-        <div class="mp-markets">
-          <?php foreach ($defs as $k => $d): ?>
-          <label class="sp-pillopt"><input type="radio" name="market" value="<?= $e($k) ?>"<?= $k === $market ? ' checked' : '' ?> data-suggest="<?= $e($suggest[$k] ?? '') ?>"><span><?= $e($d['title']) ?></span></label>
-          <?php endforeach; ?>
-        </div>
+        <h2 class="sp-step-h"><span>1</span>Place</h2>
+        <label class="sp-field sp-kind">Place
+          <select name="market" id="mpMarket">
+            <?php $groups = []; foreach ($defs as $k => $d) $groups[$d['market']][$k] = $d;
+            foreach ($groups as $mk => $cards): ?>
+            <optgroup label="<?= $e($boards[$mk] ?? $mk) ?>">
+              <?php foreach ($cards as $k => $d): ?>
+              <option value="<?= $e($k) ?>"<?= $k === $market ? ' selected' : '' ?> data-suggest="<?= $e($suggest[$k] ?? '') ?>"><?= $e($d['title']) ?><?= !empty($d['town']) ? ' (town)' : '' ?></option>
+              <?php endforeach; ?>
+            </optgroup>
+            <?php endforeach; ?>
+          </select>
+        </label>
         <?php if (count($months) > 1): ?>
         <label class="sp-field sp-kind">Month
           <select name="month">
@@ -57,7 +67,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
           <label class="sp-pillopt"><input type="radio" name="ptype" value="<?= $e($k) ?>"<?= $k === 'SF' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
-        <p class="mp-note">The figures are <?= $e(market_month_label($month)) ?>'s, from the <a href="<?= $e($report_url) ?>">Market Report</a>. A market with fewer than ten closed sales in the month shows year-to-date figures instead.</p>
+        <p class="mp-note">The figures are <?= $e(market_month_label($month)) ?>'s, from the <a href="<?= $e($report_url) ?>">Market Report</a>. A place with fewer than ten closed sales in the month shows year-to-date figures instead.</p>
       </section>
 
       <section class="sp-step">
@@ -98,7 +108,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
 
       <div class="sp-actions">
         <button type="submit" class="sp-btn">Download PNG</button>
-        <p class="sp-help">The download is a 1080 × 1350 PNG for a post, or 1080 × 1920 for a story. Every snapshot carries its board's credit line, as the boards require.</p>
+        <p class="sp-help">The download is a 1080 × 1350 PNG for a post, or 1080 × 1920 for a story. The board's credit is in the Market Report; the card carries none.</p>
       </div>
     </form>
 
@@ -141,7 +151,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
   // The suggested photo follows the market until the person picks one themselves.
   function suggestBackdrop() {
     if (backdropTouched) return;
-    const m = form.querySelector('input[name="market"]:checked');
+    const m = form.querySelector('#mpMarket option:checked');
     const want = m ? m.dataset.suggest : '';
     if ([...backdrop.options].some(o => o.value === want)) backdrop.value = want;
   }

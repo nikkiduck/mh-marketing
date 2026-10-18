@@ -14,8 +14,10 @@ if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_byt
 
 $months = market_months();
 $month  = market_pick_month((string)($_GET['month'] ?? ''));
-$market = (string)($_GET['market'] ?? 'aspen');
+$market = market_card_key((string)($_GET['market'] ?? ''));   // a card key, or a market id from the report's links
 $stock  = social_stock();
+$board_names = [];   // the picker's groups, from the month's boards.json
+foreach (($month !== '' ? (market_load($month)['boards'] ?? []) : []) as $b) $board_names[(string)$b['market']] = (string)$b['name'];
 $csrf   = (string)$_SESSION['csrf_token'];
 $render_url = '/portal/market_render.php';
 $export_url = '/portal/market_export.php';
@@ -61,7 +63,7 @@ $report_url = '/market_report.php' . ($month !== '' ? '?m=' . rawurlencode($mont
     <div class="mk-page-header">
       <div>
         <h1>Market Snapshot</h1>
-        <p class="hint">One market's month on an Instagram card, from the Market Report's figures, credited to its MLS. Agents have the same tool under Templates on their portal.</p>
+        <p class="hint">One place's month on an Instagram card, from the Market Report's figures. Agents have the same tool under Templates on their portal.</p>
       </div>
       <div class="hdr-actions">
         <a class="btn btn-outline btn-sm" href="<?= htmlspecialchars($report_url, ENT_QUOTES) ?>"><i class="ti ti-chart-bar"></i> Market Report</a>

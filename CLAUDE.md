@@ -2343,13 +2343,22 @@ a feature of the Instagram template area "dressed up a little".
   Instagram templates' (Cormorant on the title and figures, Jost labels,
   gold rule and small caps, dark ink or cream light, the ghosted triangle
   or M mark, the vertical-stack logo upper right or lower left) and an
-  optional stock photo under a heavy shade (`social_stock()`; the market's
-  suggested photo is preselected when it is on the server). Three layouts:
-  hero (one county), metro (REcolorado's own figures), list (two or three
-  counties). The artifact's rules hold: a thin market (under 10 sales in
-  the month) shows year to date, changes are recomputed with one decimal
-  and a trailing .0 dropped, every card carries its board's credit line,
-  no em dashes.
+  optional stock photo under a shade (`social_stock()`; the place's
+  suggested photo is preselected when it is on the server). The first
+  version had three layouts (hero, metro, list of two or three
+  counties). **Redrawn the same evening (Nikki): one PLACE per card**,
+  every county, every Aspen Glenwood town and Denver Metro (21 cards,
+  `market_card_defs()`, a dropdown grouped by board), the median large
+  and three rows under it (closed sales, days on market, months of
+  supply), the words big enough for a phone; no second-type line and NO
+  source block on the card (Nikki: removed entirely; the credit stays in
+  the report and in the model's unused `credit`); the photo brighter and
+  the watermark fainter. The artifact's other rules hold: a thin place
+  (under 10 sales in the month) shows year to date, changes are
+  recomputed with one decimal and a trailing .0 dropped, no em dashes.
+  Every card was measured inside the post's height budget on 2026-10-18
+  (the budget is in market_card_render.php's header; re-measure after a
+  size change).
 - `tests/render_market_sample.php` renders every card, the report and the
   builder from the data files alone into `tests/market-preview/`
   (git-ignored); serve the project folder to look at them. It prints the

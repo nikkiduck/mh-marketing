@@ -15,8 +15,10 @@ social_gate();
 
 $months = market_months();
 $month  = market_pick_month((string)($_GET['month'] ?? ''));
-$market = (string)($_GET['market'] ?? 'aspen');
+$market = market_card_key((string)($_GET['market'] ?? ''));   // a card key, or a market id from the report's links
 $stock  = social_stock();
+$board_names = [];   // the picker's groups, from the month's boards.json
+foreach (($month !== '' ? (market_load($month)['boards'] ?? []) : []) as $b) $board_names[(string)$b['market']] = (string)$b['name'];
 $csrf   = (string)($_SESSION['csrf_token'] ?? '');
 $render_url = portal_url($ctx, '/portal/market_render.php');
 $export_url = portal_url($ctx, '/portal/market_export.php');
@@ -26,7 +28,7 @@ portal_header($ctx, 'Market Snapshot', 'social');
 ?>
   <p class="pt-soon">From the Market Report.</p>
   <h1 class="pt-h1">Market Snapshot</h1>
-  <p class="pt-lead">One market's month on a card: the median, closed sales, days on market and supply, credited to its MLS. Pick the market and the look, then download.</p>
+  <p class="pt-lead">One place's month on a card: the median sale price, closed sales, days on market and months of supply. Pick the place and the look, then download.</p>
   <p class="tp-back"><a href="<?= ph(portal_url($ctx, '/portal/templates.php')) ?>">‹ All templates</a></p>
 <?php if ($month === ''): ?>
   <div class="pt-flash err">No market data is on file yet. The snapshot cards appear here once a month's figures are published.</div>

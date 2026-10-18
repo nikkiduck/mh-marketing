@@ -16,7 +16,7 @@ social_gate();
 $groups = [
     'Instagram Templates' => [
         ['Instagram Post/Story', '/portal/social.php', 'Create an Instagram or Facebook ready post or story.', 'Make a post ›'],
-        ['Market Snapshot', '/portal/market_post.php', 'One market\'s month on a card: the median, closed sales, days on market and supply, credited to its MLS. A post or a story.', 'Make a snapshot ›'],   // from the Market Report (2026-10-18)
+        ['Market Snapshot', '/portal/market_post.php', 'One place\'s month on a card: the median sale price, closed sales, days on market and months of supply. A post or a story.', 'Make a snapshot ›'],   // from the Market Report (2026-10-18)
     ],
     'Print Templates' => [
         ['Listing Flyer', '/portal/flyer.php', 'A printed Letter-size flyer: up to six photos, the details, a banner, your contact lines and a QR code. Download the PDF.', 'Make a flyer ›'],

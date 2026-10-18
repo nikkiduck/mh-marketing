@@ -91,20 +91,39 @@ From the artifact's CLAUDE.md, section 3, and built into the code:
 
 ## The cards
 
-Seven, one per market (`market_card_defs()`): Aspen & Snowmass (Pitkin),
-Vail Valley (Eagle), Telluride (San Miguel; YTD, a thin market), Montrose,
-Ridgway & Durango (three rows), Summit County & Steamboat (two rows, each
-with its townhome line), Denver Metro (REcolorado's own figures, the Denver
-County single-family median as the footnote), Colorado Springs (El Paso,
-the PPAR all-types line as the footnote). Choices on the builder: the
-month, Leads with (single-family or townhomes & condos; the footnote flips
-to the other), Post 4:5 (1080 x 1350) or Story 9:16 (1080 x 1920), Dark or
-Light, the watermark, the logo's place, and a stock photo behind the
-figures under a heavy shade (the market's suggested photo is preselected
-when it is on the server; "None" is the plain ground). The PNG is made by
-the Instagram tool's Chromium call (`social_export_png()`) with fonts,
-marks and the photo read from disk; an agent's download is kept in
+One place per card (Nikki, 2026-10-18, after a first version with seven
+market cards: "one city or county at a time", Summit and Steamboat apart,
+the words too small to read on a phone): every county in county.json,
+every Aspen Glenwood MLS town in towns.json, and Denver Metro from
+front_range.json, 21 in all (`market_card_defs()`, keyed by a slug such as
+`pitkin`, `town-glenwood`, `denver-metro`; `market_card_key()` turns the
+report's market ids into a market's first card). Each card: a short
+eyebrow, the place as the title, the month, place and property type on one
+line, the median sale price large with its change, then three rows: closed
+sales, days on market, months of supply (Denver Metro: closed sales,
+median days in MLS, active listings). Nothing else: no second-type line,
+no source block (Nikki: removed entirely; the board's credit stays in the
+report and in the model's `credit` field, which is not drawn). A thin
+place (under 10 sales in the month) shows year to date throughout.
+
+Choices on the builder: the place (a dropdown grouped by board), the month,
+Leads with (single-family or townhomes & condos), Post 4:5 (1080 x 1350)
+or Story 9:16 (1080 x 1920), Dark or Light, the watermark (faint, .08 on
+dark, .05 on light), the logo's place (upper right on the eyebrow row, or
+lower left, where the type steps down to 0.9 to make room), and a stock
+photo behind the figures under a shade that leaves the top of the picture
+showing (`social_stock()`; the place's suggested photo is preselected when
+it is on the server; "None" is the plain ground). The PNG is made by the
+Instagram tool's Chromium call (`social_export_png()`) with fonts, marks
+and the photo read from disk; an agent's download is kept in
 CREATIVES_DIR/social/<intake id>/ like their posts.
+
+**Fit:** the type sizes step down by text length (`market_card_fit()`:
+the title to one line across the full width, the median, the sub line),
+and the post's height budget is documented at the top of
+inc/market_card_render.php. tests/render_market_sample.php writes every
+card; a loop in the browser over its output measured all 84 within the
+budget on 2026-10-18. Re-measure after any size change.
 
 ## Known quirk, kept on purpose
 
