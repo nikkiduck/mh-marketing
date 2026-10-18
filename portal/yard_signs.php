@@ -14,9 +14,10 @@ portal_header($ctx, 'Yard Sign Templates', 'brand');
   <p class="pt-back"><a href="<?= ph(portal_url($ctx, '/portal/brand.php')) ?>">← Brand Tools</a></p>
   <h1 class="pt-h1">Yard Sign Templates</h1>
   <p class="pt-lead">The current Mont Haus yard sign layouts, each as a team sign and a broker sign. Tap one to see it larger. To order signs, use the form at the bottom of the page.</p>
+  <nav class="pt-jump" aria-label="On this page"><a href="#option-1">Option 1</a><a href="#option-2">Option 2</a><a href="#option-3">Option 3</a></nav>
 
   <?php for ($o = 1; $o <= 3; $o++): ?>
-  <section class="pt-section">
+  <section class="pt-section" id="option-<?= $o ?>">
     <h2 class="pt-h2">Option <?= $o ?></h2>
     <div class="pt-gal two">
       <figure class="pt-gal-item"><img src="<?= ph($img . "option-{$o}-team.png") ?>" alt="Option <?= $o ?>, team" loading="lazy" data-lb><figcaption>Team</figcaption></figure>

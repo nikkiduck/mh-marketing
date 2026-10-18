@@ -476,9 +476,10 @@ ok('Brand Guidelines inside the portal: the portal header and menu, the page\'s 
    && has($b, '.bg-embed{') && !preg_match('/^\s*body\s*\{/m', $b) && !has($b, 'class="bg-header"')
    && strpos($b, 'class="pt-jump"') > strpos($b, '<h1 class="pt-h1">Brand Guidelines</h1>') && !has($b, 'pt-subnav-wrap sticky jump'), $b);
 [$c, , $b] = req('jackson', '/portal/business_cards.php');
-ok('Business card templates inside the portal, with a lightbox', $c === 200 && no_fatal($b) && has($b, 'class="pt-nav"') && has($b, 'Front option 12') && has($b, 'Back option 5') && has($b, 'data-lb') && has($b, 'id="ptLb"'), $b);
+ok('Business card templates inside the portal, with a lightbox and the section pills under the title', $c === 200 && no_fatal($b) && has($b, 'class="pt-nav"') && has($b, 'Front option 12') && has($b, 'Back option 5') && has($b, 'data-lb') && has($b, 'id="ptLb"')
+   && strpos($b, 'class="pt-jump"') > strpos($b, '<h1 class="pt-h1">') && !has($b, 'pt-subnav-wrap sticky jump'), $b);
 [$c, , $b] = req('jackson', '/portal/yard_signs.php');
-ok('Yard sign templates inside the portal', $c === 200 && no_fatal($b) && has($b, 'class="pt-nav"') && has($b, 'option-3-broker.png') && substr_count($b, 'loading="lazy" data-lb') === 6, $b);
+ok('Yard sign templates inside the portal, section pills under the title', $c === 200 && no_fatal($b) && has($b, 'class="pt-nav"') && has($b, 'option-3-broker.png') && has($b, 'href="#option-3"') && has($b, 'id="option-3"') && substr_count($b, 'loading="lazy" data-lb') === 6, $b);
 
 // Hot Sheets: the signed-in person's own subscription, never an id from the request. Since 2026-10-12 the form is on My Profile.
 [$c, $loc, ] = req('jackson', '/portal/hotsheets.php');
