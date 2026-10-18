@@ -2156,10 +2156,15 @@ mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
   THIS account's folder (`upload:<hex>`), else its primary; labels from
   `social_labels()` or 28 custom chars; line styles from
   `social_line_styles()`; lengths capped.
-- Uploads: CREATIVES_DIR/social/<intake id>/uploads/<hex>.jpg (2000 px) +
-  -thumb.jpg (400), EXIF rotation applied, JPG/PNG/WEBP up to 20 MB
-  (`social_store_upload()`); served only to that account by
-  portal/social_asset.php; the EXPORT reads the file from disk
+- Uploads: CREATIVES_DIR/social/users/<users.id>/uploads/<hex>.jpg (2000 px)
+  + -thumb.jpg (400), EXIF rotation applied, JPG/PNG/WEBP up to 20 MB
+  (`social_store_upload()`). **Keyed by the signed-in PERSON since
+  2026-10-18**, not the portal account: keyed by account, an admin
+  previewing an agent uploaded into that agent's folder and the agent saw
+  the admin's photos as "Yours" (Nikki's two test photos on Jonathan's
+  portal; moved to users/2/). Served only to that person by
+  portal/social_asset.php; the photo grid shows them under a "Your
+  uploads" heading, then "Listing photos" or "Mont Haus stock photos"; the EXPORT reads the file from disk
   (`social_render($p, null, true)` writes file://), because Chromium has no
   portal session.
 - Photos come from the site: `api/listings.php?scope=photos` and img.php

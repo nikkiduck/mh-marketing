@@ -204,12 +204,18 @@ function social_headline_from_remarks(string $remarks): string {
 
 // ── The agent's own photos ────────────────────────────────────────────────────
 
-/** Where this account's uploads live (outside the web root). */
+/**
+ * Where the signed-in PERSON's uploads live (outside the web root): keyed by
+ * users.id, not the portal account, since 2026-10-18. Keyed by account, an
+ * admin previewing an agent uploaded INTO that agent's folder (Nikki's test
+ * photos showed on Jonathan's portal as "Yours"). The uploads under
+ * social/<intake>/uploads from before were moved to social/users/<user>/.
+ */
 function social_upload_dir(array $ctx): string {
-    return rtrim(CREATIVES_DIR, '/') . '/social/' . (int)$ctx['acct']['id'] . '/uploads';
+    return rtrim(CREATIVES_DIR, '/') . '/social/users/' . (int)$ctx['user']['id'] . '/uploads';
 }
 
-/** The file for an upload id (hex), full size or the thumbnail; null when it is not this account's. */
+/** The file for an upload id (hex), full size or the thumbnail; null when it is not this person's. */
 function social_upload_file(array $ctx, string $id, bool $thumb = false): ?string {
     if (!preg_match('/^[a-f0-9]{16}$/', $id)) return null;
     $f = social_upload_dir($ctx) . '/' . $id . ($thumb ? '-thumb' : '') . '.jpg';
@@ -236,14 +242,14 @@ function social_open_dirs(string $dir): void {
     }
 }
 
-/** This account's upload ids, newest first (at most 24). */
+/** This person's upload ids, newest first (at most 60). */
 function social_uploads(array $ctx): array {
     $dir = social_upload_dir($ctx);
     if (!is_dir($dir)) return [];
     $files = glob($dir . '/*.jpg') ?: [];
     $files = array_filter($files, fn($f) => !str_ends_with($f, '-thumb.jpg'));
     usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
-    return array_slice(array_map(fn($f) => basename($f, '.jpg'), $files), 0, 24);
+    return array_slice(array_map(fn($f) => basename($f, '.jpg'), $files), 0, 60);
 }
 
 /**

@@ -210,3 +210,13 @@ thumb, a line in stock.json, scp all three.
 Also 2026-10-15: the story's Mont Haus logo is a three-way choice, upper
 right (badge moves to upper left, date line under it at the left), lower
 left above the rule (default), or none; the checkbox is gone.
+
+## Uploads belong to the person (2026-10-18)
+
+Uploads were keyed by the portal account, so an admin previewing an agent
+uploaded into the agent's folder: Nikki's test photos appeared on
+Jonathan's portal as "Yours". They are keyed by users.id now
+(CREATIVES_DIR/social/users/<id>/uploads), the two files were moved to
+Nikki's folder, and the photo grid is in groups with headings: Your
+uploads, then Listing photos or Mont Haus stock photos. A separate Your
+Uploads tab can come when the lists grow (Nikki raised it).

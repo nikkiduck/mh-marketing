@@ -270,19 +270,31 @@ portal_header($ctx, 'Social posts', 'social');
     return '<label class="sp-photo' + (p.own ? ' own' : '') + '"' + (p.caption ? ' title="' + esc(p.caption) + '"' : '') + '><input type="radio" name="photo" value="' + esc(p.id) + '" data-large="' + esc(p.large) + '"' +
            (checked ? ' checked' : '') + '><img src="' + esc(p.thumb) + '" alt="' + esc(p.caption || '') + '" loading="lazy">' + (p.own ? '<i>Yours</i>' : '') + '</label>';
   }
-  async function loadPhotos() {
+  async function loadPhotos(selectId) {
     const l = listing(); if (!l && !isOther()) return;
     photos.innerHTML = '<div class="sp-wait">Loading photos…</div>';
     const u = new URL(PHOTOS, location.origin); u.searchParams.set('listing', isOther() ? '__none' : l.id);
     let j = { photos: [] };
     try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
-    if (isOther()) j.photos = [PLACEHOLDER].concat(j.photos || []);   // the Mont Haus mountains first, selectable
-    if (!j.photos || !j.photos.length) {
+    const all = j.photos || [];
+    if (!all.length && !isOther()) {
       photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Add your own below.</div>';
       framerSet(''); update(); return;
     }
-    photos.innerHTML = j.photos.map((p, i) => photoTile(p, i === 0)).join('');
-    framerSet(j.photos[0].large); update();
+    // In groups (2026-10-18): the person's own uploads first, then the listing's photos or the stock library.
+    const mine = all.filter(p => p.own), rest = all.filter(p => !p.own);
+    const groups = isOther()
+      ? [['Your uploads', mine], ['Mont Haus stock photos', [PLACEHOLDER].concat(rest)]]
+      : [['Your uploads', mine], ['Listing photos', rest]];
+    const first = selectId || (isOther() ? PLACEHOLDER.id : (rest[0] || mine[0] || {}).id);
+    let html = '';
+    for (const [name, list] of groups) {
+      if (!list.length) continue;
+      html += '<div class="sp-group">' + esc(name) + '</div>' + list.map(p => photoTile(p, p.id === first)).join('');
+    }
+    photos.innerHTML = html;
+    const sel = all.concat([PLACEHOLDER]).find(p => p.id === first);
+    framerSet(sel ? sel.large : ''); update();
   }
   async function upload(file) {
     if (!file) return;
@@ -295,9 +307,7 @@ portal_header($ctx, 'Social posts', 'social');
     fileIn.value = '';
     if (j.error) { dropMsg.textContent = j.error; return; }
     dropMsg.innerHTML = 'Added. Drop another, or <label class="sp-link" for="spFile">choose one</label>.';
-    photos.querySelector('.sp-wait')?.remove();
-    photos.insertAdjacentHTML('afterbegin', photoTile({ id: j.id, thumb: j.thumb, large: j.large, own: true }, true));
-    framerSet(j.large); update();
+    loadPhotos(j.id);   // redraw the groups with the new upload selected
   }
   fileIn.addEventListener('change', e => upload(e.target.files[0]));
   ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
