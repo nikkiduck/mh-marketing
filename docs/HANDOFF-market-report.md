@@ -1,7 +1,8 @@
 # Market Report and Market Snapshot posts (2026-10-18)
 
-JB's Monthly Market Report and the seven Market Snapshot social cards, built
-into the marketing portal from his Claude artifacts. The artifact project
+The Monthly Market Report and the Market Snapshot social cards, built into
+the marketing portal from Nikki's Claude artifacts (JB owns the report and
+is the person to tell when a month is refreshed; the artifacts were Nikki's). The artifact project
 and its data live at `/Users/nikkiduck/Mont Haus Master/mont-haus-market-report`
 (its CLAUDE.md is the full record: the people, the sources and their exact
 credit lines, the hard rules and the refresh procedure). This file is what
@@ -100,8 +101,9 @@ front_range.json, 21 in all (`market_card_defs()`, keyed by a slug such as
 report's market ids into a market's first card). Each card: a short
 eyebrow, the place as the title, the month, place and property type on one
 line, the median sale price large with its change, then three rows: closed
-sales, days on market, months of supply (Denver Metro: closed sales,
-median days in MLS, active listings). Nothing else: no second-type line,
+sales, days on market, homes for sale (Denver Metro: closed sales, median
+days in MLS, active listings). Months of supply is in the report, not on
+the card (Nikki, 2026-10-18: a weird stat for Instagram, keep it simple). Nothing else: no second-type line,
 no source block (Nikki: removed entirely; the board's credit stays in the
 report and in the model's `credit` field, which is not drawn). A thin
 place (under 10 sales in the month) shows year to date throughout.

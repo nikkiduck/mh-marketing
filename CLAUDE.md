@@ -2302,9 +2302,9 @@ retired the same day and 301s here.
 
 ### Market Report and Market Snapshot posts (2026-10-18)
 
-JB's Monthly Market Report of the Colorado markets Mont Haus serves, and
-the seven Market Snapshot social cards, built into the portal from his
-Claude artifacts (`/Users/nikkiduck/Mont Haus Master/mont-haus-market-report`,
+The Monthly Market Report of the Colorado markets Mont Haus serves (JB
+owns it) and the Market Snapshot social cards, built into the portal from
+Nikki's Claude artifacts (`/Users/nikkiduck/Mont Haus Master/mont-haus-market-report`,
 whose CLAUDE.md holds the sources, the exact credit lines, the hard rules
 and the monthly refresh procedure). Plan and mechanics:
 `docs/HANDOFF-market-report.md`. Nikki, 2026-10-18: on both the admin and
@@ -2349,8 +2349,9 @@ a feature of the Instagram template area "dressed up a little".
   counties). **Redrawn the same evening (Nikki): one PLACE per card**,
   every county, every Aspen Glenwood town and Denver Metro (21 cards,
   `market_card_defs()`, a dropdown grouped by board), the median large
-  and three rows under it (closed sales, days on market, months of
-  supply), the words big enough for a phone; no second-type line and NO
+  and three rows under it (closed sales, days on market, homes for sale;
+  months of supply stays in the report: Nikki, "keep it simple"), the
+  words big enough for a phone; no second-type line and NO
   source block on the card (Nikki: removed entirely; the credit stays in
   the report and in the model's unused `credit`); the photo brighter and
   the watermark fainter. The artifact's other rules hold: a thin place

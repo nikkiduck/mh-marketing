@@ -525,7 +525,7 @@ function portal_nav(): array {
         ]],
         'tools'     => ['My Tools', null, [
             'elevation' => ['Elevation Planner', '/portal/elevation.php'],
-            'market'    => ['Market Report', '/portal/market.php'],   // JB's monthly report of the markets Mont Haus serves (2026-10-18)
+            'market'    => ['Market Report', '/portal/market.php'],   // the monthly report of the markets Mont Haus serves (2026-10-18)
             'social'    => ['Templates', '/portal/templates.php'],   // "Templates" (Nikki, 2026-10-13): a landing with the Instagram Post and Listing Flyer tools, which switch between each other
             'qr'        => ['QR Codes', '/portal/qr.php'],
             'brand'     => ['Brand Tools', '/portal/brand.php'],

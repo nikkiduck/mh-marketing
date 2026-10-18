@@ -19,7 +19,8 @@
  * the vertical-stack logo upper right or lower left, a ghosted triangle (or
  * M mark) and a stock photo behind the figures. Nikki, 2026-10-18, after
  * the first version: one place and one property type per card, the figures
- * large enough to read on a phone (the median, then three figures in rows),
+ * large enough to read on a phone (the median, then three figures in rows: closed sales, days on
+ * market, homes for sale),
  * no second-type line, no source block, the photo brighter and the
  * watermark fainter. The title has the full width: with the logo upper
  * right, the logo shares the eyebrow row and the title sits under both.

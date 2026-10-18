@@ -1,8 +1,8 @@
 <?php
 /**
  * portal/market.php — the Monthly Market Report (My Tools > Market Report,
- * 2026-10-18): JB's monthly report of the Colorado markets Mont Haus
- * serves, built into the portal from his Claude artifact. The body is
+ * 2026-10-18): the monthly report of the Colorado markets Mont Haus
+ * serves, built into the portal from Nikki's Claude artifact. The body is
  * inc/market_report_body.php, shared with the admin side's market_report.php;
  * the data is the newest folder under inc/market_data (?m=YYYY-MM for an
  * older month). See inc/market_data.php and docs/HANDOFF-market-report.md.

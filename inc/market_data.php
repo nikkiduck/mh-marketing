@@ -6,7 +6,8 @@
  * tests/render_market_sample.php can render every output from the data files
  * alone; inc/market.php adds the parts that need the portal.
  *
- * The tool was built into the portal from JB's Claude artifacts
+ * The tool was built into the portal from Nikki's Claude artifacts (JB owns
+ * the report; the artifacts were hers)
  * (/Users/nikkiduck/Mont Haus Master/mont-haus-market-report: its CLAUDE.md
  * holds the sources, the credit lines and the monthly refresh procedure;
  * docs/HANDOFF-market-report.md here repeats what this code needs).
@@ -279,7 +280,9 @@ function market_ptype_words(string $pt): string { return $pt === 'TC' ? 'Townhom
 /**
  * Everything the card shows, built from the month's data (no HTML; the
  * renderer draws it). One place, one property type, the median large and
- * three figures under it; nothing else on the card (Nikki, 2026-10-18: the
+ * three figures under it (closed sales, days on market, homes for sale:
+ * months of supply stays in the report, Nikki 2026-10-18, "keep it simple");
+ * nothing else on the card (Nikki, 2026-10-18: the
  * other type's line and the source block are gone; the words were too small
  * to read on a phone). $opts: ptype SF|TC. Null when the month has no row.
  *
@@ -336,7 +339,7 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
         $card['stats'] = [
             ['Closed sales, year to date',   market_int($r['ytd_sold'] ?? null),           market_int($r['ytd_sold_ly'] ?? null) . " in {$lyYr}"],
             ['Days on market, year to date', market_int($r['ytd_days_on_market'] ?? null), market_int($r['ytd_days_on_market_ly'] ?? null) . " in {$lyYr}"],
-            ['Months of supply',             market_dec1($r['months_supply'] ?? null),     market_int($r['inventory'] ?? null) . ' homes for sale'],
+            ['Homes for sale',               market_int($r['inventory'] ?? null),         market_int($r['inventory_ly'] ?? null) . " in {$lyYr}"],
         ];
     } else {
         $ch = market_change($r['median'] ?? null, $r['median_ly'] ?? null);
@@ -346,7 +349,7 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
         $card['stats'] = [
             ['Closed sales',     market_int($r['sold'] ?? null),           $sc === null ? "None in {$lyMon}" : $vs($sc, $lyMon)],
             ['Days on market',   market_int($r['days_on_market'] ?? null), market_int($r['days_on_market_ly'] ?? null) . ' a year ago'],
-            ['Months of supply', market_dec1($r['months_supply'] ?? null), market_dec1($r['months_supply_ly'] ?? null) . ' a year ago'],
+            ['Homes for sale',   market_int($r['inventory'] ?? null),     market_int($r['inventory_ly'] ?? null) . ' a year ago'],
         ];
     }
     $card['credit'] = !empty($d['town'])
