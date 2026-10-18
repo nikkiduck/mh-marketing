@@ -53,7 +53,7 @@ f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 0f0bc7ca27dcdcaae3dc7a0d2ea6f75b  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-e63d2bf7622f95b79a8ca65a9fed9cd4  inc/social.php
+0f2ead2b2809d88d5daea777668a7e1a  inc/social.php
 a60f0d938278cdc60e452fef5354cb29  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 941f0d9aeca632d8639625c5b888e7dd  index.php
@@ -84,7 +84,7 @@ e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
 bd1d3b37a7fcf713edb84313e59cddbb  portal/profile.php
 e6411bc80e28c79a013e475e5dc875eb  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
-900d04744cfd81ccdb717833e8a4fa2e  portal/social.php
+dc57a4a486c38d87828cbc6fa610a495  portal/social.php
 b4178bb297c9b2f159e24c02f559ac7b  portal/social_asset.php
 cfea6b6cd41a82c90b01b321ee62d614  portal/social_export.php
 495aa54c8c9311744632916fbba7a0df  portal/social_photos.php
@@ -106,7 +106,7 @@ e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 f68608a395816de5e9bd156ad122cf2c  assets/css/portal.css
-7cc748c1a6ca7abdcba3c0b4ccb58e71  assets/css/social.css
+628bd3ccde17b994858996ddcf34fa5a  assets/css/social.css
 f7501d5ec5e2e0434730edd949edbe6d  assets/css/elevation.css
 72e69ed1b490cf357ff8fd1b64ae3521  assets/css/elevation-print.css
 276bc62ab93c4b58e93fb27cfb521edc  assets/js/elevation.js
