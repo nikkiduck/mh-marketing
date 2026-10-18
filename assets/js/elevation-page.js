@@ -26,7 +26,7 @@
     var src = B.working || (local && typeof local === 'object' ? local : null);
     S.plan = E.normalizePlan(src && src.plan);
     S.leads = E.normalizeLeads(src && src.leads);
-    if (!B.working && local && CAN_SAVE) dirty = true;   // a plan that lived in this browser moves to the account
+    if (!B.working && CAN_SAVE) dirty = true;   // no working row yet: write one now (a browser-only plan moves to the account; otherwise the examples), so Print or PDF has a plan to show
   })();
   var saved = Array.isArray(B.saved) ? B.saved : [];
 
@@ -424,6 +424,7 @@
       var st = statusFor(btn);
       var win = window.open('', '_blank');   // opened on the click, so the browser allows it; filled after the save
       flash(st, 'Opening your plan');
+      if (CAN_SAVE) dirty = true;   // always rewrite the working row first: the print view reads the plan from the account, never from this page
       saveNow().then(function () {
         if (win) win.location.href = printUrl('working'); else window.location.href = printUrl('working');
       });
