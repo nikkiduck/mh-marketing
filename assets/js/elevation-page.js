@@ -264,7 +264,7 @@
         '<td>' + fmtN(x.hours) + '</td><td>' + usd0.format(x.cost) + '</td>' +
         '<td>' + (x.costEach == null ? '-' : usd0.format(x.costEach)) + (x.flag ? '<span class="ev-flag ' + x.flag + '">' + (x.flag === 'low' ? 'Lowest cost' : 'Highest cost') + '</span>' : '') + '</td>' +
         '<td>' + (x.hoursEach == null ? '-' : fmtN(x.hoursEach)) + '</td></tr>';
-    }).join('') + '<tr><td>Software and subscriptions</td><td>-</td><td>-</td><td>' + usd0.format(yc.tools) + '</td><td>-</td><td>-</td></tr>';
+    }).join('') + '<tr><td>Software + subscriptions</td><td>-</td><td>-</td><td>' + usd0.format(yc.tools) + '</td><td>-</td><td>-</td></tr>';
     $('l-compare-foot').innerHTML = '<tr><td>Total</td><td>' + fmtN(yc.conv) + '</td><td>' + fmtN(yc.hours) + '</td><td>' + usd0.format(yc.cost) + '</td><td>' +
       (p.avg == null ? '-' : usd0.format(p.avg)) + '</td><td>' + (yc.conv > 0 ? fmtN(yc.hours / yc.conv) : '-') + '</td></tr>';
 

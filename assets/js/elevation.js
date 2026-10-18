@@ -340,7 +340,7 @@
             + '<td>' + (x.costEach == null ? '-' : usd0.format(x.costEach)) + (x.flag ? '<span class="ev-s-flag ' + x.flag + '">' + (x.flag === 'low' ? 'Lowest cost' : 'Highest cost') + '</span>' : '') + '</td>'
             + '<td>' + (x.hoursEach == null ? '-' : fmtN(x.hoursEach)) + '</td></tr>';
         }).join('')
-      + '<tr><td>Software and subscriptions</td><td>-</td><td>-</td><td>' + usd0.format(yc.tools) + '</td><td>-</td><td>-</td></tr>'
+      + '<tr><td>Software + subscriptions</td><td>-</td><td>-</td><td>' + usd0.format(yc.tools) + '</td><td>-</td><td>-</td></tr>'
       + '</tbody><tfoot><tr><td>Total</td><td>' + fmtN(yc.conv) + '</td><td>' + fmtN(yc.hours) + '</td><td>' + usd0.format(yc.cost) + '</td><td>' + (p.avg == null ? '-' : usd0.format(p.avg)) + '</td><td>' + (yc.conv > 0 ? fmtN(yc.hours / yc.conv) : '-') + '</td></tr></tfoot></table>')
       + '<p class="ev-s-note">Cost and hours per conversation for each source leave out software, which supports every source. The total row includes it.</p>';
     S.channels.forEach(function (ch, i) {
