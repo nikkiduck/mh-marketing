@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-18 08:43 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-18 08:53 from git HEAD in the Mont Haus Master folder.
 20a0b03146f151869668b3ef7834b245  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -33,7 +33,7 @@ b8e198e7cc0617a6128cf965b5c1cdc0  inc/boards.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 3c25b2f69d20d7bec56a4ef84b11b9b2  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
-ea689c25191d1199db89c8337c14a725  inc/elevation.php
+15f5a0d3922e71b283e0ab4d8b5cc335  inc/elevation.php
 13958d7c888d48b801e84186ed7ec2f2  inc/financials.php
 758035c7cd19b89138d0551975b9f411  inc/flyer.php
 68def6579f0fb2b41872ad289c35c550  inc/flyer_render.php
@@ -108,6 +108,6 @@ a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 f68608a395816de5e9bd156ad122cf2c  assets/css/portal.css
 628bd3ccde17b994858996ddcf34fa5a  assets/css/social.css
 f7501d5ec5e2e0434730edd949edbe6d  assets/css/elevation.css
-72e69ed1b490cf357ff8fd1b64ae3521  assets/css/elevation-print.css
-276bc62ab93c4b58e93fb27cfb521edc  assets/js/elevation.js
+2805decc2a9a17f955b17fa057b13728  assets/css/elevation-print.css
+2e0f835fe1af14e056c1d32d4d176190  assets/js/elevation.js
 71623c83950e561e2313a141bd75773e  assets/js/elevation-page.js
