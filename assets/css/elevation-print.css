@@ -29,8 +29,9 @@ body.ev-export .ev-doc { max-width: none; margin: 0; padding: 0; box-shadow: non
 @media (max-width: 700px) { .ev-doc { margin: 0; padding: 20px 16px 32px; box-shadow: none; } }
 
 /* ── Document parts ─────────────────────────────────────────────────────── */
-.ev-d-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 32px; padding-bottom: 16px; border-bottom: 2px solid var(--ink); margin-bottom: 26px; flex-wrap: wrap-reverse; }
-.ev-d-logo { height: 64px; width: auto; display: block; }   /* the stacked logo: mark, wordmark, International Realty */
+/* Logo and title block sit on the same baseline (wrap-reverse had flipped flex-end to the top, so the logo floated; Nikki, 2026-10-18). */
+.ev-d-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 32px; padding-bottom: 16px; border-bottom: 2px solid var(--ink); margin-bottom: 26px; }
+.ev-d-logo { height: 92px; width: auto; display: block; margin-bottom: 2px; }   /* the stacked logo: mark, wordmark, International Realty */
 .ev-d-title h1 { font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.05; margin: 2px 0 4px; }
 .ev-d-by { margin: 0; color: var(--muted); font-size: 14px; }
 .ev-d-part { display: flex; flex-direction: column; gap: 16px; }
@@ -65,6 +66,7 @@ body.ev-export .ev-doc { max-width: none; margin: 0; padding: 0; box-shadow: non
   .ev-s-cols { grid-template-columns: minmax(0, 1fr); }
   .ev-s-kvs { grid-template-columns: minmax(0, 1fr); }
   .ev-d-head { flex-direction: column-reverse; align-items: flex-start; }
+  .ev-d-logo { height: 72px; }
 }
 @media print {
   body { background: #fff; }
