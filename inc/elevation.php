@@ -244,8 +244,9 @@ function elevation_render(array $row, array $ctx, bool $export, string $back = '
         if ($export && is_file($disk)) return 'data:font/woff2;base64,' . base64_encode((string)file_get_contents($disk));
         return $base . '/assets/fonts/mh/' . $file;
     };
-    $logoDisk = __DIR__ . '/../assets/images/mh_horz-black.svg';
-    $logo = $export && is_file($logoDisk) ? 'data:image/svg+xml;base64,' . base64_encode((string)file_get_contents($logoDisk)) : $base . '/assets/images/mh_horz-black.svg';
+    // The full stacked logo from Final Logos (Nikki, 2026-10-18: "the proper MH logo"), added as its own file.
+    $logoDisk = __DIR__ . '/../assets/images/monthaus_black-logo_FINAL.svg';
+    $logo = $export && is_file($logoDisk) ? 'data:image/svg+xml;base64,' . base64_encode((string)file_get_contents($logoDisk)) : $base . '/assets/images/monthaus_black-logo_FINAL.svg';
 
     // elevation.css carries the .ev-s-* summary blocks the page shares; elevation-print.css the sheet, header and print rules.
     $css = (string)@file_get_contents(__DIR__ . '/../assets/css/elevation.css') . "\n" . (string)@file_get_contents(__DIR__ . '/../assets/css/elevation-print.css');

@@ -30,16 +30,14 @@ body.ev-export .ev-doc { max-width: none; margin: 0; padding: 0; box-shadow: non
 
 /* ── Document parts ─────────────────────────────────────────────────────── */
 .ev-d-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px 32px; padding-bottom: 16px; border-bottom: 2px solid var(--ink); margin-bottom: 26px; flex-wrap: wrap-reverse; }
-.ev-d-logo { height: 34px; width: auto; display: block; }
+.ev-d-logo { height: 64px; width: auto; display: block; }   /* the stacked logo: mark, wordmark, International Realty */
 .ev-d-title h1 { font-family: var(--serif); font-weight: 500; font-size: 34px; line-height: 1.05; margin: 2px 0 4px; }
 .ev-d-by { margin: 0; color: var(--muted); font-size: 14px; }
 .ev-d-part { display: flex; flex-direction: column; gap: 16px; }
 /* Part two follows part one on the sheet (a forced page break left a near-empty page when the notes ran over); headings keep their first block. */
 .ev-d-part.break { margin-top: 36px; }
-.ev-s-h2, .ev-s-h3, .ev-d-lede, .ev-s-sourcehead { break-after: avoid; page-break-after: avoid; }
+.ev-s-h2, .ev-s-h3, .ev-s-sourcehead { break-after: avoid; page-break-after: avoid; }
 .ev-s-tile, .ev-s-notebox, .ev-s-kvs, .ev-s-pace { break-inside: avoid; page-break-inside: avoid; }
-.ev-d-lede { margin: -6px 0 2px; color: var(--muted); max-width: 70ch; }
-.ev-d-foot { margin-top: 34px; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
 
 /* Tighter than the page: five tiles across a Letter column, tables that stay on the sheet. */
 .ev-s-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }

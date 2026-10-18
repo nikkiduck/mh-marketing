@@ -368,21 +368,16 @@
     return out;
   }
 
-  /** The printed plan: a header, part one, a page break, part two. meta: {agent, name, saved, date, logo}. */
+  /** The printed plan: the logo, the plan's name, the agent and the date; part one, then part two. No ledes, no footer (Nikki, 2026-10-18). meta: {agent, name, saved, date, logo}. */
   function renderDocument(el, state, meta) {
     var plan = normalizePlan(state && state.plan), leads = normalizeLeads(state && state.leads);
     var r = calc(plan), c = compute(leads);
     var html = '<header class="ev-d-head">'
       + (meta.logo ? '<img class="ev-d-logo" src="' + esc(meta.logo) + '" alt="Mont Haus International Realty">' : '')
       + '<div class="ev-d-title"><span class="ev-s-label">Elevation Plan</span><h1>' + esc(meta.saved ? meta.name : 'Working plan') + '</h1>'
-      + '<p class="ev-d-by">' + esc(meta.agent) + ' · ' + esc(meta.saved ? 'Saved ' + meta.date : 'As of ' + meta.date) + '</p></div></header>';
-    html += '<section class="ev-d-part"><h2 class="ev-s-h2"><span>Part one</span>Elevation Plan</h2>'
-      + '<p class="ev-d-lede">The take-home goal and what it takes to reach it this year: the commission, the closings, and the conversations that lead to them.</p>'
-      + planSummaryHTML(plan, r) + '</section>';
-    html += '<section class="ev-d-part break"><h2 class="ev-s-h2"><span>Part two</span>Lead Sources</h2>'
-      + '<p class="ev-d-lede">A typical month of the outreach that starts conversations, and the year it adds up to against the target above.</p>'
-      + leadsSummaryHTML(leads, c) + '</section>';
-    html += '<footer class="ev-d-foot">Prepared in the Mont Haus agent portal · The starting figures were examples; every number here is the plan as entered.</footer>';
+      + '<p class="ev-d-by">' + esc(meta.agent) + ' · ' + esc(meta.date) + '</p></div></header>';   // the name and the date, nothing more (Nikki, 2026-10-18)
+    html += '<section class="ev-d-part"><h2 class="ev-s-h2"><span>Part one</span>Elevation Plan</h2>' + planSummaryHTML(plan, r) + '</section>';
+    html += '<section class="ev-d-part break"><h2 class="ev-s-h2"><span>Part two</span>Lead Sources</h2>' + leadsSummaryHTML(leads, c) + '</section>';
     el.innerHTML = html;
   }
 
