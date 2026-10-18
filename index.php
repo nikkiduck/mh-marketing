@@ -558,6 +558,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
 
     .boards { font-size:12px; color:#6b7280; white-space:nowrap; }
     .ok-tick { color:#10b981; font-weight:700; font-size:15px; }    /* FUB / Hot Sheets columns (2026-10-18) */
+    .card-mark { font-size:12px; color:#6b7280; white-space:nowrap; }
     .warn-tick { color:#d97706; font-weight:700; font-size:15px; }
     .web-mark { font-size:15px; font-weight:700; } .web-mark.yes { color:#10b981; } .web-mark.no { color:#d1d5db; }
     .who-line { display:flex; align-items:center; gap:6px; min-width:0; }
@@ -903,8 +904,10 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       <?php foreach ($rows as $x): ?>
         <div class="agent-card agent-row<?= $x['_roster_only'] ? ' to-onboard' : '' ?>" <?= $row_attrs($x) ?>>
           <div class="card-top"><?= $avatar($x) ?><div style="min-width:0;"><?= $name_html($x) ?></div></div>
-          <div><?= $boards_html($x) ?></div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+            <?php // The card's marks (2026-10-18): FUB and Hot Sheets with a word each, then Web and the status pill. ?>
+            <?php if (!$x['_team'] && $x['_fub'] !== 'off'): ?><span class="card-mark"><?= $fub_html($x) ?> FUB</span><?php endif; ?>
+            <?php if (!$x['_team'] && $x['_hs']): ?><span class="card-mark"><?= $hs_html($x) ?> Hot Sheets</span><?php endif; ?>
             <?= $x['_web'] ? $web_html($x) : '' ?>
             <?php // Desktop shows the pill only when there is something to say; a phone card always shows it (Nikki, 2026-10-16). ?>
             <span class="card-status<?= $x['_status'] !== 'active' || $x['_onb'] ? '' : ' phone-only' ?>"><?= $status_html($x) ?></span>
