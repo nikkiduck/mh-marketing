@@ -167,9 +167,14 @@ portal_header($ctx, 'Home', 'home');
       <p class="pt-card-sub">Your business plan for the year, and how the year is tracking against it.</p>
       <span class="pt-card-go">Open the planner ›</span>
     </a>
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/market.php')) ?>">
+      <h2 class="pt-card-h">Market Report</h2>
+      <p class="pt-card-sub">The month in every market Mont Haus serves: medians, sales, days on market and supply by county, with two years of trend.</p>
+      <span class="pt-card-go">Read the report ›</span>
+    </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">
       <h2 class="pt-card-h">Templates</h2>
-      <p class="pt-card-sub">Social templates: Instagram posts and stories for your listings. Print templates: a listing flyer. More coming soon.</p>
+      <p class="pt-card-sub">Social templates: Instagram posts and stories for your listings, and a market snapshot card. Print templates: a listing flyer. More coming soon.</p>
       <span class="pt-card-go">See the templates ›</span>
     </a>
     <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/qr.php', $qr_n === 0 ? ['request' => 1] : [])) ?>">

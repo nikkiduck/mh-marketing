@@ -1,0 +1,5762 @@
+[
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 523,
+        "new_listings": 672,
+        "median": 675000,
+        "inventory": 1390
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 454,
+        "new_listings": 360,
+        "median": 690000,
+        "inventory": 1190
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 405,
+        "new_listings": 235,
+        "median": 690000,
+        "inventory": 818
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 314,
+        "new_listings": 604,
+        "median": 629000,
+        "inventory": 912
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 408,
+        "new_listings": 666,
+        "median": 700000,
+        "inventory": 1065
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 489,
+        "new_listings": 885,
+        "median": 700000,
+        "inventory": 1219
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 582,
+        "new_listings": 1092,
+        "median": 738000,
+        "inventory": 1563
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 571,
+        "new_listings": 998,
+        "median": 710000,
+        "inventory": 1794
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 560,
+        "new_listings": 813,
+        "median": 740000,
+        "inventory": 1818
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 514,
+        "new_listings": 650,
+        "median": 670000,
+        "inventory": 1716
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 445,
+        "new_listings": 628,
+        "median": 716000,
+        "inventory": 1581
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 483,
+        "new_listings": 744,
+        "median": 640000,
+        "inventory": 1622
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 473,
+        "new_listings": 669,
+        "median": 700000,
+        "inventory": 1556
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 396,
+        "new_listings": 314,
+        "median": 670000,
+        "inventory": 1233
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 417,
+        "new_listings": 219,
+        "median": 675000,
+        "inventory": 819
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 255,
+        "new_listings": 632,
+        "median": 630000,
+        "inventory": 957
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 380,
+        "new_listings": 725,
+        "median": 644000,
+        "inventory": 1087
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 534,
+        "new_listings": 842,
+        "median": 725000,
+        "inventory": 1173
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 586,
+        "new_listings": 974,
+        "median": 730000,
+        "inventory": 1374
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 666,
+        "new_listings": 864,
+        "median": 718000,
+        "inventory": 1456
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 598,
+        "new_listings": 773,
+        "median": 740000,
+        "inventory": 1459
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 512,
+        "new_listings": 740,
+        "median": 725000,
+        "inventory": 1547
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 403,
+        "new_listings": 681,
+        "median": 670000,
+        "inventory": 1561
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 383,
+        "new_listings": 795,
+        "median": 700000,
+        "inventory": 1690
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 250,
+        "new_listings": 463,
+        "median": 401000,
+        "inventory": 1457
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 222,
+        "new_listings": 270,
+        "median": 450000,
+        "inventory": 1269
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 280,
+        "new_listings": 156,
+        "median": 390000,
+        "inventory": 899
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 196,
+        "new_listings": 509,
+        "median": 414000,
+        "inventory": 1043
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 198,
+        "new_listings": 553,
+        "median": 413000,
+        "inventory": 1227
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 261,
+        "new_listings": 674,
+        "median": 390000,
+        "inventory": 1466
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 277,
+        "new_listings": 672,
+        "median": 380000,
+        "inventory": 1729
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 285,
+        "new_listings": 690,
+        "median": 400000,
+        "inventory": 1901
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 261,
+        "new_listings": 517,
+        "median": 416000,
+        "inventory": 1811
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 297,
+        "new_listings": 520,
+        "median": 395000,
+        "inventory": 1738
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 250,
+        "new_listings": 433,
+        "median": 407000,
+        "inventory": 1637
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 236,
+        "new_listings": 497,
+        "median": 426000,
+        "inventory": 1637
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 227,
+        "new_listings": 448,
+        "median": 405000,
+        "inventory": 1623
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 175,
+        "new_listings": 294,
+        "median": 389000,
+        "inventory": 1407
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 245,
+        "new_listings": 177,
+        "median": 375000,
+        "inventory": 1071
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 138,
+        "new_listings": 524,
+        "median": 420000,
+        "inventory": 1236
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 192,
+        "new_listings": 570,
+        "median": 393000,
+        "inventory": 1413
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 255,
+        "new_listings": 602,
+        "median": 445000,
+        "inventory": 1526
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 277,
+        "new_listings": 653,
+        "median": 388000,
+        "inventory": 1742
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 276,
+        "new_listings": 566,
+        "median": 426000,
+        "inventory": 1790
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 261,
+        "new_listings": 542,
+        "median": 400000,
+        "inventory": 1825
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 250,
+        "new_listings": 510,
+        "median": 390000,
+        "inventory": 1832
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 192,
+        "new_listings": 473,
+        "median": 370000,
+        "inventory": 1753
+    },
+    {
+        "county": "Denver County",
+        "market": "recolorado",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 191,
+        "new_listings": 459,
+        "median": 345000,
+        "inventory": 1767
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 54,
+        "new_listings": 54,
+        "median": 2307000,
+        "inventory": 234
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 54,
+        "new_listings": 34,
+        "median": 1525000,
+        "inventory": 211
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 32,
+        "new_listings": 48,
+        "median": 1901000,
+        "inventory": 211
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 29,
+        "new_listings": 43,
+        "median": 1931000,
+        "inventory": 222
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 22,
+        "new_listings": 52,
+        "median": 2840000,
+        "inventory": 240
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 24,
+        "new_listings": 63,
+        "median": 2913000,
+        "inventory": 250
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 29,
+        "new_listings": 58,
+        "median": 2218000,
+        "inventory": 259
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 40,
+        "new_listings": 101,
+        "median": 1773000,
+        "inventory": 308
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 37,
+        "new_listings": 118,
+        "median": 1850000,
+        "inventory": 383
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 43,
+        "new_listings": 114,
+        "median": 1775000,
+        "inventory": 410
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 56,
+        "new_listings": 70,
+        "median": 1880000,
+        "inventory": 394
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 61,
+        "new_listings": 41,
+        "median": 1600000,
+        "inventory": 355
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 63,
+        "new_listings": 58,
+        "median": 1755000,
+        "inventory": 318
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 46,
+        "new_listings": 35,
+        "median": 2713000,
+        "inventory": 290
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 41,
+        "new_listings": 38,
+        "median": 1785000,
+        "inventory": 281
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 24,
+        "new_listings": 48,
+        "median": 2475000,
+        "inventory": 278
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 27,
+        "new_listings": 47,
+        "median": 2450000,
+        "inventory": 294
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 35,
+        "new_listings": 65,
+        "median": 1869000,
+        "inventory": 288
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 43,
+        "new_listings": 63,
+        "median": 1900000,
+        "inventory": 288
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 40,
+        "new_listings": 96,
+        "median": 1698000,
+        "inventory": 338
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 41,
+        "new_listings": 102,
+        "median": 1860000,
+        "inventory": 384
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 54,
+        "new_listings": 105,
+        "median": 1888000,
+        "inventory": 400
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 45,
+        "new_listings": 77,
+        "median": 1937000,
+        "inventory": 411
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 63,
+        "new_listings": 73,
+        "median": 1900000,
+        "inventory": 386
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 45,
+        "new_listings": 53,
+        "median": 1170000,
+        "inventory": 218
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 50,
+        "new_listings": 53,
+        "median": 1230000,
+        "inventory": 224
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 47,
+        "new_listings": 66,
+        "median": 1550000,
+        "inventory": 223
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 43,
+        "new_listings": 87,
+        "median": 1150000,
+        "inventory": 262
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 33,
+        "new_listings": 50,
+        "median": 1340000,
+        "inventory": 258
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 52,
+        "new_listings": 90,
+        "median": 1625000,
+        "inventory": 288
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 39,
+        "new_listings": 60,
+        "median": 1875000,
+        "inventory": 273
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 57,
+        "new_listings": 95,
+        "median": 1100000,
+        "inventory": 311
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 38,
+        "new_listings": 97,
+        "median": 1180000,
+        "inventory": 363
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 35,
+        "new_listings": 82,
+        "median": 1100000,
+        "inventory": 381
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 47,
+        "new_listings": 67,
+        "median": 1040000,
+        "inventory": 361
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 53,
+        "new_listings": 44,
+        "median": 1350000,
+        "inventory": 314
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 67,
+        "new_listings": 52,
+        "median": 1330000,
+        "inventory": 265
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 43,
+        "new_listings": 60,
+        "median": 893000,
+        "inventory": 269
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 56,
+        "new_listings": 54,
+        "median": 1045000,
+        "inventory": 272
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 34,
+        "new_listings": 42,
+        "median": 1350000,
+        "inventory": 257
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 35,
+        "new_listings": 107,
+        "median": 1825000,
+        "inventory": 310
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 50,
+        "new_listings": 76,
+        "median": 1050000,
+        "inventory": 320
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 36,
+        "new_listings": 59,
+        "median": 1225000,
+        "inventory": 291
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 44,
+        "new_listings": 105,
+        "median": 1190000,
+        "inventory": 331
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 37,
+        "new_listings": 153,
+        "median": 1282000,
+        "inventory": 404
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 39,
+        "new_listings": 136,
+        "median": 1099000,
+        "inventory": 448
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 66,
+        "new_listings": 104,
+        "median": 1235000,
+        "inventory": 433
+    },
+    {
+        "county": "Eagle County",
+        "market": "vail",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 44,
+        "new_listings": 63,
+        "median": 1163000,
+        "inventory": 408
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 830,
+        "new_listings": 1119,
+        "median": 475000,
+        "inventory": 2719
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 748,
+        "new_listings": 729,
+        "median": 495000,
+        "inventory": 2513
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 767,
+        "new_listings": 565,
+        "median": 498000,
+        "inventory": 2065
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 578,
+        "new_listings": 1007,
+        "median": 485000,
+        "inventory": 2110
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 651,
+        "new_listings": 948,
+        "median": 480000,
+        "inventory": 2052
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 898,
+        "new_listings": 1356,
+        "median": 494000,
+        "inventory": 2157
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 943,
+        "new_listings": 1568,
+        "median": 495000,
+        "inventory": 2524
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 1001,
+        "new_listings": 1665,
+        "median": 500000,
+        "inventory": 2964
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 1057,
+        "new_listings": 1555,
+        "median": 510000,
+        "inventory": 3263
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 957,
+        "new_listings": 1385,
+        "median": 500000,
+        "inventory": 3427
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 890,
+        "new_listings": 1241,
+        "median": 488000,
+        "inventory": 3402
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 867,
+        "new_listings": 1098,
+        "median": 480000,
+        "inventory": 3301
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 748,
+        "new_listings": 1160,
+        "median": 475000,
+        "inventory": 3306
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 692,
+        "new_listings": 743,
+        "median": 495000,
+        "inventory": 3017
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 775,
+        "new_listings": 609,
+        "median": 470000,
+        "inventory": 2471
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 531,
+        "new_listings": 1028,
+        "median": 470000,
+        "inventory": 2433
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 682,
+        "new_listings": 1158,
+        "median": 465000,
+        "inventory": 2483
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 908,
+        "new_listings": 1461,
+        "median": 482000,
+        "inventory": 2565
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 971,
+        "new_listings": 1633,
+        "median": 485000,
+        "inventory": 2874
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 1103,
+        "new_listings": 1517,
+        "median": 503000,
+        "inventory": 3066
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 1083,
+        "new_listings": 1570,
+        "median": 499000,
+        "inventory": 3389
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 980,
+        "new_listings": 1459,
+        "median": 510000,
+        "inventory": 3672
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 826,
+        "new_listings": 1192,
+        "median": 475000,
+        "inventory": 3638
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 780,
+        "new_listings": 1108,
+        "median": 485000,
+        "inventory": 3619
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 149,
+        "new_listings": 206,
+        "median": 330000,
+        "inventory": 639
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 109,
+        "new_listings": 136,
+        "median": 345000,
+        "inventory": 599
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 109,
+        "new_listings": 107,
+        "median": 340000,
+        "inventory": 506
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 82,
+        "new_listings": 185,
+        "median": 326000,
+        "inventory": 498
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 101,
+        "new_listings": 185,
+        "median": 325000,
+        "inventory": 483
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 137,
+        "new_listings": 236,
+        "median": 360000,
+        "inventory": 512
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 151,
+        "new_listings": 240,
+        "median": 355000,
+        "inventory": 551
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 146,
+        "new_listings": 271,
+        "median": 340000,
+        "inventory": 602
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 131,
+        "new_listings": 244,
+        "median": 335000,
+        "inventory": 642
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 136,
+        "new_listings": 242,
+        "median": 332000,
+        "inventory": 677
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 150,
+        "new_listings": 239,
+        "median": 326000,
+        "inventory": 673
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 135,
+        "new_listings": 161,
+        "median": 335000,
+        "inventory": 631
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 128,
+        "new_listings": 180,
+        "median": 320000,
+        "inventory": 629
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 83,
+        "new_listings": 146,
+        "median": 345000,
+        "inventory": 588
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 106,
+        "new_listings": 89,
+        "median": 333000,
+        "inventory": 486
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 68,
+        "new_listings": 187,
+        "median": 298000,
+        "inventory": 524
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 84,
+        "new_listings": 207,
+        "median": 333000,
+        "inventory": 566
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 125,
+        "new_listings": 259,
+        "median": 310000,
+        "inventory": 604
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 149,
+        "new_listings": 302,
+        "median": 335000,
+        "inventory": 675
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 150,
+        "new_listings": 232,
+        "median": 335000,
+        "inventory": 683
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 145,
+        "new_listings": 275,
+        "median": 330000,
+        "inventory": 701
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 136,
+        "new_listings": 231,
+        "median": 307000,
+        "inventory": 748
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 125,
+        "new_listings": 227,
+        "median": 330000,
+        "inventory": 748
+    },
+    {
+        "county": "El Paso County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 118,
+        "new_listings": 170,
+        "median": 298000,
+        "inventory": 709
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 48,
+        "new_listings": 58,
+        "median": 728000,
+        "inventory": 183
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 45,
+        "new_listings": 32,
+        "median": 690000,
+        "inventory": 155
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 41,
+        "new_listings": 39,
+        "median": 610000,
+        "inventory": 141
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 43,
+        "new_listings": 51,
+        "median": 900000,
+        "inventory": 125
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 36,
+        "new_listings": 52,
+        "median": 734000,
+        "inventory": 122
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 33,
+        "new_listings": 75,
+        "median": 795000,
+        "inventory": 140
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 50,
+        "new_listings": 84,
+        "median": 652000,
+        "inventory": 164
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 43,
+        "new_listings": 99,
+        "median": 750000,
+        "inventory": 200
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 65,
+        "new_listings": 88,
+        "median": 850000,
+        "inventory": 212
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 71,
+        "new_listings": 96,
+        "median": 775000,
+        "inventory": 241
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 52,
+        "new_listings": 75,
+        "median": 860000,
+        "inventory": 255
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 46,
+        "new_listings": 83,
+        "median": 723000,
+        "inventory": 262
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 48,
+        "new_listings": 63,
+        "median": 795000,
+        "inventory": 248
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 41,
+        "new_listings": 42,
+        "median": 635000,
+        "inventory": 235
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 51,
+        "new_listings": 24,
+        "median": 699000,
+        "inventory": 191
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 30,
+        "new_listings": 47,
+        "median": 813000,
+        "inventory": 194
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 33,
+        "new_listings": 56,
+        "median": 629000,
+        "inventory": 212
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 45,
+        "new_listings": 95,
+        "median": 620000,
+        "inventory": 220
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 45,
+        "new_listings": 109,
+        "median": 654000,
+        "inventory": 255
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 56,
+        "new_listings": 98,
+        "median": 625000,
+        "inventory": 287
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 58,
+        "new_listings": 101,
+        "median": 848000,
+        "inventory": 333
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 52,
+        "new_listings": 87,
+        "median": 725000,
+        "inventory": 343
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 62,
+        "new_listings": 80,
+        "median": 758000,
+        "inventory": 350
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 45,
+        "new_listings": 63,
+        "median": 678000,
+        "inventory": 329
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 23,
+        "new_listings": 19,
+        "median": 515000,
+        "inventory": 45
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 14,
+        "new_listings": 15,
+        "median": 648000,
+        "inventory": 46
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 18,
+        "new_listings": 10,
+        "median": 540000,
+        "inventory": 32
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 21,
+        "new_listings": 15,
+        "median": 360000,
+        "inventory": 35
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 9,
+        "new_listings": 39,
+        "median": 515000,
+        "inventory": 58
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 10,
+        "new_listings": 20,
+        "median": 498000,
+        "inventory": 58
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 17,
+        "new_listings": 42,
+        "median": 415000,
+        "inventory": 73
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 18,
+        "new_listings": 32,
+        "median": 473000,
+        "inventory": 48
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 15,
+        "new_listings": 36,
+        "median": 486000,
+        "inventory": 70
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 15,
+        "new_listings": 30,
+        "median": 555000,
+        "inventory": 76
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 22,
+        "new_listings": 24,
+        "median": 425000,
+        "inventory": 76
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 22,
+        "new_listings": 18,
+        "median": 437000,
+        "inventory": 69
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 22,
+        "new_listings": 20,
+        "median": 505000,
+        "inventory": 66
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 13,
+        "new_listings": 18,
+        "median": 540000,
+        "inventory": 59
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 20,
+        "new_listings": 8,
+        "median": 480000,
+        "inventory": 45
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 14,
+        "new_listings": 14,
+        "median": 633000,
+        "inventory": 44
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 10,
+        "new_listings": 22,
+        "median": 583000,
+        "inventory": 52
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 8,
+        "new_listings": 39,
+        "median": 488000,
+        "inventory": 60
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 23,
+        "new_listings": 31,
+        "median": 555000,
+        "inventory": 68
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 17,
+        "new_listings": 20,
+        "median": 565000,
+        "inventory": 69
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 20,
+        "new_listings": 23,
+        "median": 485000,
+        "inventory": 75
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 11,
+        "new_listings": 29,
+        "median": 345000,
+        "inventory": 84
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 19,
+        "new_listings": 19,
+        "median": 450000,
+        "inventory": 86
+    },
+    {
+        "county": "Garfield County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 17,
+        "new_listings": 29,
+        "median": 565000,
+        "inventory": 94
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 55,
+        "new_listings": 61,
+        "median": 725000,
+        "inventory": 228
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 48,
+        "new_listings": 33,
+        "median": 835000,
+        "inventory": 182
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 41,
+        "new_listings": 29,
+        "median": 815000,
+        "inventory": 147
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 30,
+        "new_listings": 52,
+        "median": 753000,
+        "inventory": 137
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 26,
+        "new_listings": 35,
+        "median": 580000,
+        "inventory": 140
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 32,
+        "new_listings": 68,
+        "median": 823000,
+        "inventory": 164
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 39,
+        "new_listings": 83,
+        "median": 880000,
+        "inventory": 198
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 48,
+        "new_listings": 141,
+        "median": 879000,
+        "inventory": 279
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 36,
+        "new_listings": 97,
+        "median": 838000,
+        "inventory": 293
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 72,
+        "new_listings": 88,
+        "median": 833000,
+        "inventory": 306
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 67,
+        "new_listings": 77,
+        "median": 790000,
+        "inventory": 312
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 56,
+        "new_listings": 68,
+        "median": 742000,
+        "inventory": 296
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 64,
+        "new_listings": 70,
+        "median": 945000,
+        "inventory": 257
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 45,
+        "new_listings": 22,
+        "median": 924000,
+        "inventory": 212
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 37,
+        "new_listings": 36,
+        "median": 769000,
+        "inventory": 193
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 29,
+        "new_listings": 41,
+        "median": 950000,
+        "inventory": 167
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 24,
+        "new_listings": 45,
+        "median": 813000,
+        "inventory": 183
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 42,
+        "new_listings": 88,
+        "median": 831000,
+        "inventory": 193
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 49,
+        "new_listings": 111,
+        "median": 785000,
+        "inventory": 241
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 57,
+        "new_listings": 96,
+        "median": 940000,
+        "inventory": 267
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 59,
+        "new_listings": 119,
+        "median": 840000,
+        "inventory": 324
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 63,
+        "new_listings": 80,
+        "median": 735000,
+        "inventory": 332
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 40,
+        "new_listings": 71,
+        "median": 871000,
+        "inventory": 345
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 46,
+        "new_listings": 77,
+        "median": 873000,
+        "inventory": 338
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 32,
+        "new_listings": 25,
+        "median": 655000,
+        "inventory": 87
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 20,
+        "new_listings": 18,
+        "median": 1000000,
+        "inventory": 83
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 22,
+        "new_listings": 11,
+        "median": 438000,
+        "inventory": 73
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 14,
+        "new_listings": 32,
+        "median": 524000,
+        "inventory": 76
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 14,
+        "new_listings": 23,
+        "median": 499000,
+        "inventory": 80
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 10,
+        "new_listings": 24,
+        "median": 437000,
+        "inventory": 83
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 18,
+        "new_listings": 46,
+        "median": 538000,
+        "inventory": 99
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 25,
+        "new_listings": 38,
+        "median": 650000,
+        "inventory": 107
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 22,
+        "new_listings": 42,
+        "median": 421000,
+        "inventory": 130
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 19,
+        "new_listings": 33,
+        "median": 572000,
+        "inventory": 131
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 24,
+        "new_listings": 36,
+        "median": 578000,
+        "inventory": 132
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 29,
+        "new_listings": 31,
+        "median": 520000,
+        "inventory": 127
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 19,
+        "new_listings": 28,
+        "median": 695000,
+        "inventory": 125
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 23,
+        "new_listings": 20,
+        "median": 517000,
+        "inventory": 110
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 14,
+        "new_listings": 19,
+        "median": 405000,
+        "inventory": 106
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 12,
+        "new_listings": 28,
+        "median": 440000,
+        "inventory": 101
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 26,
+        "new_listings": 26,
+        "median": 620000,
+        "inventory": 105
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 17,
+        "new_listings": 42,
+        "median": 385000,
+        "inventory": 115
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 17,
+        "new_listings": 45,
+        "median": 537000,
+        "inventory": 128
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 24,
+        "new_listings": 50,
+        "median": 576000,
+        "inventory": 144
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 18,
+        "new_listings": 41,
+        "median": 530000,
+        "inventory": 159
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 24,
+        "new_listings": 32,
+        "median": 736000,
+        "inventory": 163
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 17,
+        "new_listings": 35,
+        "median": 516000,
+        "inventory": 158
+    },
+    {
+        "county": "La Plata County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 28,
+        "new_listings": 34,
+        "median": 588000,
+        "inventory": 170
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 58,
+        "new_listings": 54,
+        "median": 435000,
+        "inventory": 203
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 46,
+        "new_listings": 40,
+        "median": 404000,
+        "inventory": 187
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 34,
+        "new_listings": 40,
+        "median": 441000,
+        "inventory": 162
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 38,
+        "new_listings": 60,
+        "median": 476000,
+        "inventory": 160
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 42,
+        "new_listings": 51,
+        "median": 461000,
+        "inventory": 156
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 38,
+        "new_listings": 71,
+        "median": 465000,
+        "inventory": 169
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 55,
+        "new_listings": 64,
+        "median": 425000,
+        "inventory": 168
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 51,
+        "new_listings": 83,
+        "median": 485000,
+        "inventory": 194
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 54,
+        "new_listings": 81,
+        "median": 471000,
+        "inventory": 207
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 61,
+        "new_listings": 86,
+        "median": 500000,
+        "inventory": 229
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 47,
+        "new_listings": 82,
+        "median": 484000,
+        "inventory": 245
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 52,
+        "new_listings": 78,
+        "median": 453000,
+        "inventory": 241
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 54,
+        "new_listings": 54,
+        "median": 495000,
+        "inventory": 228
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 54,
+        "new_listings": 50,
+        "median": 466000,
+        "inventory": 219
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 35,
+        "new_listings": 41,
+        "median": 486000,
+        "inventory": 201
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 36,
+        "new_listings": 54,
+        "median": 426000,
+        "inventory": 189
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 32,
+        "new_listings": 54,
+        "median": 492000,
+        "inventory": 199
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 45,
+        "new_listings": 93,
+        "median": 430000,
+        "inventory": 215
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 48,
+        "new_listings": 88,
+        "median": 469000,
+        "inventory": 234
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 55,
+        "new_listings": 106,
+        "median": 477000,
+        "inventory": 273
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 39,
+        "new_listings": 85,
+        "median": 530000,
+        "inventory": 295
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 53,
+        "new_listings": 107,
+        "median": 475000,
+        "inventory": 329
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 41,
+        "new_listings": 75,
+        "median": 465000,
+        "inventory": 344
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 38,
+        "new_listings": 66,
+        "median": 515000,
+        "inventory": 340
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 4,
+        "new_listings": 2,
+        "median": 340000,
+        "inventory": 8
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 4,
+        "new_listings": 4,
+        "median": 370000,
+        "inventory": 10
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 2,
+        "new_listings": 4,
+        "median": 315000,
+        "inventory": 10
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 2,
+        "new_listings": 5,
+        "median": 369000,
+        "inventory": 6
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 2,
+        "new_listings": 8,
+        "median": 293000,
+        "inventory": 11
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 2,
+        "new_listings": 5,
+        "median": 368000,
+        "inventory": 12
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 3,
+        "new_listings": 4,
+        "median": 315000,
+        "inventory": 14
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 5,
+        "new_listings": 2,
+        "median": 325000,
+        "inventory": 8
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 3,
+        "new_listings": 5,
+        "median": 336000,
+        "inventory": 12
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 2,
+        "new_listings": 11,
+        "median": 320000,
+        "inventory": 17
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 5,
+        "new_listings": 9,
+        "median": 339000,
+        "inventory": 22
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 3,
+        "new_listings": 5,
+        "median": 335000,
+        "inventory": 18
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 7,
+        "new_listings": 3,
+        "median": 348000,
+        "inventory": 17
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 4,
+        "new_listings": 1,
+        "median": 332000,
+        "inventory": 13
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 3,
+        "new_listings": 3,
+        "median": 360000,
+        "inventory": 16
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 0,
+        "new_listings": 7,
+        "median": null,
+        "inventory": 23
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 1,
+        "new_listings": 9,
+        "median": 324000,
+        "inventory": 22
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 4,
+        "new_listings": 5,
+        "median": 331000,
+        "inventory": 23
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 2,
+        "new_listings": 4,
+        "median": 340000,
+        "inventory": 20
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 2,
+        "new_listings": 5,
+        "median": 336000,
+        "inventory": 21
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 4,
+        "new_listings": 2,
+        "median": 305000,
+        "inventory": 19
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 3,
+        "new_listings": 2,
+        "median": 305000,
+        "inventory": 19
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 2,
+        "new_listings": 4,
+        "median": 525000,
+        "inventory": 17
+    },
+    {
+        "county": "Montrose County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 4,
+        "new_listings": 2,
+        "median": 332000,
+        "inventory": 18
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 10,
+        "new_listings": 5,
+        "median": 896000,
+        "inventory": 83
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 5,
+        "new_listings": 8,
+        "median": 950000,
+        "inventory": 71
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 7,
+        "new_listings": 4,
+        "median": 980000,
+        "inventory": 57
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 7,
+        "new_listings": 8,
+        "median": 950000,
+        "inventory": 45
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 9,
+        "new_listings": 7,
+        "median": 668000,
+        "inventory": 44
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 10,
+        "new_listings": 15,
+        "median": 1050000,
+        "inventory": 53
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 6,
+        "new_listings": 17,
+        "median": 700000,
+        "inventory": 66
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 1,
+        "new_listings": 27,
+        "median": 958000,
+        "inventory": 75
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 8,
+        "new_listings": 23,
+        "median": 1175000,
+        "inventory": 87
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 9,
+        "new_listings": 19,
+        "median": 790000,
+        "inventory": 88
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 13,
+        "new_listings": 11,
+        "median": 950000,
+        "inventory": 82
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 9,
+        "new_listings": 11,
+        "median": 900000,
+        "inventory": 73
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 17,
+        "new_listings": 10,
+        "median": 792000,
+        "inventory": 68
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 7,
+        "new_listings": 6,
+        "median": 860000,
+        "inventory": 53
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 9,
+        "new_listings": 9,
+        "median": 1016000,
+        "inventory": 49
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 3,
+        "new_listings": 12,
+        "median": 875000,
+        "inventory": 50
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 5,
+        "new_listings": 13,
+        "median": 860000,
+        "inventory": 52
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 2,
+        "new_listings": 16,
+        "median": 585000,
+        "inventory": 57
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 2,
+        "new_listings": 26,
+        "median": 950000,
+        "inventory": 71
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 5,
+        "new_listings": 28,
+        "median": 850000,
+        "inventory": 84
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 8,
+        "new_listings": 21,
+        "median": 1166000,
+        "inventory": 86
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 11,
+        "new_listings": 16,
+        "median": 798000,
+        "inventory": 83
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 6,
+        "new_listings": 19,
+        "median": 910000,
+        "inventory": 94
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 6,
+        "new_listings": 13,
+        "median": 828000,
+        "inventory": 96
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 0,
+        "new_listings": 3,
+        "median": null,
+        "inventory": 8
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 1,
+        "new_listings": 6,
+        "median": 715000,
+        "inventory": 10
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 0,
+        "new_listings": 6,
+        "median": null,
+        "inventory": 12
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 1,
+        "new_listings": 3,
+        "median": 345000,
+        "inventory": 13
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 1,
+        "new_listings": 4,
+        "median": 670000,
+        "inventory": 13
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 1,
+        "new_listings": 1,
+        "median": 668000,
+        "inventory": 14
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 2,
+        "new_listings": 0,
+        "median": 664000,
+        "inventory": 14
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 1,
+        "new_listings": 9,
+        "median": 370000,
+        "inventory": 22
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 1,
+        "new_listings": 3,
+        "median": 990000,
+        "inventory": 23
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 2,
+        "new_listings": 2,
+        "median": 635000,
+        "inventory": 18
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 5,
+        "new_listings": 4,
+        "median": 560000,
+        "inventory": 19
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 2,
+        "new_listings": 4,
+        "median": 750000,
+        "inventory": 20
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 3,
+        "new_listings": 1,
+        "median": 975000,
+        "inventory": 17
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 2,
+        "new_listings": 4,
+        "median": 492000,
+        "inventory": 14
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 2,
+        "new_listings": 2,
+        "median": 950000,
+        "inventory": 15
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 0,
+        "new_listings": 6,
+        "median": null,
+        "inventory": 16
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 1,
+        "new_listings": 1,
+        "median": 700000,
+        "inventory": 18
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 0,
+        "new_listings": 6,
+        "median": null,
+        "inventory": 21
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 0,
+        "new_listings": 4,
+        "median": null,
+        "inventory": 23
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 2,
+        "new_listings": 9,
+        "median": 738000,
+        "inventory": 25
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 5,
+        "new_listings": 4,
+        "median": 775000,
+        "inventory": 27
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 1,
+        "new_listings": 7,
+        "median": 388000,
+        "inventory": 33
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 2,
+        "new_listings": 5,
+        "median": 840000,
+        "inventory": 33
+    },
+    {
+        "county": "Ouray County",
+        "market": "cren",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 2,
+        "new_listings": 3,
+        "median": 459000,
+        "inventory": 30
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 17,
+        "new_listings": 15,
+        "median": 6488000,
+        "inventory": 129
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 12,
+        "new_listings": 12,
+        "median": 9263000,
+        "inventory": 122
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 11,
+        "new_listings": 38,
+        "median": 7500000,
+        "inventory": 144
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 11,
+        "new_listings": 26,
+        "median": 7200000,
+        "inventory": 148
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 8,
+        "new_listings": 21,
+        "median": 16025000,
+        "inventory": 144
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 18,
+        "new_listings": 14,
+        "median": 8731000,
+        "inventory": 137
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 19,
+        "new_listings": 12,
+        "median": 8000000,
+        "inventory": 124
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 11,
+        "new_listings": 33,
+        "median": 13250000,
+        "inventory": 134
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 12,
+        "new_listings": 68,
+        "median": 6925000,
+        "inventory": 192
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 12,
+        "new_listings": 26,
+        "median": 8413000,
+        "inventory": 192
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 19,
+        "new_listings": 26,
+        "median": 6207000,
+        "inventory": 183
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 18,
+        "new_listings": 15,
+        "median": 7100000,
+        "inventory": 169
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 16,
+        "new_listings": 17,
+        "median": 8977000,
+        "inventory": 148
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 13,
+        "new_listings": 13,
+        "median": 10375000,
+        "inventory": 145
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 10,
+        "new_listings": 34,
+        "median": 5735000,
+        "inventory": 158
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 10,
+        "new_listings": 16,
+        "median": 10625000,
+        "inventory": 146
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 9,
+        "new_listings": 16,
+        "median": 9275000,
+        "inventory": 150
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 9,
+        "new_listings": 13,
+        "median": 4400000,
+        "inventory": 144
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 11,
+        "new_listings": 14,
+        "median": 8325000,
+        "inventory": 120
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 9,
+        "new_listings": 29,
+        "median": 5500000,
+        "inventory": 132
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 13,
+        "new_listings": 70,
+        "median": 9500000,
+        "inventory": 185
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 14,
+        "new_listings": 36,
+        "median": 7575000,
+        "inventory": 190
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 11,
+        "new_listings": 33,
+        "median": 3600000,
+        "inventory": 193
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 26,
+        "new_listings": 20,
+        "median": 8453000,
+        "inventory": 186
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 57,
+        "new_listings": 15,
+        "median": 4251000,
+        "inventory": 113
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 49,
+        "new_listings": 14,
+        "median": 3425000,
+        "inventory": 97
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 19,
+        "new_listings": 136,
+        "median": 3483000,
+        "inventory": 204
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 16,
+        "new_listings": 28,
+        "median": 3362000,
+        "inventory": 209
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 14,
+        "new_listings": 25,
+        "median": 3000000,
+        "inventory": 137
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 26,
+        "new_listings": 36,
+        "median": 2973000,
+        "inventory": 154
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 13,
+        "new_listings": 17,
+        "median": 2600000,
+        "inventory": 134
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 17,
+        "new_listings": 22,
+        "median": 1850000,
+        "inventory": 137
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 14,
+        "new_listings": 54,
+        "median": 1575000,
+        "inventory": 176
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 10,
+        "new_listings": 43,
+        "median": 2778000,
+        "inventory": 187
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 20,
+        "new_listings": 21,
+        "median": 3353000,
+        "inventory": 191
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 20,
+        "new_listings": 12,
+        "median": 2644000,
+        "inventory": 165
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 16,
+        "new_listings": 19,
+        "median": 3063000,
+        "inventory": 143
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 15,
+        "new_listings": 20,
+        "median": 2400000,
+        "inventory": 137
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 18,
+        "new_listings": 44,
+        "median": 4200000,
+        "inventory": 160
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 13,
+        "new_listings": 18,
+        "median": 3000000,
+        "inventory": 166
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 8,
+        "new_listings": 25,
+        "median": 2400000,
+        "inventory": 173
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 16,
+        "new_listings": 21,
+        "median": 3645000,
+        "inventory": 167
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 14,
+        "new_listings": 19,
+        "median": 2513000,
+        "inventory": 145
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 12,
+        "new_listings": 11,
+        "median": 2442000,
+        "inventory": 120
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 13,
+        "new_listings": 62,
+        "median": 2118000,
+        "inventory": 178
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 10,
+        "new_listings": 31,
+        "median": 1173000,
+        "inventory": 185
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 21,
+        "new_listings": 26,
+        "median": 3950000,
+        "inventory": 177
+    },
+    {
+        "county": "Pitkin County",
+        "market": "aspen",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 13,
+        "new_listings": 24,
+        "median": 5045000,
+        "inventory": 165
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 35,
+        "new_listings": 31,
+        "median": 1375000,
+        "inventory": 108
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 23,
+        "new_listings": 12,
+        "median": 1115000,
+        "inventory": 92
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 17,
+        "new_listings": 11,
+        "median": 1500000,
+        "inventory": 87
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 7,
+        "new_listings": 23,
+        "median": 1225000,
+        "inventory": 82
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 6,
+        "new_listings": 24,
+        "median": 1052000,
+        "inventory": 81
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 20,
+        "new_listings": 38,
+        "median": 1463000,
+        "inventory": 93
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 17,
+        "new_listings": 35,
+        "median": 2375000,
+        "inventory": 103
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 17,
+        "new_listings": 70,
+        "median": 949000,
+        "inventory": 143
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 24,
+        "new_listings": 71,
+        "median": 1381000,
+        "inventory": 182
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 27,
+        "new_listings": 57,
+        "median": 1125000,
+        "inventory": 192
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 27,
+        "new_listings": 47,
+        "median": 1725000,
+        "inventory": 206
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 28,
+        "new_listings": 33,
+        "median": 1536000,
+        "inventory": 189
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 36,
+        "new_listings": 28,
+        "median": 1624000,
+        "inventory": 161
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 25,
+        "new_listings": 13,
+        "median": 2550000,
+        "inventory": 127
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 28,
+        "new_listings": 9,
+        "median": 1738000,
+        "inventory": 100
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 10,
+        "new_listings": 16,
+        "median": 972000,
+        "inventory": 96
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 18,
+        "new_listings": 23,
+        "median": 1375000,
+        "inventory": 101
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 8,
+        "new_listings": 32,
+        "median": 880000,
+        "inventory": 110
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 7,
+        "new_listings": 45,
+        "median": 1750000,
+        "inventory": 128
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 21,
+        "new_listings": 65,
+        "median": 1545000,
+        "inventory": 167
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 24,
+        "new_listings": 66,
+        "median": 1288000,
+        "inventory": 195
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 21,
+        "new_listings": 52,
+        "median": 1562000,
+        "inventory": 210
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 34,
+        "new_listings": 33,
+        "median": 1530000,
+        "inventory": 208
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 29,
+        "new_listings": 23,
+        "median": 1500000,
+        "inventory": 183
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 33,
+        "new_listings": 26,
+        "median": 845000,
+        "inventory": 111
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 28,
+        "new_listings": 24,
+        "median": 921000,
+        "inventory": 93
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 30,
+        "new_listings": 46,
+        "median": 857000,
+        "inventory": 103
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 25,
+        "new_listings": 50,
+        "median": 815000,
+        "inventory": 113
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 24,
+        "new_listings": 56,
+        "median": 832000,
+        "inventory": 131
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 33,
+        "new_listings": 62,
+        "median": 955000,
+        "inventory": 146
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 33,
+        "new_listings": 58,
+        "median": 831000,
+        "inventory": 165
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 26,
+        "new_listings": 79,
+        "median": 683000,
+        "inventory": 211
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 19,
+        "new_listings": 65,
+        "median": 975000,
+        "inventory": 238
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 27,
+        "new_listings": 77,
+        "median": 932000,
+        "inventory": 258
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 33,
+        "new_listings": 53,
+        "median": 685000,
+        "inventory": 262
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 40,
+        "new_listings": 43,
+        "median": 975000,
+        "inventory": 234
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 41,
+        "new_listings": 40,
+        "median": 935000,
+        "inventory": 201
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 29,
+        "new_listings": 34,
+        "median": 535000,
+        "inventory": 168
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 37,
+        "new_listings": 60,
+        "median": 975000,
+        "inventory": 189
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 18,
+        "new_listings": 38,
+        "median": 886000,
+        "inventory": 196
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 25,
+        "new_listings": 43,
+        "median": 900000,
+        "inventory": 204
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 34,
+        "new_listings": 52,
+        "median": 538000,
+        "inventory": 222
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 40,
+        "new_listings": 49,
+        "median": 1100000,
+        "inventory": 231
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 28,
+        "new_listings": 58,
+        "median": 1640000,
+        "inventory": 236
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 30,
+        "new_listings": 61,
+        "median": 904000,
+        "inventory": 246
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 40,
+        "new_listings": 77,
+        "median": 575000,
+        "inventory": 261
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 29,
+        "new_listings": 62,
+        "median": 885000,
+        "inventory": 265
+    },
+    {
+        "county": "Routt County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 39,
+        "new_listings": 45,
+        "median": 869000,
+        "inventory": 264
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 3,
+        "new_listings": 5,
+        "median": 600000,
+        "inventory": 51
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 4,
+        "new_listings": 2,
+        "median": 2195000,
+        "inventory": 47
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 6,
+        "new_listings": 1,
+        "median": 883000,
+        "inventory": 37
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 1,
+        "new_listings": 6,
+        "median": 4500000,
+        "inventory": 35
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 7,
+        "new_listings": 5,
+        "median": 730000,
+        "inventory": 34
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 4,
+        "new_listings": 7,
+        "median": 5355000,
+        "inventory": 36
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 1,
+        "new_listings": 5,
+        "median": 375000,
+        "inventory": 36
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 3,
+        "new_listings": 5,
+        "median": 530000,
+        "inventory": 40
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 2,
+        "new_listings": 16,
+        "median": 6529000,
+        "inventory": 55
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 1,
+        "new_listings": 7,
+        "median": 2675000,
+        "inventory": 57
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 6,
+        "new_listings": 7,
+        "median": 1240000,
+        "inventory": 59
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 3,
+        "new_listings": 5,
+        "median": 800000,
+        "inventory": 57
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 4,
+        "new_listings": 5,
+        "median": 585000,
+        "inventory": 46
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 4,
+        "new_listings": 12,
+        "median": 1520000,
+        "inventory": 46
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 5,
+        "new_listings": 6,
+        "median": 1050000,
+        "inventory": 46
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 2,
+        "new_listings": 5,
+        "median": 1380000,
+        "inventory": 46
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 2,
+        "new_listings": 7,
+        "median": 9145000,
+        "inventory": 50
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 2,
+        "new_listings": 4,
+        "median": 6668000,
+        "inventory": 49
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 2,
+        "new_listings": 3,
+        "median": 2980000,
+        "inventory": 43
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 2,
+        "new_listings": 9,
+        "median": 1315000,
+        "inventory": 48
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 3,
+        "new_listings": 9,
+        "median": 5195000,
+        "inventory": 51
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 2,
+        "new_listings": 4,
+        "median": 651000,
+        "inventory": 51
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 2,
+        "new_listings": 8,
+        "median": 1418000,
+        "inventory": 51
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 4,
+        "new_listings": 2,
+        "median": 2580000,
+        "inventory": 48
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 0,
+        "new_listings": 0,
+        "median": null,
+        "inventory": 13
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 2,
+        "new_listings": 0,
+        "median": 1925000,
+        "inventory": 10
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 0,
+        "new_listings": 7,
+        "median": null,
+        "inventory": 15
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 0,
+        "new_listings": 4,
+        "median": null,
+        "inventory": 16
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 2,
+        "new_listings": 3,
+        "median": 2498000,
+        "inventory": 18
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 0,
+        "new_listings": 6,
+        "median": null,
+        "inventory": 22
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 2,
+        "new_listings": 1,
+        "median": 4258000,
+        "inventory": 18
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 2,
+        "new_listings": 1,
+        "median": 1943000,
+        "inventory": 16
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 1,
+        "new_listings": 4,
+        "median": 1500000,
+        "inventory": 19
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 0,
+        "new_listings": 2,
+        "median": null,
+        "inventory": 17
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 1,
+        "new_listings": 6,
+        "median": 750000,
+        "inventory": 18
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 3,
+        "new_listings": 3,
+        "median": 1376000,
+        "inventory": 15
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 4,
+        "new_listings": 2,
+        "median": 1245000,
+        "inventory": 16
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 0,
+        "new_listings": 2,
+        "median": null,
+        "inventory": 18
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 0,
+        "new_listings": 1,
+        "median": null,
+        "inventory": 14
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 5,
+        "new_listings": 2,
+        "median": 1300000,
+        "inventory": 14
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 0,
+        "new_listings": 0,
+        "median": null,
+        "inventory": 14
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 1,
+        "new_listings": 0,
+        "median": 4700000,
+        "inventory": 13
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 0,
+        "new_listings": 1,
+        "median": null,
+        "inventory": 11
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 0,
+        "new_listings": 2,
+        "median": null,
+        "inventory": 11
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 0,
+        "new_listings": 3,
+        "median": null,
+        "inventory": 10
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 1,
+        "new_listings": 3,
+        "median": 4600000,
+        "inventory": 13
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 1,
+        "new_listings": 4,
+        "median": 328000,
+        "inventory": 15
+    },
+    {
+        "county": "San Miguel County",
+        "market": "telluride",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 1,
+        "new_listings": 1,
+        "median": 2800000,
+        "inventory": 14
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 46,
+        "new_listings": 47,
+        "median": 1999000,
+        "inventory": 262
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 43,
+        "new_listings": 35,
+        "median": 2260000,
+        "inventory": 219
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 30,
+        "new_listings": 28,
+        "median": 1973000,
+        "inventory": 201
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 30,
+        "new_listings": 34,
+        "median": 1670000,
+        "inventory": 173
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 31,
+        "new_listings": 47,
+        "median": 1831000,
+        "inventory": 181
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 41,
+        "new_listings": 55,
+        "median": 2350000,
+        "inventory": 189
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 30,
+        "new_listings": 65,
+        "median": 1903000,
+        "inventory": 216
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 34,
+        "new_listings": 96,
+        "median": 2063000,
+        "inventory": 264
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 32,
+        "new_listings": 154,
+        "median": 1836000,
+        "inventory": 351
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 48,
+        "new_listings": 109,
+        "median": 1900000,
+        "inventory": 400
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 48,
+        "new_listings": 78,
+        "median": 2150000,
+        "inventory": 381
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 69,
+        "new_listings": 58,
+        "median": 2075000,
+        "inventory": 325
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 78,
+        "new_listings": 42,
+        "median": 1870000,
+        "inventory": 281
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 44,
+        "new_listings": 34,
+        "median": 1775000,
+        "inventory": 242
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 49,
+        "new_listings": 26,
+        "median": 1825000,
+        "inventory": 205
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 20,
+        "new_listings": 35,
+        "median": 1658000,
+        "inventory": 199
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 18,
+        "new_listings": 32,
+        "median": 1935000,
+        "inventory": 175
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 41,
+        "new_listings": 50,
+        "median": 1866000,
+        "inventory": 181
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 29,
+        "new_listings": 52,
+        "median": 2700000,
+        "inventory": 184
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 42,
+        "new_listings": 118,
+        "median": 2053000,
+        "inventory": 240
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 41,
+        "new_listings": 154,
+        "median": 1630000,
+        "inventory": 317
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 50,
+        "new_listings": 116,
+        "median": 1905000,
+        "inventory": 351
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 56,
+        "new_listings": 84,
+        "median": 1800000,
+        "inventory": 356
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 50,
+        "new_listings": 63,
+        "median": 1958000,
+        "inventory": 349
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 108,
+        "new_listings": 115,
+        "median": 816000,
+        "inventory": 434
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 95,
+        "new_listings": 98,
+        "median": 723000,
+        "inventory": 430
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 79,
+        "new_listings": 75,
+        "median": 840000,
+        "inventory": 373
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 61,
+        "new_listings": 97,
+        "median": 825000,
+        "inventory": 372
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 60,
+        "new_listings": 98,
+        "median": 875000,
+        "inventory": 388
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 67,
+        "new_listings": 141,
+        "median": 725000,
+        "inventory": 425
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 70,
+        "new_listings": 170,
+        "median": 730000,
+        "inventory": 502
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 98,
+        "new_listings": 205,
+        "median": 843000,
+        "inventory": 597
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 64,
+        "new_listings": 201,
+        "median": 818000,
+        "inventory": 681
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 88,
+        "new_listings": 172,
+        "median": 790000,
+        "inventory": 716
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 102,
+        "new_listings": 144,
+        "median": 773000,
+        "inventory": 688
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 110,
+        "new_listings": 96,
+        "median": 816000,
+        "inventory": 600
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 102,
+        "new_listings": 96,
+        "median": 775000,
+        "inventory": 491
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 93,
+        "new_listings": 73,
+        "median": 715000,
+        "inventory": 439
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 68,
+        "new_listings": 81,
+        "median": 733000,
+        "inventory": 389
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 44,
+        "new_listings": 101,
+        "median": 740000,
+        "inventory": 401
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 66,
+        "new_listings": 96,
+        "median": 936000,
+        "inventory": 401
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 69,
+        "new_listings": 143,
+        "median": 850000,
+        "inventory": 446
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 87,
+        "new_listings": 167,
+        "median": 778000,
+        "inventory": 492
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 73,
+        "new_listings": 181,
+        "median": 875000,
+        "inventory": 596
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 94,
+        "new_listings": 239,
+        "median": 950000,
+        "inventory": 718
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 88,
+        "new_listings": 186,
+        "median": 930000,
+        "inventory": 770
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 104,
+        "new_listings": 153,
+        "median": 837000,
+        "inventory": 756
+    },
+    {
+        "county": "Summit County",
+        "market": "altitude",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 76,
+        "new_listings": 129,
+        "median": 890000,
+        "inventory": 741
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2024-10",
+        "sold": 61,
+        "new_listings": 85,
+        "median": 515000,
+        "inventory": 351
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2024-11",
+        "sold": 53,
+        "new_listings": 52,
+        "median": 490000,
+        "inventory": 309
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2024-12",
+        "sold": 47,
+        "new_listings": 31,
+        "median": 457000,
+        "inventory": 225
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-01",
+        "sold": 47,
+        "new_listings": 64,
+        "median": 535000,
+        "inventory": 226
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-02",
+        "sold": 36,
+        "new_listings": 57,
+        "median": 565000,
+        "inventory": 218
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-03",
+        "sold": 43,
+        "new_listings": 108,
+        "median": 524000,
+        "inventory": 253
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-04",
+        "sold": 51,
+        "new_listings": 115,
+        "median": 465000,
+        "inventory": 294
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-05",
+        "sold": 57,
+        "new_listings": 152,
+        "median": 460000,
+        "inventory": 368
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-06",
+        "sold": 53,
+        "new_listings": 119,
+        "median": 498000,
+        "inventory": 389
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-07",
+        "sold": 64,
+        "new_listings": 126,
+        "median": 520000,
+        "inventory": 426
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-08",
+        "sold": 63,
+        "new_listings": 99,
+        "median": 495000,
+        "inventory": 428
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-09",
+        "sold": 63,
+        "new_listings": 95,
+        "median": 550000,
+        "inventory": 422
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-10",
+        "sold": 65,
+        "new_listings": 104,
+        "median": 515000,
+        "inventory": 399
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-11",
+        "sold": 54,
+        "new_listings": 40,
+        "median": 515000,
+        "inventory": 339
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2025-12",
+        "sold": 62,
+        "new_listings": 36,
+        "median": 472000,
+        "inventory": 251
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-01",
+        "sold": 42,
+        "new_listings": 79,
+        "median": 435000,
+        "inventory": 250
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-02",
+        "sold": 45,
+        "new_listings": 91,
+        "median": 477000,
+        "inventory": 245
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-03",
+        "sold": 55,
+        "new_listings": 118,
+        "median": 500000,
+        "inventory": 280
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-04",
+        "sold": 63,
+        "new_listings": 124,
+        "median": 465000,
+        "inventory": 316
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-05",
+        "sold": 68,
+        "new_listings": 88,
+        "median": 530000,
+        "inventory": 320
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-06",
+        "sold": 59,
+        "new_listings": 144,
+        "median": 550000,
+        "inventory": 390
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-07",
+        "sold": 62,
+        "new_listings": 95,
+        "median": 573000,
+        "inventory": 394
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-08",
+        "sold": 61,
+        "new_listings": 93,
+        "median": 475000,
+        "inventory": 386
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Single family",
+        "month": "2026-09",
+        "sold": 44,
+        "new_listings": 76,
+        "median": 545000,
+        "inventory": 355
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2024-10",
+        "sold": 6,
+        "new_listings": 3,
+        "median": 458000,
+        "inventory": 24
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2024-11",
+        "sold": 1,
+        "new_listings": 3,
+        "median": 475000,
+        "inventory": 19
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2024-12",
+        "sold": 3,
+        "new_listings": 2,
+        "median": 522000,
+        "inventory": 14
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-01",
+        "sold": 0,
+        "new_listings": 6,
+        "median": null,
+        "inventory": 18
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-02",
+        "sold": 0,
+        "new_listings": 5,
+        "median": null,
+        "inventory": 20
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-03",
+        "sold": 1,
+        "new_listings": 11,
+        "median": 536000,
+        "inventory": 26
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-04",
+        "sold": 1,
+        "new_listings": 10,
+        "median": 350000,
+        "inventory": 27
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-05",
+        "sold": 9,
+        "new_listings": 5,
+        "median": 474000,
+        "inventory": 27
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-06",
+        "sold": 3,
+        "new_listings": 7,
+        "median": 266000,
+        "inventory": 31
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-07",
+        "sold": 4,
+        "new_listings": 6,
+        "median": 441000,
+        "inventory": 27
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-08",
+        "sold": 7,
+        "new_listings": 8,
+        "median": 447000,
+        "inventory": 32
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-09",
+        "sold": 7,
+        "new_listings": 2,
+        "median": 284000,
+        "inventory": 24
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-10",
+        "sold": 3,
+        "new_listings": 3,
+        "median": 539000,
+        "inventory": 19
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-11",
+        "sold": 7,
+        "new_listings": 2,
+        "median": 378000,
+        "inventory": 17
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2025-12",
+        "sold": 2,
+        "new_listings": 0,
+        "median": 174000,
+        "inventory": 9
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-01",
+        "sold": 0,
+        "new_listings": 6,
+        "median": null,
+        "inventory": 11
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-02",
+        "sold": 3,
+        "new_listings": 5,
+        "median": 295000,
+        "inventory": 15
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-03",
+        "sold": 0,
+        "new_listings": 11,
+        "median": null,
+        "inventory": 24
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-04",
+        "sold": 0,
+        "new_listings": 6,
+        "median": null,
+        "inventory": 29
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-05",
+        "sold": 0,
+        "new_listings": 4,
+        "median": null,
+        "inventory": 29
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-06",
+        "sold": 2,
+        "new_listings": 4,
+        "median": 312000,
+        "inventory": 27
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-07",
+        "sold": 2,
+        "new_listings": 3,
+        "median": 170000,
+        "inventory": 24
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-08",
+        "sold": 6,
+        "new_listings": 4,
+        "median": 310000,
+        "inventory": 16
+    },
+    {
+        "county": "Teller County",
+        "market": "elevate",
+        "ptype": "Townhouse-condo",
+        "month": "2026-09",
+        "sold": 3,
+        "new_listings": 6,
+        "median": 540000,
+        "inventory": 18
+    }
+]

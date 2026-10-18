@@ -1,9 +1,15 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-18 10:28 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-18 16:01 from git HEAD in the Mont Haus Master folder.
 20a0b03146f151869668b3ef7834b245  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 c4984ee573dd0128324b9897d5565ed3  api/roster.php
+fb22bcd5bb01d543d60a4fdaa8f4caa5  assets/css/market.css
+d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
+3c5b7bb6c8f0bb7f9f8a10fbda5efba4  assets/css/portal.css
+1320a735c05d43579326161794cc3373  assets/css/social.css
+6f73b8d9cf8e3d620ab4be2097d45895  assets/js/market-report.js
+a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 a0a741fb23901617405f30fee4a12bbe  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
 2574ed722be2203d46373fd5d0e209e6  creative.php
@@ -45,9 +51,14 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 06406477f9bc1bf6dc3ceaf577ba202d  inc/hs_template.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
+6514a06ed1995c1754319fa878860726  inc/market.php
+d4ab2a507f5c6e0bb7b3f00dde542734  inc/market_card_render.php
+719c519f6cee4bd529fab8d02ad20632  inc/market_data.php
+5654c6f1b485371cbf9628858b8886e2  inc/market_post_body.php
+6650b325a0fe93b5fb62f8cb82ed29b2  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
-657df82cf942f065b0c2548475e9d189  inc/portal.php
+0d7fc97b37ab8babdfa3b00c62e4edfb  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
@@ -57,11 +68,13 @@ f166b2c609bf7db3d811ab39634b3efb  inc/qr.php
 1ba02195b159e28cad43450d9b859160  inc/social.php
 a60f0d938278cdc60e452fef5354cb29  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-50bc25d064a842cddbcd3a3e54848b9b  index.php
+50710cb410cc4dd800d3a2173280dd5a  index.php
 0ff3c46ff54aca4f47244aefcaa38287  intake.php
 8bce1a103a42a7e017e711547c910e10  leadership.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php
 bb73a2b0b1ccb8ca4b160bb7a05ff140  logout.php
+b2012742223c7fc0e3e0cabd02ffd9c2  market_report.php
+b40e01d76e06f80871bc04c4ba768f5b  market_snapshot.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
 f3327ec6854ed5362ede027a9b198064  oauth_start.php
 210a1c8334cfa292107df4eac8d2fa85  order_split.php
@@ -81,7 +94,11 @@ c631051215ccc3c7f229af2015586264  portal/elevation_save.php
 db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
-f4651759b9b34d7f56f59ff61271f241  portal/index.php
+a853bc27dca480d18141befba71ca74a  portal/index.php
+70213a7e183c41d50a2b1151e80293f4  portal/market.php
+55bd10a15a5f839e4a866fc959eaa856  portal/market_export.php
+d5829465b92ea074ac9c56c36ede135c  portal/market_post.php
+269d7d9b345d1cad5c3de74b048ca8e4  portal/market_render.php
 2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
 e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
 bd1d3b37a7fcf713edb84313e59cddbb  portal/profile.php
@@ -95,7 +112,7 @@ cfea6b6cd41a82c90b01b321ee62d614  portal/social_export.php
 3b2ecd3bf5e7571ef9f9630e67208d3e  portal/social_render.php
 e6cafb63f213289c3e835aede4d2c27f  portal/social_upload.php
 2f6f6b397081287ed0190cebbd0b1bca  portal/spend.php
-61734f8313bd3af2b6502e8461ee606d  portal/templates.php
+b62679f7fdaae4d16ffc692202170ca7  portal/templates.php
 7f5e553082c8b06564ff9b72874e7f4f  portal/yard_signs.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 8e6d7d7742f6c9589b47c7a0e28b4d0d  qr_codes.php
@@ -108,7 +125,3 @@ a0002a748704eb7f6b3f572df32895ed  subscribers.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 8780274663695d9cfb5111cbedf31a6e  users.php
 90750ac4905fdab022c241560911f5ba  website_order.php
-d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
-a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
-3c5b7bb6c8f0bb7f9f8a10fbda5efba4  assets/css/portal.css
-1320a735c05d43579326161794cc3373  assets/css/social.css

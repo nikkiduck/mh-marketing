@@ -1,0 +1,41 @@
+[
+    {
+        "region": "Denver Metro (11 counties)",
+        "market": "recolorado",
+        "mls": "REcolorado",
+        "scope": "All residential",
+        "closed": 2898,
+        "closed_change_pct": -18,
+        "median": 575000,
+        "median_change_pct": -2,
+        "median_days_in_mls": 33,
+        "days_change": -4,
+        "new_listings": 4885,
+        "new_listings_change_pct": -1,
+        "pending": 2921,
+        "pending_change_pct": -13,
+        "active": 13522,
+        "active_change_pct": 2,
+        "weeks_of_inventory": 20
+    },
+    {
+        "region": "Pikes Peak Region",
+        "market": "elevate",
+        "mls": "elevateMLS",
+        "scope": "All property types",
+        "closed": 1101,
+        "closed_change_pct": null,
+        "median": 450000,
+        "median_change_pct": null,
+        "median_days_in_mls": null,
+        "days_change": null,
+        "new_listings": null,
+        "new_listings_change_pct": null,
+        "pending": null,
+        "pending_change_pct": null,
+        "active": null,
+        "active_change_pct": null,
+        "weeks_of_inventory": null,
+        "avg_days_on_market": 59
+    }
+]

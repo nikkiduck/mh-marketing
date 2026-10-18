@@ -51,3 +51,6 @@ Thumbs.db
 # "Mont Haus/Mtn Photos" folder and assets/stock/stock.json (tracked) carries the captions.
 assets/stock/*.jpg
 assets/stock/thumbs/*.jpg
+
+# Market Report and snapshot samples from tests/render_market_sample.php (2026-10-18)
+tests/market-preview/

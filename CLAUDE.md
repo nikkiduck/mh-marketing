@@ -2040,7 +2040,7 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 - **Menu and My Profile (Nikki, 2026-10-12).** The nav is main tabs with
   sub-menus (`portal_nav()` in inc/portal.php, one place): Home · My
   Profile · My Marketing (Spend, Advertising, Collateral, Memberships) · My Tools
-  (Elevation Planner, Social Templates = portal/social.php, QR Codes, Brand
+  (Elevation Planner, Market Report since 2026-10-18, Social Templates = portal/social.php, QR Codes, Brand
   Tools). Desktop: dropdowns; phones (< 720px): a Menu button opens a
   stacked list with every group's pages under its name; a page in a group
   also gets a row of sub-tabs under the header. Home mirrors it (a My
@@ -2299,6 +2299,66 @@ retired the same day and 301s here.
 - Tests: `tests/render_portal.php` (the plans fixtures: Jackson's working
   and saved rows, Kim's, and the save, rename, delete, print and PDF
   refusals), run on a server like the other harnesses.
+
+### Market Report and Market Snapshot posts (2026-10-18)
+
+JB's Monthly Market Report of the Colorado markets Mont Haus serves, and
+the seven Market Snapshot social cards, built into the portal from his
+Claude artifacts (`/Users/nikkiduck/Mont Haus Master/mont-haus-market-report`,
+whose CLAUDE.md holds the sources, the exact credit lines, the hard rules
+and the monthly refresh procedure). Plan and mechanics:
+`docs/HANDOFF-market-report.md`. Nikki, 2026-10-18: on both the admin and
+the agent portals, under Tools for agents, in the portal's look, the cards
+a feature of the Instagram template area "dressed up a little".
+- **Where:** My Tools > Market Report (`portal/market.php`) and My Tools >
+  Templates > Instagram Templates > Market Snapshot (`portal/market_post.php`)
+  for agents; `market_report.php` (a button on the Agent Roster header) and
+  `market_snapshot.php` for admins whose login has no linked account
+  (Nikki). Both sides draw the same bodies (`inc/market_report_body.php`,
+  `inc/market_post_body.php`). A home card and a Templates card link them.
+- **The data is files, not tables:** `inc/market_data/<YYYY-MM>/` with
+  `meta.json`, `boards.json`, `county.json`, `county_trend.json`,
+  `towns.json`, `front_range.json` (the artifact's files, `_sep` dropped
+  from three names, field names untouched: the JavaScript and the card
+  model read them by name). The newest folder is the report; `?m=YYYY-MM`
+  an older one (a Month picker appears with two or more). **A monthly
+  refresh is a new folder, deployed and committed; no SQL.** September 2026
+  is on file (exported 2026-10-18).
+- `inc/market_data.php` (loading, the words for months and numbers,
+  `market_card_model()`) and `inc/market_card_render.php`
+  (`market_card_render()`, the card as HTML) run without a database;
+  `inc/market.php` adds the portal parts: `market_gate()` (any portal
+  login, or an admin without an account; the endpoints hold no account
+  data), the checked options, the stock backdrop, `market_card_html()`.
+- **The report** (`assets/js/market-report.js`, `assets/css/market.css`,
+  scoped `.mr-*` with its own tokens so it sits under either header) is
+  the artifact's page: tabs per market (the hash, `#aspen`), the overview
+  table, the metro panels, county tiles, 24-month charts and the Aspen
+  town table. The charts are plain SVG (no d3, no CDN). The month words
+  come from the data (`market_boot()`), never hard-coded.
+- **The cards:** ONE render path, as for the Instagram posts: the preview
+  iframe and the PNG (`portal/market_render.php`, `portal/market_export.php`,
+  through `social_export_png()` at 1080 x 1350 or 1080 x 1920) come from
+  the same HTML; never draw the card in JavaScript. The look is the
+  Instagram templates' (Cormorant on the title and figures, Jost labels,
+  gold rule and small caps, dark ink or cream light, the ghosted triangle
+  or M mark, the vertical-stack logo upper right or lower left) and an
+  optional stock photo under a heavy shade (`social_stock()`; the market's
+  suggested photo is preselected when it is on the server). Three layouts:
+  hero (one county), metro (REcolorado's own figures), list (two or three
+  counties). The artifact's rules hold: a thin market (under 10 sales in
+  the month) shows year to date, changes are recomputed with one decimal
+  and a trailing .0 dropped, every card carries its board's credit line,
+  no em dashes.
+- `tests/render_market_sample.php` renders every card, the report and the
+  builder from the data files alone into `tests/market-preview/`
+  (git-ignored); serve the project folder to look at them. It prints the
+  card figures to check against the artifact's CLAUDE.md, section 10
+  (they matched on 2026-10-18). Walked at 1200 px and 375 px that day. Not
+  covered by `tests/render_portal.php`.
+- Kept on purpose: a market page's headline names the county with the
+  most single-family sales that month (Garfield for Aspen), as the
+  artifact did; its CLAUDE.md flags it for JB to decide.
 
 ### Render harnesses: run them on a server
 The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`

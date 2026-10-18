@@ -1,0 +1,79 @@
+[
+    {
+        "market": "aspen",
+        "order": 1,
+        "name": "Aspen & Roaring Fork",
+        "mls": "Aspen Glenwood MLS",
+        "mls_full": "Aspen/Glenwood Springs MLS Inc.",
+        "areas": "Pitkin and Garfield counties; town reports for Aspen, Snowmass Village, Woody Creek, Old Snowmass, Basalt, Missouri Heights, Carbondale, Glenwood Springs",
+        "credit": "All data from the Aspen/Glenwood Springs MLS Inc. Report © 2026 ShowingTime Plus, LLC. Current as of October 5, 2026.",
+        "county_credit": "Local Market Update for September 2026, a research tool provided by the Colorado Association of REALTORS®. Current as of October 5, 2026. All data from the multiple listing services in the state of Colorado. Report © 2026 ShowingTime Plus, LLC.",
+        "source_url": "https://aspenglenwoodmls.com/statistics/"
+    },
+    {
+        "market": "vail",
+        "order": 2,
+        "name": "Vail Valley",
+        "mls": "Vail MLS",
+        "mls_full": "Vail Multi List Service (VMLS), Vail Board of REALTORS®",
+        "areas": "Eagle County: Vail, Beaver Creek, Avon, Edwards, Eagle",
+        "credit": "",
+        "county_credit": "Local Market Update for September 2026, a research tool provided by the Colorado Association of REALTORS®. Current as of October 5, 2026. All data from the multiple listing services in the state of Colorado. Report © 2026 ShowingTime Plus, LLC.",
+        "source_url": "https://marketstatsreports.showingtime.com/CAR-Colorado_hqac0/sst/202609/Eagle-County.pdf"
+    },
+    {
+        "market": "telluride",
+        "order": 3,
+        "name": "Telluride",
+        "mls": "Telluride MLS",
+        "mls_full": "Telluride Association of REALTORS® MLS",
+        "areas": "San Miguel County: Telluride, Mountain Village",
+        "credit": "",
+        "county_credit": "Local Market Update for September 2026, a research tool provided by the Colorado Association of REALTORS®. Current as of October 5, 2026. All data from the multiple listing services in the state of Colorado. Report © 2026 ShowingTime Plus, LLC.",
+        "source_url": "https://marketstatsreports.showingtime.com/CAR-Colorado_hqac0/sst/202609/San-Miguel-County.pdf"
+    },
+    {
+        "market": "cren",
+        "order": 4,
+        "name": "Montrose, Ridgway & Durango",
+        "mls": "CREN",
+        "mls_full": "Colorado Real Estate Network (CREN)",
+        "areas": "Montrose, Ouray (Ridgway, Ouray) and La Plata (Durango) counties",
+        "credit": "",
+        "county_credit": "Local Market Update for September 2026, a research tool provided by the Colorado Association of REALTORS®. Current as of October 5, 2026. All data from the multiple listing services in the state of Colorado. Report © 2026 ShowingTime Plus, LLC.",
+        "source_url": "https://marketstatsreports.showingtime.com/CAR-Colorado_hqac0/sst/202609/0SF.htm"
+    },
+    {
+        "market": "altitude",
+        "order": 5,
+        "name": "Summit County & Steamboat",
+        "mls": "Altitude MLS",
+        "mls_full": "Altitude REALTORS® MLS",
+        "areas": "Summit County (Breckenridge, Keystone, Frisco) and Routt County (Steamboat Springs)",
+        "credit": "",
+        "county_credit": "Local Market Update for September 2026, a research tool provided by the Colorado Association of REALTORS®. Current as of October 5, 2026. All data from the multiple listing services in the state of Colorado. Report © 2026 ShowingTime Plus, LLC.",
+        "source_url": "https://marketstatsreports.showingtime.com/CAR-Colorado_hqac0/sst/202609/0SF.htm"
+    },
+    {
+        "market": "recolorado",
+        "order": 6,
+        "name": "Denver Metro",
+        "mls": "REcolorado",
+        "mls_full": "REcolorado®",
+        "areas": "Denver County, plus the 11-county Denver Metro in REcolorado's own report",
+        "credit": "Data courtesy of REcolorado. September 2026 Market Watch, published October 7, 2026.",
+        "county_credit": "Local Market Update for September 2026, a research tool provided by the Colorado Association of REALTORS®. Current as of October 5, 2026. All data from the multiple listing services in the state of Colorado. Report © 2026 ShowingTime Plus, LLC.",
+        "source_url": "https://recolorado.com/september-2026-housing-market-reports/"
+    },
+    {
+        "market": "elevate",
+        "order": 7,
+        "name": "Colorado Springs",
+        "mls": "elevateMLS",
+        "mls_full": "elevateMLS, Pikes Peak REALTOR® Services",
+        "areas": "El Paso and Teller counties",
+        "credit": "Pikes Peak Association of REALTORS®, September 2026. All property types within the elevateMLS market.",
+        "county_credit": "Local Market Update for September 2026, a research tool provided by the Colorado Association of REALTORS®. Current as of October 5, 2026. All data from the multiple listing services in the state of Colorado. Report © 2026 ShowingTime Plus, LLC.",
+        "source_url": "https://ppar.com/pikes-peak-region-real-estate-market-trends/"
+    }
+]

@@ -1,0 +1,12 @@
+{
+    "month": "2026-09",
+    "current_as_of": "October 5, 2026",
+    "sources": {
+        "county": "Colorado Association of REALTORS Local Market Updates for September 2026 (ShowingTime+, current as of October 5, 2026), one row per county and property type, read from each county PDF.",
+        "county_trend": "Closed sales, new listings, median price and homes for sale per county, October 2024 to September 2026, from CAR monthly sortable statistics pages as first published each month.",
+        "towns": "Aspen Glenwood MLS Local Market Updates by town for September 2026 (ShowingTime+, current as of October 5, 2026), read from each town PDF.",
+        "front_range": "Metro headline figures for September 2026: REcolorado Market Watch and the PPAR Pikes Peak market trends page (elevateMLS, all property types)."
+    },
+    "exported": "2026-10-18",
+    "note": "Exported from the Claude dashboard artifact on 2026-10-18 with September 2026 data."
+}
