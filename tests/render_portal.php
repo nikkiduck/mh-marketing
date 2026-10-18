@@ -810,7 +810,7 @@ ok('an archived account is refused', $c === 403 && has($b, 'no longer active'), 
 // (PORTAL_SNAPSHOTS=/some/dir php tests/render_portal.php).
 if ($snap = getenv('PORTAL_SNAPSHOTS')) {
     @mkdir($snap, 0777, true);
-    foreach (['home-jackson' => ['jackson', '/portal/'], 'profile-jackson' => ['jackson', '/portal/profile.php'], 'qr-jackson' => ['jackson', '/portal/qr.php'],
+    foreach (['home-jackson' => ['jackson', '/portal/'], 'profile-jackson' => ['jackson', '/portal/profile.php'], 'brand-jackson' => ['jackson', '/portal/brand_guidelines.php'], 'cards-jackson' => ['jackson', '/portal/business_cards.php'], 'qr-jackson' => ['jackson', '/portal/qr.php'],
               'qr-edit-jackson' => ['jackson', '/portal/qr.php?edit=1'], 'home-wb' => ['jon', '/portal/'],
               'qr-wb' => ['jon', '/portal/qr.php'], 'qr-preview' => ['nikki', '/portal/qr.php?preview=6'],
               'refused-nolink' => ['nolink', '/portal/'], 'spend-jackson' => ['jackson', '/portal/spend.php'],
