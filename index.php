@@ -693,7 +693,9 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       <div class="hdr-actions">
         <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Hot Sheets</a>
         <a class="btn btn-outline btn-sm" href="qr_codes.php"><i class="ti ti-qrcode"></i> QR Codes</a>
-        <a class="btn btn-outline btn-sm" href="website_order.php"><i class="ti ti-arrows-sort"></i> Website Order</a>
+        <?php // Website Order hidden 2026-10-18 (Nikki): the site lists agents alphabetically for now. website_order.php still
+              // answers by URL; put the line back to show the button again.
+              // <a class="btn btn-outline btn-sm" href="website_order.php"><i class="ti ti-arrows-sort"></i> Website Order</a> ?>
         <a class="btn btn-outline btn-sm" href="leadership.php"><i class="ti ti-crown"></i> Leadership &amp; Staff</a>
         <?php if (is_super_admin()): // users.php admits super admins only; until 2026-10-08 nothing linked to it ?>
         <a class="btn btn-outline btn-sm" href="users.php" title="Portal logins: who may sign in, their role, and which marketing account they see"><i class="ti ti-key"></i> Users</a>
