@@ -30,6 +30,7 @@ require_once __DIR__ . '/inc/financials.php';
 require_once __DIR__ . '/inc/agent_lifecycle.php';
 require_once __DIR__ . '/inc/agent_roster.php';   // mk_agents_only_sql()
 require_once __DIR__ . '/inc/site_sync.php';      // "Sync to Website"
+require_once __DIR__ . '/inc/fub.php';            // FUB_STATUS_CACHE_FILE: the grid's FUB column (2026-10-18)
 require_login();
 // Agents land in their portal instead of this admin page's 403 (2026-10-01).
 // Not a guard loop: /portal/ never sends anyone back here.
@@ -163,8 +164,8 @@ $col_initials = $has_initials ? 'mi.initials' : 'NULL';
 // Columns from agent_roster_v1.sql. When it has not run, both arms select the
 // same NULL placeholders, so the column lists still line up.
 $col_web = $has_web
-    ? "mi.web_status, mi.headshot_face_url, mi.in_fub, mi.office, mi.mls_email, mi.mls_phone, mi.departure_detected_at"
-    : "NULL AS web_status, NULL AS headshot_face_url, 0 AS in_fub, NULL AS office, NULL AS mls_email, NULL AS mls_phone, NULL AS departure_detected_at";
+    ? "mi.web_status, mi.headshot_face_url, mi.in_fub, mi.office, mi.mls_email, mi.mls_phone, mi.departure_detected_at, mi.slug"
+    : "NULL AS web_status, NULL AS headshot_face_url, 0 AS in_fub, NULL AS office, NULL AS mls_email, NULL AS mls_phone, NULL AS departure_detected_at, NULL AS slug";
 $has_bio = "(mi.bio_text IS NOT NULL AND TRIM(mi.bio_text) NOT IN ('', '<p><br></p>', '<p></p>'))";
 // agent_roster_v2_teams.sql: a team (Weber Boxer Group) is a marketing entity.
 $has_team = mk_column_exists($conn, 'marketing_intakes', 'entity_type');
@@ -255,6 +256,13 @@ $r = $conn->query("SELECT mi.id AS intake_id, mi.roster_id, mi.agent_name, {$col
                           {$has_bio} AS has_bio, {$col_web}, NULL AS markets, NULL AS agent_key, NULL AS vail_agent_key
                      FROM marketing_intakes mi WHERE mi.is_active = 0{$no_staff} ORDER BY mi.archived_at DESC");
 if ($r) $archived = $r->fetch_all(MYSQLI_ASSOC);
+
+// Each agent's Follow Up Boss standing as the website last reported it (inc/fub.php's hourly cache; nothing live here).
+$fub_cache = [];
+if (defined('FUB_STATUS_CACHE_FILE') && is_readable(FUB_STATUS_CACHE_FILE)) {
+    $fc = json_decode((string)file_get_contents(FUB_STATUS_CACHE_FILE), true);
+    if (is_array($fc['agents'] ?? null)) $fub_cache = $fc['agents'];
+}
 
 // Board identities (agent_roster_v1.sql): how a CREN-only agent gets a badge.
 $id_markets = [];
@@ -391,6 +399,13 @@ foreach (array_merge($agents, $archived) as $a) {
     [$done, $total, $missing] = mk_completeness($a, $boards, $has_web);
     $email     = strtolower(trim((string)($a['mh_email'] ?: ($a['mls_email'] ?? ''))));
     $hs        = ($iid && isset($hs_by_id[$iid])) || ($email !== '' && isset($hs_by_email[$email]));
+    // FUB (grid column since 2026-10-18, Nikki): 'on' = ticked on the profile AND the website reports an Active
+    // FUB user; 'pending' = ticked, but the website says Invited / no user / not synced yet; 'off' = not ticked.
+    $fub_state = 'off';
+    if (!empty($a['in_fub'])) {
+        $fs = $fub_cache[(string)($a['slug'] ?? '')] ?? null;
+        $fub_state = ($fs && !empty($fs['usable'])) ? 'on' : 'pending';
+    }
     $bal       = $balances[$iid] ?? 0.0;
     $is_team   = ($a['entity_type'] ?? 'agent') === 'team';
     $web       = $has_web && $iid && !$is_roster && !$is_team ? (string)$a['web_status'] : '';
@@ -406,7 +421,7 @@ foreach (array_merge($agents, $archived) as $a) {
         '_iid' => $iid, '_status' => $status, '_manual_inactive' => $manual_in, '_mls_gone' => $mls_gone, '_team' => $is_team, '_roster_only' => $is_roster,
         '_ck_open' => $ck_open, '_ck_total' => $ck_total, '_onb' => !$is_team && $status === 'active' && $ck_open > 0,
         '_members' => $team_members[$iid] ?? [], '_teams' => $member_teams[$iid] ?? [], '_boards' => $boards, '_done' => $done, '_total' => $total,
-        '_missing' => $missing, '_hs' => $hs, '_bal' => $bal, '_web' => $web, '_attn' => $attn, '_name' => $name,
+        '_missing' => $missing, '_hs' => $hs, '_fub' => $fub_state, '_bal' => $bal, '_web' => $web, '_attn' => $attn, '_name' => $name,
         '_first' => strtolower($parts[0] ?? ''), '_last' => $is_team ? strtolower($name) : strtolower($parts[count($parts) - 1] ?? ''),   // a team files under its first word
         '_offboard' => $iid && $status !== 'archived'
             ? mk_offboard_preview($a, $hs, $has_web) : [],
@@ -542,6 +557,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     .who-title { font-size:11px; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px; }
 
     .boards { font-size:12px; color:#6b7280; white-space:nowrap; }
+    .ok-tick { color:#10b981; font-weight:700; font-size:15px; }    /* FUB / Hot Sheets columns (2026-10-18) */
+    .warn-tick { color:#d97706; font-weight:700; font-size:15px; }
     .web-mark { font-size:15px; font-weight:700; } .web-mark.yes { color:#10b981; } .web-mark.no { color:#d1d5db; }
     .who-line { display:flex; align-items:center; gap:6px; min-width:0; }
     .tag-team { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; background:#111; color:#fff;
@@ -775,9 +792,16 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
           }
           return $tags ? '<div class="who-line">' . $n . $tags . '</div>' : $n;
       };
-      $boards_html = function (array $x): string {
-          if (!$x['_boards']) return '<span class="muted">·</span>';
-          return '<span class="boards">' . e(implode(' · ', $x['_boards'])) . '</span>';
+      // FUB and Hot Sheets (2026-10-18, in place of Boards): a tick, or an amber tick for "ticked but not active in FUB yet".
+      $fub_html = function (array $x): string {
+          if ($x['_team']) return '';
+          if ($x['_fub'] === 'on')      return '<span class="ok-tick" title="In the FUB lead rotation, active in Follow Up Boss">✓</span>';
+          if ($x['_fub'] === 'pending') return '<span class="warn-tick" title="Ticked for the FUB rotation, but Follow Up Boss has no active user for this email yet (see the agent page)">✓</span>';
+          return '<span class="muted">·</span>';
+      };
+      $hs_html = function (array $x): string {
+          if ($x['_team']) return '';
+          return $x['_hs'] ? '<span class="ok-tick" title="Subscribed to Internal Hot Sheets">✓</span>' : '<span class="muted">·</span>';
       };
       // Website: a tick or a cross; the words are in the tooltip.
       $web_html = function (array $x) use ($web_label): string {
@@ -847,7 +871,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     <table class="roster-table" id="viewTable">
       <thead><tr>
         <th data-sort="first" title="Sort by first name">Agent <i class="ti ti-selector"></i></th>
-        <th>Boards</th>
+        <th style="text-align:center;" title="In the Follow Up Boss lead rotation">FUB</th>
+        <th style="text-align:center;" title="Subscribed to Internal Hot Sheets">Hot Sheets</th>
         <th style="text-align:center;" title="On the website">Web</th>
         <th>Status</th>
         <th>Tasks</th>
@@ -859,7 +884,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       <?php foreach ($rows as $x): ?>
         <tr class="agent-row<?= $x['_roster_only'] ? ' to-onboard' : '' ?>" <?= $row_attrs($x) ?>>
           <td class="c-who"><div class="who"><?= $avatar($x) ?><div style="min-width:0;"><?= $name_html($x) ?></div></div></td>
-          <td class="c-hide-sm"><?= $boards_html($x) ?></td>
+          <td class="c-hide-sm" style="text-align:center;"><?= $fub_html($x) ?></td>
+          <td class="c-hide-sm" style="text-align:center;"><?= $hs_html($x) ?></td>
           <td style="text-align:center;"><?= $web_html($x) ?></td>
           <td class="c-hide-sm"><?= $status_html($x) ?></td>
           <td class="c-hide-sm"><?= (int)$x['open_tasks'] > 0 ? '<a class="tasks-badge" href="agent.php?id=' . $x['_iid'] . '&tab=tasks" style="text-decoration:none;"><i class="ti ti-list-check"></i> ' . (int)$x['open_tasks'] . '</a>' : '<span class="muted">·</span>' ?></td>
