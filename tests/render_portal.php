@@ -42,9 +42,10 @@ $SB = sys_get_temp_dir() . '/pt_render_' . bin2hex(random_bytes(4));
 mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
 foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php', 'portal/memberships.php',
-          'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'portal/profile.php', 'portal/elevation.php', 'portal/elevation_save.php', 'portal/elevation_print.php', 'portal/elevation_pdf.php', 'portal/contact.php', 'inc/portal.php', 'inc/elevation.php', 'inc/portal_hotsheets.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
+          'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'portal/profile.php', 'portal/elevation.php', 'portal/elevation_save.php', 'portal/elevation_print.php', 'portal/elevation_pdf.php', 'portal/contact.php', 'portal/brand_guidelines.php', 'portal/business_cards.php', 'portal/yard_signs.php', 'inc/brand_embed.php', 'brand-guidelines/index.html', 'brand-guidelines/assets/css/brand-guidelines.css', 'inc/portal.php', 'inc/elevation.php', 'inc/portal_hotsheets.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
           'inc/creatives.php', 'inc/boards.php', 'inc/agent_lifecycle.php', 'inc/_onboarding.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
+    @mkdir(dirname("{$SB}/{$f}"), 0777, true);
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
 }
 
@@ -466,9 +467,17 @@ ok('Kim\'s plan id on the print view: refused, nothing of hers shown', $c !== 20
 [$c, , $b] = req('jackson', '/portal/elevation_pdf.php?id=83');
 ok('Kim\'s plan id on the PDF: refused, nothing of hers shown', $c !== 200 && !has($b, 'KC SECRET'), $b);
 [$c, , $b] = req('jackson', '/portal/brand.php');
-ok('Brand & templates: guidelines with the logo downloads, card and sign templates, each in a new tab (2026-10-10)', $c === 200 && no_fatal($b)
-   && has($b, 'href="/brand-guidelines/#downloads"') && has($b, 'Download the logos') && has($b, 'href="/brand-guidelines/business-cards/"') && has($b, 'href="/brand-guidelines/yard-signs/"')
-   && substr_count($b, 'target="_blank"') >= 3, $b);
+ok('Brand Tools: the three open inside the portal (2026-10-18), the logo link at the guidelines\' Downloads', $c === 200 && no_fatal($b)
+   && has($b, 'href="/portal/brand_guidelines.php#downloads"') && has($b, 'Download the logos') && has($b, 'href="/portal/business_cards.php"') && has($b, 'href="/portal/yard_signs.php"')
+   && !has($b, 'target="_blank"'), $b);
+[$c, , $b] = req('jackson', '/portal/brand_guidelines.php');
+ok('Brand Guidelines inside the portal: the portal header and menu, the page\'s own sections and anchors, assets made absolute, styles scoped', $c === 200 && no_fatal($b)
+   && has($b, 'class="pt-nav"') && has($b, 'id="downloads"') && has($b, 'href="#downloads"') && has($b, 'href="#logos"') && has($b, '/brand-guidelines/assets/logos/') && !has($b, 'src="assets/')
+   && has($b, '.bg-embed{') && !preg_match('/^\s*body\s*\{/m', $b) && !has($b, 'class="bg-header"'), $b);
+[$c, , $b] = req('jackson', '/portal/business_cards.php');
+ok('Business card templates inside the portal, with a lightbox', $c === 200 && no_fatal($b) && has($b, 'class="pt-nav"') && has($b, 'Front option 12') && has($b, 'Back option 5') && has($b, 'data-lb') && has($b, 'id="ptLb"'), $b);
+[$c, , $b] = req('jackson', '/portal/yard_signs.php');
+ok('Yard sign templates inside the portal', $c === 200 && no_fatal($b) && has($b, 'class="pt-nav"') && has($b, 'option-3-broker.png') && substr_count($b, 'loading="lazy" data-lb') === 6, $b);
 
 // Hot Sheets: the signed-in person's own subscription, never an id from the request. Since 2026-10-12 the form is on My Profile.
 [$c, $loc, ] = req('jackson', '/portal/hotsheets.php');

@@ -4,20 +4,22 @@
  * guidelines (with the logo files to download), and the business card and
  * yard sign template galleries, which moved here from monthausint.com the
  * same day (brand-guidelines/business-cards/, brand-guidelines/yard-signs/).
- * Links only; nothing here is per account, so there is nothing to scope.
+ * Since 2026-10-18 the three open INSIDE the portal (portal/brand_guidelines.php,
+ * business_cards.php, yard_signs.php: same header and menu, so people can get
+ * back); the public pages stay for vendors. Nothing here is per account.
  */
 require_once __DIR__ . '/../inc/portal.php';
 
 $ctx = portal_context($conn);
 
 $items = [
-    ['Brand guidelines', '/brand-guidelines/#downloads',
+    ['Brand guidelines', portal_url($ctx, '/portal/brand_guidelines.php') . '#downloads',
      'Colors, type, how the logo is used, and the logo files for download.',
      'Download the logos ›'],
-    ['Business card templates', '/brand-guidelines/business-cards/',
+    ['Business card templates', portal_url($ctx, '/portal/business_cards.php'),
      'Current MH business card designs.',
      'See the designs ›'],
-    ['Yard sign templates', '/brand-guidelines/yard-signs/',
+    ['Yard sign templates', portal_url($ctx, '/portal/yard_signs.php'),
      'Current MH yard sign layouts.',
      'See the designs ›'],
 ];
@@ -29,7 +31,7 @@ portal_header($ctx, 'Brand & templates', 'brand');
 
   <div class="pt-cards">
     <?php foreach ($items as [$title, $url, $sub, $go]): ?>
-    <a class="pt-card" href="<?= ph($url) ?>" target="_blank" rel="noopener">
+    <a class="pt-card" href="<?= ph($url) ?>">
       <h2 class="pt-card-h"><?= ph($title) ?></h2>
       <p class="pt-card-sub"><?= ph($sub) ?></p>
       <span class="pt-card-go"><?= ph($go) ?></span>

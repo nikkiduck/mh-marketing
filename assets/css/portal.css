@@ -289,3 +289,16 @@ a.pt-list-row[href]:hover { border-color: var(--gold); }
 .pt-editor .ql-editor p + p { margin-top: .9em; }
 .pt-form textarea { display: block; width: 100%; margin-top: 6px; font: 16px var(--sans); padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text); }
 .pt-soon { color: var(--muted); font-style: italic; font-size: 14px; margin: 0 0 6px; }   /* above a tool's title (Nikki, 2026-10-13) */
+
+/* ── Brand pages inside the portal (2026-10-18) ──────────────────────────── */
+.pt-subnav-wrap.jump { top: 0; }
+.pt-gal { display: grid; grid-template-columns: 1fr; gap: 16px; }
+@media (min-width: 520px) { .pt-gal { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 860px) { .pt-gal { grid-template-columns: repeat(3, 1fr); } .pt-gal.two { grid-template-columns: 1fr 1fr; } }
+.pt-gal-item { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
+.pt-gal-item img { width: 100%; height: auto; display: block; border-radius: 8px; cursor: zoom-in; background: #fff; }
+.pt-gal-item figcaption { padding: 10px 6px 2px; color: var(--muted); font-size: 14px; }
+.pt-lb { position: fixed; inset: 0; background: rgba(13,12,10,.92); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.pt-lb[hidden] { display: none; }
+.pt-lb img { max-width: 100%; max-height: 100%; border-radius: 8px; background: #fff; }
+.pt-lb-x { position: absolute; top: 14px; right: 18px; background: transparent; border: 0; color: #fff; font-size: 40px; line-height: 1; cursor: pointer; }

@@ -2054,6 +2054,17 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   `portal_handle()`, stored bare like agent.php) and the Hot Sheet
   subscription editable; a row of anchors under the header; and a contact
   form (marketing_requests kind `contact`, emailed via portal_send_mail).
+  **Brand Tools inside the portal (Nikki, 2026-10-18):** portal/brand.php's
+  three cards open portal pages with the portal header and menu:
+  `brand_guidelines.php` lifts the PUBLIC page's <main> (brand-guidelines/
+  index.html stays the one copy, still served to vendors) through
+  inc/brand_embed.php, which makes its asset paths absolute, takes its own
+  nav anchors as the jump row, and scopes its stylesheet under `.bg-embed`
+  (its `:root` redefines --ink/--muted/--line, the portal's own variable
+  names; html/body rules dropped). `business_cards.php` and `yard_signs.php`
+  draw the galleries' pictures in portal cards with `portal_lightbox()`.
+  portal_header() now draws a page's anchor row under a group's sub-tabs
+  too (`.pt-subnav-wrap.jump`).
   **The short bio is gone (Nikki, 2026-10-12):** `bio_short` is no longer
   read or written anywhere (the column stays). 2026-10-13 (Nikki): the
   contact form is the FOOTER of every portal page (portal_footer() reads the

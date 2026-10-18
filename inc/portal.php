@@ -604,8 +604,9 @@ function portal_header(array $ctx, string $title, string $active, array $jump = 
     <a href="<?= ph(portal_url($ctx, $p2)) ?>" class="<?= $lk === $active ? 'on' : '' ?>"><?= ph($l2) ?></a>
   <?php endforeach; ?>
 </nav></div>
-<?php elseif ($jump): // a long page's own sections, as anchors in the same row (My Profile); sticks while scrolling ?>
-<div class="pt-subnav-wrap sticky"><nav class="pt-subnav" aria-label="On this page">
+<?php endif; ?>
+<?php if ($jump): // a long page's own sections, as anchors in a row (My Profile; the Brand pages under their group's tabs); sticks while scrolling ?>
+<div class="pt-subnav-wrap sticky jump"><nav class="pt-subnav" aria-label="On this page">
   <?php foreach ($jump as $id => $label): ?><a href="#<?= ph($id) ?>"><?= ph($label) ?></a><?php endforeach; ?>
 </nav></div>
 <?php endif; ?>
@@ -653,6 +654,22 @@ function portal_footer(): void {
 </footer>
 </body>
 </html>
+    <?php
+}
+
+/** A picture tapped in a gallery opens large (the Brand pages, 2026-10-18); Esc or a tap outside closes it. Call before portal_footer(). */
+function portal_lightbox(): void {
+    ?>
+<div class="pt-lb" id="ptLb" role="dialog" aria-modal="true" hidden><button type="button" class="pt-lb-x" aria-label="Close">&times;</button><img src="" alt=""></div>
+<script>
+(function () {
+  var lb = document.getElementById('ptLb'), im = lb.querySelector('img');
+  function close() { lb.hidden = true; im.src = ''; }
+  document.querySelectorAll('img[data-lb]').forEach(function (i) { i.addEventListener('click', function () { im.src = i.src; im.alt = i.alt; lb.hidden = false; }); });
+  lb.addEventListener('click', function (e) { if (e.target === lb || e.target.classList.contains('pt-lb-x')) close(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+})();
+</script>
     <?php
 }
 
