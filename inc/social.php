@@ -242,6 +242,16 @@ function social_open_dirs(string $dir): void {
     }
 }
 
+/** Remove one of this person's uploads (the file and its thumbnail). False when it is not theirs. */
+function social_delete_upload(array $ctx, string $id): bool {
+    $f = social_upload_file($ctx, $id);
+    if (!$f) return false;
+    $t = social_upload_file($ctx, $id, true);
+    $ok = @unlink($f);
+    if ($t) @unlink($t);
+    return $ok;
+}
+
 /** This person's upload ids, newest first (at most 60). */
 function social_uploads(array $ctx): array {
     $dir = social_upload_dir($ctx);

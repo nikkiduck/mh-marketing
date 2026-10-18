@@ -175,7 +175,7 @@ portal_header($ctx, 'Social posts', 'social');
 <script>
 (function () {
   const L = <?= json_encode($listings, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
-  const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>;
+  const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode(portal_url($ctx, '/portal/social_delete.php')) ?>;
   const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
   const fmt = () => (f('type').value.indexOf('story') === 0 ? 'story' : 'post'), fmtH = () => fmt() === 'story' ? 1920 : 1440;
   const kind = () => f('kind').value, isOther = () => kind() === 'other';
@@ -268,7 +268,7 @@ portal_header($ctx, 'Social posts', 'social');
   function photoTile(p, checked) {
     // A stock photo carries its caption as the tooltip (hover) so the agent knows where it is (Nikki, 2026-10-15).
     return '<label class="sp-photo' + (p.own ? ' own' : '') + '"' + (p.caption ? ' title="' + esc(p.caption) + '"' : '') + '><input type="radio" name="photo" value="' + esc(p.id) + '" data-large="' + esc(p.large) + '"' +
-           (checked ? ' checked' : '') + '><img src="' + esc(p.thumb) + '" alt="' + esc(p.caption || '') + '" loading="lazy">' + (p.own ? '<i>Yours</i>' : '') + '</label>';
+           (checked ? ' checked' : '') + '><img src="' + esc(p.thumb) + '" alt="' + esc(p.caption || '') + '" loading="lazy">' + (p.own ? '<i>Yours</i><button type="button" class="sp-del" data-id="' + esc(p.id) + '" title="Remove this photo" aria-label="Remove this photo">×</button>' : '') + '</label>';
   }
   async function loadPhotos(selectId) {
     const l = listing(); if (!l && !isOther()) return;
@@ -283,9 +283,10 @@ portal_header($ctx, 'Social posts', 'social');
     }
     // In groups (2026-10-18): the person's own uploads first, then the listing's photos or the stock library.
     const mine = all.filter(p => p.own), rest = all.filter(p => !p.own);
+    // Own photos last, beside the upload box (Nikki, 2026-10-18).
     const groups = isOther()
-      ? [['Your uploads', mine], ['Mont Haus stock photos', [PLACEHOLDER].concat(rest)]]
-      : [['Your uploads', mine], ['Listing photos', rest]];
+      ? [['Mont Haus stock photos', [PLACEHOLDER].concat(rest)], ['Your photos', mine]]
+      : [['Listing photos', rest], ['Your photos', mine]];
     const first = selectId || (isOther() ? PLACEHOLDER.id : (rest[0] || mine[0] || {}).id);
     let html = '';
     for (const [name, list] of groups) {
@@ -357,6 +358,18 @@ portal_header($ctx, 'Social posts', 'social');
   new ResizeObserver(framerApply).observe(framer);
 
   // ── Wiring ──
+  // The x on an own photo removes it (2026-10-18): a confirm, then the file is gone and the grid redraws.
+  photos.addEventListener('click', async e => {
+    const b = e.target.closest('.sp-del'); if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    if (!confirm('Remove this photo from your uploads? Posts you already downloaded are not affected.')) return;
+    const fd = new FormData(); fd.append('csrf_token', f('csrf_token').value); fd.append('id', b.dataset.id);
+    let j = {};
+    try { j = await (await fetch(DELETE_URL, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); } catch (err) { j = { error: 'That did not work. Please try again.' }; }
+    if (j.error) { alert(j.error); return; }
+    const wasSelected = (form.querySelector('input[name="photo"]:checked') || {}).value === b.dataset.id;
+    loadPhotos(wasSelected ? undefined : (form.querySelector('input[name="photo"]:checked') || {}).value);
+  });
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'listing') { fill(listing()); labelForType(); loadPhotos(); return; }

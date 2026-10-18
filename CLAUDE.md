@@ -2163,8 +2163,11 @@ mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
   previewing an agent uploaded into that agent's folder and the agent saw
   the admin's photos as "Yours" (Nikki's two test photos on Jonathan's
   portal; moved to users/2/). Served only to that person by
-  portal/social_asset.php; the photo grid shows them under a "Your
-  uploads" heading, then "Listing photos" or "Mont Haus stock photos"; the EXPORT reads the file from disk
+  portal/social_asset.php; the photo grid shows "Listing photos" or "Mont Haus
+  stock photos" first and the person's own under "Your photos" last, beside
+  the upload box, each own tile with an x that removes it
+  (portal/social_delete.php, `social_delete_upload()`, owner only; kept
+  exports untouched); the EXPORT reads the file from disk
   (`social_render($p, null, true)` writes file://), because Chromium has no
   portal session.
 - Photos come from the site: `api/listings.php?scope=photos` and img.php

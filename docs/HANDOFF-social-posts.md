@@ -220,3 +220,7 @@ Jonathan's portal as "Yours". They are keyed by users.id now
 Nikki's folder, and the photo grid is in groups with headings: Your
 uploads, then Listing photos or Mont Haus stock photos. A separate Your
 Uploads tab can come when the lists grow (Nikki raised it).
+
+Later 2026-10-18: "Your photos" is the last group, next to the upload box,
+and each own tile has an x (hover on desktop, always on touch) that deletes
+the upload after a confirm (portal/social_delete.php, owner only).
