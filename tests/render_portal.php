@@ -468,12 +468,13 @@ ok('Kim\'s plan id on the print view: refused, nothing of hers shown', $c !== 20
 ok('Kim\'s plan id on the PDF: refused, nothing of hers shown', $c !== 200 && !has($b, 'KC SECRET'), $b);
 [$c, , $b] = req('jackson', '/portal/brand.php');
 ok('Brand Tools: the three open inside the portal (2026-10-18), the logo link at the guidelines\' Downloads', $c === 200 && no_fatal($b)
-   && has($b, 'href="/portal/brand_guidelines.php#downloads"') && has($b, 'Download the logos') && has($b, 'href="/portal/business_cards.php"') && has($b, 'href="/portal/yard_signs.php"')
+   && has($b, 'href="/portal/brand_guidelines.php"') && !has($b, 'brand_guidelines.php#') && has($b, 'See the guidelines') && has($b, 'href="/portal/business_cards.php"') && has($b, 'href="/portal/yard_signs.php"')
    && !has($b, 'target="_blank"'), $b);
 [$c, , $b] = req('jackson', '/portal/brand_guidelines.php');
 ok('Brand Guidelines inside the portal: the portal header and menu, the page\'s own sections and anchors, assets made absolute, styles scoped', $c === 200 && no_fatal($b)
    && has($b, 'class="pt-nav"') && has($b, 'id="downloads"') && has($b, 'href="#downloads"') && has($b, 'href="#logos"') && has($b, '/brand-guidelines/assets/logos/') && !has($b, 'src="assets/')
-   && has($b, '.bg-embed{') && !preg_match('/^\s*body\s*\{/m', $b) && !has($b, 'class="bg-header"'), $b);
+   && has($b, '.bg-embed{') && !preg_match('/^\s*body\s*\{/m', $b) && !has($b, 'class="bg-header"')
+   && strpos($b, 'class="pt-jump"') > strpos($b, '<h1 class="pt-h1">Brand Guidelines</h1>') && !has($b, 'pt-subnav-wrap sticky jump'), $b);
 [$c, , $b] = req('jackson', '/portal/business_cards.php');
 ok('Business card templates inside the portal, with a lightbox', $c === 200 && no_fatal($b) && has($b, 'class="pt-nav"') && has($b, 'Front option 12') && has($b, 'Back option 5') && has($b, 'data-lb') && has($b, 'id="ptLb"'), $b);
 [$c, , $b] = req('jackson', '/portal/yard_signs.php');

@@ -13,9 +13,9 @@ require_once __DIR__ . '/../inc/portal.php';
 $ctx = portal_context($conn);
 
 $items = [
-    ['Brand guidelines', portal_url($ctx, '/portal/brand_guidelines.php') . '#downloads',
+    ['Brand guidelines', portal_url($ctx, '/portal/brand_guidelines.php'),
      'Colors, type, how the logo is used, and the logo files for download.',
-     'Download the logos ›'],
+     'See the guidelines ›'],
     ['Business card templates', portal_url($ctx, '/portal/business_cards.php'),
      'Current MH business card designs.',
      'See the designs ›'],

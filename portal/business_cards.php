@@ -11,7 +11,7 @@ $img = '/brand-guidelines/business-cards/img/';
 $front = [1 => 'page-01', 'page-02', 'page-03', 'page-04', 'page-05', 'page-06', 'page-07', 'page-08', 'page-09', 'page-10', 'page-15', 'page-16'];
 $back  = [1 => 'page-11', 'page-12', 'page-13', 'page-14', 'page-17'];
 
-portal_header($ctx, 'Business Card Templates', 'brand', ['front' => 'Front options', 'back' => 'Back options']);
+portal_header($ctx, 'Business Card Templates', 'brand');
 ?>
   <p class="pt-back"><a href="<?= ph(portal_url($ctx, '/portal/brand.php')) ?>">← Brand Tools</a></p>
   <h1 class="pt-h1">Business Card Templates</h1>
