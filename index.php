@@ -692,7 +692,6 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
       <h1>Agent Roster</h1>
       <div class="hdr-actions">
         <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Hot Sheets</a>
-        <a class="btn btn-outline btn-sm" href="subscribers.php"><i class="ti ti-users"></i> Subscribers</a>
         <a class="btn btn-outline btn-sm" href="qr_codes.php"><i class="ti ti-qrcode"></i> QR Codes</a>
         <a class="btn btn-outline btn-sm" href="website_order.php"><i class="ti ti-arrows-sort"></i> Website Order</a>
         <a class="btn btn-outline btn-sm" href="leadership.php"><i class="ti ti-crown"></i> Leadership &amp; Staff</a>

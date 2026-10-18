@@ -181,12 +181,20 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     .hdr-actions { display:flex; gap:8px; flex-wrap:wrap; }
     .wrap { max-width:1100px; margin:32px auto 60px; padding:0 20px; }
     .mk-page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+    /* Hot Sheets is one area (Nikki, 2026-10-18): the emails and the subscribers as two tabs. */
+    .hs-tabs { display:flex; gap:4px; border-bottom:1px solid #e5e7eb; margin:-6px 0 18px; }
+    .hs-tabs a { padding:10px 14px; font-size:13px; font-weight:600; color:#6b7280; text-decoration:none; border-bottom:2px solid transparent; margin-bottom:-1px; }
+    .hs-tabs a.active { color:#111; border-bottom-color:#111; }
+    .hs-tabs a:hover { color:#111; }
+
     .card { background:#fff; border-radius:6px; padding:22px 26px; margin-bottom:18px; }
     .card-title { font-size:14px; font-weight:700; margin:0 0 16px; }
     .sub-table { width:100%; border-collapse:collapse; }
     .sub-table th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:#6b7280; padding:8px 10px; }
     .sub-table td { padding:10px; border-top:1px solid #f1ece0; vertical-align:middle; font-size:14px; }
-    .sub-email { font-weight:600; }
+    .sub-email { font-size:12px; color:#6b7280; margin-top:2px; }
+    .sub-name { font-weight:600; }
+    .btn-icon { padding:5px 8px; font-size:14px; line-height:1; }
     .sub-who a { text-decoration:none; }
     .pill { display:inline-block; font-size:11px; padding:2px 9px; border-radius:10px; white-space:nowrap; }
     .pill.on     { background:#f0fdf4; color:#15803d; }
@@ -220,15 +228,18 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
 
     <div class="mk-page-header">
       <div>
-        <h1>Hot Sheet Subscribers</h1>
+        <h1>Hot Sheets</h1>
         <p class="hint" style="margin:4px 0 0;">
           <?= $counts['on'] ?> receiving &middot; <?= $counts['paused'] ?> paused &middot; <?= $counts['off'] ?> unsubscribed<?= $counts['noareas'] ? ' &middot; ' . $counts['noareas'] . ' with no areas chosen' : '' ?>
         </p>
       </div>
       <div class="hdr-actions">
         <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>
-        <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Preview the emails</a>
       </div>
+    </div>
+    <div class="hs-tabs">
+      <a href="hot_sheet_preview.php"><i class="ti ti-mail"></i> The emails</a>
+      <a href="subscribers.php" class="active"><i class="ti ti-users"></i> Subscribers</a>
     </div>
 
     <?php if ($flash): ?><div class="flash <?= e($flash[0]) ?>"><?= e($flash[1]) ?></div><?php endif; ?>
@@ -306,12 +317,12 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
         <input type="hidden" name="q" value="<?= e($q) ?>">
       </form>
       <div class="card-title" style="display:flex;align-items:center;gap:12px;">
-        <span>Everyone on the list</span>
+        <span>Current Subscribers</span>
         <span style="flex:1;"></span>
         <button type="submit" form="saveAll" class="btn btn-primary btn-sm">Save all changes</button>
       </div>
       <table class="sub-table">
-        <thead><tr><th>Email</th><th>Agent</th><th>How often</th><?php if ($has_areas): ?><th>Areas</th><?php endif; ?><th>Status</th><th></th></tr></thead>
+        <thead><tr><th>Name</th><th>How often</th><?php if ($has_areas): ?><th>Areas</th><?php endif; ?><th>Status</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($rows as $r):
           $state = $r['unsubscribed_at'] ? 'off' : ((int)$r['is_active'] ? 'on' : 'paused');
@@ -320,11 +331,9 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
           $ticked = $has_areas ? mk_areas_decode($r['areas'] ?? null) : [];
         ?>
           <tr<?= $hit ? ' class="hl" id="found"' : '' ?>>
-            <td class="sub-email"><?= e($r['email']) ?></td>
             <td class="sub-who">
-              <?php if ($r['intake_id'] && $r['agent_name']): ?>
-                <a href="agent.php?id=<?= (int)$r['intake_id'] ?>&tab=profile"><?= e($r['agent_name']) ?></a>
-              <?php else: ?><span class="hint">not on the roster</span><?php endif; ?>
+              <div class="sub-name"><?php if ($r['intake_id'] && $r['agent_name']): ?><a href="agent.php?id=<?= (int)$r['intake_id'] ?>&tab=profile"><?= e($r['agent_name']) ?></a><?php else: ?><span class="hint">Not on the roster</span><?php endif; ?></div>
+              <div class="sub-email"><?= e($r['email']) ?></div>
             </td>
             <td>
               <?php if ($state !== 'off'): ?>
@@ -361,32 +370,27 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
                 <?php if ($state === 'on'): ?>
                   <form method="POST" style="margin:0;"><input type="hidden" name="_action" value="pause">
                     <input type="hidden" name="id" value="<?= (int)$r['id'] ?>"><input type="hidden" name="q" value="<?= e($q) ?>">
-                    <button class="btn btn-outline btn-xs" type="submit">Pause</button></form>
+                    <button class="btn btn-outline btn-icon" type="submit" title="Pause: keep the record, stop the email" aria-label="Pause"><i class="ti ti-player-pause"></i></button></form>
                 <?php elseif ($state === 'paused'): ?>
                   <form method="POST" style="margin:0;"><input type="hidden" name="_action" value="resume">
                     <input type="hidden" name="id" value="<?= (int)$r['id'] ?>"><input type="hidden" name="q" value="<?= e($q) ?>">
-                    <button class="btn btn-primary btn-xs" type="submit">Start again</button></form>
+                    <button class="btn btn-primary btn-icon" type="submit" title="Start again" aria-label="Start again"><i class="ti ti-player-play"></i></button></form>
                 <?php endif; ?>
                 <form method="POST" style="margin:0;" onsubmit="return confirm('Remove <?= e($r['email']) ?> from the list? Use Pause instead if they only want a break.');">
                   <input type="hidden" name="_action" value="remove">
                   <input type="hidden" name="id" value="<?= (int)$r['id'] ?>"><input type="hidden" name="q" value="<?= e($q) ?>">
-                  <button class="btn btn-outline btn-xs" type="submit">Remove</button>
+                  <button class="btn btn-outline btn-icon" type="submit" title="Remove from the list" aria-label="Remove"><i class="ti ti-trash"></i></button>
                 </form>
               </div>
             </td>
           </tr>
         <?php endforeach; ?>
-        <?php if (!$rows): ?><tr><td colspan="6" class="hint">Nobody is subscribed yet.</td></tr><?php endif; ?>
+        <?php if (!$rows): ?><tr><td colspan="5" class="hint">Nobody is subscribed yet.</td></tr><?php endif; ?>
         </tbody>
       </table>
       <div style="display:flex;justify-content:flex-end;margin-top:14px;">
         <button type="submit" form="saveAll" class="btn btn-primary btn-sm">Save all changes</button>
       </div>
-      <p class="hint" style="margin:14px 0 0;">
-        Save all changes writes every row's frequency and areas at once. Pause keeps the record and stops the
-        email. Unsubscribed is the person's own choice from the email footer, and cannot be undone here: they
-        have to subscribe again themselves (or on the agent portal).
-      </p>
     </div>
 
   </div>

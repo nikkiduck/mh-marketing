@@ -67,6 +67,12 @@ $allowed = array_values(array_filter(array_map('trim', explode(',', defined('HOT
     .hdr-actions { display:flex; gap:8px; flex-wrap:wrap; }
     .wrap { max-width:1100px; margin:32px auto 60px; padding:0 20px; }
     .mk-page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
+    /* Hot Sheets is one area (Nikki, 2026-10-18): the emails and the subscribers as two tabs. */
+    .hs-tabs { display:flex; gap:4px; border-bottom:1px solid #e5e7eb; margin:-6px 0 18px; }
+    .hs-tabs a { padding:10px 14px; font-size:13px; font-weight:600; color:#6b7280; text-decoration:none; border-bottom:2px solid transparent; margin-bottom:-1px; }
+    .hs-tabs a.active { color:#111; border-bottom-color:#111; }
+    .hs-tabs a:hover { color:#111; }
+
     .card { background:#fff; border-radius:6px; padding:22px 26px; margin-bottom:18px; }
     .card-title { font-size:14px; font-weight:700; margin:0 0 16px; }
     .sub-table { width:100%; border-collapse:collapse; }
@@ -98,9 +104,12 @@ $allowed = array_values(array_filter(array_map('trim', explode(',', defined('HOT
       </div>
       <div class="hdr-actions">
         <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>
-        <a class="btn btn-outline btn-sm" href="subscribers.php"><i class="ti ti-mail"></i> Subscribers</a>
         <a class="btn btn-outline btn-sm" href="pipeline_review.php"><i class="ti ti-list-check"></i> Pipeline Review</a>
       </div>
+    </div>
+    <div class="hs-tabs">
+      <a href="hot_sheet_preview.php" class="active"><i class="ti ti-mail"></i> The emails</a>
+      <a href="subscribers.php"><i class="ti ti-users"></i> Subscribers</a>
     </div>
 
     <?php if ($allowed): ?>
