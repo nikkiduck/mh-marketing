@@ -46,16 +46,18 @@ foreach (array_keys(market_cards($data)) as $market) {
         }
         foreach (['dark', 'light'] as $theme) {
             $name = "{$market}-{$pt}-{$theme}.html";
-            file_put_contents("$out/$name", market_card_render($card, ['format' => 'post', 'theme' => $theme, 'mark' => 'triangle', 'logo' => 'top'], ''));
+            file_put_contents("$out/$name", market_card_render($card, ['format' => 'post', 'theme' => $theme, 'mark' => 'triangle'], ''));
             $files[] = [$name, 1350];
         }
         if ($pt === 'SF') {
             $name = "{$market}-story.html";
-            file_put_contents("$out/$name", market_card_render($card, ['format' => 'story', 'theme' => 'dark', 'mark' => 'triangle', 'logo' => 'bottom'], ''));
+            file_put_contents("$out/$name", market_card_render($card, ['format' => 'story', 'theme' => 'dark', 'mark' => 'triangle'], ''));
             $files[] = [$name, 1920];
-            $name = "{$market}-bottom-light.html";
-            file_put_contents("$out/$name", market_card_render($card, ['format' => 'post', 'theme' => 'light', 'mark' => 'mmark', 'logo' => 'bottom', 'backdrop' => '/assets/images/social-placeholder.jpg'], ''));
+            $picked = market_card_model($data, $market, ['ptype' => 'SF', 'stats' => ['pct', 'average', 'supply']]);   // an agent's own three rows
+            $name = "{$market}-picked-light.html";
+            file_put_contents("$out/$name", market_card_render($picked, ['format' => 'post', 'theme' => 'light', 'mark' => 'mmark', 'backdrop' => '/assets/images/social-placeholder.jpg'], ''));
             $files[] = [$name, 1350];
+            if ($pt === 'SF' && $market === 'pitkin') echo '  pitkin offers: ' . implode(', ', $card['pool_keys']) . "; picked: " . implode(', ', $picked['stat_keys']) . "\n";
         }
     }
 }

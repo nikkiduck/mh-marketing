@@ -2385,8 +2385,12 @@ a feature of the Instagram template area "dressed up a little".
   sales for the town this year. Each market page ends with a "Town by
   town, from the MLS feed" table, and the towns join the snapshot cards'
   Location list (keys `feed-<town>`; the Roaring Fork towns keep their CAR
-  cards; the third row is price per sq ft until a month-end inventory
-  snapshot exists, the first being 2026-11-01). Caveats shown with the
+  cards). **The agent picks the three rows under the median** (evening:
+  `market_stat_catalog()`, eight figures; a location offers what its source
+  publishes, defaults closed sales, avg days on market, homes for sale or
+  price per sq ft until a month-end inventory snapshot exists, the first
+  being 2026-11-01), the type is nothing under 30 px and the logo always
+  upper right (the lower-left option is gone). Caveats shown with the
   figures: IDX data runs under a board's own totals; CREN, elevateMLS and
   REcolorado days on market are on-market to closing. Details:
   docs/HANDOFF-market-report.md.

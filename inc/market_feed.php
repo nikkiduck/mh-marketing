@@ -110,45 +110,46 @@ function market_feed_card_defs(array $data, array $covered_labels): array {
 }
 
 /**
- * The card model's body for a feed town (the renderer's words: hero and
- * three rows), or null when the town has nothing for this class. The third
- * row is homes for sale once a snapshot exists, else price per square foot
- * (Nikki, 2026-10-18). $words: ['month','lyLab','lyMon','lyYr','monthName'].
+ * A feed town's card body: the eyebrow, the hero (median) and the pool of
+ * figures the agent may pick three from (market_stat_catalog() keys; the
+ * card model chooses). Null when the town has nothing for this class. The
+ * year-to-date variants when the month is thin (under 10 sales); homes for
+ * sale and months of supply only once the site has a month-end snapshot.
+ * $w: ['month','monthName','lyLab','lyMon','lyYr'].
  */
-function market_feed_card_body(array $town, string $pt, array $words): ?array {
+function market_feed_pool(array $town, string $pt, array $w): ?array {
     $p = $town[$pt] ?? null;
     if (!$p) return null;
     $m = $p['month'] ?? []; $ly = $p['ly'] ?? []; $ytd = $p['ytd'] ?? []; $ytdly = $p['ytd_ly'] ?? [];
     if ((int)($m['sold'] ?? 0) === 0 && (int)($ytd['sold'] ?? 0) === 0) return null;
-    $inv = $p['inventory'] ?? null;
-    $vs = function (?float $f, string $when): string { if ($f === null) return ''; $t = market_change_text($f); return $t === 'Even' ? "Even with {$when}" : "{$t} vs {$when}"; };
-    $ppsf = fn($v) => ($v === null || $v === '') ? '–' : '$' . number_format((float)$v);
+    $inv  = $p['inventory'] ?? null;
+    $n    = fn($v) => $v !== null && $v !== '';
+    $ppsf = fn($v) => '$' . number_format((float)$v);
     $thin = (int)($m['sold'] ?? 0) < 10;
-    $out = ['eyebrow' => $thin ? 'Market snapshot · Year to date' : 'Market snapshot'];
+    $pool = [];
     if ($thin) {
+        $lyY = $w['lyYr'];
         $ch = market_change($ytd['median'] ?? null, $ytdly['median'] ?? null);
-        $out['hero'] = ['label' => 'Median sale price, January to ' . $words['monthName'], 'value' => market_money($ytd['median'] ?? null),
-                        'change' => $ch === null ? ((int)($ytdly['sold'] ?? 0) === 0 ? "No sales in the same period of {$words['lyYr']}" : '') : $vs($ch, "the same period of {$words['lyYr']}"), 'dir' => market_dir($ch)];
-        $rows = [
-            ['Closed sales, year to date',   market_int($ytd['sold'] ?? null),    market_int($ytdly['sold'] ?? null) . " in {$words['lyYr']}"],
-            ['Days on market, year to date', market_int($ytd['avg_dom'] ?? null), ($ytdly['avg_dom'] ?? null) !== null ? market_int($ytdly['avg_dom']) . " in {$words['lyYr']}" : ''],
-        ];
-        $rows[] = $inv && ($inv['active'] ?? null) !== null
-            ? ['Homes for sale', market_int($inv['active']), ($inv['months_supply'] ?? null) !== null ? market_dec1($inv['months_supply']) . ' months of supply' : '']
-            : ['Price per sq ft, year to date', $ppsf($ytd['price_per_sqft'] ?? null), ($ytdly['price_per_sqft'] ?? null) !== null ? $ppsf($ytdly['price_per_sqft']) . " in {$words['lyYr']}" : ''];
+        $hero = ['label' => 'Median sale price, January to ' . $w['monthName'], 'value' => market_money($ytd['median'] ?? null),
+                 'change' => $ch === null ? ((int)($ytdly['sold'] ?? 0) === 0 ? "No sales in the same period of {$lyY}" : '') : market_vs($ch, "the same period of {$lyY}"), 'dir' => market_dir($ch)];
+        $pool['sold'] = ['Closed sales, YTD', market_int($ytd['sold'] ?? null), market_int($ytdly['sold'] ?? null) . " in {$lyY}"];
+        if ($n($ytd['avg_dom'] ?? null))        $pool['dom']     = ['Avg days on market, YTD', market_int($ytd['avg_dom']), $n($ytdly['avg_dom'] ?? null) ? market_int($ytdly['avg_dom']) . " in {$lyY}" : ''];
+        if ($n($ytd['price_per_sqft'] ?? null)) $pool['ppsf']    = ['Median price per sq ft, YTD', $ppsf($ytd['price_per_sqft']), $n($ytdly['price_per_sqft'] ?? null) ? $ppsf($ytdly['price_per_sqft']) . " in {$lyY}" : ''];
+        if ($n($ytd['pct_of_list'] ?? null))    $pool['pct']     = ['% of list received, YTD', market_dec1($ytd['pct_of_list']) . '%', $n($ytdly['pct_of_list'] ?? null) ? market_dec1($ytdly['pct_of_list']) . "% in {$lyY}" : ''];
+        if ($n($ytd['average'] ?? null))        $pool['average'] = ['Average sale price, YTD', market_money($ytd['average']), market_vs(market_change($ytd['average'], $ytdly['average'] ?? null), "the same period of {$lyY}")];
     } else {
+        $lyMon = $w['lyMon'];
         $ch = market_change($m['median'] ?? null, $ly['median'] ?? null);
         $sc = market_change($m['sold'] ?? null, $ly['sold'] ?? null);
-        $out['hero'] = ['label' => 'Median sale price', 'value' => market_money($m['median'] ?? null),
-                        'change' => $ch === null ? "No sales in {$words['lyMon']}" : $vs($ch, $words['lyLab']), 'dir' => market_dir($ch)];
-        $rows = [
-            ['Closed sales',   market_int($m['sold'] ?? null),    $sc === null ? "None in {$words['lyMon']}" : $vs($sc, $words['lyMon'])],
-            ['Days on market', market_int($m['avg_dom'] ?? null), ($ly['avg_dom'] ?? null) !== null ? market_int($ly['avg_dom']) . ' a year ago' : ''],
-        ];
-        $rows[] = $inv && ($inv['active'] ?? null) !== null
-            ? ['Homes for sale', market_int($inv['active']), ($inv['months_supply'] ?? null) !== null ? market_dec1($inv['months_supply']) . ' months of supply' : '']
-            : ['Price per sq ft', $ppsf($m['price_per_sqft'] ?? null), ($ly['price_per_sqft'] ?? null) !== null ? $ppsf($ly['price_per_sqft']) . ' a year ago' : ''];
+        $hero = ['label' => 'Median sale price', 'value' => market_money($m['median'] ?? null),
+                 'change' => $ch === null ? "No sales in {$lyMon}" : market_vs($ch, $w['lyLab']), 'dir' => market_dir($ch)];
+        $pool['sold'] = ['Closed sales', market_int($m['sold'] ?? null), $sc === null ? "None in {$lyMon}" : market_vs($sc, $lyMon)];
+        if ($n($m['avg_dom'] ?? null))        $pool['dom']     = ['Avg days on market', market_int($m['avg_dom']), $n($ly['avg_dom'] ?? null) ? market_int($ly['avg_dom']) . ' a year ago' : ''];
+        if ($n($m['price_per_sqft'] ?? null)) $pool['ppsf']    = ['Median price per sq ft', $ppsf($m['price_per_sqft']), $n($ly['price_per_sqft'] ?? null) ? $ppsf($ly['price_per_sqft']) . ' a year ago' : ''];
+        if ($n($m['pct_of_list'] ?? null))    $pool['pct']     = ['% of list price received', market_dec1($m['pct_of_list']) . '%', $n($ly['pct_of_list'] ?? null) ? market_dec1($ly['pct_of_list']) . '% a year ago' : ''];
+        if ($n($m['average'] ?? null))        $pool['average'] = ['Average sale price', market_money($m['average']), market_vs(market_change($m['average'], $ly['average'] ?? null), $lyMon)];
     }
-    $out['stats'] = $rows;
-    return $out;
+    if ($inv && $n($inv['active'] ?? null))        $pool['inventory'] = ['Homes for sale', market_int($inv['active']), ''];
+    if ($inv && $n($inv['months_supply'] ?? null)) $pool['supply']    = ['Months of supply', market_dec1($inv['months_supply']), ''];
+    return ['eyebrow' => $thin ? 'Market snapshot · Year to date' : 'Market snapshot', 'hero' => $hero, 'pool' => $pool];
 }

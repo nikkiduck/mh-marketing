@@ -1,7 +1,7 @@
 <?php
 /**
  * inc/market_card_render.php — the Market Snapshot post (2026-10-18;
- * redrawn the same day to Nikki's notes).
+ * redrawn twice that day to Nikki's notes).
  *
  * One function turns a card model (market_card_model() in inc/market_data.php:
  * the words and figures, no HTML) into a complete HTML document sized
@@ -16,22 +16,20 @@
  * The look is the Instagram templates' (inc/social_render.php): Cormorant
  * Garamond on the title and the figures, Jost on the labels, the champagne
  * gold rule and small-caps labels, the dark ink or the cream light ground,
- * the vertical-stack logo upper right or lower left, a ghosted triangle (or
- * M mark) and a stock photo behind the figures. Nikki, 2026-10-18, after
- * the first version: one place and one property type per card, the figures
- * large enough to read on a phone (the median, then three figures in rows: closed sales, days on
- * market, homes for sale),
- * no second-type line, no source block, the photo brighter and the
- * watermark fainter. The title has the full width: with the logo upper
- * right, the logo shares the eyebrow row and the title sits under both.
- * A story keeps a safe area of about 190 px at the top and 170 at the
- * bottom, as the Instagram story does.
+ * the vertical-stack logo upper right on the eyebrow row, a ghosted triangle
+ * (or M mark) and a stock photo behind the figures. One place and one
+ * property type per card; the median large; three figures in rows, each
+ * with its label and comparison centred on its number. Nikki, 2026-10-18,
+ * evening: nothing under 30 px, the place name a step smaller, the month
+ * line and the median's label larger, the median itself smaller, the rows'
+ * words larger and centred, and no lower-left logo (the space is worth
+ * more). A story keeps a safe area of about 190 px at the top and 170 at
+ * the bottom, as the Instagram story does.
  *
- * The post's height budget (logo upper right): 1350 less 74 + 84 padding =
- * 1192 for the head (about 370), the hero (about 370) and three rows
- * (about 430); the two .gap spacers take whatever is left, and all of the
- * story's extra height. With the logo lower left the type steps down to
- * 0.9 to make room for it. Measured on every card in both looks on
+ * The post's height budget: 1350 less 74 + 84 padding = 1192 for the head
+ * (about 335), the hero (about 305) and three rows (about 410, a row's
+ * label may wrap once); the two .gap spacers take whatever is left, and all
+ * of the story's extra height. Measured on every card in both looks on
  * 2026-10-18 (tests/render_market_sample.php, then the browser).
  */
 
@@ -53,7 +51,8 @@ function market_card_fit(string $text, int $size, array $steps): int {
 /**
  * The complete HTML document for one card.
  * $opts: format post|story, theme dark|light, mark triangle|mmark|none,
- *        logo top|bottom, backdrop '' or an image URL / file:// path.
+ *        backdrop '' or an image URL / file:// path. (logo is no longer an
+ *        option: upper right, always.)
  * $export = true inlines the fonts and marks as data URIs (Chromium opens the
  * file with no session and no cross-origin fonts).
  */
@@ -64,7 +63,6 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
     $format = ($opts['format'] ?? 'post') === 'story' ? 'story' : 'post';
     $theme  = ($opts['theme'] ?? 'dark') === 'light' ? 'light' : 'dark';
     $mark   = in_array((string)($opts['mark'] ?? ''), ['triangle', 'mmark', 'none'], true) ? (string)$opts['mark'] : 'triangle';
-    $logo   = ($opts['logo'] ?? 'top') === 'bottom' ? 'bottom' : 'top';
     $bd     = (string)($opts['backdrop'] ?? '');
     $H      = market_card_height($format);
     [$top, $bot] = market_card_insets($format);
@@ -90,16 +88,13 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
            'logo' => $asset('assets/images/MH_vert-stack_white.svg', 'image/svg+xml'),
            'tri'  => $asset('assets/images/triangle_mark-white.svg', 'image/svg+xml'), 'm' => $asset('assets/images/M-mark_white.svg', 'image/svg+xml')];
 
-    $title = (string)($card['title'] ?? '');
-    $h     = (array)($card['hero'] ?? []);
+    $title   = (string)($card['title'] ?? '');
+    $h       = (array)($card['hero'] ?? []);
     $heroVal = (string)($h['value'] ?? '');
-    $sub   = (string)($card['sub'] ?? '');
-    // With the logo lower left there is less height for the figures: the type steps down a size.
-    $k = $logo === 'bottom' ? 0.9 : 1.0;
-    $sz = fn(int $px) => (int)round($px * $k);
-    $titleSize = $sz(market_card_fit($title, 132, [12 => 116, 17 => 100, 22 => 84, 28 => 70]));   // one line across the full width
-    $heroSize  = $sz(market_card_fit($heroVal, 196, [6 => 182, 8 => 160, 10 => 140]));
-    $subSize   = $sz(market_card_fit($sub, 32, [50 => 29, 58 => 26]));
+    $sub     = (string)($card['sub'] ?? '');
+    $titleSize = market_card_fit($title, 108, [12 => 96, 17 => 84, 22 => 72, 28 => 62]);   // one line across the full width
+    $heroSize  = market_card_fit($heroVal, 160, [6 => 148, 8 => 134, 10 => 118]);
+    $subSize   = market_card_fit($sub, 40, [42 => 36, 50 => 32]);   // never under 30: a long one wraps instead
     $padTop = 74 + $top; $padBot = 84 + $bot;
 
     $css = <<<CSS
@@ -117,24 +112,22 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .gap{flex:1 1 0;min-height:0}
 .toprow{display:flex;align-items:flex-start;justify-content:space-between;gap:40px}
 .toprow .logo{height:118px;display:block;flex:none;margin-top:-4px}
-.eyebrow{font-size:{$sz(27)}px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:{$c['accent']};line-height:1.3;padding-top:8px}
-.title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$titleSize}px;line-height:1.02;margin:12px 0 0;white-space:nowrap}
-.sub{font-size:{$subSize}px;font-weight:300;color:{$c['muted']};margin-top:12px;line-height:1.3;white-space:nowrap}
+.eyebrow{font-size:30px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3;padding-top:10px}
+.title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$titleSize}px;line-height:1.02;margin:10px 0 0;white-space:nowrap}
+.sub{font-size:{$subSize}px;font-weight:300;color:{$c['muted']};margin-top:12px;line-height:1.3;text-wrap:balance}
 .rule{width:90px;height:4px;background:{$c['accent']};margin-top:24px}
-.hero{margin-top:{$sz(32)}px}
-.hero .lab{font-size:{$sz(27)}px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
-.hero .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$heroSize}px;line-height:1;letter-spacing:-.01em;margin-top:4px;white-space:nowrap}
-.chg{font-size:{$sz(40)}px;font-weight:400;margin-top:10px;line-height:1.3}
+.hero{margin-top:32px}
+.hero .lab{font-size:36px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
+.hero .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$heroSize}px;line-height:1;letter-spacing:-.01em;margin-top:6px;white-space:nowrap}
+.chg{font-size:40px;font-weight:400;margin-top:10px;line-height:1.3}
 .chg i{font-style:normal;color:{$c['accent']};font-size:.78em;margin-right:12px;vertical-align:.1em}
-.stats{margin-top:{$sz(40)}px;display:flex;flex-direction:column}
-.stat{display:flex;align-items:baseline;gap:36px;padding:{$sz(16)}px 0;border-top:1px solid {$c['line']}}
+.stats{margin-top:40px;display:flex;flex-direction:column}
+.stat{display:flex;align-items:center;gap:36px;padding:16px 0;border-top:1px solid {$c['line']}}
 .stat:last-child{border-bottom:1px solid {$c['line']}}
-.stat .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$sz(84)}px;line-height:1;min-width:{$sz(280)}px;white-space:nowrap}
-.stat .txt{display:flex;flex-direction:column;gap:5px;min-width:0}
-.stat .lab{font-size:{$sz(25)}px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:{$c['muted']};line-height:1.25}
-.stat .note{font-size:{$sz(31)}px;font-weight:300;color:{$c['soft']};line-height:1.3}
-.foot{margin-top:auto;padding-top:28px}
-.foot img{height:150px;display:block}
+.stat .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:88px;line-height:1;min-width:280px;white-space:nowrap}
+.stat .txt{display:flex;flex-direction:column;gap:6px;min-width:0}
+.stat .lab{font-size:32px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:{$c['muted']};line-height:1.2}
+.stat .note{font-size:34px;font-weight:300;color:{$c['soft']};line-height:1.3}
 CSS;
 
     $bdHtml = $bd !== '' ? '<div class="bd"><img src="' . $e($bd) . '" alt=""></div>' : '';
@@ -143,11 +136,11 @@ CSS;
         'none'  => '',
         default => '<img class="ghost" src="' . $e($c['tri']) . '" alt="">',
     };
-    $logoImg = '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
     $arrow = fn(int $dir) => $dir > 0 ? '<i>▲</i>' : ($dir < 0 ? '<i>▼</i>' : '');
 
     $body  = '<header class="head">'
-           . '<div class="toprow"><div class="eyebrow">' . $e($card['eyebrow'] ?? '') . '</div>' . ($logo === 'top' ? $logoImg : '') . '</div>'
+           . '<div class="toprow"><div class="eyebrow">' . $e($card['eyebrow'] ?? '') . '</div>'
+           . '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty"></div>'
            . '<h1 class="title">' . $e($title) . '</h1>'
            . ($sub !== '' ? '<div class="sub">' . $e($sub) . '</div>' : '')
            . '<div class="rule"></div></header>';
@@ -161,7 +154,6 @@ CSS;
                . ($note !== '' ? '<div class="note">' . $e($note) . '</div>' : '') . '</div></div>';
     }
     $body .= '</section>';
-    if ($logo === 'bottom') $body .= '<div class="gap"></div><footer class="foot">' . $logoImg . '</footer>';
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
          . '<title>' . $e($title . ' market snapshot') . '</title><style>' . $css . '</style></head><body>'

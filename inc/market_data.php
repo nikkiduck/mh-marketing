@@ -305,16 +305,95 @@ function market_thin(?array $r): bool { return $r !== null && (int)($r['sold'] ?
 function market_ptype_words(string $pt): string { return $pt === 'TC' ? 'Townhomes & condos' : 'Single-family homes'; }
 
 /**
+ * The figures a card can show under the median, in builder order: key =>
+ * the picker's words. Each source offers a subset (`pool_keys` on the model);
+ * the agent picks three (Nikki, 2026-10-18), defaults fill the rest.
+ */
+function market_stat_catalog(): array {
+    return [
+        'sold'      => 'Closed sales',
+        'dom'       => 'Avg days on market',
+        'ppsf'      => 'Median price per sq ft',
+        'inventory' => 'Homes for sale',
+        'supply'    => 'Months of supply',
+        'pct'       => '% of list price received',
+        'average'   => 'Average sale price',
+        'new'       => 'New listings',
+    ];
+}
+
+/** "+19% vs September 2025", "Even with …", '' for none. */
+function market_vs(?float $f, string $when): string {
+    if ($f === null) return '';
+    $t = market_change_text($f);
+    return $t === 'Even' ? "Even with {$when}" : "{$t} vs {$when}";
+}
+
+/**
+ * The pool for a CAR county or town row: key => [label, value, note], the
+ * year-to-date variants when the month is thin. $w: the month words.
+ */
+function market_pool_car(array $r, array $w, bool $thin): array {
+    $pool = [];
+    $n = fn($v) => $v !== null && $v !== '';
+    if ($thin) {
+        $ly = $w['lyYr'];
+        if ($n($r['ytd_sold'] ?? null))           $pool['sold']    = ['Closed sales, YTD', market_int($r['ytd_sold']), $n($r['ytd_sold_ly'] ?? null) ? market_int($r['ytd_sold_ly']) . " in {$ly}" : ''];
+        if ($n($r['ytd_days_on_market'] ?? null)) $pool['dom']     = ['Avg days on market, YTD', market_int($r['ytd_days_on_market']), $n($r['ytd_days_on_market_ly'] ?? null) ? market_int($r['ytd_days_on_market_ly']) . " in {$ly}" : ''];
+        if ($n($r['ytd_pct_of_list'] ?? null))    $pool['pct']     = ['% of list received, YTD', market_dec1($r['ytd_pct_of_list']) . '%', $n($r['ytd_pct_of_list_ly'] ?? null) ? market_dec1($r['ytd_pct_of_list_ly']) . "% in {$ly}" : ''];
+        if ($n($r['ytd_average'] ?? null))        $pool['average'] = ['Average sale price, YTD', market_money($r['ytd_average']), market_vs(market_change($r['ytd_average'], $r['ytd_average_ly'] ?? null), "the same period of {$ly}")];
+        if ($n($r['ytd_new_listings'] ?? null))   $pool['new']     = ['New listings, YTD', market_int($r['ytd_new_listings']), $n($r['ytd_new_listings_ly'] ?? null) ? market_int($r['ytd_new_listings_ly']) . " in {$ly}" : ''];
+    } else {
+        $lyMon = $w['lyMon'];
+        if ($n($r['sold'] ?? null))           { $sc = market_change($r['sold'], $r['sold_ly'] ?? null); $pool['sold'] = ['Closed sales', market_int($r['sold']), $sc === null ? "None in {$lyMon}" : market_vs($sc, $lyMon)]; }
+        if ($n($r['days_on_market'] ?? null)) $pool['dom']     = ['Avg days on market', market_int($r['days_on_market']), $n($r['days_on_market_ly'] ?? null) ? market_int($r['days_on_market_ly']) . ' a year ago' : ''];
+        if ($n($r['pct_of_list'] ?? null))    $pool['pct']     = ['% of list price received', market_dec1($r['pct_of_list']) . '%', $n($r['pct_of_list_ly'] ?? null) ? market_dec1($r['pct_of_list_ly']) . '% a year ago' : ''];
+        if ($n($r['average'] ?? null))        $pool['average'] = ['Average sale price', market_money($r['average']), market_vs(market_change($r['average'], $r['average_ly'] ?? null), $lyMon)];
+        if ($n($r['new_listings'] ?? null))   $pool['new']     = ['New listings', market_int($r['new_listings']), market_vs(market_change($r['new_listings'], $r['new_listings_ly'] ?? null), $lyMon)];
+    }
+    if ($n($r['inventory'] ?? null))     $pool['inventory'] = ['Homes for sale', market_int($r['inventory']), $n($r['inventory_ly'] ?? null) ? market_int($r['inventory_ly']) . ' a year ago' : ''];
+    if ($n($r['months_supply'] ?? null)) $pool['supply']    = ['Months of supply', market_dec1($r['months_supply']), $n($r['months_supply_ly'] ?? null) ? market_dec1($r['months_supply_ly']) . ' a year ago' : ''];
+    return $pool;
+}
+
+/** The pool for REcolorado's own metro figures (front_range.json). */
+function market_pool_metro(array $f, array $w): array {
+    $lyMon = $w['lyMon'];
+    $whole = function ($pct) use ($lyMon) { $t = market_whole_pct_text($pct); return $t === '' ? '' : ($t === 'Even' ? "Even with {$lyMon}" : "{$t} vs {$lyMon}"); };
+    $pool = [];
+    if (($f['closed'] ?? null) !== null) $pool['sold'] = ['Closed sales', market_int($f['closed']), $whole($f['closed_change_pct'] ?? null)];
+    if (($f['median_days_in_mls'] ?? null) !== null) {
+        $dc = $f['days_change'] ?? null;
+        $pool['dom'] = ['Median days in MLS', market_int($f['median_days_in_mls']), $dc === null ? '' : ((float)$dc < 0 ? market_int(abs((float)$dc)) . " days faster than {$lyMon}" : ((float)$dc > 0 ? market_int($dc) . " days slower than {$lyMon}" : "Same as {$lyMon}"))];
+    }
+    if (($f['active'] ?? null) !== null)             $pool['inventory'] = ['Active listings', market_int($f['active']), $whole($f['active_change_pct'] ?? null)];
+    if (($f['new_listings'] ?? null) !== null)       $pool['new']       = ['New listings', market_int($f['new_listings']), $whole($f['new_listings_change_pct'] ?? null)];
+    if (($f['weeks_of_inventory'] ?? null) !== null) $pool['supply']    = ['Weeks of inventory', market_int($f['weeks_of_inventory']), ''];
+    return $pool;
+}
+
+/** Three keys from the pool: the agent's picks that the pool has, then the source's defaults, then whatever is left. */
+function market_pick_stats(array $pool, array $want, array $defaults): array {
+    $out = [];
+    foreach ($want as $k) if (isset($pool[$k]) && !in_array($k, $out, true)) $out[] = $k;
+    foreach ($defaults as $k) if (count($out) < 3 && isset($pool[$k]) && !in_array($k, $out, true)) $out[] = $k;
+    foreach (array_keys($pool) as $k) if (count($out) < 3 && !in_array($k, $out, true)) $out[] = $k;
+    return array_slice($out, 0, 3);
+}
+
+/**
  * Everything the card shows, built from the month's data (no HTML; the
  * renderer draws it). One place, one property type, the median large and
- * three figures under it (closed sales, days on market, homes for sale:
- * months of supply stays in the report, Nikki 2026-10-18, "keep it simple");
- * nothing else on the card (Nikki, 2026-10-18: the
- * other type's line and the source block are gone; the words were too small
- * to read on a phone). $opts: ptype SF|TC. Null when the month has no row.
+ * three figures under it, which the agent picks from the source's pool
+ * (Nikki, 2026-10-18; defaults: closed sales, avg days on market, homes for
+ * sale, or price per sq ft where no inventory exists yet). Nothing else on
+ * the card. $opts: ptype SF|TC, stats [up to three catalog keys].
+ * Null when the month has no row.
  *
- * ['key', 'eyebrow' (short: the month is in sub), 'title', 'sub', 'hero' => [label, value, change, dir],
- *  'stats' => [[label, value, note] x3], 'credit' (kept for the record, not drawn)]
+ * ['key', 'eyebrow' (short: the month is in sub), 'title', 'sub',
+ *  'hero' => [label, value, change, dir], 'stats' => [[label, value, note] x3],
+ *  'stat_keys' => the three keys drawn, 'pool_keys' => every key this source offers,
+ *  'credit' (kept for the record, not drawn)]
  */
 function market_card_model(array $data, string $key, array $opts = []): ?array {
     $defs = market_cards($data);
@@ -322,77 +401,65 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
     $d  = $defs[$key];
     $pt = ($opts['ptype'] ?? 'SF') === 'TC' ? 'TC' : 'SF';
     $m  = $data['month'];
-    $month = market_month_label($m);                  // September 2026
-    $lyLab = market_month_label(market_month_ly($m)); // September 2025
-    $lyMon = market_month_short(market_month_ly($m)); // Sep 2025
-    $lyYr  = market_year(market_month_ly($m));
-    $yr    = market_year($m);
-    $card  = ['key' => $key, 'market' => $d['market'], 'title' => $d['title'], 'eyebrow' => 'Market snapshot', 'sub' => '', 'hero' => null, 'stats' => [], 'credit' => ''];
-    $vs = function (?float $f, string $when) {   // "+19% vs September 2025", "Even with …", "" for none
-        if ($f === null) return '';
-        $t = market_change_text($f);
-        return $t === 'Even' ? "Even with {$when}" : "{$t} vs {$when}";
-    };
+    $w  = ['month' => market_month_label($m), 'monthName' => market_month_name($m), 'lyLab' => market_month_label(market_month_ly($m)),
+           'lyMon' => market_month_short(market_month_ly($m)), 'lyYr' => market_year(market_month_ly($m))];
+    $yr = market_year($m);
+    $card = ['key' => $key, 'market' => $d['market'], 'title' => $d['title'], 'eyebrow' => 'Market snapshot', 'sub' => '', 'hero' => null,
+             'stats' => [], 'stat_keys' => [], 'pool_keys' => [], 'credit' => ''];
+    $want = array_values(array_filter((array)($opts['stats'] ?? []), fn($k) => isset(market_stat_catalog()[$k])));
 
     if (!empty($d['feed'])) {   // a town from our own feed (inc/market_feed.php)
         $town = $data['towns_feed'][$d['feed']] ?? null;
-        if (!$town) return null;
-        $body = market_feed_card_body($town, $pt, ['month' => $month, 'lyLab' => $lyLab, 'lyMon' => $lyMon, 'lyYr' => $lyYr, 'monthName' => market_month_name($m)]);
+        $body = $town ? market_feed_pool($town, $pt, $w) : null;
         if (!$body) return null;
-        $card['sub'] = "{$month} · {$d['place']} · " . market_ptype_words($pt);
+        $card['eyebrow'] = $body['eyebrow']; $card['hero'] = $body['hero'];
+        $pool = $body['pool'];
+        $defaults = ['sold', 'dom', isset($pool['inventory']) ? 'inventory' : 'ppsf'];
+        $card['sub'] = "{$w['month']} · {$d['place']} · " . market_ptype_words($pt);
         $card['credit'] = 'Source: ' . $town['market'] . ' listing data, compiled by Mont Haus International Realty.';
-        return $body + $card;
-    }
-
-    if (!empty($d['metro'])) {
+    } elseif (!empty($d['metro'])) {
         $f = market_front_row($data, $d['metro']);
         if (!$f) return null;
         $mc = $f['median_change_pct'] ?? null;
-        $card['sub']  = "{$month} · {$d['place']}";
+        $card['sub']  = "{$w['month']} · {$d['place']}";
         $card['hero'] = ['label' => 'Median closed price', 'value' => market_money($f['median'] ?? null, true),
-                         'change' => $mc === null ? '' : (market_whole_pct_text($mc) === 'Even' ? "Even with {$lyLab}" : market_whole_pct_text($mc) . " vs {$lyLab}"),
+                         'change' => $mc === null ? '' : (market_whole_pct_text($mc) === 'Even' ? "Even with {$w['lyLab']}" : market_whole_pct_text($mc) . " vs {$w['lyLab']}"),
                          'dir' => market_dir($mc === null ? null : (float)$mc)];
-        $dc = $f['days_change'] ?? null;
-        $daysNote = $dc === null ? '' : ((float)$dc < 0 ? market_int(abs((float)$dc)) . " days faster than {$lyMon}" : ((float)$dc > 0 ? market_int($dc) . " days slower than {$lyMon}" : "Same as {$lyMon}"));
-        $cc = market_whole_pct_text($f['closed_change_pct'] ?? null);
-        $ac = market_whole_pct_text($f['active_change_pct'] ?? null);
-        $card['stats'] = [
-            ['Closed sales',       market_int($f['closed'] ?? null),             $cc === '' ? '' : ($cc === 'Even' ? "Even with {$lyMon}" : "{$cc} vs {$lyMon}")],
-            ['Median days in MLS', market_int($f['median_days_in_mls'] ?? null), $daysNote],
-            ['Active listings',    market_int($f['active'] ?? null),             $ac === '' ? '' : ($ac === 'Even' ? "Even with {$lyMon}" : "{$ac} vs {$lyMon}")],
-        ];
-        $card['credit'] = "Source: REcolorado Market Watch, {$month}. Data courtesy of REcolorado.";
-        return $card;
-    }
-
-    $r = !empty($d['town']) ? market_town_row($data, $d['town'], $pt) : market_county_row($data, $d['county'], $pt);
-    if (!$r || ($r['sold'] ?? null) === null) return null;
-    $card['sub'] = "{$month} · {$d['place']} · " . market_ptype_words($pt);
-    if (market_thin($r)) {
-        $ch = market_change($r['ytd_median'] ?? null, $r['ytd_median_ly'] ?? null);
-        $card['eyebrow'] = 'Market snapshot · Year to date';
-        $card['hero'] = ['label' => 'Median sale price, January to ' . market_month_name($m), 'value' => market_money($r['ytd_median'] ?? null),
-                         'change' => $vs($ch, "the same period of {$lyYr}"), 'dir' => market_dir($ch)];
-        $card['stats'] = [
-            ['Closed sales, year to date',   market_int($r['ytd_sold'] ?? null),           market_int($r['ytd_sold_ly'] ?? null) . " in {$lyYr}"],
-            ['Days on market, year to date', market_int($r['ytd_days_on_market'] ?? null), market_int($r['ytd_days_on_market_ly'] ?? null) . " in {$lyYr}"],
-            ['Homes for sale',               market_int($r['inventory'] ?? null),         market_int($r['inventory_ly'] ?? null) . " in {$lyYr}"],
-        ];
+        $pool = market_pool_metro($f, $w);
+        $defaults = ['sold', 'dom', 'inventory'];
+        $card['credit'] = "Source: REcolorado Market Watch, {$w['month']}. Data courtesy of REcolorado.";
     } else {
-        $ch = market_change($r['median'] ?? null, $r['median_ly'] ?? null);
-        $sc = market_change($r['sold'] ?? null, $r['sold_ly'] ?? null);
-        $card['hero'] = ['label' => 'Median sale price', 'value' => market_money($r['median'] ?? null),
-                         'change' => $ch === null ? "No sales in {$lyMon}" : $vs($ch, $lyLab), 'dir' => market_dir($ch)];
-        $card['stats'] = [
-            ['Closed sales',     market_int($r['sold'] ?? null),           $sc === null ? "None in {$lyMon}" : $vs($sc, $lyMon)],
-            ['Days on market',   market_int($r['days_on_market'] ?? null), market_int($r['days_on_market_ly'] ?? null) . ' a year ago'],
-            ['Homes for sale',   market_int($r['inventory'] ?? null),     market_int($r['inventory_ly'] ?? null) . ' a year ago'],
-        ];
+        $r = !empty($d['town']) ? market_town_row($data, $d['town'], $pt) : market_county_row($data, $d['county'], $pt);
+        if (!$r || ($r['sold'] ?? null) === null) return null;
+        $card['sub'] = "{$w['month']} · {$d['place']} · " . market_ptype_words($pt);
+        $thin = market_thin($r);
+        if ($thin) {
+            $ch = market_change($r['ytd_median'] ?? null, $r['ytd_median_ly'] ?? null);
+            $card['eyebrow'] = 'Market snapshot · Year to date';
+            $card['hero'] = ['label' => 'Median sale price, January to ' . $w['monthName'], 'value' => market_money($r['ytd_median'] ?? null),
+                             'change' => market_vs($ch, "the same period of {$w['lyYr']}"), 'dir' => market_dir($ch)];
+        } else {
+            $ch = market_change($r['median'] ?? null, $r['median_ly'] ?? null);
+            $card['hero'] = ['label' => 'Median sale price', 'value' => market_money($r['median'] ?? null),
+                             'change' => $ch === null ? "No sales in {$w['lyMon']}" : market_vs($ch, $w['lyLab']), 'dir' => market_dir($ch)];
+        }
+        $pool = market_pool_car($r, $w, $thin);
+        $defaults = ['sold', 'dom', 'inventory'];
+        $card['credit'] = !empty($d['town'])
+            ? "Source: Aspen/Glenwood Springs MLS Inc. Local Market Update, {$d['town']}, {$w['month']}. Report © {$yr} ShowingTime Plus, LLC."
+            : "Source: Colorado Association of REALTORS® Local Market Update, {$d['county']}, {$w['month']}. Report © {$yr} ShowingTime Plus, LLC.";
     }
-    $card['credit'] = !empty($d['town'])
-        ? "Source: Aspen/Glenwood Springs MLS Inc. Local Market Update, {$d['town']}, {$month}. Report © {$yr} ShowingTime Plus, LLC."
-        : "Source: Colorado Association of REALTORS® Local Market Update, {$d['county']}, {$month}. Report © {$yr} ShowingTime Plus, LLC.";
+    $keys = market_pick_stats($pool, $want, $defaults);
+    $card['stat_keys'] = $keys;
+    $card['pool_keys'] = array_keys($pool);
+    $card['stats'] = array_map(fn($k) => $pool[$k], $keys);
     return $card;
+}
+
+/** The catalog keys a card offers for a property type (the builder disables the rest); [] when the card has no figures. */
+function market_card_stats_available(array $data, string $key, string $pt): array {
+    $card = market_card_model($data, $key, ['ptype' => $pt]);
+    return $card ? $card['pool_keys'] : [];
 }
 
 /** "market-snapshot-pitkin-sep-2026.png" (a story adds -story, condos add -condos). */

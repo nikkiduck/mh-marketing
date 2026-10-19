@@ -110,11 +110,17 @@ report and in the model's `credit` field, which is not drawn). A thin
 place (under 10 sales in the month) shows year to date throughout.
 
 Choices on the builder: the location (a dropdown grouped by board), the month,
-Leads with (single-family or townhomes & condos), Post 4:5 (1080 x 1350)
-or Story 9:16 (1080 x 1920), Dark or Light, the watermark (faint, .08 on
-dark, .05 on light), the logo's place (upper right on the eyebrow row, or
-lower left, where the type steps down to 0.9 to make room), and a
-background photo chosen from thumbnails with the location under each
+Leads with (single-family or townhomes & condos), **the three figures
+under the median** (Nikki, 2026-10-18 evening: `market_stat_catalog()`:
+closed sales, avg days on market, median price per sq ft, homes for sale,
+months of supply, % of list price received, average sale price, new
+listings; each location offers what its source publishes, `pool_keys` on
+the model, data-sf / data-tc on its option, the rest greyed out; defaults
+closed sales, avg days on market, homes for sale or price per sq ft;
+`market_pick_stats()` fills a pick the source lacks), Post 4:5 (1080 x
+1350) or Story 9:16 (1080 x 1920), Dark or Light, the watermark (faint,
+.08 on dark, .05 on light), and a background photo chosen from thumbnails
+with the location under each
 (`market_stock_location()` from the file name; `social_stock()` for the
 list; the location's suggested photo is preselected when it is on the
 server; a None tile is the plain ground). The controls are the small,
@@ -122,6 +128,14 @@ quiet kind (Nikki: the dropdowns were huge). The PNG is made by the
 Instagram tool's Chromium call (`social_export_png()`) with fonts, marks
 and the photo read from disk; an agent's download is kept in
 CREATIVES_DIR/social/<intake id>/ like their posts.
+
+**Type (Nikki, 2026-10-18 evening): nothing under 30 px.** The logo is
+always upper right on the eyebrow row (the lower-left option went: the
+space is worth more). The place name is 108 px stepping down by length,
+the month line 40 px (never under 30; a long one wraps, balanced), the
+median's label 36 px and the median itself 160 px stepping down, the rows'
+numbers 88 px with their label (32 px) and comparison (34 px) centred on
+them. The harness's measuring loop also flags any text under 30 px.
 
 **Fit:** the type sizes step down by text length (`market_card_fit()`:
 the title to one line across the full width, the median, the sub line),

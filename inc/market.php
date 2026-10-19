@@ -31,8 +31,9 @@ function market_gate(mysqli $conn): ?array {
 
 /**
  * The builder's choices, checked: market (a card), month (on file), format,
- * theme, ptype, mark (the Instagram posts' watermarks), logo (top | bottom),
- * backdrop ('' or a stock photo name). Everything else is dropped.
+ * theme, ptype, mark (the Instagram posts' watermarks), stats (up to three
+ * catalog keys, the rows under the median), backdrop ('' or a stock photo
+ * name). Everything else is dropped.
  */
 function market_card_options_from_request(array $in): array {
     $month  = market_pick_month((string)($in['month'] ?? ''));
@@ -43,11 +44,11 @@ function market_card_options_from_request(array $in): array {
     $theme  = isset(market_card_themes()[(string)($in['theme'] ?? '')]) ? (string)$in['theme'] : 'dark';
     $ptype  = (string)($in['ptype'] ?? 'SF') === 'TC' ? 'TC' : 'SF';
     $mark   = isset(social_marks()[(string)($in['mark'] ?? '')]) ? (string)$in['mark'] : 'triangle';
-    $logo   = in_array((string)($in['logo'] ?? ''), ['top', 'bottom'], true) ? (string)$in['logo'] : 'top';
+    $stats  = array_values(array_slice(array_filter(array_map('strval', (array)($in['stats'] ?? [])), fn($k) => isset(market_stat_catalog()[$k])), 0, 3));   // the three rows, from the catalog
     $bd     = (string)($in['backdrop'] ?? '');
     $backdrop = ($bd !== '' && preg_match('/^[a-z0-9-]+$/', $bd) && isset(social_stock()[$bd])) ? $bd : '';
     return ['market' => $market, 'month' => $month, 'format' => $format, 'theme' => $theme,
-            'ptype' => $ptype, 'mark' => $mark, 'logo' => $logo, 'backdrop' => $backdrop];
+            'ptype' => $ptype, 'mark' => $mark, 'stats' => $stats, 'backdrop' => $backdrop];
 }
 
 /** The stock photo's URL for the preview, or its file on disk for the export (Chromium has no session). */
@@ -71,9 +72,9 @@ function market_card_html(array $o, bool $export = false): string|array {
     $data = market_load($o['month']);
     if (!$data) return 'The data for ' . market_month_label($o['month']) . ' could not be read.';
     market_attach_feed($data);
-    $card = market_card_model($data, $o['market'], ['ptype' => $o['ptype']]);
+    $card = market_card_model($data, $o['market'], ['ptype' => $o['ptype'], 'stats' => $o['stats'] ?? []]);
     if (!$card) return (market_cards($data)[$o['market']]['title'] ?? $o['market']) . ' has no figures for ' . market_month_label($o['month']) . '.';
-    $html = market_card_render($card, ['format' => $o['format'], 'theme' => $o['theme'], 'mark' => $o['mark'], 'logo' => $o['logo'],
+    $html = market_card_render($card, ['format' => $o['format'], 'theme' => $o['theme'], 'mark' => $o['mark'],
                                        'backdrop' => market_backdrop_src($o['backdrop'], $export)], null, $export);
     return ['html' => $html, 'card' => $card];
 }

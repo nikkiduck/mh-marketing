@@ -10,9 +10,12 @@
  * name => caption; empty on a Mac, where the photos are not on disk),
  * $board_names (market id => name, the picker's groups). $market is a card
  * key (market_card_key() turns the report's market ids into one). The places
- * are a dropdown grouped by board (21 of them since the one-place-per-card
- * redesign of 2026-10-18); the background photos are thumbnails with the
- * location under each (market_stock_location()), None first.
+ * are a dropdown grouped by board (the counties, the towns, Denver Metro);
+ * three Figures pickers choose the rows under the median from
+ * market_stat_catalog(), each location greying out what its source lacks
+ * (data-sf / data-tc on its option); the background photos are thumbnails
+ * with the location under each (market_stock_location()), None first. The
+ * logo is always upper right (the lower-left option went 2026-10-18).
  *
  * Like the Instagram tool: the form on the left, a live preview on the right
  * (an iframe whose srcdoc is what portal/market_render.php returns for the
@@ -27,12 +30,21 @@ $market = market_card_key($market, $data ?? []);
 $stock_thumb = $stock_thumb ?? fn(string $name) => social_stock_url($name, 400);   // the harness points this at a local picture
 $boards = (array)($board_names ?? []);
 $suggest = [];   // market => its suggested backdrop, when that photo is on the server
+$catalog = market_stat_catalog();
+$avail = [];     // card key => ['SF' => keys offered, 'TC' => keys offered], for the pickers
+foreach ($defs as $k => $d) $avail[$k] = ['SF' => market_card_stats_available($data ?? [], $k, 'SF'), 'TC' => market_card_stats_available($data ?? [], $k, 'TC')];
+$defaults = fn(array $keys) => array_values(array_filter(['sold', 'dom', in_array('inventory', $keys, true) ? 'inventory' : 'ppsf'], fn($x) => in_array($x, $keys, true)));
 foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']])) $suggest[$k] = $d['photo'];
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= $v('assets/css/social.css') ?>">
 <style>
   .sp-kind:first-of-type { margin-top: 0; }
   .sp-form .sp-field.sp-kind { margin-bottom: 18px; }   /* room under the Location dropdown before Leads with (Nikki, 2026-10-18) */
+  .mp-rows { display: grid; grid-template-columns: 1fr; gap: 10px; }   /* stacked: the form column is never wide enough for three */
+  .sp-form .mp-rows .sp-field select { font-size: 15px; padding: 8px 34px 8px 12px; max-width: 340px; appearance: none; -webkit-appearance: none;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a6d36' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center; }
+  .sp-form .mp-rows .sp-field { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6f6857); }
+  .mp-rows option:disabled { color: #b5ad9e; }
   .sp-form .sp-field.sp-kind select { font-size: 15px; padding: 8px 34px 8px 12px; max-width: 340px; width: 100%; appearance: none; -webkit-appearance: none;
       background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a6d36' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center; }
   .sp-form .sp-field.sp-kind { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6f6857); }
@@ -62,7 +74,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
             foreach ($groups as $mk => $cards): ?>
             <optgroup label="<?= $e($boards[$mk] ?? $mk) ?>">
               <?php foreach ($cards as $k => $d): ?>
-              <option value="<?= $e($k) ?>"<?= $k === $market ? ' selected' : '' ?> data-suggest="<?= $e($suggest[$k] ?? '') ?>"><?= $e($d['title']) ?></option>
+              <option value="<?= $e($k) ?>"<?= $k === $market ? ' selected' : '' ?> data-suggest="<?= $e($suggest[$k] ?? '') ?>" data-sf="<?= $e(implode(',', $avail[$k]['SF'])) ?>" data-tc="<?= $e(implode(',', $avail[$k]['TC'])) ?>"><?= $e($d['title']) ?></option>
               <?php endforeach; ?>
             </optgroup>
             <?php endforeach; ?>
@@ -87,7 +99,23 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
       </section>
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span>2</span>Look</h2>
+        <h2 class="sp-step-h"><span>2</span>Figures</h2>
+        <p class="sp-hint">The median sale price leads every card. Choose the three figures under it; a location offers the ones its source publishes.</p>
+        <div class="mp-rows">
+          <?php $start = $defaults($avail[$market]['SF'] ?? []); foreach ([0, 1, 2] as $i): ?>
+          <label class="sp-field">Row <?= $i + 1 ?>
+            <select name="stats[]" class="mp-stat">
+              <?php foreach ($catalog as $k => $name): ?>
+              <option value="<?= $e($k) ?>"<?= ($start[$i] ?? '') === $k ? ' selected' : '' ?>><?= $e($name) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+          <?php endforeach; ?>
+        </div>
+      </section>
+
+      <section class="sp-step">
+        <h2 class="sp-step-h"><span>3</span>Look</h2>
         <div class="sp-look">
           <span class="sp-look-l">Size</span>
           <?php foreach (market_card_formats() as $k => $t): ?>
@@ -105,11 +133,6 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
           <?php foreach (social_marks() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="mark" value="<?= $e($k) ?>"<?= $k === 'triangle' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
-        </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Mont Haus logo</span>
-          <label class="sp-pillopt"><input type="radio" name="logo" value="top" checked><span>Upper right</span></label>
-          <label class="sp-pillopt"><input type="radio" name="logo" value="bottom"><span>Lower left</span></label>
         </div>
         <div class="sp-look"><span class="sp-look-l">Background photo</span></div>
         <div class="mp-photos" id="mpPhotos">
@@ -163,6 +186,25 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
     stage.style.height = Math.round(H * w / 1080) + 'px';
     stage.classList.toggle('story', H === 1920);
   }
+  // The figures a location offers (data-sf / data-tc on its option): the rest are greyed out, and a
+  // pick that is not offered falls back to the defaults (closed sales, days on market, homes for sale
+  // or price per sq ft). Runs on load and whenever the location or Leads with changes.
+  function syncStats() {
+    const opt = form.querySelector('#mpMarket option:checked'); if (!opt) return;
+    const pt = f('ptype').value === 'TC' ? 'tc' : 'sf';
+    const offered = (opt.dataset[pt] || '').split(',').filter(Boolean);
+    const defaults = ['sold', 'dom', offered.includes('inventory') ? 'inventory' : 'ppsf'].filter(k => offered.includes(k));
+    const picks = [...form.querySelectorAll('select.mp-stat')];
+    const used = [];
+    picks.forEach((sel, i) => {
+      [...sel.options].forEach(o => { o.disabled = !offered.includes(o.value); });
+      if (!offered.includes(sel.value) || used.includes(sel.value)) {
+        const next = [defaults[i]].concat(defaults, offered).find(k => k && offered.includes(k) && !used.includes(k));
+        if (next) sel.value = next;
+      }
+      used.push(sel.value);
+    });
+  }
   // The suggested photo follows the location until the person picks one themselves.
   function suggestBackdrop() {
     if (backdropTouched) return;
@@ -174,12 +216,14 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'backdrop') backdropTouched = true;
+    if (n === 'market' || n === 'ptype') syncStats();
     if (n === 'market') suggestBackdrop();
     if (n === 'format') scale();
     update();
   });
   form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), 10000); });
   new ResizeObserver(scale).observe(stage); scale();
+  syncStats();
   render();
 })();
 </script>
