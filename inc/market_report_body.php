@@ -114,6 +114,31 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
         </table>
       </div>
     </div>
+    <div class="mr-card" id="mr-mk-feed-card" hidden>
+      <div>
+        <h3 class="mr-h3">Town by town, from the MLS feed</h3>
+        <p class="mr-note">Closed sales as the board reports them to Mont Haus, for the towns in our Communities list. A town with fewer than ten sales in the month is better read by its year-to-date columns. <span id="mr-mk-feed-dom"></span></p>
+      </div>
+      <div class="mr-tablewrap">
+        <table class="mr-table" id="mr-mk-feed">
+          <thead><tr>
+            <th class="l">Town</th>
+            <th>Closed</th>
+            <th>vs <?= $e($boot['ly_short']) ?></th>
+            <th>Median</th>
+            <th>vs <?= $e($boot['ly_short']) ?></th>
+            <th>$ / sq ft</th>
+            <th>Days on market</th>
+            <th>Closed YTD</th>
+            <th>Median YTD</th>
+            <th>YTD vs <?= $e($boot['ly_year']) ?></th>
+            <th>For sale</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <p class="mr-note" id="mr-mk-feed-note"></p>
+    </div>
     <div class="mr-card">
       <h3 class="mr-h3">Source</h3>
       <div class="mr-credits" id="mr-mk-credit"></div>

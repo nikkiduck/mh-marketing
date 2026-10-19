@@ -37,6 +37,8 @@
  * changes are recomputed from this year and last year, one decimal, a
  * trailing .0 dropped (+30%, −4.3%); "% of list" changes are points.
  */
+require_once __DIR__ . '/market_feed.php';   // town figures from our own feed (standalone too)
+
 const MARKET_DATA_DIR = __DIR__ . '/market_data';
 
 // ── Months and loading ───────────────────────────────────────────────────────
@@ -188,6 +190,8 @@ function market_boot(array $data, array $urls): array {
         'trend'      => $data['county_trend'],
         'towns'      => $data['towns'],
         'front'      => $data['front_range'],
+        'feed_towns' => array_values((array)($data['towns_feed'] ?? [])),   // the Communities towns from our own feed (inc/market_feed.php)
+        'feed_note'  => (string)($data['feed_note'] ?? ''),
     ];
 }
 
@@ -251,9 +255,16 @@ function market_stock_location(string $name, string $caption): string {
     $first = trim(explode(',', $caption)[0]);
     return $first !== '' ? $first : $name;
 }
+/** Every card for a month: the static defs plus the feed towns (market_feed_card_defs(); none until market_attach_feed() ran). */
+function market_cards(array $data): array {
+    $static = market_card_defs();
+    $covered = array_values(array_filter(array_map(fn($d) => $d['town'] ?? null, $static)));
+    return $static + market_feed_card_defs($data, $covered);
+}
+
 /** The card key for a request: a card key as is, a market id (the report's links) to its first card, else the first card. */
-function market_card_key(string $want): string {
-    $defs = market_card_defs();
+function market_card_key(string $want, array $data = []): string {
+    $defs = $data ? market_cards($data) : market_card_defs();
     if (isset($defs[$want])) return $want;
     foreach ($defs as $k => $d) if ($d['market'] === $want) return $k;
     return array_key_first($defs);
@@ -306,7 +317,7 @@ function market_ptype_words(string $pt): string { return $pt === 'TC' ? 'Townhom
  *  'stats' => [[label, value, note] x3], 'credit' (kept for the record, not drawn)]
  */
 function market_card_model(array $data, string $key, array $opts = []): ?array {
-    $defs = market_card_defs();
+    $defs = market_cards($data);
     if (!isset($defs[$key])) return null;
     $d  = $defs[$key];
     $pt = ($opts['ptype'] ?? 'SF') === 'TC' ? 'TC' : 'SF';
@@ -322,6 +333,16 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
         $t = market_change_text($f);
         return $t === 'Even' ? "Even with {$when}" : "{$t} vs {$when}";
     };
+
+    if (!empty($d['feed'])) {   // a town from our own feed (inc/market_feed.php)
+        $town = $data['towns_feed'][$d['feed']] ?? null;
+        if (!$town) return null;
+        $body = market_feed_card_body($town, $pt, ['month' => $month, 'lyLab' => $lyLab, 'lyMon' => $lyMon, 'lyYr' => $lyYr, 'monthName' => market_month_name($m)]);
+        if (!$body) return null;
+        $card['sub'] = "{$month} · {$d['place']} · " . market_ptype_words($pt);
+        $card['credit'] = 'Source: ' . $town['market'] . ' listing data, compiled by Mont Haus International Realty.';
+        return $body + $card;
+    }
 
     if (!empty($d['metro'])) {
         $f = market_front_row($data, $d['metro']);

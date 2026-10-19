@@ -12,6 +12,7 @@ require_once __DIR__ . '/../inc/market.php';
 $ctx   = portal_context($conn);
 $month = market_pick_month((string)($_GET['m'] ?? ''));
 $data  = $month !== '' ? market_load($month) : null;
+if ($data) market_attach_feed($data);   // the Communities towns from our own feed
 
 portal_header($ctx, 'Market Report', 'market');
 if (!$data) {

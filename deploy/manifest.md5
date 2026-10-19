@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-18 20:20 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-18 20:34 from git HEAD in the Mont Haus Master folder.
 20a0b03146f151869668b3ef7834b245  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -8,7 +8,7 @@ fb22bcd5bb01d543d60a4fdaa8f4caa5  assets/css/market.css
 d7463753bdff12091bdb5f3fafb2ffb1  assets/css/mh-theme.css
 3c5b7bb6c8f0bb7f9f8a10fbda5efba4  assets/css/portal.css
 1320a735c05d43579326161794cc3373  assets/css/social.css
-6f73b8d9cf8e3d620ab4be2097d45895  assets/js/market-report.js
+fc21c7628d6d4e564b6502274aeb56fc  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 a0a741fb23901617405f30fee4a12bbe  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
@@ -51,11 +51,12 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 06406477f9bc1bf6dc3ceaf577ba202d  inc/hs_template.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
 c4459738ad9b4f3a2251112ac85641bb  inc/mailer.php
-025b6ab4eb41dde23b88b77e30635305  inc/market.php
+78420f1d25093056c0dae6340a20cb6a  inc/market.php
 4155aa6c5e699e4ac9125a9f99e6ad11  inc/market_card_render.php
-628908b11e89f9b6f12d74603e11ec15  inc/market_data.php
-5715242bb3461193689b8beb73348a43  inc/market_post_body.php
-90713bb7b04dc28612541ea97c760c9e  inc/market_report_body.php
+3d04b58d87ae1c4f68f852b630bf0b1b  inc/market_data.php
+619ea2ae6728a1d525a4c216e704709c  inc/market_feed.php
+015f2920b980fd9277788cb9bd6ccb0e  inc/market_post_body.php
+67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php
 ade3d6ec54277b3f65ce8213099b7ed6  inc/portal.php
@@ -73,8 +74,8 @@ b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 8bce1a103a42a7e017e711547c910e10  leadership.php
 0ff64eafb38cc99db2752ac079f8bdc1  login.php
 bb73a2b0b1ccb8ca4b160bb7a05ff140  logout.php
-b2012742223c7fc0e3e0cabd02ffd9c2  market_report.php
-f1e9527f2623ff7fec8944642c3cca15  market_snapshot.php
+5d0f0f7a01bd7f3311aa57519cfc4820  market_report.php
+4f68eab3f774542a1f7f1541d9027834  market_snapshot.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
 f3327ec6854ed5362ede027a9b198064  oauth_start.php
 210a1c8334cfa292107df4eac8d2fa85  order_split.php
@@ -95,9 +96,9 @@ db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
 a853bc27dca480d18141befba71ca74a  portal/index.php
-4d32d5904fba7bba1a22b4d2b71495ff  portal/market.php
+3cfd20db36fa046a3e9287837d53bc1c  portal/market.php
 55bd10a15a5f839e4a866fc959eaa856  portal/market_export.php
-57951e3e2ada428d211a3b239cc36609  portal/market_post.php
+adae9e75e493e7eedbe4da96fc13aab8  portal/market_post.php
 269d7d9b345d1cad5c3de74b048ca8e4  portal/market_render.php
 2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
 e7c12aff8a3eacf12427e61920f621a4  portal/orders.php

@@ -12,6 +12,7 @@ require_role('admin');
 
 $month = market_pick_month((string)($_GET['m'] ?? ''));
 $data  = $month !== '' ? market_load($month) : null;
+if ($data) market_attach_feed($data);   // the Communities towns from our own feed
 $boot  = $data ? market_boot($data, ['post' => '/market_snapshot.php', 'self' => '/market_report.php']) : null;
 ?>
 <!DOCTYPE html>

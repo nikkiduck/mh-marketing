@@ -25,9 +25,18 @@ if ($month === '') { fwrite(STDERR, "no month on file under inc/market_data\n");
 $data = market_load($month);
 if (!$data) { fwrite(STDERR, "could not load $month\n"); exit(1); }
 echo "Month {$month} (" . market_month_label($month) . ")\n";
+// The feed towns, from a saved site response and the cached registry (MARKET_FEED and MARKET_AREAS point at the files);
+// without them the samples show the CAR cards and tables only.
+$feedFile = (string)getenv('MARKET_FEED'); $areasFile = (string)getenv('MARKET_AREAS');
+if ($feedFile !== '' && is_file($feedFile) && $areasFile !== '' && is_file($areasFile)) {
+    $feed = json_decode((string)file_get_contents($feedFile), true); $reg = json_decode((string)file_get_contents($areasFile), true);
+    $data['towns_feed'] = market_feed_towns((array)$feed, (array)($reg['areas'] ?? []), array_column($data['boards'], 'market'));
+    $data['feed_note'] = (string)($feed['note'] ?? '');
+    echo '  feed towns: ' . count($data['towns_feed']) . ': ' . implode(', ', array_map(fn($t) => $t['label'] . ' (' . $t['market'] . ')', $data['towns_feed'])) . "\n";
+} else { $data['towns_feed'] = []; $data['feed_note'] = ''; }
 
 $files = [];
-foreach (array_keys(market_card_defs()) as $market) {
+foreach (array_keys(market_cards($data)) as $market) {
     foreach (['SF'] as $pt) {
         $card = market_card_model($data, $market, ['ptype' => $pt]);
         if (!$card) { echo "  {$market} {$pt}: no card\n"; continue; }

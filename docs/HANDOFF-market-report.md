@@ -130,6 +130,47 @@ inc/market_card_render.php. tests/render_market_sample.php writes every
 card; a loop in the browser over its output measured all 84 within the
 budget on 2026-10-18. Re-measure after any size change.
 
+## Town figures from our own feed (2026-10-18, late)
+
+The site computes town statistics from the MLS feeds it receives (site
+`docs/HANDOFF-market-stats.md`: `ap_sales`, `sync_sales.php`,
+`api/market_stats.php`, closings back to January 2025, inventory snapshots
+from 2026-11-01). This portal reads them:
+
+- `inc/market.php` `market_feed($month)` fetches
+  `<LISTINGS_FEED_URL dir>/market_stats.php?month=&min=0` with the listings
+  feed token and caches the JSON in `CREATIVES_DIR/market/towns_feed_<month>.json`
+  (six hours for the current report month, a week for older ones, the stale
+  copy when the site does not answer). `market_attach_feed($data)` puts the
+  resolved towns on `$data['towns_feed']`; every page that loads a month
+  calls it. No cron, no new table.
+- `inc/market_feed.php` (standalone) resolves the site's Communities towns
+  (registry `areas`, `mk_areas()`) against the feed: every town of every
+  area, **no minimum** (Nikki: Ridgway with a couple of sales is still
+  worth seeing); a town with no sale all year is left out. The board a
+  town's figure comes from is the one with the most closed sales for that
+  town this year (`market_feed_towns()`), so there is no map to keep;
+  a few spellings are aliased (`market_town_city_keys()`: Old Snowmass is
+  "Snowmass" in the feed, Steamboat Springs also "Steamboat", Greater
+  Denver is "Denver").
+- The report: each market page ends with "Town by town, from the MLS feed"
+  (`drawFeedTowns()`), the board's towns for the chosen class, sorted by
+  year-to-date sales: closed, median, $ per sq ft, days on market, the
+  year-to-date columns, For sale (a dash until a snapshot exists). The
+  note under it carries the site's caveat (IDX data) and the board's
+  days-on-market basis.
+- The cards: the feed towns join the Location list under their board
+  (`market_feed_card_defs()`, keys `feed-<town key>`), except the Roaring
+  Fork towns, which keep their CAR town-report cards. The third row is
+  price per square foot until the town has a month-end snapshot, then
+  homes for sale (`market_feed_card_body()`). Thin months (under 10 sales)
+  show year to date, as everywhere.
+- September 2026 resolved 39 towns on 2026-10-18; 208 card variants
+  measured inside the height budget.
+- Locally: `MARKET_FEED=<saved response> MARKET_AREAS=<boards.json cache>
+  php tests/render_market_sample.php` draws the towns too; without the two
+  files the samples show the CAR cards and tables only.
+
 ## Known quirk, kept on purpose
 
 On a market page the headline names the county with the MOST single-family

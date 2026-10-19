@@ -276,7 +276,35 @@
         tb.appendChild(trr);
       });
     }
+    drawFeedTowns(b);
     const mc = $('#mr-mk-credit'); mc.replaceChildren(); credit(b, mc);
+  }
+
+  // Town by town from our own feed (inc/market_feed.php): the Communities towns this board serves,
+  // for the chosen class; no minimum (Nikki, 2026-10-18). Inventory shows once the site has a snapshot.
+  function drawFeedTowns(b) {
+    const card = $('#mr-mk-feed-card');
+    const cls = state.ptype === 'Single family' ? 'SF' : 'TC';
+    const towns = (B.feed_towns || []).filter((t) => t.market === b.market && t[cls] && ((t[cls].month && t[cls].month.sold) || (t[cls].ytd && t[cls].ytd.sold)));
+    card.hidden = !towns.length;
+    if (!towns.length) return;
+    const tb = $('#mr-mk-feed tbody'); tb.replaceChildren();
+    const bases = {};
+    towns.sort((x, y) => (y[cls].ytd.sold - x[cls].ytd.sold) || x.label.localeCompare(y.label)).forEach((t) => {
+      const p = t[cls], m = p.month || {}, ly = p.ly || {}, ytd = p.ytd || {}, yl = p.ytd_ly || {}, inv = p.inventory;
+      const mc = ch(m.median, ly.median), sc = ch(m.sold, ly.sold), yc = ch(ytd.median, yl.median);
+      if (m.dom_basis) bases[m.dom_basis] = true; else if (ytd.dom_basis) bases[ytd.dom_basis] = true;
+      const tr = h('tr'); tr.dataset.key = t.key;
+      [[t.label, 'l'], [num(m.sold)], [arrow(sc) + signed(sc), dirCls(sc)], [m.sold ? money(m.median) : '–'], [arrow(mc) + signed(mc), dirCls(mc)],
+       [m.price_per_sqft != null ? '$' + num(m.price_per_sqft) : '–'], [m.sold ? num(m.avg_dom) : '–'],
+       [num(ytd.sold)], [money(ytd.median)], [arrow(yc) + signed(yc), dirCls(yc)], [inv && inv.active != null ? num(inv.active) : '–']]
+        .forEach(([s, c]) => tr.appendChild(h('td', c || null, s)));
+      tb.appendChild(tr);
+    });
+    const words = { board: 'as the board counts them', contract: 'on market to contract', close: 'on market to closing (this board sends no contract date)' };
+    const list = Object.keys(bases).map((k) => words[k] || k);
+    $('#mr-mk-feed-dom').textContent = list.length ? 'Days on market: ' + list.join('; ') + '.' : '';
+    $('#mr-mk-feed-note').textContent = (B.feed_note || '').replace(/\s*Days on market:[^.]*\./, '') + ' For sale is the count at the month end, from the first month-end snapshot on.';
   }
 
   function draw() {

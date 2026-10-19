@@ -15,10 +15,12 @@ social_gate();
 
 $months = market_months();
 $month  = market_pick_month((string)($_GET['month'] ?? ''));
-$market = market_card_key((string)($_GET['market'] ?? ''));   // a card key, or a market id from the report's links
+$data   = $month !== '' ? market_load($month) : null;
+if ($data) market_attach_feed($data);   // the feed towns join the Location list
+$market = market_card_key((string)($_GET['market'] ?? ''), $data ?? []);   // a card key, or a market id from the report's links
 $stock  = social_stock();
 $board_names = [];   // the picker's groups, from the month's boards.json
-foreach (($month !== '' ? (market_load($month)['boards'] ?? []) : []) as $b) $board_names[(string)$b['market']] = (string)$b['name'];
+foreach (($data['boards'] ?? []) as $b) $board_names[(string)$b['market']] = (string)$b['name'];
 $csrf   = (string)($_SESSION['csrf_token'] ?? '');
 $render_url = portal_url($ctx, '/portal/market_render.php');
 $export_url = portal_url($ctx, '/portal/market_export.php');

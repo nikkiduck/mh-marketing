@@ -22,8 +22,8 @@
  */
 $v = fn(string $f) => (int)@filemtime(__DIR__ . '/../' . $f);
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
-$defs = market_card_defs();
-$market = market_card_key($market);
+$defs = market_cards($data ?? []);   // the static cards plus the feed towns of the month
+$market = market_card_key($market, $data ?? []);
 $stock_thumb = $stock_thumb ?? fn(string $name) => social_stock_url($name, 400);   // the harness points this at a local picture
 $boards = (array)($board_names ?? []);
 $suggest = [];   // market => its suggested backdrop, when that photo is on the server
