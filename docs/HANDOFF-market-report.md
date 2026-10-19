@@ -40,7 +40,7 @@ the portal needs.
 | file | rows | what |
 |---|---|---|
 | `meta.json` | | `month`, `current_as_of` (CAR's "current as of" date, shown under the report), `sources` (the dataset descriptions), notes |
-| `boards.json` | 7 | `{market, order, name, mls, mls_full, areas, credit, county_credit, source_url}`; the credit lines carry the month and the "current as of" date |
+| `boards.json` | 8 | `{market, order, name, mls, mls_full, areas, credit, county_credit, source_url}`; the credit lines carry the month and the "current as of" date. **Routt County is its own row, market `routt`** (Nikki, 2026-10-18: Summit and Steamboat apart, as the site's Communities have them); it is still Altitude MLS data, and the Routt rows in county.json and county_trend.json carry `market: "routt"`. The artifact's files have one `altitude` row for both: split it when copying a new month. The names follow the site's Communities (Roaring Fork Valley, Vail Valley, Summit County, Routt County). |
 | `county.json` | 24 | 12 counties x 2 property types; key `"<County>|SF"` or `"|TC"`; `X, X_ly, ytd_X, ytd_X_ly` for new_listings, sold, median, average, pct_of_list, days_on_market; `inventory, inventory_ly, months_supply, months_supply_ly` |
 | `county_trend.json` | 576 | 12 counties x 2 types x 24 months, `{county, market, ptype, month, sold, new_listings, median, inventory}`, as CAR FIRST published each month |
 | `towns.json` | 14 | the Aspen Glenwood MLS town reports, county.json's fields plus `town` |
@@ -99,7 +99,8 @@ every Aspen Glenwood MLS town in towns.json, and Denver Metro from
 front_range.json, 21 in all (`market_card_defs()`, keyed by a slug such as
 `pitkin`, `town-glenwood`, `denver-metro`; `market_card_key()` turns the
 report's market ids into a market's first card). Each card: a short
-eyebrow, the place as the title, the month, place and property type on one
+eyebrow, the county (or town) as the title with the site's Communities
+towns under it (Routt County over Steamboat Springs, Nikki 2026-10-18), the month, place and property type on one
 line, the median sale price large with its change, then three rows: closed
 sales, days on market, homes for sale (Denver Metro: closed sales, median
 days in MLS, active listings). Months of supply is in the report, not on
@@ -108,14 +109,16 @@ no source block (Nikki: removed entirely; the board's credit stays in the
 report and in the model's `credit` field, which is not drawn). A thin
 place (under 10 sales in the month) shows year to date throughout.
 
-Choices on the builder: the place (a dropdown grouped by board), the month,
+Choices on the builder: the location (a dropdown grouped by board), the month,
 Leads with (single-family or townhomes & condos), Post 4:5 (1080 x 1350)
 or Story 9:16 (1080 x 1920), Dark or Light, the watermark (faint, .08 on
 dark, .05 on light), the logo's place (upper right on the eyebrow row, or
-lower left, where the type steps down to 0.9 to make room), and a stock
-photo behind the figures under a shade that leaves the top of the picture
-showing (`social_stock()`; the place's suggested photo is preselected when
-it is on the server; "None" is the plain ground). The PNG is made by the
+lower left, where the type steps down to 0.9 to make room), and a
+background photo chosen from thumbnails with the location under each
+(`market_stock_location()` from the file name; `social_stock()` for the
+list; the location's suggested photo is preselected when it is on the
+server; a None tile is the plain ground). The controls are the small,
+quiet kind (Nikki: the dropdowns were huge). The PNG is made by the
 Instagram tool's Chromium call (`social_export_png()`) with fonts, marks
 and the photo read from disk; an agent's download is kept in
 CREATIVES_DIR/social/<intake id>/ like their posts.

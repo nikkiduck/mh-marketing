@@ -421,7 +421,7 @@
     },
     {
         "key": "Routt|SF",
-        "market": "altitude",
+        "market": "routt",
         "mls": "Altitude MLS",
         "county": "Routt County",
         "ptype": "Single family",
@@ -456,7 +456,7 @@
     },
     {
         "key": "Routt|TC",
-        "market": "altitude",
+        "market": "routt",
         "mls": "Altitude MLS",
         "county": "Routt County",
         "ptype": "Townhouse-condo",

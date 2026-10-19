@@ -3841,7 +3841,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2024-10",
         "sold": 35,
@@ -3851,7 +3851,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2024-11",
         "sold": 23,
@@ -3861,7 +3861,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2024-12",
         "sold": 17,
@@ -3871,7 +3871,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-01",
         "sold": 7,
@@ -3881,7 +3881,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-02",
         "sold": 6,
@@ -3891,7 +3891,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-03",
         "sold": 20,
@@ -3901,7 +3901,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-04",
         "sold": 17,
@@ -3911,7 +3911,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-05",
         "sold": 17,
@@ -3921,7 +3921,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-06",
         "sold": 24,
@@ -3931,7 +3931,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-07",
         "sold": 27,
@@ -3941,7 +3941,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-08",
         "sold": 27,
@@ -3951,7 +3951,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-09",
         "sold": 28,
@@ -3961,7 +3961,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-10",
         "sold": 36,
@@ -3971,7 +3971,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-11",
         "sold": 25,
@@ -3981,7 +3981,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2025-12",
         "sold": 28,
@@ -3991,7 +3991,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-01",
         "sold": 10,
@@ -4001,7 +4001,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-02",
         "sold": 18,
@@ -4011,7 +4011,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-03",
         "sold": 8,
@@ -4021,7 +4021,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-04",
         "sold": 7,
@@ -4031,7 +4031,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-05",
         "sold": 21,
@@ -4041,7 +4041,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-06",
         "sold": 24,
@@ -4051,7 +4051,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-07",
         "sold": 21,
@@ -4061,7 +4061,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-08",
         "sold": 34,
@@ -4071,7 +4071,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Single family",
         "month": "2026-09",
         "sold": 29,
@@ -4081,7 +4081,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2024-10",
         "sold": 33,
@@ -4091,7 +4091,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2024-11",
         "sold": 28,
@@ -4101,7 +4101,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2024-12",
         "sold": 30,
@@ -4111,7 +4111,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-01",
         "sold": 25,
@@ -4121,7 +4121,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-02",
         "sold": 24,
@@ -4131,7 +4131,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-03",
         "sold": 33,
@@ -4141,7 +4141,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-04",
         "sold": 33,
@@ -4151,7 +4151,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-05",
         "sold": 26,
@@ -4161,7 +4161,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-06",
         "sold": 19,
@@ -4171,7 +4171,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-07",
         "sold": 27,
@@ -4181,7 +4181,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-08",
         "sold": 33,
@@ -4191,7 +4191,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-09",
         "sold": 40,
@@ -4201,7 +4201,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-10",
         "sold": 41,
@@ -4211,7 +4211,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-11",
         "sold": 29,
@@ -4221,7 +4221,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2025-12",
         "sold": 37,
@@ -4231,7 +4231,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-01",
         "sold": 18,
@@ -4241,7 +4241,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-02",
         "sold": 25,
@@ -4251,7 +4251,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-03",
         "sold": 34,
@@ -4261,7 +4261,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-04",
         "sold": 40,
@@ -4271,7 +4271,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-05",
         "sold": 28,
@@ -4281,7 +4281,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-06",
         "sold": 30,
@@ -4291,7 +4291,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-07",
         "sold": 40,
@@ -4301,7 +4301,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-08",
         "sold": 29,
@@ -4311,7 +4311,7 @@
     },
     {
         "county": "Routt County",
-        "market": "altitude",
+        "market": "routt",
         "ptype": "Townhouse-condo",
         "month": "2026-09",
         "sold": 39,

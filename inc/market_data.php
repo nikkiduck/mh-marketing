@@ -204,37 +204,53 @@ function market_boot(array $data, array $urls): array {
  */
 function market_card_defs(): array {
     return [
-        // Aspen Glenwood MLS
-        'pitkin'          => ['title' => 'Aspen & Snowmass',     'place' => 'Pitkin County',   'county' => 'Pitkin County',     'market' => 'aspen',      'photo' => 'aspen-aerial-fall-1110909378'],
-        'garfield'        => ['title' => 'Garfield County',      'place' => 'Glenwood Springs, Carbondale', 'county' => 'Garfield County', 'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
-        'town-aspen'      => ['title' => 'Aspen',                'place' => 'Town report',     'town' => 'Aspen',               'market' => 'aspen',      'photo' => 'aspen-buttermilk-fall-snow-542481942'],
-        'town-snowmass'   => ['title' => 'Snowmass Village',     'place' => 'Town report',     'town' => 'Snowmass Village',    'market' => 'aspen',      'photo' => 'snowmass-ski-slopes-winter-panorama-410667845'],
-        'town-woody-creek'=> ['title' => 'Woody Creek',          'place' => 'Town report',     'town' => 'Woody Creek',         'market' => 'aspen',      'photo' => 'aspen-aerial-fall-1110909378'],
-        'town-old-snowmass' => ['title' => 'Old Snowmass',       'place' => 'Town report',     'town' => 'Old Snowmass',        'market' => 'aspen',      'photo' => 'snowmass-ski-slopes-winter-panorama-410667845'],
-        'town-basalt'     => ['title' => 'Basalt',               'place' => 'Town report',     'town' => 'Basalt',              'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
-        'town-missouri-heights' => ['title' => 'Missouri Heights', 'place' => 'Town report',   'town' => 'Missouri Heights',    'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
-        'town-carbondale' => ['title' => 'Carbondale',           'place' => 'Town report',     'town' => 'Carbondale',          'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
-        'town-glenwood'   => ['title' => 'Glenwood Springs',     'place' => 'Town report',     'town' => 'Glenwood Springs',    'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
+        // Aspen Glenwood MLS: the two counties, then the eight town reports (the site's Roaring Fork Valley)
+        'pitkin'          => ['title' => 'Pitkin County',    'place' => 'Aspen, Snowmass Village',          'county' => 'Pitkin County',     'market' => 'aspen',      'photo' => 'aspen-aerial-fall-1110909378'],
+        'garfield'        => ['title' => 'Garfield County',  'place' => 'Glenwood Springs, Carbondale',     'county' => 'Garfield County',   'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-aspen'      => ['title' => 'Aspen',            'place' => 'Roaring Fork Valley', 'town' => 'Aspen',            'market' => 'aspen', 'photo' => 'aspen-buttermilk-fall-snow-542481942'],
+        'town-snowmass'   => ['title' => 'Snowmass Village', 'place' => 'Roaring Fork Valley', 'town' => 'Snowmass Village', 'market' => 'aspen', 'photo' => 'snowmass-ski-slopes-winter-panorama-410667845'],
+        'town-woody-creek'=> ['title' => 'Woody Creek',      'place' => 'Roaring Fork Valley', 'town' => 'Woody Creek',      'market' => 'aspen', 'photo' => 'aspen-aerial-fall-1110909378'],
+        'town-old-snowmass' => ['title' => 'Old Snowmass',   'place' => 'Roaring Fork Valley', 'town' => 'Old Snowmass',     'market' => 'aspen', 'photo' => 'snowmass-ski-slopes-winter-panorama-410667845'],
+        'town-basalt'     => ['title' => 'Basalt',           'place' => 'Roaring Fork Valley', 'town' => 'Basalt',           'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-missouri-heights' => ['title' => 'Missouri Heights', 'place' => 'Roaring Fork Valley', 'town' => 'Missouri Heights', 'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-carbondale' => ['title' => 'Carbondale',       'place' => 'Roaring Fork Valley', 'town' => 'Carbondale',       'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-glenwood'   => ['title' => 'Glenwood Springs', 'place' => 'Roaring Fork Valley', 'town' => 'Glenwood Springs', 'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
         // Vail MLS
-        'eagle'           => ['title' => 'Vail Valley',          'place' => 'Eagle County',    'county' => 'Eagle County',      'market' => 'vail',       'photo' => 'vail-aspens-fall-1746156502'],
+        'eagle'           => ['title' => 'Eagle County',     'place' => 'Vail, Beaver Creek, Avon, Edwards', 'county' => 'Eagle County',     'market' => 'vail',       'photo' => 'vail-aspens-fall-1746156502'],
         // Telluride MLS
-        'san-miguel'      => ['title' => 'Telluride',            'place' => 'San Miguel County', 'county' => 'San Miguel County', 'market' => 'telluride', 'photo' => 'telluride-aerial-main-street-fall-1111462754'],
+        'san-miguel'      => ['title' => 'San Miguel County', 'place' => 'Telluride, Mountain Village',      'county' => 'San Miguel County', 'market' => 'telluride',  'photo' => 'telluride-aerial-main-street-fall-1111462754'],
         // CREN
-        'montrose'        => ['title' => 'Montrose',             'place' => 'Montrose County', 'county' => 'Montrose County',   'market' => 'cren',       'photo' => 'ridgway-mount-sneffels-summer-198784289'],
-        'ouray'           => ['title' => 'Ridgway & Ouray',      'place' => 'Ouray County',    'county' => 'Ouray County',      'market' => 'cren',       'photo' => 'ridgway-mount-sneffels-fall-198784448'],
-        'la-plata'        => ['title' => 'Durango',              'place' => 'La Plata County', 'county' => 'La Plata County',   'market' => 'cren',       'photo' => 'ridgway-san-juans-fall-sunrise-256750697'],
-        // Altitude MLS
-        'summit'          => ['title' => 'Summit County',        'place' => 'Breckenridge, Keystone, Frisco', 'county' => 'Summit County', 'market' => 'altitude', 'photo' => 'breckenridge-town-winter-dusk-382409211'],
-        'routt'           => ['title' => 'Steamboat Springs',    'place' => 'Routt County',    'county' => 'Routt County',      'market' => 'altitude',   'photo' => 'steamboat-ski-resort-winter-503720128'],
+        'montrose'        => ['title' => 'Montrose County',  'place' => 'Montrose',                          'county' => 'Montrose County',   'market' => 'cren',       'photo' => 'ridgway-mount-sneffels-summer-198784289'],
+        'ouray'           => ['title' => 'Ouray County',     'place' => 'Ridgway, Ouray',                    'county' => 'Ouray County',      'market' => 'cren',       'photo' => 'ridgway-mount-sneffels-fall-198784448'],
+        'la-plata'        => ['title' => 'La Plata County',  'place' => 'Durango',                           'county' => 'La Plata County',   'market' => 'cren',       'photo' => 'ridgway-san-juans-fall-sunrise-256750697'],
+        // Altitude MLS: Summit and Routt apart (Nikki, 2026-10-18; the site's Communities split them 2026-10-08)
+        'summit'          => ['title' => 'Summit County',    'place' => 'Breckenridge, Keystone, Frisco',    'county' => 'Summit County',     'market' => 'altitude',   'photo' => 'breckenridge-town-winter-dusk-382409211'],
+        'routt'           => ['title' => 'Routt County',     'place' => 'Steamboat Springs',                 'county' => 'Routt County',      'market' => 'routt',      'photo' => 'steamboat-ski-resort-winter-503720128'],
         // REcolorado
-        'denver-metro'    => ['title' => 'Denver Metro',         'place' => '11-county metro · All residential', 'metro' => 'recolorado', 'market' => 'recolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
-        'denver'          => ['title' => 'Denver',               'place' => 'Denver County',   'county' => 'Denver County',     'market' => 'recolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
+        'denver-metro'    => ['title' => 'Denver Metro',     'place' => '11-county metro · All residential', 'metro' => 'recolorado',         'market' => 'recolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
+        'denver'          => ['title' => 'Denver County',    'place' => 'Denver',                            'county' => 'Denver County',     'market' => 'recolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
         // elevateMLS
-        'el-paso'         => ['title' => 'Colorado Springs',     'place' => 'El Paso County',  'county' => 'El Paso County',    'market' => 'elevate',    'photo' => null],
-        'teller'          => ['title' => 'Teller County',        'place' => 'Woodland Park, Cripple Creek', 'county' => 'Teller County', 'market' => 'elevate', 'photo' => null],
+        'el-paso'         => ['title' => 'El Paso County',   'place' => 'Colorado Springs',                  'county' => 'El Paso County',    'market' => 'elevate',    'photo' => null],
+        'teller'          => ['title' => 'Teller County',    'place' => 'Woodland Park, Cripple Creek',      'county' => 'Teller County',     'market' => 'elevate',    'photo' => null],
     ];
 }
 
+/**
+ * The location under a stock photo's thumbnail on the builder (Nikki,
+ * 2026-10-18: thumbnails with the location, not a dropdown of captions):
+ * from the file name's first words; the caption's first phrase otherwise.
+ */
+function market_stock_location(string $name, string $caption): string {
+    static $map = ['aspen-snowmass' => 'Aspen Snowmass', 'aspen' => 'Aspen', 'snowmass' => 'Snowmass', 'telluride' => 'Telluride', 'vail' => 'Vail',
+        'beaver-creek' => 'Beaver Creek', 'steamboat' => 'Steamboat Springs', 'breckenridge' => 'Breckenridge', 'crested-butte' => 'Crested Butte',
+        'ridgway' => 'Ridgway', 'last-dollar-road' => 'Ridgway to Telluride', 'denver' => 'Denver', 'red-rocks' => 'Red Rocks', 'golden' => 'Golden',
+        'boulder' => 'Boulder', 'fort-collins' => 'Fort Collins', 'colorado' => 'Colorado', 'mountain-highway' => 'Colorado',
+        'smoky-mountains' => 'Smoky Mountains', 'sawtooth' => 'Sawtooth Mountains', 'athabasca' => 'Alberta', 'swiss-alps' => 'Swiss Alps',
+        'zermatt' => 'Zermatt', 'bavaria' => 'Bavaria', 'gondola' => 'Alpine', 'chairlift' => 'Alpine', 'alpine' => 'Alpine'];
+    foreach ($map as $prefix => $loc) if (str_starts_with($name, $prefix . '-') || $name === $prefix) return $loc;
+    $first = trim(explode(',', $caption)[0]);
+    return $first !== '' ? $first : $name;
+}
 /** The card key for a request: a card key as is, a market id (the report's links) to its first card, else the first card. */
 function market_card_key(string $want): string {
     $defs = market_card_defs();

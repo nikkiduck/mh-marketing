@@ -2320,7 +2320,11 @@ a feature of the Instagram template area "dressed up a little".
   `meta.json`, `boards.json`, `county.json`, `county_trend.json`,
   `towns.json`, `front_range.json` (the artifact's files, `_sep` dropped
   from three names, field names untouched: the JavaScript and the card
-  model read them by name). The newest folder is the report; `?m=YYYY-MM`
+  model read them by name; **Routt County is its own boards.json row,
+  market `routt`, split from the artifact's `altitude` row and renamed in
+  county.json and county_trend.json**: Nikki, 2026-10-18, Summit and
+  Steamboat apart as on the site; the tab names follow the site's
+  Communities). The newest folder is the report; `?m=YYYY-MM`
   an older one (a Month picker appears with two or more). **A monthly
   refresh is a new folder, deployed and committed; no SQL.** September 2026
   is on file (exported 2026-10-18).
@@ -2348,7 +2352,10 @@ a feature of the Instagram template area "dressed up a little".
   version had three layouts (hero, metro, list of two or three
   counties). **Redrawn the same evening (Nikki): one PLACE per card**,
   every county, every Aspen Glenwood town and Denver Metro (21 cards,
-  `market_card_defs()`, a dropdown grouped by board), the median large
+  `market_card_defs()`, a Location dropdown grouped by board; the county
+  is the title with the site's Communities towns under it, Routt County
+  over Steamboat Springs; the background photo is picked from thumbnails
+  with the location under each), the median large
   and three rows under it (closed sales, days on market, homes for sale;
   months of supply stays in the report: Nikki, "keep it simple"), the
   words big enough for a phone; no second-type line and NO

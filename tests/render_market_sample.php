@@ -74,7 +74,8 @@ echo "Wrote " . (count($files) + 2) . " files to {$out}\n";
 require_once dirname(__DIR__) . '/inc/social_render.php';   // social_marks(), standalone
 $render_url = '/__render'; $export_url = '/__render'; $report_url = 'report.html'; $csrf = 'sample';
 $months = $data['months']; $market = 'pitkin'; $board_names = array_column($data['boards'], 'name', 'market');
-$stock = ['social-placeholder' => 'Mont Haus mountains (the placeholder photo; the stock library is on the server)'];
+$stock = array_slice(json_decode((string)file_get_contents(dirname(__DIR__) . '/assets/stock/stock.json'), true) ?: [], 0, 14, true);   // the first 14 names, with the placeholder standing in for every picture
+$stock_thumb = fn(string $n) => '/assets/images/social-placeholder.jpg';
 ob_start();
 include dirname(__DIR__) . '/inc/market_post_body.php';
 $body = ob_get_clean();
