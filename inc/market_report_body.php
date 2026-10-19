@@ -17,7 +17,6 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 <div class="mr" id="mr">
   <div class="mr-top">
     <div class="mr-head">
-      <p class="mr-eyebrow">Mont Haus International Realty · Monthly market report</p>
       <h1 class="mr-title" id="mr-title">Colorado markets, <?= $e($boot['label']) ?></h1>
     </div>
     <div class="mr-topright">
