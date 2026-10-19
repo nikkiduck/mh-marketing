@@ -100,7 +100,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
 
       <section class="sp-step">
         <h2 class="sp-step-h"><span>2</span>Figures</h2>
-        <p class="sp-hint">The median sale price leads every card. Choose the three figures under it; a location offers the ones its source publishes.</p>
+        <p class="sp-hint">The median sale price leads every card. Choose the three figures under it; a location offers the ones its source publishes. Price per sq ft comes from Mont Haus's own MLS feed (IDX data), so it is offered wherever the feed has sales.</p>
         <div class="mp-rows">
           <?php $start = $defaults($avail[$market]['SF'] ?? []); foreach ([0, 1, 2] as $i): ?>
           <label class="sp-field">Row <?= $i + 1 ?>

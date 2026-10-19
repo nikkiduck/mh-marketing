@@ -125,5 +125,6 @@ function market_attach_feed(array &$data): void {
     if (isset($data['towns_feed'])) return;
     $feed = market_feed((string)$data['month']);
     $data['towns_feed'] = $feed ? market_feed_towns($feed, mk_areas(), array_column($data['boards'], 'market')) : [];
+    $data['counties_feed'] = $feed ? market_feed_counties($feed, array_column($data['boards'], 'market')) : [];
     $data['feed_note']  = (string)($feed['note'] ?? '');
 }

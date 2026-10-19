@@ -149,13 +149,24 @@ budget on 2026-10-18 and again on 2026-10-19 after the month line grew
 (the head is 260 to 272 px; the three month lines all fit on one line
 with room to spare). Re-measure after any size change.
 
-**Price per square foot (asked 2026-10-19):** CAR's county reports and
-the Aspen Glenwood town reports do not publish it, so on the 21 CAR cards
-the option is greyed out by design; the figure exists only where the
-site's own feed supplies it, the `feed-` towns (33 of them in September
-2026), where it is live and is the default third row until an inventory
-snapshot exists. Our feed has no county rows, so a county card cannot be
-given it without adding county totals to the site's market_stats API.
+**Price per square foot on the CAR cards (Nikki, 2026-10-19: "if we
+have the data, that's a valuable option to offer"):** CAR's county reports
+and the Aspen Glenwood town reports do not publish it, so it comes from
+our own feed. The site's market_stats API publishes county rows since
+2026-10-19 (one per board and county, city '' with `county` set);
+`market_feed_counties()` (inc/market_feed.php) keeps the board with the
+most closed sales in the county this year, as for the towns, on
+`$data['counties_feed']` (market_attach_feed() and the harness);
+`market_feed_place_for_card()` finds a county card's county there and a
+town card's town in `towns_feed` by label, and `market_feed_ppsf_stat()`
+puts the one row in the CAR pool (`ppsf`: the month's median and a year
+ago, the year-to-date pair when the card is thin). The card's `credit`
+gains "Price per sq ft from the MLS feeds Mont Haus receives (IDX data)"
+and the builder's Figures hint says where the figure comes from. The
+other CAR figures stay CAR's. September 2026: every one of the 21 cards
+offers it except Woody Creek condos (no feed row). The `feed-` towns had
+it already (default third row until an inventory snapshot exists).
+Measured: 209 cards inside the budget on 2026-10-19.
 
 **Stock photos (2026-10-19):** 17 more from Nikki's Mtn Photos folder
 (renamed there by location from their Adobe Stock metadata, see the

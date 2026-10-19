@@ -31,9 +31,11 @@ $feedFile = (string)getenv('MARKET_FEED'); $areasFile = (string)getenv('MARKET_A
 if ($feedFile !== '' && is_file($feedFile) && $areasFile !== '' && is_file($areasFile)) {
     $feed = json_decode((string)file_get_contents($feedFile), true); $reg = json_decode((string)file_get_contents($areasFile), true);
     $data['towns_feed'] = market_feed_towns((array)$feed, (array)($reg['areas'] ?? []), array_column($data['boards'], 'market'));
+    $data['counties_feed'] = market_feed_counties((array)$feed, array_column($data['boards'], 'market'));
     $data['feed_note'] = (string)($feed['note'] ?? '');
+    echo '  feed counties: ' . count($data['counties_feed']) . "\n";
     echo '  feed towns: ' . count($data['towns_feed']) . ': ' . implode(', ', array_map(fn($t) => $t['label'] . ' (' . $t['market'] . ')', $data['towns_feed'])) . "\n";
-} else { $data['towns_feed'] = []; $data['feed_note'] = ''; }
+} else { $data['towns_feed'] = []; $data['counties_feed'] = []; $data['feed_note'] = ''; }
 
 $files = [];
 foreach (array_keys(market_cards($data)) as $market) {

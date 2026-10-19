@@ -448,10 +448,14 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
                              'change' => $ch === null ? "No sales in {$w['lyMon']}" : market_vs($ch, $w['lyLab']), 'dir' => market_dir($ch)];
         }
         $pool = market_pool_car($r, $w, $thin);
+        // Price per sq ft is not in CAR's reports: it comes from our own feed for the county or town (Nikki, 2026-10-19).
+        $fp = function_exists('market_feed_ppsf_stat') ? market_feed_ppsf_stat(market_feed_place_for_card($data, $d), $pt, $w, $thin) : null;
+        if ($fp) $pool['ppsf'] = $fp;
         $defaults = ['sold', 'dom', 'inventory'];
         $card['credit'] = !empty($d['town'])
             ? "Source: Aspen/Glenwood Springs MLS Inc. Local Market Update, {$d['town']}, {$w['month']}. Report © {$yr} ShowingTime Plus, LLC."
             : "Source: Colorado Association of REALTORS® Local Market Update, {$d['county']}, {$w['month']}. Report © {$yr} ShowingTime Plus, LLC.";
+        if ($fp) $card['credit'] .= ' Price per sq ft from the MLS feeds Mont Haus receives (IDX data).';
     }
     $keys = market_pick_stats($pool, $want, $defaults);
     $card['stat_keys'] = $keys;

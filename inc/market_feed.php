@@ -98,6 +98,72 @@ function market_feed_towns(array $feed, array $areas, array $board_order = []): 
 }
 
 /**
+ * The feed's county rows (city '' with a county; since 2026-10-19 the site
+ * publishes one per board and county), the board with the most closed sales
+ * in the county this year chosen as for the towns. Keyed by the county name
+ * lower-cased, without " County".
+ * Returns [county key => ['county','market','ytd','SF' => place|null,'TC' => place|null]].
+ */
+function market_feed_counties(array $feed, array $board_order = []): array {
+    $by = [];   // county key => market => class => place
+    foreach ((array)($feed['places'] ?? []) as $p) {
+        $county = trim((string)($p['county'] ?? ''));
+        if (trim((string)($p['city'] ?? '')) !== '' || $county === '') continue;
+        $by[strtolower(preg_replace('/\s+County$/i', '', $county))][(string)$p['market']][(string)$p['class']] = $p;
+    }
+    $rank = array_flip($board_order);
+    $out = [];
+    foreach ($by as $ck => $markets) {
+        $best = null;
+        foreach ($markets as $mk => $classes) {
+            $ytd = (int)($classes['SF']['ytd']['sold'] ?? 0) + (int)($classes['TC']['ytd']['sold'] ?? 0);
+            if ($ytd === 0) continue;
+            $cand = ['county' => (string)(($classes['SF'] ?? $classes['TC'])['county'] ?? $ck), 'market' => $mk, 'ytd' => $ytd, 'SF' => $classes['SF'] ?? null, 'TC' => $classes['TC'] ?? null];
+            if ($best === null || $cand['ytd'] > $best['ytd'] || ($cand['ytd'] === $best['ytd'] && ($rank[$mk] ?? 99) < ($rank[$best['market']] ?? 99))) $best = $cand;
+        }
+        if ($best !== null) $out[$ck] = $best;
+    }
+    return $out;
+}
+
+/**
+ * The feed place behind a CAR card (Nikki, 2026-10-19: offer price per sq
+ * ft on the county and town cards too, from our own feed, since CAR does
+ * not publish it): a county card's county in $data['counties_feed'], a
+ * town card's town in $data['towns_feed'] by label. Null when the feed has
+ * no figure for it.
+ */
+function market_feed_place_for_card(array $data, array $def): ?array {
+    if (!empty($def['town'])) {
+        foreach ((array)($data['towns_feed'] ?? []) as $t) if (strcasecmp((string)$t['label'], (string)$def['town']) === 0) return $t;
+        return null;
+    }
+    if (!empty($def['county'])) {
+        $ck = strtolower(trim(preg_replace('/\s+County$/i', '', (string)$def['county'])));
+        return $data['counties_feed'][$ck] ?? null;
+    }
+    return null;
+}
+
+/**
+ * The price-per-sq-ft row for a CAR card from its feed place, in the pool's
+ * shape ([label, value, note]), the year-to-date variant when the card is
+ * thin; null when the feed has none for the class.
+ */
+function market_feed_ppsf_stat(?array $place, string $pt, array $w, bool $thin): ?array {
+    $p = $place[$pt] ?? null;
+    if (!$p) return null;
+    $ppsf = fn($v) => '$' . number_format((float)$v);
+    $n = fn($v) => $v !== null && $v !== '';
+    if ($thin) {
+        $v = $p['ytd']['price_per_sqft'] ?? null; $ly = $p['ytd_ly']['price_per_sqft'] ?? null;
+        return $n($v) ? ['Median price per sq ft, YTD', $ppsf($v), $n($ly) ? $ppsf($ly) . " in {$w['lyYr']}" : ''] : null;
+    }
+    $v = $p['month']['price_per_sqft'] ?? null; $ly = $p['ly']['price_per_sqft'] ?? null;
+    return $n($v) ? ['Median price per sq ft', $ppsf($v), $n($ly) ? $ppsf($ly) . ' a year ago' : ''] : null;
+}
+
+/**
  * Card definitions for the feed towns, in the static defs' shape, keyed
  * feed-<town key>; towns that already have a CAR town report card (the
  * Roaring Fork Valley) are left out. Needs $data['towns_feed'].

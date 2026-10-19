@@ -2396,8 +2396,11 @@ a feature of the Instagram template area "dressed up a little".
   size change). **2026-10-19 (Nikki):** the title is the ONE location name
   (the town names beneath it are gone; `place` stays on the defs, undrawn),
   the month-and-type line is 50 px (was 40), all 84 re-measured. Price per
-  sq ft is greyed out on the 21 CAR cards because CAR does not publish it;
-  the feed towns offer it. 17 more stock photos (57 now; the Mtn Photos
+  sq ft is not in CAR's reports, so the 21 CAR cards take it from our own
+  feed (the site's market_stats API publishes county rows since 2026-10-19;
+  `market_feed_counties()`, `market_feed_place_for_card()`,
+  `market_feed_ppsf_stat()` in inc/market_feed.php; the board with the most
+  sales in the county this year); the feed towns had it already. 17 more stock photos (57 now; the Mtn Photos
   folder's Glenwood Springs shot is Editorial Use Only and stays out), with
   suggested backdrops for El Paso and Teller and closer ones for several
   places.
