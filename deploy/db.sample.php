@@ -12,15 +12,9 @@
  * not the hub's. See README.md and DEPLOY_LIGHTSAIL.md.
  */
 
-// ── Spark MLS API ────────────────────────────────────────────────────────────
-// Used by agent.php, mls_key_debug.php and the two sync crons.
-define('SPARK_ACCESS_TOKEN',      'PASTE_ASPEN_TOKEN');   // Aspen/Glenwood MLS
-define('VAIL_SPARK_ACCESS_TOKEN', 'PASTE_VAIL_TOKEN');    // Vail MLS
-define('VAIL_OFFICE_MLS_ID',      'oaltixrealty');        // Mont Haus office, Vail board
-define('ASPEN_OFFICE_ID',         'PASTE_ASPEN_OFFICE_ID');
-
 // ── Anyprop MLS API ──────────────────────────────────────────────────────────
-// cron/sync_anyprop_roster.php. Replaces Spark. Token is fetched per run.
+// cron/sync_anyprop_roster.php. Replaced Spark (retired 2026-10-01, its
+// constants removed 2026-10-19). Token is fetched per run.
 define('ANYPROP_USERNAME', 'PASTE_ANYPROP_USERNAME');
 define('ANYPROP_PASSWORD', 'PASTE_ANYPROP_PASSWORD');
 // Mont Haus office per board, 'OriginatingSystemName:OfficeMlsId'. Skips the

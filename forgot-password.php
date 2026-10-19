@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             . '<p style="font-size:13px;color:#888;">— Mont Haus</p>'
                             . '</div>';
                 $send_error = '';
-                send_email($email, '', $subject, $body_html, $body_plain, [], $send_error, 'noreply@monthausint.com', 'Mont Haus');
+                send_email($email, '', $subject, $body_html, $body_plain, [], $send_error, 'noreply@monthaus.com', 'Mont Haus');
             }
 
             // Always show the same message to prevent email enumeration

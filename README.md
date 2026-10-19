@@ -59,7 +59,7 @@ split tolerable.
 ├── inc/             include-only PHP — never a URL
 │   ├── auth.php     session bootstrap + require_login() / require_role()
 │   ├── db.php       DB credentials and API keys — NOT in git, created on the server
-│   ├── config.php   SITE_URL, HUB_URL, RECEIPTS_DIR
+│   ├── config.php   SITE_URL, RECEIPTS_DIR
 │   ├── sso.php      OIDC engine: PKCE, JWKS, token verification
 │   ├── sso_config.php  tenant/client/secret — NOT in git, created on the server
 │   ├── mailer.php   PHPMailer wrapper for password resets

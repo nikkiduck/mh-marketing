@@ -11,8 +11,9 @@ registry: site.monthaus.com docs/HANDOFF-board-registry.md.
 
 Replicated from `monthausint.com/marketing`, and fully independent of it.
 Its own code, its own database, its own cron. Nothing is shared with the hub
-except the Spark MLS API credentials — so a fix made here does not reach
-monthausint.com, and a fix made there does not reach here.
+(the Spark MLS API credentials were the last shared thing; removed here
+2026-10-19) — so a fix made here does not reach monthausint.com, and a fix
+made there does not reach here.
 
 ## Broker page links (2026-10-13)
 
@@ -1097,6 +1098,23 @@ Spark is retired (2026-10-01): `mls_key_debug.php` was deleted, and nothing in
 the app calls Spark any more (agent.php's listings and intake.php's member
 lookup were the last). The notes above are kept for reading old code.
 
+**Deleted 2026-10-19, before the portal opened to every agent** (the go-live
+audit, docs/HANDOFF-portal-go-live.md): `spark_debug.php`,
+`cron/sync_mh_brokers.php` and `cron/sync_roster.php`, the `SPARK_ACCESS_TOKEN`
+/ `VAIL_SPARK_ACCESS_TOKEN` placeholders (with `VAIL_OFFICE_MLS_ID` and
+`ASPEN_OFFICE_ID`, which nothing read either) in deploy/db.sample.php, and the
+unused `HUB_URL` in inc/config.php. The live token defines sit in the server's
+`inc/db.php` (git-ignored) and go with the same deploy. Why it could not
+wait: sync_mh_brokers.php carried both Spark access tokens as trailing
+comments on its two `'token' =>` lines, so **the tokens remain in git history**
+(every commit up to e8eeac8). Treat them as exposed: the Spark (FBS) account
+should be closed with the vendor, which is Nikki's job, not a code change.
+
+The same day the two remaining senders on the hub domain moved off it:
+forgot-password.php and the fallback in inc/mailer.php now send as
+`noreply@monthaus.com` (was noreply@monthausint.com; hotsheet@ and portal@
+already sent through SendGrid from monthaus.com, so the domain is verified).
+
 ## Contacts
 
 - **Nikki Boxer** — `nikki.boxer@monthaus.com`. Use this for any alert,
@@ -1195,8 +1213,8 @@ for the same reason — if you find it running again after a rebuild, disable it
 - The app user (`mh_app`) has `SELECT, INSERT, UPDATE, DELETE` and no DDL
   rights. Migrations run as the master user, by hand.
 - Collation is `utf8mb4_0900_ai_ci` throughout — the hub was a mix of that and
-  `utf8mb4_unicode_ci`, which is why `sync_roster.php` carries explicit
-  `COLLATE` casts in its JOINs. Normalised here so the problem cannot recur.
+  `utf8mb4_unicode_ci`, which is why `sync_roster.php` (deleted 2026-10-19)
+  carried explicit `COLLATE` casts in its JOINs. Normalised here so the problem cannot recur.
 
 ### ONLY_FULL_GROUP_BY must stay off
 
@@ -1254,7 +1272,8 @@ with the log under `/var/log/mh-marketing/`; shortened here.)
   `office_roster` and `mh_brokers` are frozen as of the 2026-09-30 03:00 run
   and `marketing_intakes.roster_id` is no longer re-linked. Anything that
   still reads those tables (index.php's UNION arm, roster.php) sees that
-  snapshot. The scripts stay in `cron/` until nothing reads their tables.
+  snapshot. The scripts were deleted 2026-10-19 (see "Spark MLS API" above);
+  the tables stay until nothing reads them.
 - Removed 2026-09-30 at Nikki's request: `activate_roster.php` (nightly
   03:45; to be rescheduled when the roster is tidied up) and a leftover
   every-minute `/bin/date` test job. Its `cron_test.log` (1.6 MB) is still
@@ -1321,8 +1340,9 @@ where the HTML actually ends before touching the JavaScript, and check
 no `/var/log/syslog`).
 
 **Uploading is per file and easy to get partly wrong.** `deploy/manifest.md5`
-lists every `.php` under the root, `inc/`, `api/` and `cron/`, plus
-`assets/css/mh-theme.css`. It deliberately omits `inc/db.php`,
+lists every `.php` under the root, `inc/`, `api/`, `cron/` and `portal/`,
+plus `assets/css/{market,mh-theme,portal,social}.css` and
+`assets/js/{market-report,mh-qr}.js`. It deliberately omits `inc/db.php`,
 `inc/sso_config.php`, `agent-photos/` and `assets/vendor/`, whose server copies
 are meant to differ. Regenerate it from the working folder, then on the server:
 
@@ -1506,8 +1526,8 @@ padding and it goes flush again.
 
 The site header is `inc/_nav.php`, included by `index.php`, `agent.php`,
 `intake.php` and `billing.php`. Its links are Marketing and Billing; the Hub
-link was removed at Nikki's request. `HUB_URL` still exists in `inc/config.php`
-and nothing reads it any more. It relies on `.mh-header-inner`, `.mh-logo`, `.mh-nav`,
+link was removed at Nikki's request, and `HUB_URL` was removed from
+`inc/config.php` on 2026-10-19 (nothing had read it since). It relies on `.mh-header-inner`, `.mh-logo`, `.mh-nav`,
 `.mh-nav-link` and `.mh-nav-divider`, which those pages define in their own
 inline `<style>` blocks; only the user-menu rules live in the partial. Set
 `$nav_extra` before including to add a trailing crumb.
@@ -1795,8 +1815,8 @@ the fix is at the boards, not in the feed. Name search is `contains` on
 MemberFullName in several casings because Anyprop cannot filter on last
 name and `contains` is case-sensitive.
 
-`spark_debug.php` is the same tool against a board's own Spark (FBS) RESO
-feed, to compare with Anyprop: tokens from inc/db.php (Aspen, Vail) or one
+`spark_debug.php` (deleted 2026-10-19 with the rest of Spark) was the same
+tool against a board's own Spark (FBS) RESO feed, to compare with Anyprop: tokens from inc/db.php (Aspen, Vail) or one
 pasted into the form (POSTed, kept in the PHP session, "Forget token"
 drops it; never in a URL or on disk). Spark honours only `eq`: startswith()
 and contains() return 200 with an empty list, so member searches are exact
@@ -2074,7 +2094,7 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   drawn by portal_header()'s fourth argument, in the band above the title;
   phones show with periods (`portal_phone()`); the nav says "Templates" for
   portal/social.php ("More templates coming soon." in italics above its
-  title); the admin editor and the portal editor show a space between
+  title; removed for go-live 2026-10-19, see Nav under Listing Flyer); the admin editor and the portal editor show a space between
   paragraphs (Quill's p + p). Later that day: an admin preview shows the
   footer form with its fields disabled (hidden, it looked unrendered); My
   Profile links "View your page on monthaus.com" (qr_profile_url(), shown
@@ -2225,6 +2245,13 @@ list) and shrinks to stay on one line; the address and price are large
 (portal/social.php) and Print Templates (portal/flyer.php: the flyer is
 not an Instagram thing, so the tool-to-tool switch is gone); each tool
 page links back with `.tp-back`; both pass 'social' as the active key.
+**The three "coming soon" lines were removed for go-live (2026-10-19;
+Nikki has not decided whether they come back).** They were: `<p
+class="pt-soon">More templates coming soon.</p>` directly above the
+`.pt-h1` in portal/templates.php and portal/social.php (the `.pt-soon`
+style is still in portal.css, flyer.php and market_post.php use it), and
+"More coming soon." at the end of the Templates card's `.pt-card-sub` on
+portal/index.php. Each comes back in one edit.
 - `inc/flyer_render.php` (standalone layout at 612 x 792 pt, Jost) and
   `inc/flyer.php` (rules, QR, PDF export) sit on the Instagram tool's data
   layer: `social_listings()` (now with `url`), `social_photos()`,
@@ -2411,7 +2438,7 @@ between rewriting scenario.json and the next request; rerun before chasing it.
   `index.php`'s first UNION arm and Onboard action, `roster.php` (whole page,
   incl. an UPDATE), and `sync_anyprop_roster.php` (read-only, to link a new
   agent to an old row). Plan: roster rows from `marketing_intakes` only, then
-  drop `roster.php`, the dead crons and the tables. `intake.php` no longer
+  drop `roster.php` and the tables (the dead crons went 2026-10-19). `intake.php` no longer
   writes office_roster or calls Spark (2026-10-01).
 
 - **Agent portal**: `docs/AGENT_PORTAL_PLAN.md` (revised 2026-10-01 with Nikki's

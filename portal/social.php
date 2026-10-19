@@ -42,7 +42,6 @@ function social_status_words(string $s): string {
 portal_header($ctx, 'Social posts', 'social');
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
-  <p class="pt-soon">More templates coming soon.</p>
   <h1 class="pt-h1">Instagram Templates</h1>
   <p class="pt-lead">Pick a listing, choose and frame the photo, edit the text, and download. If you'd like to create a custom post, you may download the MH logos from the Brand Tools tab.</p>
   <p class="tp-back"><a href="<?= ph(portal_url($ctx, '/portal/templates.php')) ?>">‹ All templates</a></p>

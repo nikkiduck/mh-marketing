@@ -38,7 +38,7 @@ function send_email(string $to_email, string $to_name, string $subject, string $
 
         // From: use the logged-in user's email from the session (or explicit override for cron).
         // Agent and system addresses must be on a domain authorized in SendGrid.
-        $from_email = $from_email ?: ($_SESSION['user_email']      ?? 'noreply@monthausint.com');
+        $from_email = $from_email ?: ($_SESSION['user_email']      ?? 'noreply@monthaus.com');
         $from_name  = $from_name  ?: trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION['user_last_name'] ?? '')) ?: 'Mont Haus';
         $mail->setFrom($from_email, $from_name);
         $mail->addReplyTo($from_email, $from_name);

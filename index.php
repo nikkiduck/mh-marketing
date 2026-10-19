@@ -703,7 +703,8 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
         <a class="btn btn-outline btn-sm" href="users.php" title="Portal logins: who may sign in, their role, and which marketing account they see"><i class="ti ti-key"></i> Users</a>
         <?php endif; ?>
         <?php // Anyprop Feed / Spark Feed buttons removed 2026-10-06 (Nikki); the
-              // probe pages anyprop_debug.php and spark_debug.php still answer by URL. ?>
+              // probe page anyprop_debug.php still answers by URL (spark_debug.php was
+              // deleted 2026-10-19 with the rest of Spark). ?>
         <?php if (defined('SITE_AGENT_SYNC_URL') && SITE_AGENT_SYNC_URL !== ''): ?>
         <!-- Pushes every profile to the public site now. Safe to press twice:
              the website only writes what actually differs. -->

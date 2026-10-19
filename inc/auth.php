@@ -18,7 +18,7 @@ ini_set('session.cookie_secure', 1);
 // Lax still blocks cross-site POSTs and subresource requests.
 ini_set('session.cookie_samesite', 'Lax');
 
-require_once __DIR__ . '/config.php';   // SITE_URL, HUB_URL, RECEIPTS_DIR
+require_once __DIR__ . '/config.php';   // SITE_URL, RECEIPTS_DIR
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

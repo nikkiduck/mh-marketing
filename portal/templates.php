@@ -26,7 +26,6 @@ $groups = [
 portal_header($ctx, 'Templates', 'social');
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
-  <p class="pt-soon">More templates coming soon.</p>
   <h1 class="pt-h1">Templates</h1>
   <p class="pt-lead">Ready-made Mont Haus designs filled in from your listings. Pick one to start.</p>
   <?php foreach ($groups as $heading => $cards): ?>

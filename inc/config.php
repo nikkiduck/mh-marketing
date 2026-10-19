@@ -9,10 +9,6 @@
 // Canonical origin for this app. Used to build absolute URLs.
 define('SITE_URL', 'https://marketing.monthaus.com');
 
-// Where the "Hub" link in the header points. Change this to
-// https://portal.monthaus.com/ once the portal is live.
-define('HUB_URL', 'https://monthausint.com/');
-
 // Receipt uploads are stored OUTSIDE the document root so they can never be
 // fetched directly — receipt.php streams them after an auth check.
 // config.php lives in inc/, so this is TWO levels up: from
