@@ -47,14 +47,16 @@ function market_town_photo(string $key): ?string {
         'vail' => 'vail-aspens-fall-1746156502', 'beaver-creek' => 'beaver-creek-ski-resort-winter-571078727',
         'avon' => 'vail-summit-gore-range-summer-sunset-217581553', 'edwards' => 'vail-summit-gore-range-summer-sunset-217581553',
         'minturn' => 'vail-mountain-gore-range-winter-401309793', 'eagle' => 'vail-summit-gore-range-summer-sunset-217581553', 'gypsum' => 'vail-summit-gore-range-summer-sunset-217581553',
-        'breckenridge' => 'breckenridge-town-winter-dusk-382409211', 'keystone' => 'breckenridge-town-winter-dusk-382409211', 'copper-mountain' => 'breckenridge-town-winter-dusk-382409211',
-        'frisco' => 'breckenridge-town-winter-dusk-382409211', 'dillon' => 'breckenridge-town-winter-dusk-382409211', 'silverthorne' => 'breckenridge-town-winter-dusk-382409211',
+        'breckenridge' => 'breckenridge-town-winter-dusk-382409211', 'keystone' => 'arapahoe-basin-ski-area-aerial-winter-105068310', 'copper-mountain' => 'breckenridge-town-winter-dusk-382409211',
+        'frisco' => 'dillon-silverthorne-fall-75673092', 'dillon' => 'dillon-silverthorne-lake-dillon-summer-568906174', 'silverthorne' => 'dillon-silverthorne-lake-dillon-summer-568906174',
+        'leadville' => 'independence-pass-fall-aspens-381152733', 'twin-lakes' => 'independence-pass-fall-aspens-381152733',
         'steamboat-springs' => 'steamboat-ski-resort-winter-503720128', 'oak-creek' => 'steamboat-yampa-river-winter-1374732175', 'clark' => 'steamboat-yampa-river-winter-1374732175', 'yampa' => 'steamboat-yampa-river-winter-1374732175',
         'crested-butte' => 'crested-butte-panorama-summer-1935731679', 'gunnison' => 'crested-butte-town-snodgrass-summer-309032886',
         'telluride' => 'telluride-town-overlook-summer-413597756', 'mountain-village' => 'telluride-aerial-main-street-fall-1111462754',
-        'ridgway' => 'ridgway-mount-sneffels-fall-198784448', 'ouray' => 'ridgway-san-juans-fall-sunrise-256750697', 'montrose' => 'ridgway-mount-sneffels-summer-198784289',
-        'durango' => 'ridgway-san-juans-fall-sunrise-256750697', 'pagosa-springs' => 'ridgway-san-juans-fall-sunrise-256750697',
-        'greater-denver' => 'denver-union-station-skyline-sunrise-438466179', 'boulder' => 'boulder-flatirons-milky-way-378561606', 'evergreen' => 'red-rocks-denver-sunrise-207456426',
+        'ridgway' => 'ridgway-mount-sneffels-fall-198784448', 'ouray' => 'ouray-town-aerial-summer-sunset-384322006', 'montrose' => 'ridgway-mount-sneffels-summer-198784289',
+        'durango' => 'durango-silverton-train-fall-519473031', 'pagosa-springs' => 'ridgway-san-juans-fall-sunrise-256750697',
+        'greater-denver' => 'denver-union-station-skyline-sunrise-438466179', 'boulder' => 'boulder-downtown-aerial-sunset-1168002389', 'evergreen' => 'red-rocks-denver-sunrise-207456426',
+        'colorado-springs' => 'colorado-springs-aerial-dusk-373849837',
     ];
     return $map[$key] ?? null;
 }

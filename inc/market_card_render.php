@@ -22,7 +22,9 @@
  * with its label and comparison centred on its number. Nikki, 2026-10-18,
  * evening: nothing under 30 px, the place name a step smaller, the month
  * line and the median's label larger, the median itself smaller, the rows'
- * words larger and centred, and no logo (the space is worth more). A story keeps a safe area of about 190 px at the top and 170 at
+ * words larger and centred, and no logo (the space is worth more). 2026-10-19
+ * (Nikki): the title is the one location name, no town names beneath it (the
+ * month line is month and property type only), and that line is 50 px. A story keeps a safe area of about 190 px at the top and 170 at
  * the bottom, as the Instagram story does.
  *
  * The post's height budget: 1350 less 74 + 84 padding = 1192 for the head
@@ -90,7 +92,7 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
     $sub     = (string)($card['sub'] ?? '');
     $titleSize = market_card_fit($title, 108, [12 => 96, 17 => 84, 22 => 72, 28 => 62]);   // one line across the full width
     $heroSize  = market_card_fit($heroVal, 160, [6 => 148, 8 => 134, 10 => 118]);
-    $subSize   = market_card_fit($sub, 40, [42 => 36, 50 => 32]);   // never under 30: a long one wraps instead
+    $subSize   = market_card_fit($sub, 50, [38 => 44, 46 => 40]);   // 50 px since 2026-10-19 (Nikki: larger); never under 30, a long one wraps instead
     $padTop = 74 + $top; $padBot = 84 + $bot;
 
     $css = <<<CSS

@@ -2393,7 +2393,14 @@ a feature of the Instagram template area "dressed up a little".
   recomputed with one decimal and a trailing .0 dropped, no em dashes.
   Every card was measured inside the post's height budget on 2026-10-18
   (the budget is in market_card_render.php's header; re-measure after a
-  size change).
+  size change). **2026-10-19 (Nikki):** the title is the ONE location name
+  (the town names beneath it are gone; `place` stays on the defs, undrawn),
+  the month-and-type line is 50 px (was 40), all 84 re-measured. Price per
+  sq ft is greyed out on the 21 CAR cards because CAR does not publish it;
+  the feed towns offer it. 17 more stock photos (57 now; the Mtn Photos
+  folder's Glenwood Springs shot is Editorial Use Only and stays out), with
+  suggested backdrops for El Paso and Teller and closer ones for several
+  places.
 - `tests/render_market_sample.php` renders every card, the report and the
   builder from the data files alone into `tests/market-preview/`
   (git-ignored); serve the project folder to look at them. It prints the

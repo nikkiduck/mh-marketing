@@ -205,19 +205,21 @@ function market_boot(array $data, array $urls): array {
  * builder posts back. market: the board it belongs to (the picker groups
  * by it, and the report's "Snapshot post for this market" link opens the
  * market's first card). photo: the suggested stock backdrop (assets/stock).
+ * place: the towns under the title; NOT drawn since 2026-10-19 (Nikki: one
+ * location name on the card, no town names beneath it), kept for the record.
  */
 function market_card_defs(): array {
     return [
         // Aspen Glenwood MLS: the two counties, then the eight town reports (the site's Roaring Fork Valley)
         'pitkin'          => ['title' => 'Pitkin County',    'place' => 'Aspen, Snowmass Village',          'county' => 'Pitkin County',     'market' => 'aspen',      'photo' => 'aspen-aerial-fall-1110909378'],
-        'garfield'        => ['title' => 'Garfield County',  'place' => 'Glenwood Springs, Carbondale',     'county' => 'Garfield County',   'market' => 'aspen',      'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'garfield'        => ['title' => 'Garfield County',  'place' => 'Glenwood Springs, Carbondale',     'county' => 'Garfield County',   'market' => 'aspen',      'photo' => 'carbondale-mount-sopris-ranch-summer-1698598412'],
         'town-aspen'      => ['title' => 'Aspen',            'place' => 'Roaring Fork Valley', 'town' => 'Aspen',            'market' => 'aspen', 'photo' => 'aspen-buttermilk-fall-snow-542481942'],
         'town-snowmass'   => ['title' => 'Snowmass Village', 'place' => 'Roaring Fork Valley', 'town' => 'Snowmass Village', 'market' => 'aspen', 'photo' => 'snowmass-ski-slopes-winter-panorama-410667845'],
         'town-woody-creek'=> ['title' => 'Woody Creek',      'place' => 'Roaring Fork Valley', 'town' => 'Woody Creek',      'market' => 'aspen', 'photo' => 'aspen-aerial-fall-1110909378'],
         'town-old-snowmass' => ['title' => 'Old Snowmass',   'place' => 'Roaring Fork Valley', 'town' => 'Old Snowmass',     'market' => 'aspen', 'photo' => 'snowmass-ski-slopes-winter-panorama-410667845'],
         'town-basalt'     => ['title' => 'Basalt',           'place' => 'Roaring Fork Valley', 'town' => 'Basalt',           'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
         'town-missouri-heights' => ['title' => 'Missouri Heights', 'place' => 'Roaring Fork Valley', 'town' => 'Missouri Heights', 'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
-        'town-carbondale' => ['title' => 'Carbondale',       'place' => 'Roaring Fork Valley', 'town' => 'Carbondale',       'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
+        'town-carbondale' => ['title' => 'Carbondale',       'place' => 'Roaring Fork Valley', 'town' => 'Carbondale',       'market' => 'aspen', 'photo' => 'carbondale-mount-sopris-ranch-summer-1698598412'],
         'town-glenwood'   => ['title' => 'Glenwood Springs', 'place' => 'Roaring Fork Valley', 'town' => 'Glenwood Springs', 'market' => 'aspen', 'photo' => 'colorado-fall-mountain-highway-379603669'],
         // Vail MLS
         'eagle'           => ['title' => 'Eagle County',     'place' => 'Vail, Beaver Creek, Avon, Edwards', 'county' => 'Eagle County',     'market' => 'vail',       'photo' => 'vail-aspens-fall-1746156502'],
@@ -225,8 +227,8 @@ function market_card_defs(): array {
         'san-miguel'      => ['title' => 'San Miguel County', 'place' => 'Telluride, Mountain Village',      'county' => 'San Miguel County', 'market' => 'telluride',  'photo' => 'telluride-aerial-main-street-fall-1111462754'],
         // CREN
         'montrose'        => ['title' => 'Montrose County',  'place' => 'Montrose',                          'county' => 'Montrose County',   'market' => 'cren',       'photo' => 'ridgway-mount-sneffels-summer-198784289'],
-        'ouray'           => ['title' => 'Ouray County',     'place' => 'Ridgway, Ouray',                    'county' => 'Ouray County',      'market' => 'cren',       'photo' => 'ridgway-mount-sneffels-fall-198784448'],
-        'la-plata'        => ['title' => 'La Plata County',  'place' => 'Durango',                           'county' => 'La Plata County',   'market' => 'cren',       'photo' => 'ridgway-san-juans-fall-sunrise-256750697'],
+        'ouray'           => ['title' => 'Ouray County',     'place' => 'Ridgway, Ouray',                    'county' => 'Ouray County',      'market' => 'cren',       'photo' => 'ouray-town-aerial-summer-sunset-384322006'],
+        'la-plata'        => ['title' => 'La Plata County',  'place' => 'Durango',                           'county' => 'La Plata County',   'market' => 'cren',       'photo' => 'durango-silverton-train-fall-519473031'],
         // Altitude MLS: Summit and Routt apart (Nikki, 2026-10-18; the site's Communities split them 2026-10-08)
         'summit'          => ['title' => 'Summit County',    'place' => 'Breckenridge, Keystone, Frisco',    'county' => 'Summit County',     'market' => 'altitude',   'photo' => 'breckenridge-town-winter-dusk-382409211'],
         'routt'           => ['title' => 'Routt County',     'place' => 'Steamboat Springs',                 'county' => 'Routt County',      'market' => 'routt',      'photo' => 'steamboat-ski-resort-winter-503720128'],
@@ -234,8 +236,8 @@ function market_card_defs(): array {
         'denver-metro'    => ['title' => 'Denver Metro',     'place' => '11-county metro · All residential', 'metro' => 'recolorado',         'market' => 'recolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
         'denver'          => ['title' => 'Denver County',    'place' => 'Denver',                            'county' => 'Denver County',     'market' => 'recolorado', 'photo' => 'denver-union-station-skyline-sunrise-438466179'],
         // elevateMLS
-        'el-paso'         => ['title' => 'El Paso County',   'place' => 'Colorado Springs',                  'county' => 'El Paso County',    'market' => 'elevate',    'photo' => null],
-        'teller'          => ['title' => 'Teller County',    'place' => 'Woodland Park, Cripple Creek',      'county' => 'Teller County',     'market' => 'elevate',    'photo' => null],
+        'el-paso'         => ['title' => 'El Paso County',   'place' => 'Colorado Springs',                  'county' => 'El Paso County',    'market' => 'elevate',    'photo' => 'colorado-springs-aerial-dusk-373849837'],
+        'teller'          => ['title' => 'Teller County',    'place' => 'Woodland Park, Cripple Creek',      'county' => 'Teller County',     'market' => 'elevate',    'photo' => 'colorado-springs-garden-of-the-gods-sunset-518817778'],
     ];
 }
 
@@ -245,10 +247,12 @@ function market_card_defs(): array {
  * from the file name's first words; the caption's first phrase otherwise.
  */
 function market_stock_location(string $name, string $caption): string {
-    static $map = ['aspen-snowmass' => 'Aspen Snowmass', 'aspen' => 'Aspen', 'snowmass' => 'Snowmass', 'telluride' => 'Telluride', 'vail' => 'Vail',
-        'beaver-creek' => 'Beaver Creek', 'steamboat' => 'Steamboat Springs', 'breckenridge' => 'Breckenridge', 'crested-butte' => 'Crested Butte',
-        'ridgway' => 'Ridgway', 'last-dollar-road' => 'Ridgway to Telluride', 'denver' => 'Denver', 'red-rocks' => 'Red Rocks', 'golden' => 'Golden',
-        'boulder' => 'Boulder', 'fort-collins' => 'Fort Collins', 'colorado' => 'Colorado', 'mountain-highway' => 'Colorado',
+    static $map = ['aspen-snowmass' => 'Aspen Snowmass', 'aspen-highlands' => 'Aspen Highlands', 'aspen' => 'Aspen', 'snowmass' => 'Snowmass',
+        'carbondale' => 'Carbondale', 'glenwood-springs' => 'Glenwood Springs', 'independence-pass' => 'Independence Pass', 'telluride' => 'Telluride', 'vail' => 'Vail',
+        'beaver-creek' => 'Beaver Creek', 'steamboat' => 'Steamboat Springs', 'breckenridge' => 'Breckenridge', 'arapahoe-basin' => 'Arapahoe Basin',
+        'dillon-silverthorne' => 'Dillon & Silverthorne', 'crested-butte' => 'Crested Butte', 'ridgway' => 'Ridgway', 'ouray' => 'Ouray', 'durango' => 'Durango',
+        'last-dollar-road' => 'Ridgway to Telluride', 'denver' => 'Denver', 'red-rocks' => 'Red Rocks', 'golden' => 'Golden', 'boulder' => 'Boulder',
+        'fort-collins' => 'Fort Collins', 'colorado-springs' => 'Colorado Springs', 'colorado' => 'Colorado', 'mountain-highway' => 'Colorado',
         'smoky-mountains' => 'Smoky Mountains', 'sawtooth' => 'Sawtooth Mountains', 'athabasca' => 'Alberta', 'swiss-alps' => 'Swiss Alps',
         'zermatt' => 'Zermatt', 'bavaria' => 'Bavaria', 'gondola' => 'Alpine', 'chairlift' => 'Alpine', 'alpine' => 'Alpine'];
     foreach ($map as $prefix => $loc) if (str_starts_with($name, $prefix . '-') || $name === $prefix) return $loc;
@@ -415,13 +419,13 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
         $card['eyebrow'] = $body['eyebrow']; $card['hero'] = $body['hero'];
         $pool = $body['pool'];
         $defaults = ['sold', 'dom', isset($pool['inventory']) ? 'inventory' : 'ppsf'];
-        $card['sub'] = "{$w['month']} · {$d['place']} · " . market_ptype_words($pt);
+        $card['sub'] = "{$w['month']} · " . market_ptype_words($pt);
         $card['credit'] = 'Source: ' . $town['market'] . ' listing data, compiled by Mont Haus International Realty.';
     } elseif (!empty($d['metro'])) {
         $f = market_front_row($data, $d['metro']);
         if (!$f) return null;
         $mc = $f['median_change_pct'] ?? null;
-        $card['sub']  = "{$w['month']} · {$d['place']}";
+        $card['sub']  = "{$w['month']} · All residential";
         $card['hero'] = ['label' => 'Median closed price', 'value' => market_money($f['median'] ?? null, true),
                          'change' => $mc === null ? '' : (market_whole_pct_text($mc) === 'Even' ? "Even with {$w['lyLab']}" : market_whole_pct_text($mc) . " vs {$w['lyLab']}"),
                          'dir' => market_dir($mc === null ? null : (float)$mc)];
@@ -431,7 +435,7 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
     } else {
         $r = !empty($d['town']) ? market_town_row($data, $d['town'], $pt) : market_county_row($data, $d['county'], $pt);
         if (!$r || ($r['sold'] ?? null) === null) return null;
-        $card['sub'] = "{$w['month']} · {$d['place']} · " . market_ptype_words($pt);
+        $card['sub'] = "{$w['month']} · " . market_ptype_words($pt);
         $thin = market_thin($r);
         if ($thin) {
             $ch = market_change($r['ytd_median'] ?? null, $r['ytd_median_ly'] ?? null);

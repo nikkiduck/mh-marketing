@@ -99,9 +99,11 @@ every Aspen Glenwood MLS town in towns.json, and Denver Metro from
 front_range.json, 21 in all (`market_card_defs()`, keyed by a slug such as
 `pitkin`, `town-glenwood`, `denver-metro`; `market_card_key()` turns the
 report's market ids into a market's first card). Each card: a short
-eyebrow, the county (or town) as the title with the site's Communities
-towns under it (Routt County over Steamboat Springs, Nikki 2026-10-18), the month, place and property type on one
-line, the median sale price large with its change, then three rows: closed
+eyebrow, the county (or town) as the title, ONE location name only (Nikki,
+2026-10-19: the town names that sat beneath it, "Aspen, Snowmass Village",
+are gone; the defs keep `place` for the record, nothing draws it), the
+month and property type on one line (50 px since 2026-10-19, Nikki:
+larger; Denver Metro says "All residential"), the median sale price large with its change, then three rows: closed
 sales, days on market, homes for sale (Denver Metro: closed sales, median
 days in MLS, active listings). Months of supply is in the report, not on
 the card (Nikki, 2026-10-18: a weird stat for Instagram, keep it simple). Nothing else: no second-type line,
@@ -132,7 +134,8 @@ CREATIVES_DIR/social/<intake id>/ like their posts.
 **Type (Nikki, 2026-10-18 evening): nothing under 30 px.** No logo on the
 card at all (Nikki: the space is worth more; the ghosted triangle or M
 mark carries the brand). The place name is 108 px stepping down by length,
-the month line 40 px (never under 30; a long one wraps, balanced), the
+the month line 50 px (2026-10-19; was 40; steps down past 38 and 46
+characters, never under 30; a long one wraps, balanced), the
 median's label 36 px and the median itself 160 px stepping down, the rows'
 numbers 88 px with their label (32 px) and comparison (34 px) centred on
 them. The harness's measuring loop also flags any text under 30 px.
@@ -142,7 +145,31 @@ the title to one line across the full width, the median, the sub line),
 and the post's height budget is documented at the top of
 inc/market_card_render.php. tests/render_market_sample.php writes every
 card; a loop in the browser over its output measured all 84 within the
-budget on 2026-10-18. Re-measure after any size change.
+budget on 2026-10-18 and again on 2026-10-19 after the month line grew
+(the head is 260 to 272 px; the three month lines all fit on one line
+with room to spare). Re-measure after any size change.
+
+**Price per square foot (asked 2026-10-19):** CAR's county reports and
+the Aspen Glenwood town reports do not publish it, so on the 21 CAR cards
+the option is greyed out by design; the figure exists only where the
+site's own feed supplies it, the `feed-` towns (33 of them in September
+2026), where it is live and is the default third row until an inventory
+snapshot exists. Our feed has no county rows, so a county card cannot be
+given it without adding county totals to the site's market_stats API.
+
+**Stock photos (2026-10-19):** 17 more from Nikki's Mtn Photos folder
+(renamed there by location from their Adobe Stock metadata, see the
+folder's _rename-log.txt), captions in assets/stock/stock.json, the 2048
+and 400 px copies on the server: Arapahoe Basin, downtown Boulder,
+Carbondale and Mount Sopris, Buffalo Pass above Steamboat, Denver City
+Park, two more Ridgway, Wilson Peak from Last Dollar Road, Aspen
+Highlands, two Colorado Springs, Independence Pass, Ouray, the Roaring
+Fork Valley, the Durango train, two Dillon and Silverthorne. The Glenwood
+Springs photo in that folder is licensed Editorial Use Only and was left
+out. The suggested backdrops now cover El Paso and Teller, and Garfield,
+Carbondale, Ouray, La Plata and several feed towns (Keystone, Frisco,
+Dillon, Silverthorne, Leadville, Twin Lakes, Ouray, Durango, Boulder,
+Colorado Springs) got a closer picture.
 
 ## Town figures from our own feed (2026-10-18, late)
 
