@@ -32,6 +32,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= $v('assets/css/social.css') ?>">
 <style>
   .sp-kind:first-of-type { margin-top: 0; }
+  .sp-form .sp-field.sp-kind { margin-bottom: 18px; }   /* room under the Location dropdown before Leads with (Nikki, 2026-10-18) */
   .sp-form .sp-field.sp-kind select { font-size: 15px; padding: 8px 34px 8px 12px; max-width: 340px; width: 100%; appearance: none; -webkit-appearance: none;
       background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a6d36' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center; }
   .sp-form .sp-field.sp-kind { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6f6857); }
