@@ -2389,8 +2389,8 @@ a feature of the Instagram template area "dressed up a little".
   `market_stat_catalog()`, eight figures; a location offers what its source
   publishes, defaults closed sales, avg days on market, homes for sale or
   price per sq ft until a month-end inventory snapshot exists, the first
-  being 2026-11-01), the type is nothing under 30 px and the logo always
-  upper right (the lower-left option is gone). Caveats shown with the
+  being 2026-11-01), the type is nothing under 30 px and there is NO logo on
+  the card (Nikki: the watermark carries the brand). Caveats shown with the
   figures: IDX data runs under a board's own totals; CREN, elevateMLS and
   REcolorado days on market are on-market to closing. Details:
   docs/HANDOFF-market-report.md.

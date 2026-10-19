@@ -14,8 +14,8 @@
  * three Figures pickers choose the rows under the median from
  * market_stat_catalog(), each location greying out what its source lacks
  * (data-sf / data-tc on its option); the background photos are thumbnails
- * with the location under each (market_stock_location()), None first. The
- * logo is always upper right (the lower-left option went 2026-10-18).
+ * with the location under each (market_stock_location()), None first. No
+ * logo on the card (Nikki, 2026-10-18).
  *
  * Like the Instagram tool: the form on the left, a live preview on the right
  * (an iframe whose srcdoc is what portal/market_render.php returns for the

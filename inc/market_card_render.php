@@ -16,18 +16,17 @@
  * The look is the Instagram templates' (inc/social_render.php): Cormorant
  * Garamond on the title and the figures, Jost on the labels, the champagne
  * gold rule and small-caps labels, the dark ink or the cream light ground,
- * the vertical-stack logo upper right on the eyebrow row, a ghosted triangle
- * (or M mark) and a stock photo behind the figures. One place and one
+ * a ghosted triangle (or M mark) and a stock photo behind the figures. No
+ * logo at all (Nikki, 2026-10-18 evening: the watermark carries the brand). One place and one
  * property type per card; the median large; three figures in rows, each
  * with its label and comparison centred on its number. Nikki, 2026-10-18,
  * evening: nothing under 30 px, the place name a step smaller, the month
  * line and the median's label larger, the median itself smaller, the rows'
- * words larger and centred, and no lower-left logo (the space is worth
- * more). A story keeps a safe area of about 190 px at the top and 170 at
+ * words larger and centred, and no logo (the space is worth more). A story keeps a safe area of about 190 px at the top and 170 at
  * the bottom, as the Instagram story does.
  *
  * The post's height budget: 1350 less 74 + 84 padding = 1192 for the head
- * (about 335), the hero (about 305) and three rows (about 410, a row's
+ * (about 250), the hero (about 305) and three rows (about 410, a row's
  * label may wrap once); the two .gap spacers take whatever is left, and all
  * of the story's extra height. Measured on every card in both looks on
  * 2026-10-18 (tests/render_market_sample.php, then the browser).
@@ -51,8 +50,7 @@ function market_card_fit(string $text, int $size, array $steps): int {
 /**
  * The complete HTML document for one card.
  * $opts: format post|story, theme dark|light, mark triangle|mmark|none,
- *        backdrop '' or an image URL / file:// path. (logo is no longer an
- *        option: upper right, always.)
+ *        backdrop '' or an image URL / file:// path. No logo.
  * $export = true inlines the fonts and marks as data URIs (Chromium opens the
  * file with no session and no cross-origin fonts).
  */
@@ -81,11 +79,9 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
     $c = $theme === 'light'
         ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31', 'line' => 'rgba(58,46,35,.22)',
            'shade' => 'rgba(241,236,226,.55) 0%, rgba(241,236,226,.80) 42%, rgba(241,236,226,.94) 100%', 'ghost' => '.05',
-           'logo' => $asset('assets/images/MH_vert-stack_brown.svg', 'image/svg+xml'),
            'tri'  => $asset('assets/images/triangle_mark-dark.svg', 'image/svg+xml'), 'm' => $asset('assets/images/M-mark_black.svg', 'image/svg+xml')]
         : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da', 'line' => 'rgba(255,255,255,.22)',
            'shade' => 'rgba(20,18,16,.42) 0%, rgba(20,18,16,.72) 42%, rgba(20,18,16,.90) 100%', 'ghost' => '.08',
-           'logo' => $asset('assets/images/MH_vert-stack_white.svg', 'image/svg+xml'),
            'tri'  => $asset('assets/images/triangle_mark-white.svg', 'image/svg+xml'), 'm' => $asset('assets/images/M-mark_white.svg', 'image/svg+xml')];
 
     $title   = (string)($card['title'] ?? '');
@@ -110,10 +106,8 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .ghost.m{right:0;width:745px}
 .card{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;box-sizing:border-box;padding:{$padTop}px 94px {$padBot}px}
 .gap{flex:1 1 0;min-height:0}
-.toprow{display:flex;align-items:flex-start;justify-content:space-between;gap:40px}
-.toprow .logo{height:118px;display:block;flex:none;margin-top:-4px}
-.eyebrow{font-size:30px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3;padding-top:10px}
-.title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$titleSize}px;line-height:1.02;margin:10px 0 0;white-space:nowrap}
+.eyebrow{font-size:30px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
+.title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$titleSize}px;line-height:1.02;margin:18px 0 0;white-space:nowrap}
 .sub{font-size:{$subSize}px;font-weight:300;color:{$c['muted']};margin-top:12px;line-height:1.3;text-wrap:balance}
 .rule{width:90px;height:4px;background:{$c['accent']};margin-top:24px}
 .hero{margin-top:32px}
@@ -139,8 +133,7 @@ CSS;
     $arrow = fn(int $dir) => $dir > 0 ? '<i>▲</i>' : ($dir < 0 ? '<i>▼</i>' : '');
 
     $body  = '<header class="head">'
-           . '<div class="toprow"><div class="eyebrow">' . $e($card['eyebrow'] ?? '') . '</div>'
-           . '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty"></div>'
+           . '<div class="eyebrow">' . $e($card['eyebrow'] ?? '') . '</div>'
            . '<h1 class="title">' . $e($title) . '</h1>'
            . ($sub !== '' ? '<div class="sub">' . $e($sub) . '</div>' : '')
            . '<div class="rule"></div></header>';

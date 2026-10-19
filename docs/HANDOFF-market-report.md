@@ -129,9 +129,9 @@ Instagram tool's Chromium call (`social_export_png()`) with fonts, marks
 and the photo read from disk; an agent's download is kept in
 CREATIVES_DIR/social/<intake id>/ like their posts.
 
-**Type (Nikki, 2026-10-18 evening): nothing under 30 px.** The logo is
-always upper right on the eyebrow row (the lower-left option went: the
-space is worth more). The place name is 108 px stepping down by length,
+**Type (Nikki, 2026-10-18 evening): nothing under 30 px.** No logo on the
+card at all (Nikki: the space is worth more; the ghosted triangle or M
+mark carries the brand). The place name is 108 px stepping down by length,
 the month line 40 px (never under 30; a long one wraps, balanced), the
 median's label 36 px and the median itself 160 px stepping down, the rows'
 numbers 88 px with their label (32 px) and comparison (34 px) centred on
