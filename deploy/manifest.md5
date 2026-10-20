@@ -50,7 +50,7 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
 58913e4194d92f378295f6ce642a5aa4  inc/mailer.php
 91b3a82b79e0569bf10fba67d39693f4  inc/market.php
-8baf43bdb85fe12a869c919795b78a9a  inc/market_card_render.php
+ed3b8676199afb5a4f26657809ea4a57  inc/market_card_render.php
 da9338e7878f8ef59cbbb17658525f64  inc/market_data.php
 7385b8d4568987c933b3d9822c8f3474  inc/market_feed.php
 68217bf030a69ec3a8f4d9af5349d8d7  inc/market_post_body.php
