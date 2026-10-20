@@ -33,7 +33,9 @@
  *
  * Rules that every output follows (the artifact's CLAUDE.md, section 3): no
  * em dashes; every figure credits its board; a thin market (fewer than 10
- * closed sales in the month) shows year-to-date figures on the card; percent
+ * closed sales in the month) showed year-to-date figures on the card until
+ * 2026-10-19 (Nikki: the month, however few; the county card is the steadier
+ * number), the YTD pools remain for the report; percent
  * changes are recomputed from this year and last year, one decimal, a
  * trailing .0 dropped (+30%, −4.3%); "% of list" changes are points.
  */
@@ -436,7 +438,7 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
         $r = !empty($d['town']) ? market_town_row($data, $d['town'], $pt) : market_county_row($data, $d['county'], $pt);
         if (!$r || ($r['sold'] ?? null) === null) return null;
         $card['sub'] = "{$w['month']} · " . market_ptype_words($pt);
-        $thin = market_thin($r);
+        $thin = false;   // always the month's own figures, however few sales (Nikki, 2026-10-19: no year-to-date switch; the county card is there for a steadier number). market_thin() and the YTD pools stay for the report.
         if ($thin) {
             $ch = market_change($r['ytd_median'] ?? null, $r['ytd_median_ly'] ?? null);
             $card['eyebrow'] = 'Market snapshot · Year to date';

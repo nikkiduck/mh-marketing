@@ -2400,7 +2400,13 @@ a feature of the Instagram template area "dressed up a little".
   when the portal context owns the file, so market_render.php and
   market_export.php now pass `$ctx` through, and the export hands Chromium
   the file:// path; the admin-side market_snapshot.php has no account and
-  shows neither). The first
+  shows neither). **No year-to-date switch (Nikki, 2026-10-19):** a town
+  with under ten sales in the month used to flip the card to YTD figures,
+  whose longer labels wrapped and pushed the third row off the card
+  (Snowmass Village, September 2026); now every card shows the month's own
+  figures however few, and the county card is the steadier number. `$thin`
+  is pinned false in `market_card_model()` and `market_feed_pool()`; the
+  YTD pools and `market_thin()` remain for the report. The first
   version had three layouts (hero, metro, list of two or three
   counties). **Redrawn the same evening (Nikki): one PLACE per card**,
   every county, every Aspen Glenwood town and Denver Metro (21 cards,

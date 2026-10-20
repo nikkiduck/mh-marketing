@@ -17,8 +17,8 @@
  * is nothing to show. Which board a town's figure comes from: the board with
  * the most closed sales for that town this year (Breckenridge sells on
  * Altitude 117 times and on REcolorado 41; Ridgway on CREN 30 and the
- * Telluride MLS 18), so no map to keep. A thin month (under 10 sales) shows
- * year to date, the cards' rule.
+ * Telluride MLS 18), so no map to keep. A thin month (under 10 sales) showed
+ * year to date until 2026-10-19; the cards show the month, however few.
  *
  * Figures per town and class (SF, TC), each for the month, the same month a
  * year ago, year to date and year to date a year ago: sold, median, average,
@@ -181,7 +181,7 @@ function market_feed_card_defs(array $data, array $covered_labels): array {
  * A feed town's card body: the eyebrow, the hero (median) and the pool of
  * figures the agent may pick three from (market_stat_catalog() keys; the
  * card model chooses). Null when the town has nothing for this class. The
- * year-to-date variants when the month is thin (under 10 sales); homes for
+ * year-to-date variants are built but off since 2026-10-19 ($thin); homes for
  * sale and months of supply only once the site has a month-end snapshot.
  * $w: ['month','monthName','lyLab','lyMon','lyYr'].
  */
@@ -193,7 +193,7 @@ function market_feed_pool(array $town, string $pt, array $w): ?array {
     $inv  = $p['inventory'] ?? null;
     $n    = fn($v) => $v !== null && $v !== '';
     $ppsf = fn($v) => '$' . number_format((float)$v);
-    $thin = (int)($m['sold'] ?? 0) < 10;
+    $thin = false;   // the month's own figures, however few sales (Nikki, 2026-10-19; was: under 10 sales shows year to date). The YTD branch stays in case it is wanted again.
     $pool = [];
     if ($thin) {
         $lyY = $w['lyYr'];
@@ -214,7 +214,7 @@ function market_feed_pool(array $town, string $pt, array $w): ?array {
         $pool['sold'] = ['Closed sales', market_int($m['sold'] ?? null), $sc === null ? "None in {$lyMon}" : market_vs($sc, $lyMon)];
         if ($n($m['avg_dom'] ?? null))        $pool['dom']     = ['Avg days on market', market_int($m['avg_dom']), $n($ly['avg_dom'] ?? null) ? market_int($ly['avg_dom']) . ' a year ago' : ''];
         if ($n($m['price_per_sqft'] ?? null)) $pool['ppsf']    = ['Median price/SqFt', $ppsf($m['price_per_sqft']), $n($ly['price_per_sqft'] ?? null) ? $ppsf($ly['price_per_sqft']) . ' a year ago' : ''];
-        if ($n($m['pct_of_list'] ?? null))    $pool['pct']     = ['% of list price received', market_dec1($m['pct_of_list']) . '%', $n($ly['pct_of_list'] ?? null) ? market_dec1($ly['pct_of_list']) . '% a year ago' : ''];
+        if ($n($m['pct_of_list'] ?? null))    $pool['pct']     = ['% of list price', market_dec1($m['pct_of_list']) . '%', $n($ly['pct_of_list'] ?? null) ? market_dec1($ly['pct_of_list']) . '% a year ago' : ''];
         if ($n($m['average'] ?? null))        $pool['average'] = ['Average sale price', market_money($m['average']), market_vs(market_change($m['average'], $ly['average'] ?? null), $lyMon)];
     }
     if ($inv && $n($inv['active'] ?? null))        $pool['inventory'] = ['Homes for sale', market_int($inv['active']), ''];
