@@ -320,7 +320,7 @@ function market_stat_catalog(): array {
         'ppsf'      => 'Median price/SqFt',   // short, so the label stays on one line on the card (Nikki, 2026-10-19)
         'inventory' => 'Homes for sale',
         'supply'    => 'Months of supply',
-        'pct'       => '% of list price received',
+        'pct'       => '% of list price',
         'average'   => 'Average sale price',
         'new'       => 'New listings',
     ];
@@ -351,7 +351,7 @@ function market_pool_car(array $r, array $w, bool $thin): array {
         $lyMon = $w['lyMon'];
         if ($n($r['sold'] ?? null))           { $sc = market_change($r['sold'], $r['sold_ly'] ?? null); $pool['sold'] = ['Closed sales', market_int($r['sold']), $sc === null ? "None in {$lyMon}" : market_vs($sc, $lyMon)]; }
         if ($n($r['days_on_market'] ?? null)) $pool['dom']     = ['Avg days on market', market_int($r['days_on_market']), $n($r['days_on_market_ly'] ?? null) ? market_int($r['days_on_market_ly']) . ' a year ago' : ''];
-        if ($n($r['pct_of_list'] ?? null))    $pool['pct']     = ['% of list price received', market_dec1($r['pct_of_list']) . '%', $n($r['pct_of_list_ly'] ?? null) ? market_dec1($r['pct_of_list_ly']) . '% a year ago' : ''];
+        if ($n($r['pct_of_list'] ?? null))    $pool['pct']     = ['% of list price', market_dec1($r['pct_of_list']) . '%', $n($r['pct_of_list_ly'] ?? null) ? market_dec1($r['pct_of_list_ly']) . '% a year ago' : ''];
         if ($n($r['average'] ?? null))        $pool['average'] = ['Average sale price', market_money($r['average']), market_vs(market_change($r['average'], $r['average_ly'] ?? null), $lyMon)];
         if ($n($r['new_listings'] ?? null))   $pool['new']     = ['New listings', market_int($r['new_listings']), market_vs(market_change($r['new_listings'], $r['new_listings_ly'] ?? null), $lyMon)];
     }
