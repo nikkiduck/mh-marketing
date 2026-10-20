@@ -8,14 +8,19 @@
  * report, for the way back), $csrf, $months (market_months()), $month (the
  * one preselected), $market (preselected card), $stock (social_stock():
  * name => caption; empty on a Mac, where the photos are not on disk),
- * $board_names (market id => name, the picker's groups). $market is a card
+ * $board_names (market id => name, the picker's groups); and, on the portal
+ * only, $uploads (social_uploads(): the person's own photos), $upload_url,
+ * $delete_url and $upload_thumb (2026-10-19; the admin page has no account,
+ * so it shows neither the photos nor the drop box). $market is a card
  * key (market_card_key() turns the report's market ids into one). The places
  * are a dropdown grouped by board (the counties, the towns, Denver Metro);
  * three Figures pickers choose the rows under the median from
  * market_stat_catalog(), each location greying out what its source lacks
  * (data-sf / data-tc on its option); the background photos are thumbnails
  * with the location under each (market_stock_location()), None first, then
- * a heading per region (social_stock_region(), 2026-10-19). No
+ * a heading per region (social_stock_region(), 2026-10-19), then the
+ * person's own under Your photos with the Instagram tool's drop box and x
+ * (the same uploads, portal/social_upload.php and social_delete.php). No
  * logo on the card (Nikki, 2026-10-18).
  *
  * Like the Instagram tool: the form on the left, a live preview on the right
@@ -34,6 +39,8 @@ $boards = (array)($board_names ?? []);
 $stock_groups = array_fill_keys(social_stock_region_order(), []);
 foreach ($stock as $name => $caption) $stock_groups[social_stock_region($name)][$name] = $caption;
 $stock_groups = array_filter($stock_groups);
+$uploads = (array)($uploads ?? []); $upload_url = (string)($upload_url ?? ''); $delete_url = (string)($delete_url ?? '');
+$upload_thumb = $upload_thumb ?? fn(string $id) => '';
 $suggest = [];   // market => its suggested backdrop, when that photo is on the server
 $catalog = market_stat_catalog();
 $avail = [];     // card key => ['SF' => keys offered, 'TC' => keys offered], for the pickers
@@ -62,6 +69,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
   .mp-photo input:checked + img, .mp-photo input:checked + .mp-none { border-color: var(--gold-deep, #8a6d36); }
   .mp-photo input:focus-visible + img, .mp-photo input:focus-visible + .mp-none { outline: 2px solid var(--gold-deep, #8a6d36); outline-offset: 2px; }
   .mp-group { grid-column: 1 / -1; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted, #6f6857); margin: 8px 0 -2px; }
+  .mp-photo:hover .sp-del, .mp-photo .sp-del:focus-visible { opacity: 1; }   /* the x on an own photo, as on the Instagram grid */
   .mp-photo small { display: block; margin-top: 5px; font-size: 12.5px; line-height: 1.25; color: var(--muted, #6f6857); }
   .mp-photo input:checked ~ small { color: var(--gold-deep, #8a6d36); font-weight: 500; }
   .mp-note { color: var(--muted, #6f6857); font-size: 14px; margin: 12px 0 0; }
@@ -148,7 +156,18 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
           <?php foreach ($list as $name => $caption): ?>
           <label class="mp-photo" title="<?= $e($caption) ?>"><input type="radio" name="backdrop" value="<?= $e($name) ?>"<?= ($suggest[$market] ?? '') === $name ? ' checked' : '' ?>><img src="<?= $e($stock_thumb($name)) ?>" alt="<?= $e($caption) ?>" loading="lazy"><small><?= $e(market_stock_location($name, $caption)) ?></small></label>
           <?php endforeach; endforeach; ?>
+          <div class="mp-group mp-own-h"<?= $uploads ? '' : ' hidden' ?>>Your photos</div>
+          <?php foreach ($uploads as $id): ?>
+          <label class="mp-photo own"><input type="radio" name="backdrop" value="upload:<?= $e($id) ?>"><img src="<?= $e($upload_thumb($id)) ?>" alt="" loading="lazy"><button type="button" class="sp-del" data-id="upload:<?= $e($id) ?>" title="Remove this photo" aria-label="Remove this photo">×</button><small>Your photo</small></label>
+          <?php endforeach; ?>
         </div>
+        <?php if ($upload_url !== ''): ?>
+        <div class="sp-drop" id="mpDrop">
+          <span id="mpDropMsg">Or use your own: drop a photo here, or <label class="sp-link" for="mpFile">choose one</label>.</span>
+          <small>JPG, PNG or WEBP, up to 20 MB.</small>
+          <input type="file" id="mpFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
+        </div>
+        <?php endif; ?>
         <?php if (!$stock): ?><p class="mp-note">The Mont Haus stock photos are on the server; on this copy the ground is plain.</p><?php endif; ?>
       </section>
 
@@ -220,6 +239,50 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
     const want = m ? m.dataset.suggest : '';
     const tile = photos.querySelector('input[name="backdrop"][value="' + want.replace(/"/g, '') + '"]');
     if (tile) tile.checked = true;
+  }
+  // ── Your own photos (2026-10-19): the Instagram tool's uploads, shared. A new one lands under Your photos and is chosen;
+  //    the x removes it (a confirm first) and falls back to None when it was the one in use. ──
+  const UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>;
+  const drop = document.getElementById('mpDrop'), dropMsg = document.getElementById('mpDropMsg'), fileIn = document.getElementById('mpFile');
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  function ownTile(id, thumb) {
+    const l = document.createElement('label'); l.className = 'mp-photo own';
+    l.innerHTML = '<input type="radio" name="backdrop" value="' + esc(id) + '"><img src="' + esc(thumb) + '" alt="">' +
+                  '<button type="button" class="sp-del" data-id="' + esc(id) + '" title="Remove this photo" aria-label="Remove this photo">×</button><small>Your photo</small>';
+    return l;
+  }
+  async function upload(file) {
+    if (!file) return;
+    drop.classList.add('busy'); dropMsg.textContent = 'Uploading ' + file.name + '…';
+    const fd = new FormData(); fd.append('csrf_token', f('csrf_token').value); fd.append('photo', file);
+    let j = {};
+    try { j = await (await fetch(UPLOAD, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); }
+    catch (e) { j = { error: 'The upload did not go through. Please try again.' }; }
+    drop.classList.remove('busy'); fileIn.value = '';
+    if (j.error) { dropMsg.textContent = j.error; return; }
+    dropMsg.innerHTML = 'Added. Drop another, or <label class="sp-link" for="mpFile">choose one</label>.';
+    const h = photos.querySelector('.mp-own-h'); h.hidden = false;
+    const tile = ownTile(j.id, j.thumb); h.after(tile);   // newest first, as the Instagram grid orders them
+    tile.querySelector('input').checked = true; backdropTouched = true; update();
+  }
+  if (drop) {
+    fileIn.addEventListener('change', e => upload(e.target.files[0]));
+    ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+    ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+    drop.addEventListener('drop', e => upload(e.dataTransfer.files[0]));
+    photos.addEventListener('click', async e => {
+      const b = e.target.closest('.sp-del'); if (!b) return;
+      e.preventDefault(); e.stopPropagation();
+      if (!confirm('Remove this photo from your uploads? Posts you already downloaded are not affected.')) return;
+      const fd = new FormData(); fd.append('csrf_token', f('csrf_token').value); fd.append('id', b.dataset.id);
+      let j = {};
+      try { j = await (await fetch(DELETE_URL, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); } catch (err) { j = { error: 'That did not work. Please try again.' }; }
+      if (j.error) { alert(j.error); return; }
+      const tile = b.closest('.mp-photo'), was = tile.querySelector('input').checked;
+      tile.remove();
+      if (!photos.querySelector('.mp-photo.own')) photos.querySelector('.mp-own-h').hidden = true;
+      if (was) { photos.querySelector('input[name="backdrop"][value=""]').checked = true; update(); }
+    });
   }
   form.addEventListener('input', e => {
     const n = e.target.name;

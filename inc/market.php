@@ -33,9 +33,10 @@ function market_gate(mysqli $conn): ?array {
  * The builder's choices, checked: market (a card), month (on file), format,
  * theme, ptype, mark (the Instagram posts' watermarks), stats (up to three
  * catalog keys, the rows under the median), backdrop ('' or a stock photo
- * name). Everything else is dropped.
+ * name, or "upload:<id>", one of the person's own photos from the Instagram
+ * tool's uploads, when $ctx is theirs; 2026-10-19). Everything else is dropped.
  */
-function market_card_options_from_request(array $in): array {
+function market_card_options_from_request(array $in, ?array $ctx = null): array {
     $month  = market_pick_month((string)($in['month'] ?? ''));
     $data   = $month !== '' ? market_load($month) : null;
     if ($data) market_attach_feed($data);
@@ -46,14 +47,24 @@ function market_card_options_from_request(array $in): array {
     $mark   = isset(social_marks()[(string)($in['mark'] ?? '')]) ? (string)$in['mark'] : 'triangle';
     $stats  = array_values(array_slice(array_filter(array_map('strval', (array)($in['stats'] ?? [])), fn($k) => isset(market_stat_catalog()[$k])), 0, 3));   // the three rows, from the catalog
     $bd     = (string)($in['backdrop'] ?? '');
-    $backdrop = ($bd !== '' && preg_match('/^[a-z0-9-]+$/', $bd) && isset(social_stock()[$bd])) ? $bd : '';
+    if (str_starts_with($bd, 'upload:')) {
+        $backdrop = ($ctx && social_upload_file($ctx, substr($bd, 7))) ? $bd : '';   // only a photo this person uploaded
+    } else {
+        $backdrop = ($bd !== '' && preg_match('/^[a-z0-9-]+$/', $bd) && isset(social_stock()[$bd])) ? $bd : '';
+    }
     return ['market' => $market, 'month' => $month, 'format' => $format, 'theme' => $theme,
             'ptype' => $ptype, 'mark' => $mark, 'stats' => $stats, 'backdrop' => $backdrop];
 }
 
-/** The stock photo's URL for the preview, or its file on disk for the export (Chromium has no session). */
-function market_backdrop_src(string $name, bool $export): string {
+/** The stock photo's (or the person's own photo's) URL for the preview, or its file on disk for the export (Chromium has no session). */
+function market_backdrop_src(string $name, bool $export, ?array $ctx = null): string {
     if ($name === '') return '';
+    if (str_starts_with($name, 'upload:')) {
+        if (!$ctx) return '';
+        $id = substr($name, 7);
+        if ($export) { $f = social_upload_file($ctx, $id); return $f ? 'file://' . $f : ''; }
+        return social_upload_url($ctx, $id, 1600);
+    }
     if ($export) {
         $f = realpath(__DIR__ . '/../assets/stock/' . $name . '.jpg');
         return $f ? 'file://' . $f : '';
@@ -67,7 +78,7 @@ function market_backdrop_src(string $name, bool $export): string {
  * URL for the preview and inlined for the export. A string is the reason
  * there is nothing to draw.
  */
-function market_card_html(array $o, bool $export = false): string|array {
+function market_card_html(array $o, bool $export = false, ?array $ctx = null): string|array {
     if ($o['month'] === '') return 'No market data is on file yet.';
     $data = market_load($o['month']);
     if (!$data) return 'The data for ' . market_month_label($o['month']) . ' could not be read.';
@@ -75,7 +86,7 @@ function market_card_html(array $o, bool $export = false): string|array {
     $card = market_card_model($data, $o['market'], ['ptype' => $o['ptype'], 'stats' => $o['stats'] ?? []]);
     if (!$card) return (market_cards($data)[$o['market']]['title'] ?? $o['market']) . ' has no figures for ' . market_month_label($o['month']) . '.';
     $html = market_card_render($card, ['format' => $o['format'], 'theme' => $o['theme'], 'mark' => $o['mark'],
-                                       'backdrop' => market_backdrop_src($o['backdrop'], $export)], null, $export);
+                                       'backdrop' => market_backdrop_src($o['backdrop'], $export, $ctx)], null, $export);
     return ['html' => $html, 'card' => $card];
 }
 

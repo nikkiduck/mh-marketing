@@ -4,7 +4,7 @@
  * 2026-10-18): an Instagram-ready PNG of one market's monthly figures, from
  * the Market Report's data, in the Mont Haus look. Seven cards, one per
  * market; a post or a story; dark or light; the watermark, the logo's place
- * and an optional stock photo behind the figures. The body is
+ * and an optional stock photo, or one of the agent's own, behind the figures. The body is
  * inc/market_post_body.php, shared with the admin side's market_snapshot.php.
  * ?market=aspen&month=2026-09 preselects (the report's links). See inc/market.php.
  */
@@ -19,6 +19,11 @@ $data   = $month !== '' ? market_load($month) : null;
 if ($data) market_attach_feed($data);   // the feed towns join the Location list
 $market = market_card_key((string)($_GET['market'] ?? ''), $data ?? []);   // a card key, or a market id from the report's links
 $stock  = social_stock();
+// The person's own photos, shared with the Instagram tool (2026-10-19): the same uploads, drop box and x.
+$uploads      = social_uploads($ctx);
+$upload_url   = portal_url($ctx, '/portal/social_upload.php');
+$delete_url   = portal_url($ctx, '/portal/social_delete.php');
+$upload_thumb = fn(string $id) => social_upload_url($ctx, $id, 400);
 $board_names = [];   // the picker's groups, from the month's boards.json
 foreach (($data['boards'] ?? []) as $b) $board_names[(string)$b['market']] = (string)$b['name'];
 $csrf   = (string)($_SESSION['csrf_token'] ?? '');

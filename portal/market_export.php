@@ -13,8 +13,8 @@ $ctx = market_gate($conn);
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
     portal_stop('Please try again', 'That page had been open too long. Go back, reload it, and download again.');
 }
-$o = market_card_options_from_request($_POST);
-$r = market_card_html($o, true);
+$o = market_card_options_from_request($_POST, $ctx);
+$r = market_card_html($o, true, $ctx);
 if (is_string($r)) portal_stop('Nothing to download yet', ph($r));
 
 $png = social_export_png($r['html'], market_card_height($o['format']));

@@ -2392,7 +2392,15 @@ a feature of the Instagram template area "dressed up a little".
   or M mark, the vertical-stack logo upper right or lower left) and an
   optional stock photo under a shade (`social_stock()`, the tiles under a
   heading per region since 2026-10-19, None first; the place's
-  suggested photo is preselected when it is on the server). The first
+  suggested photo is preselected when it is on the server), or one of the
+  person's OWN photos (Nikki, 2026-10-19: the same uploads as the Instagram
+  tool, under "Your photos" with the same drop box and x; the endpoints
+  are social_upload.php and social_delete.php unchanged; a backdrop of
+  `upload:<id>` is accepted by `market_card_options_from_request()` only
+  when the portal context owns the file, so market_render.php and
+  market_export.php now pass `$ctx` through, and the export hands Chromium
+  the file:// path; the admin-side market_snapshot.php has no account and
+  shows neither). The first
   version had three layouts (hero, metro, list of two or three
   counties). **Redrawn the same evening (Nikki): one PLACE per card**,
   every county, every Aspen Glenwood town and Denver Metro (21 cards,

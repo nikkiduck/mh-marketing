@@ -89,6 +89,8 @@ $render_url = '/__render'; $export_url = '/__render'; $report_url = 'report.html
 $months = $data['months']; $market = 'pitkin'; $board_names = array_column($data['boards'], 'name', 'market');
 $stock = array_slice(json_decode((string)file_get_contents(dirname(__DIR__) . '/assets/stock/stock.json'), true) ?: [], 0, 14, true);   // the first 14 names, with the placeholder standing in for every picture
 $stock_thumb = fn(string $n) => '/assets/images/social-placeholder.jpg';
+$uploads = ['sample0000000001', 'sample0000000002']; $upload_url = '/__upload'; $delete_url = '/__delete';   // two of the person's own photos and the drop box (2026-10-19)
+$upload_thumb = fn(string $id) => '/assets/images/social-placeholder.jpg';
 ob_start();
 include dirname(__DIR__) . '/inc/market_post_body.php';
 $body = ob_get_clean();
