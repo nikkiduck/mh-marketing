@@ -160,7 +160,7 @@ function market_feed_ppsf_stat(?array $place, string $pt, array $w, bool $thin):
         return $n($v) ? ['Median price per sq ft, YTD', $ppsf($v), $n($ly) ? $ppsf($ly) . " in {$w['lyYr']}" : ''] : null;
     }
     $v = $p['month']['price_per_sqft'] ?? null; $ly = $p['ly']['price_per_sqft'] ?? null;
-    return $n($v) ? ['Median price per sq ft', $ppsf($v), $n($ly) ? $ppsf($ly) . ' a year ago' : ''] : null;
+    return $n($v) ? ['Median price/SqFt', $ppsf($v), $n($ly) ? $ppsf($ly) . ' a year ago' : ''] : null;
 }
 
 /**
@@ -213,7 +213,7 @@ function market_feed_pool(array $town, string $pt, array $w): ?array {
                  'change' => $ch === null ? "No sales in {$lyMon}" : market_vs($ch, $w['lyLab']), 'dir' => market_dir($ch)];
         $pool['sold'] = ['Closed sales', market_int($m['sold'] ?? null), $sc === null ? "None in {$lyMon}" : market_vs($sc, $lyMon)];
         if ($n($m['avg_dom'] ?? null))        $pool['dom']     = ['Avg days on market', market_int($m['avg_dom']), $n($ly['avg_dom'] ?? null) ? market_int($ly['avg_dom']) . ' a year ago' : ''];
-        if ($n($m['price_per_sqft'] ?? null)) $pool['ppsf']    = ['Median price per sq ft', $ppsf($m['price_per_sqft']), $n($ly['price_per_sqft'] ?? null) ? $ppsf($ly['price_per_sqft']) . ' a year ago' : ''];
+        if ($n($m['price_per_sqft'] ?? null)) $pool['ppsf']    = ['Median price/SqFt', $ppsf($m['price_per_sqft']), $n($ly['price_per_sqft'] ?? null) ? $ppsf($ly['price_per_sqft']) . ' a year ago' : ''];
         if ($n($m['pct_of_list'] ?? null))    $pool['pct']     = ['% of list price received', market_dec1($m['pct_of_list']) . '%', $n($ly['pct_of_list'] ?? null) ? market_dec1($ly['pct_of_list']) . '% a year ago' : ''];
         if ($n($m['average'] ?? null))        $pool['average'] = ['Average sale price', market_money($m['average']), market_vs(market_change($m['average'], $ly['average'] ?? null), $lyMon)];
     }
