@@ -88,9 +88,9 @@ define('ADVERTISING_SHEET_URL',
  * the agent page, and where the marketing portal points people. Change to
  * https://monthaus.com at go-live.
  */
-define('PUBLIC_SITE_URL', 'https://site.monthaus.com');
+define('PUBLIC_SITE_URL', 'https://monthaus.com');
 
-define('LISTINGS_FEED_URL', 'https://site.monthaus.com/api/listings.php');
+define('LISTINGS_FEED_URL', 'https://monthaus.com/api/listings.php');
 
 /**
  * "Sync to Website" on the roster. It asks the website to pull this portal's
@@ -99,7 +99,7 @@ define('LISTINGS_FEED_URL', 'https://site.monthaus.com/api/listings.php');
  *
  * Empty or undefined hides the button, so this portal still works on its own.
  */
-define('SITE_AGENT_SYNC_URL', 'https://site.monthaus.com/api/sync_agents.php');
+define('SITE_AGENT_SYNC_URL', 'https://monthaus.com/api/sync_agents.php');
 
 
 /**
