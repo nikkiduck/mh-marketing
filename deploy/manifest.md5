@@ -51,8 +51,8 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 58913e4194d92f378295f6ce642a5aa4  inc/mailer.php
 8bcd2252552b967ed112ca9efca7fa69  inc/market.php
 64932dfa3b91dbb2e740cbd8c57f06c7  inc/market_card_render.php
-bc87210634078aa3961f5feb7c171e3d  inc/market_data.php
-18bd8171c26780997b02016032c7f3f6  inc/market_feed.php
+1eb2215225c7eed276cbb3d14611fc93  inc/market_data.php
+d610f89c4a0e67bdbca4e6f117432cb9  inc/market_feed.php
 61711addf62ccb793f5f7293d2fbe3d5  inc/market_post_body.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
