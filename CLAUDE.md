@@ -1786,8 +1786,10 @@ Representation, Rentals. **An area with nothing in it is not sent at all**
   published"). "listing" now maps to Active (negatives still win: "Listing
   Cancelled" is null). Whether Paperless's Transaction Status Changed
   trigger fires when a transaction is CREATED in the Listing category, or
-  only when one moves into it, was being tested the same day with a test
-  transaction; the Zap has only that one trigger (Paperless docs).
+  only when one moves into it, is NOT yet known: Nikki paused the test on
+  2026-10-20 (the TC will create a test listing-side transaction another
+  day; watch hs_pipeline_events for it). The Zap has only that one trigger
+  (Paperless docs).
 - Preview: hot_sheet_preview.php lists every area with counts and whether
   it would be sent today; `?area=key` renders that email. Send:
   `send_hot_sheet.php --to=ADDR [--area=key]`. check_health.php now watches
