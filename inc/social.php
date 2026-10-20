@@ -332,6 +332,13 @@ function social_stock(): array {
     return $cache;
 }
 
+/** The library grouped: [region => [name => caption]], regions in social_stock_region_order(), photos in manifest order inside each. */
+function social_stock_grouped(): array {
+    $groups = array_fill_keys(social_stock_region_order(), []);
+    foreach (social_stock() as $name => $caption) $groups[social_stock_region($name)][$name] = $caption;
+    return array_filter($groups);
+}
+
 /** A stock photo's file on disk, or null. */
 function social_stock_file(string $name): ?string {
     if (!isset(social_stock()[$name])) return null;

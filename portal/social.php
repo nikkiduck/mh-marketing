@@ -178,7 +178,7 @@ portal_header($ctx, 'Social posts', 'social');
   const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
   const fmt = () => (f('type').value.indexOf('story') === 0 ? 'story' : 'post'), fmtH = () => fmt() === 'story' ? 1920 : 1440;
   const kind = () => f('kind').value, isOther = () => kind() === 'other';
-  const PLACEHOLDER = { id: 'placeholder', thumb: '/assets/images/social-placeholder.jpg', large: '/assets/images/social-placeholder.jpg', own: false, caption: 'Aspen Highlands and the Maroon Bells, early snow on fall colour' };
+  const PLACEHOLDER = { id: 'placeholder', thumb: '/assets/images/social-placeholder.jpg', large: '/assets/images/social-placeholder.jpg', own: false, caption: 'Aspen Highlands and the Maroon Bells, early snow on fall colour', group: 'Aspen & Roaring Fork Valley' };
   // The template key: size + kind (photo = a post).
   function setType() {
     const base = f('size').value === 'story' ? 'story' : 'photo';
@@ -282,9 +282,15 @@ portal_header($ctx, 'Social posts', 'social');
     }
     // In groups (2026-10-18): the person's own uploads first, then the listing's photos or the stock library.
     const mine = all.filter(p => p.own), rest = all.filter(p => !p.own);
-    // Own photos last, beside the upload box (Nikki, 2026-10-18).
+    // Own photos last, beside the upload box (Nikki, 2026-10-18). The stock library is grouped by
+    // region, one heading each, in the order the server sends them (Nikki, 2026-10-19).
+    const byRegion = [];
+    for (const p of (isOther() ? [PLACEHOLDER].concat(rest) : [])) {
+      const g = byRegion.find(x => x[0] === p.group);
+      if (g) g[1].push(p); else byRegion.push([p.group || 'Mont Haus stock photos', [p]]);
+    }
     const groups = isOther()
-      ? [['Mont Haus stock photos', [PLACEHOLDER].concat(rest)], ['Your photos', mine]]
+      ? byRegion.concat([['Your photos', mine]])
       : [['Listing photos', rest], ['Your photos', mine]];
     const first = selectId || (isOther() ? PLACEHOLDER.id : (rest[0] || mine[0] || {}).id);
     let html = '';

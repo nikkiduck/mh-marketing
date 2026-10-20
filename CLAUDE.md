@@ -2160,7 +2160,14 @@ uploads (social_photos.php?listing=__none), the Mont Haus STOCK LIBRARY
 tracked assets/stock/stock.json, images server-only and git-ignored,
 built 2026-10-15 from Nikki's "Mont Haus/Mtn Photos" folder, 40 photos,
 Colorado and abroad; `social_stock()`, a tile's caption is its hover
-tooltip; a new photo = a 2048 jpg + a 400 thumb + a caption line) plus the Mont Haus
+tooltip; a new photo = a 2048 jpg + a 400 thumb + a caption line; BOTH
+pickers group the library by region, 2026-10-19: `social_stock_region()`
+in social_render.php reads the place from the start of the file name
+(aspen-, vail-, steamboat-, ...) into nine groups in
+`social_stock_region_order()`, mountain markets first, then Front Range,
+Colorado, Beyond Colorado; `social_stock_grouped()` returns the library
+in that order; a new place prefix goes in the map or lands under Beyond
+Colorado) plus the Mont Haus
 mountains placeholder (assets/images/social-placeholder.jpg, chosen until
 an upload is), headline "Alpine Roots. Global Vision." and Text 1 "Mont
 Haus International Realty" to start, no label by default. Open House: the date and time line is free text
@@ -2194,8 +2201,9 @@ mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
   previewing an agent uploaded into that agent's folder and the agent saw
   the admin's photos as "Yours" (Nikki's two test photos on Jonathan's
   portal; moved to users/2/). Served only to that person by
-  portal/social_asset.php; the photo grid shows "Listing photos" or "Mont Haus
-  stock photos" first and the person's own under "Your photos" last, beside
+  portal/social_asset.php; the photo grid shows "Listing photos", or the
+  stock library under one heading per region (the `group` each stock photo
+  carries in social_photos.php), first and the person's own under "Your photos" last, beside
   the upload box, each own tile with an x that removes it
   (portal/social_delete.php, `social_delete_upload()`, owner only; kept
   exports untouched); the EXPORT reads the file from disk
@@ -2382,7 +2390,8 @@ a feature of the Instagram template area "dressed up a little".
   Instagram templates' (Cormorant on the title and figures, Jost labels,
   gold rule and small caps, dark ink or cream light, the ghosted triangle
   or M mark, the vertical-stack logo upper right or lower left) and an
-  optional stock photo under a shade (`social_stock()`; the place's
+  optional stock photo under a shade (`social_stock()`, the tiles under a
+  heading per region since 2026-10-19, None first; the place's
   suggested photo is preselected when it is on the server). The first
   version had three layouts (hero, metro, list of two or three
   counties). **Redrawn the same evening (Nikki): one PLACE per card**,

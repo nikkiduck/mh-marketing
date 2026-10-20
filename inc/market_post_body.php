@@ -14,7 +14,8 @@
  * three Figures pickers choose the rows under the median from
  * market_stat_catalog(), each location greying out what its source lacks
  * (data-sf / data-tc on its option); the background photos are thumbnails
- * with the location under each (market_stock_location()), None first. No
+ * with the location under each (market_stock_location()), None first, then
+ * a heading per region (social_stock_region(), 2026-10-19). No
  * logo on the card (Nikki, 2026-10-18).
  *
  * Like the Instagram tool: the form on the left, a live preview on the right
@@ -29,6 +30,10 @@ $defs = market_cards($data ?? []);   // the static cards plus the feed towns of 
 $market = market_card_key($market, $data ?? []);
 $stock_thumb = $stock_thumb ?? fn(string $name) => social_stock_url($name, 400);   // the harness points this at a local picture
 $boards = (array)($board_names ?? []);
+// The library by region (social_stock_grouped()), grouped from whatever $stock holds so the harness's list groups too (2026-10-19).
+$stock_groups = array_fill_keys(social_stock_region_order(), []);
+foreach ($stock as $name => $caption) $stock_groups[social_stock_region($name)][$name] = $caption;
+$stock_groups = array_filter($stock_groups);
 $suggest = [];   // market => its suggested backdrop, when that photo is on the server
 $catalog = market_stat_catalog();
 $avail = [];     // card key => ['SF' => keys offered, 'TC' => keys offered], for the pickers
@@ -56,6 +61,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
   .mp-none { background: linear-gradient(135deg, #141210 50%, #F1ECE2 50%); }
   .mp-photo input:checked + img, .mp-photo input:checked + .mp-none { border-color: var(--gold-deep, #8a6d36); }
   .mp-photo input:focus-visible + img, .mp-photo input:focus-visible + .mp-none { outline: 2px solid var(--gold-deep, #8a6d36); outline-offset: 2px; }
+  .mp-group { grid-column: 1 / -1; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted, #6f6857); margin: 8px 0 -2px; }
   .mp-photo small { display: block; margin-top: 5px; font-size: 12.5px; line-height: 1.25; color: var(--muted, #6f6857); }
   .mp-photo input:checked ~ small { color: var(--gold-deep, #8a6d36); font-weight: 500; }
   .mp-note { color: var(--muted, #6f6857); font-size: 14px; margin: 12px 0 0; }
@@ -137,9 +143,11 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
         <div class="sp-look"><span class="sp-look-l">Background photo</span></div>
         <div class="mp-photos" id="mpPhotos">
           <label class="mp-photo"><input type="radio" name="backdrop" value=""<?= ($suggest[$market] ?? '') === '' ? ' checked' : '' ?>><span class="mp-none"></span><small>None</small></label>
-          <?php foreach ($stock as $name => $caption): ?>
+          <?php foreach ($stock_groups as $region => $list): ?>
+          <div class="mp-group"><?= $e($region) ?></div>
+          <?php foreach ($list as $name => $caption): ?>
           <label class="mp-photo" title="<?= $e($caption) ?>"><input type="radio" name="backdrop" value="<?= $e($name) ?>"<?= ($suggest[$market] ?? '') === $name ? ' checked' : '' ?>><img src="<?= $e($stock_thumb($name)) ?>" alt="<?= $e($caption) ?>" loading="lazy"><small><?= $e(market_stock_location($name, $caption)) ?></small></label>
-          <?php endforeach; ?>
+          <?php endforeach; endforeach; ?>
         </div>
         <?php if (!$stock): ?><p class="mp-note">The Mont Haus stock photos are on the server; on this copy the ground is plain.</p><?php endif; ?>
       </section>
