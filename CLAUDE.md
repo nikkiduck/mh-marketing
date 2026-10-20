@@ -2343,6 +2343,14 @@ a feature of the Instagram template area "dressed up a little".
   `market_snapshot.php` for admins whose login has no linked account
   (Nikki). Both sides draw the same bodies (`inc/market_report_body.php`,
   `inc/market_post_body.php`). A home card and a Templates card link them.
+- **The card's type since 2026-10-19 is Nikki's InDesign pass** (her
+  market-snapshot-story.pdf, sizes read from the PDF): eyebrow 41, title
+  105, month line 50 regular, median label 36, median 162, change 46 in
+  the text colour with no arrow, rows 100 / 38 gold small caps / 46,
+  hairlines between the rows only, a near-flat 90 % shade over the photo,
+  the story starting 150 px lower than the post. The same card exported as
+  editable IDML lives in Documents > Weber Boxer Group > Mont Haus > Market
+  Snapshot InDesign (a hand-built package; Adobe's PDF-to-INDD tools fail).
 - **The data is files, not tables:** `inc/market_data/<YYYY-MM>/` with
   `meta.json`, `boards.json`, `county.json`, `county_trend.json`,
   `towns.json`, `front_range.json` (the artifact's files, `_sep` dropped

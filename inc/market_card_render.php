@@ -80,20 +80,22 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
     // is lighter at the top so the picture shows, darker where the figures sit.
     $c = $theme === 'light'
         ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31', 'line' => 'rgba(58,46,35,.22)',
-           'shade' => 'rgba(241,236,226,.55) 0%, rgba(241,236,226,.80) 42%, rgba(241,236,226,.94) 100%', 'ghost' => '.05',
+           'shade' => 'rgba(241,236,226,.86) 0%, rgba(241,236,226,.90) 50%, rgba(241,236,226,.94) 100%', 'ghost' => '.05',
            'tri'  => $asset('assets/images/triangle_mark-dark.svg', 'image/svg+xml'), 'm' => $asset('assets/images/M-mark_black.svg', 'image/svg+xml')]
         : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da', 'line' => 'rgba(255,255,255,.22)',
-           'shade' => 'rgba(20,18,16,.42) 0%, rgba(20,18,16,.72) 42%, rgba(20,18,16,.90) 100%', 'ghost' => '.08',
+           'shade' => 'rgba(20,18,16,.84) 0%, rgba(20,18,16,.90) 50%, rgba(20,18,16,.92) 100%', 'ghost' => '.08',   // near-flat 90 %, as Nikki set it (2026-10-19)
            'tri'  => $asset('assets/images/triangle_mark-white.svg', 'image/svg+xml'), 'm' => $asset('assets/images/M-mark_white.svg', 'image/svg+xml')];
 
     $title   = (string)($card['title'] ?? '');
     $h       = (array)($card['hero'] ?? []);
     $heroVal = (string)($h['value'] ?? '');
     $sub     = (string)($card['sub'] ?? '');
-    $titleSize = market_card_fit($title, 108, [12 => 96, 17 => 84, 22 => 72, 28 => 62]);   // one line across the full width
-    $heroSize  = market_card_fit($heroVal, 160, [6 => 148, 8 => 134, 10 => 118]);
+    // Sizes from Nikki's InDesign pass (2026-10-19, market-snapshot-story.pdf): eyebrow 41, title 105,
+    // month line 50 regular, median label 36, median 162, change 46 in the text colour, rows 100 / 38 gold / 46.
+    $titleSize = market_card_fit($title, 105, [12 => 94, 17 => 82, 22 => 70, 28 => 60]);   // one line across the full width
+    $heroSize  = market_card_fit($heroVal, 162, [6 => 150, 8 => 136, 10 => 120]);
     $subSize   = market_card_fit($sub, 50, [38 => 44, 46 => 40]);   // 50 px since 2026-10-19 (Nikki: larger); never under 30, a long one wraps instead
-    $padTop = 74 + $top; $padBot = 84 + $bot;
+    $padTop = ($format === 'story' ? 150 : 74) + $top; $padBot = 84 + $bot;   // the story starts lower (Nikki's PDF: eyebrow at 345)
 
     $css = <<<CSS
 @font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url({$fCormorant}) format('woff2')}
@@ -108,22 +110,22 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .ghost.m{right:0;width:745px}
 .card{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;box-sizing:border-box;padding:{$padTop}px 94px {$padBot}px}
 .gap{flex:1 1 0;min-height:0}
-.eyebrow{font-size:30px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
+.eyebrow{font-size:41px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
 .title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$titleSize}px;line-height:1.02;margin:18px 0 0;white-space:nowrap}
-.sub{font-size:{$subSize}px;font-weight:300;color:{$c['muted']};margin-top:12px;line-height:1.3;text-wrap:balance}
-.rule{width:90px;height:4px;background:{$c['accent']};margin-top:24px}
+.sub{font-size:{$subSize}px;font-weight:400;color:{$c['muted']};margin-top:20px;line-height:1.3;text-wrap:balance}
+.rule{width:90px;height:4px;background:{$c['accent']};margin-top:30px}
 .hero{margin-top:32px}
 .hero .lab{font-size:36px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
-.hero .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$heroSize}px;line-height:1;letter-spacing:-.01em;margin-top:6px;white-space:nowrap}
-.chg{font-size:40px;font-weight:400;margin-top:10px;line-height:1.3}
+.hero .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$heroSize}px;line-height:1;letter-spacing:-.01em;margin-top:16px;white-space:nowrap}
+.chg{font-size:46px;font-weight:400;margin-top:30px;line-height:1.3}
 .chg i{font-style:normal;color:{$c['accent']};font-size:.78em;margin-right:12px;vertical-align:.1em}
 .stats{margin-top:40px;display:flex;flex-direction:column}
-.stat{display:flex;align-items:center;gap:36px;padding:16px 0;border-top:1px solid {$c['line']}}
-.stat:last-child{border-bottom:1px solid {$c['line']}}
-.stat .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:88px;line-height:1;min-width:280px;white-space:nowrap}
+.stat{display:flex;align-items:center;gap:42px;padding:30px 0}
+.stat+.stat{border-top:1px solid {$c['line']}}   /* lines between the rows only (Nikki, 2026-10-19) */
+.stat .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:100px;line-height:1;min-width:280px;white-space:nowrap}
 .stat .txt{display:flex;flex-direction:column;gap:6px;min-width:0}
-.stat .lab{font-size:32px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:{$c['muted']};line-height:1.2}
-.stat .note{font-size:34px;font-weight:300;color:{$c['soft']};line-height:1.3}
+.stat .lab{font-size:38px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.2}
+.stat .note{font-size:46px;font-weight:400;color:{$c['soft']};line-height:1.3}
 CSS;
 
     $bdHtml = $bd !== '' ? '<div class="bd"><img src="' . $e($bd) . '" alt=""></div>' : '';
@@ -142,7 +144,7 @@ CSS;
     $body .= '<div class="gap"></div>';
     $body .= '<section class="hero"><div class="lab">' . $e($h['label'] ?? '') . '</div>'
            . '<div class="val">' . $e($heroVal) . '</div>'
-           . (($h['change'] ?? '') !== '' ? '<div class="chg">' . $arrow((int)($h['dir'] ?? 0)) . $e($h['change']) . '</div>' : '')
+           . (($h['change'] ?? '') !== '' ? '<div class="chg">' . $e($h['change']) . '</div>' : '')   // no arrow (Nikki's 2026-10-19 layout)
            . '</section><div class="gap"></div><section class="stats">';
     foreach ((array)($card['stats'] ?? []) as [$lab, $val, $note]) {
         $body .= '<div class="stat"><div class="val">' . $e($val) . '</div><div class="txt"><div class="lab">' . $e($lab) . '</div>'
