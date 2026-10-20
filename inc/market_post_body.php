@@ -14,7 +14,7 @@
  * so it shows neither the photos nor the drop box). $market is a card
  * key (market_card_key() turns the report's market ids into one). The places
  * are a dropdown grouped by board (the counties, the towns, Denver Metro);
- * three Figures pickers choose the rows under the median from
+ * three Figures pickers choose the rows under the average from
  * market_stat_catalog(), each location greying out what its source lacks
  * (data-sf / data-tc on its option); the background photos are thumbnails
  * with the location under each (market_stock_location()), None first, then
@@ -114,7 +114,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
 
       <section class="sp-step">
         <h2 class="sp-step-h"><span>2</span>Figures</h2>
-        <p class="sp-hint">The median sale price leads every card. Choose the three figures under it; a location offers the ones its source publishes. Price per sq ft comes from Mont Haus's own MLS feed (IDX data), so it is offered wherever the feed has sales.</p>
+        <p class="sp-hint">The average sale price leads every card. Choose the three figures under it; a location offers the ones its source publishes. Price per sq ft comes from Mont Haus's own MLS feed (IDX data), so it is offered wherever the feed has sales.</p>
         <div class="mp-rows">
           <?php $start = $defaults($avail[$market]['SF'] ?? []); foreach ([0, 1, 2] as $i): ?>
           <label class="sp-field">Row <?= $i + 1 ?>

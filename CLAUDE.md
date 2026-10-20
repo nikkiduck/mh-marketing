@@ -2463,6 +2463,17 @@ a feature of the Instagram template area "dressed up a little".
   REcolorado days on market are on-market to closing. Details:
   docs/HANDOFF-market-report.md.
 
+- **2026-10-20 (Jon Boxer's decision, via Nikki): the big number on the
+  Market Snapshot is the AVERAGE sale price**, every card type (CAR's
+  `average`, the feed's `average`); the median is a pickable row (catalog key
+  `median`; the `average` key is gone). Denver Metro leads with the average
+  once front_range.json carries `average` + `average_change_pct` (add at the
+  refresh), the median until then. Found the same morning: with the
+  2026-10-19 type, every post whose title is 12 characters or fewer (Eagle
+  County, Routt County, most feed towns: 60 of 208 cards) ran 8 px past the
+  bottom padding; `.stats` margin-top is 30 px now (was 40) and all 208
+  measure inside the budget.
+
 ### Render harnesses: run them on a server
 The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`
 so the stub is the only `mysqli`. Homebrew's PHP 8.5 on Nikki's Mac compiles

@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-19 16:58 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-20 07:55 from git HEAD in the Mont Haus Master folder.
 20a0b03146f151869668b3ef7834b245  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -50,10 +50,10 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
 58913e4194d92f378295f6ce642a5aa4  inc/mailer.php
 8bcd2252552b967ed112ca9efca7fa69  inc/market.php
-64932dfa3b91dbb2e740cbd8c57f06c7  inc/market_card_render.php
-1eb2215225c7eed276cbb3d14611fc93  inc/market_data.php
-d610f89c4a0e67bdbca4e6f117432cb9  inc/market_feed.php
-61711addf62ccb793f5f7293d2fbe3d5  inc/market_post_body.php
+a4813209e1bda78755969990f93be0cc  inc/market_card_render.php
+e74da8828c4bed68acd3aa17959bc44e  inc/market_data.php
+ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
+1ca986915ee67525ebdd10b74f3746fa  inc/market_post_body.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 7c650f2864b8efd9c4e661b7982cf5f0  inc/pipeline.php

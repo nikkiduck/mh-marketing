@@ -55,7 +55,7 @@ foreach (array_keys(market_cards($data)) as $market) {
             $name = "{$market}-story.html";
             file_put_contents("$out/$name", market_card_render($card, ['format' => 'story', 'theme' => 'dark', 'mark' => 'triangle'], ''));
             $files[] = [$name, 1920];
-            $picked = market_card_model($data, $market, ['ptype' => 'SF', 'stats' => ['pct', 'average', 'supply']]);   // an agent's own three rows
+            $picked = market_card_model($data, $market, ['ptype' => 'SF', 'stats' => ['pct', 'median', 'supply']]);   // an agent's own three rows
             $name = "{$market}-picked-light.html";
             file_put_contents("$out/$name", market_card_render($picked, ['format' => 'post', 'theme' => 'light', 'mark' => 'mmark', 'backdrop' => '/assets/images/social-placeholder.jpg'], ''));
             $files[] = [$name, 1350];
@@ -97,5 +97,5 @@ $body = ob_get_clean();
 file_put_contents("$out/builder.html", '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
     . '<title>Market Snapshot sample</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">'
     . '<link rel="stylesheet" href="/assets/css/portal.css"></head><body><main class="pt-main"><p class="pt-soon">From the Market Report.</p><h1 class="pt-h1">Market Snapshot</h1>'
-    . '<p class="pt-lead">One place\'s month on a card: the median, closed sales, days on market and supply, Pick the place and the look, then download.</p>' . $body . '</main></body></html>');
+    . '<p class="pt-lead">One place\'s month on a card: the average sale price, closed sales, days on market and supply, Pick the place and the look, then download.</p>' . $body . '</main></body></html>');
 echo "Wrote builder.html\n";

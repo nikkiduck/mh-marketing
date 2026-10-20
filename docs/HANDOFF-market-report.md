@@ -182,6 +182,17 @@ Carbondale, Ouray, La Plata and several feed towns (Keystone, Frisco,
 Dillon, Silverthorne, Leadville, Twin Lakes, Ouray, Durango, Boulder,
 Colorado Springs) got a closer picture.
 
+**The big number is the AVERAGE sale price (2026-10-20, Jon Boxer's
+decision, via Nikki).** Every card type leads with the average (CAR's
+`average` / `ytd_average`, the feed's `average`), with its change against
+the same month a year ago; the median is a pickable row instead (catalog
+key `median`, "Median sale price"; the old `average` key is gone). Denver
+Metro leads with the average when the month's front_range.json carries
+`average` + `average_change_pct` (REcolorado's Market Watch publishes an
+average closed price; add it at the monthly refresh) and with the median
+until then, labelled as such. The report page is unchanged (medians in
+its tables, the average on the county tiles).
+
 ## Town figures from our own feed (2026-10-18, late)
 
 The site computes town statistics from the MLS feeds it receives (site

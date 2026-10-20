@@ -311,7 +311,7 @@ function market_thin(?array $r): bool { return $r !== null && (int)($r['sold'] ?
 function market_ptype_words(string $pt): string { return $pt === 'TC' ? 'Townhomes & condos' : 'Single-family homes'; }
 
 /**
- * The figures a card can show under the median, in builder order: key =>
+ * The figures a card can show under the average, in builder order: key =>
  * the picker's words. Each source offers a subset (`pool_keys` on the model);
  * the agent picks three (Nikki, 2026-10-18), defaults fill the rest.
  */
@@ -323,7 +323,7 @@ function market_stat_catalog(): array {
         'inventory' => 'Homes for sale',
         'supply'    => 'Months of supply',
         'pct'       => '% of list price',
-        'average'   => 'Average sale price',
+        'median'    => 'Median sale price',   // a row since 2026-10-20: the average leads the card (Jon's decision, via Nikki)
         'new'       => 'New listings',
     ];
 }
@@ -347,14 +347,14 @@ function market_pool_car(array $r, array $w, bool $thin): array {
         if ($n($r['ytd_sold'] ?? null))           $pool['sold']    = ['Closed sales, YTD', market_int($r['ytd_sold']), $n($r['ytd_sold_ly'] ?? null) ? market_int($r['ytd_sold_ly']) . " in {$ly}" : ''];
         if ($n($r['ytd_days_on_market'] ?? null)) $pool['dom']     = ['Avg days on market, YTD', market_int($r['ytd_days_on_market']), $n($r['ytd_days_on_market_ly'] ?? null) ? market_int($r['ytd_days_on_market_ly']) . " in {$ly}" : ''];
         if ($n($r['ytd_pct_of_list'] ?? null))    $pool['pct']     = ['% of list received, YTD', market_dec1($r['ytd_pct_of_list']) . '%', $n($r['ytd_pct_of_list_ly'] ?? null) ? market_dec1($r['ytd_pct_of_list_ly']) . "% in {$ly}" : ''];
-        if ($n($r['ytd_average'] ?? null))        $pool['average'] = ['Average sale price, YTD', market_money($r['ytd_average']), market_vs(market_change($r['ytd_average'], $r['ytd_average_ly'] ?? null), "the same period of {$ly}")];
+        if ($n($r['ytd_median'] ?? null))         $pool['median']  = ['Median sale price, YTD', market_money($r['ytd_median']), market_vs(market_change($r['ytd_median'], $r['ytd_median_ly'] ?? null), "the same period of {$ly}")];
         if ($n($r['ytd_new_listings'] ?? null))   $pool['new']     = ['New listings, YTD', market_int($r['ytd_new_listings']), $n($r['ytd_new_listings_ly'] ?? null) ? market_int($r['ytd_new_listings_ly']) . " in {$ly}" : ''];
     } else {
         $lyMon = $w['lyMon'];
         if ($n($r['sold'] ?? null))           { $sc = market_change($r['sold'], $r['sold_ly'] ?? null); $pool['sold'] = ['Closed sales', market_int($r['sold']), $sc === null ? "None in {$lyMon}" : market_vs($sc, $lyMon)]; }
         if ($n($r['days_on_market'] ?? null)) $pool['dom']     = ['Avg days on market', market_int($r['days_on_market']), $n($r['days_on_market_ly'] ?? null) ? market_int($r['days_on_market_ly']) . ' a year ago' : ''];
         if ($n($r['pct_of_list'] ?? null))    $pool['pct']     = ['% of list price', market_dec1($r['pct_of_list']) . '%', $n($r['pct_of_list_ly'] ?? null) ? market_dec1($r['pct_of_list_ly']) . '% a year ago' : ''];
-        if ($n($r['average'] ?? null))        $pool['average'] = ['Average sale price', market_money($r['average']), market_vs(market_change($r['average'], $r['average_ly'] ?? null), $lyMon)];
+        if ($n($r['median'] ?? null))         $pool['median']  = ['Median sale price', market_money($r['median']), market_vs(market_change($r['median'], $r['median_ly'] ?? null), $lyMon)];
         if ($n($r['new_listings'] ?? null))   $pool['new']     = ['New listings', market_int($r['new_listings']), market_vs(market_change($r['new_listings'], $r['new_listings_ly'] ?? null), $lyMon)];
     }
     if ($n($r['inventory'] ?? null))     $pool['inventory'] = ['Homes for sale', market_int($r['inventory']), $n($r['inventory_ly'] ?? null) ? market_int($r['inventory_ly']) . ' a year ago' : ''];
@@ -389,7 +389,7 @@ function market_pick_stats(array $pool, array $want, array $defaults): array {
 
 /**
  * Everything the card shows, built from the month's data (no HTML; the
- * renderer draws it). One place, one property type, the median large and
+ * renderer draws it). One place, one property type, the average sale price large (the median until 2026-10-20) and
  * three figures under it, which the agent picks from the source's pool
  * (Nikki, 2026-10-18; defaults: closed sales, avg days on market, homes for
  * sale, or price per sq ft where no inventory exists yet). Nothing else on
@@ -426,9 +426,12 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
     } elseif (!empty($d['metro'])) {
         $f = market_front_row($data, $d['metro']);
         if (!$f) return null;
-        $mc = $f['median_change_pct'] ?? null;
+        // The average leads since 2026-10-20 (Jon); REcolorado's Market Watch figure goes in front_range.json as
+        // `average` + `average_change_pct` at the monthly refresh. A month without one still leads with the median.
+        $hasAvg = ($f['average'] ?? null) !== null;
+        $mc = $hasAvg ? ($f['average_change_pct'] ?? null) : ($f['median_change_pct'] ?? null);
         $card['sub']  = "{$w['month']} · All residential";
-        $card['hero'] = ['label' => 'Median closed price', 'value' => market_money($f['median'] ?? null, true),
+        $card['hero'] = ['label' => $hasAvg ? 'Average closed price' : 'Median closed price', 'value' => market_money($hasAvg ? $f['average'] : ($f['median'] ?? null), true),
                          'change' => $mc === null ? '' : (market_whole_pct_text($mc) === 'Even' ? "Even with {$w['lyLab']}" : market_whole_pct_text($mc) . " vs {$w['lyLab']}"),
                          'dir' => market_dir($mc === null ? null : (float)$mc)];
         $pool = market_pool_metro($f, $w);
@@ -440,13 +443,14 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
         $card['sub'] = "{$w['month']} · " . market_ptype_words($pt);
         $thin = false;   // always the month's own figures, however few sales (Nikki, 2026-10-19: no year-to-date switch; the county card is there for a steadier number). market_thin() and the YTD pools stay for the report.
         if ($thin) {
-            $ch = market_change($r['ytd_median'] ?? null, $r['ytd_median_ly'] ?? null);
+            $ch = market_change($r['ytd_average'] ?? null, $r['ytd_average_ly'] ?? null);
             $card['eyebrow'] = 'Market snapshot · Year to date';
-            $card['hero'] = ['label' => 'Median sale price, January to ' . $w['monthName'], 'value' => market_money($r['ytd_median'] ?? null),
+            $card['hero'] = ['label' => 'Average sale price, January to ' . $w['monthName'], 'value' => market_money($r['ytd_average'] ?? null),
                              'change' => market_vs($ch, "the same period of {$w['lyYr']}"), 'dir' => market_dir($ch)];
         } else {
-            $ch = market_change($r['median'] ?? null, $r['median_ly'] ?? null);
-            $card['hero'] = ['label' => 'Median sale price', 'value' => market_money($r['median'] ?? null),
+            // The AVERAGE sale price leads the card since 2026-10-20 (Jon Boxer's decision, via Nikki); the median is a pickable row.
+            $ch = market_change($r['average'] ?? null, $r['average_ly'] ?? null);
+            $card['hero'] = ['label' => 'Average sale price', 'value' => market_money($r['average'] ?? null),
                              'change' => $ch === null ? "No sales in {$w['lyMon']}" : market_vs($ch, $w['lyLab']), 'dir' => market_dir($ch)];
         }
         $pool = market_pool_car($r, $w, $thin);

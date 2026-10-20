@@ -18,7 +18,7 @@
  * gold rule and small-caps labels, the dark ink or the cream light ground,
  * a ghosted triangle (or M mark) and a stock photo behind the figures. No
  * logo at all (Nikki, 2026-10-18 evening: the watermark carries the brand). One place and one
- * property type per card; the median large; three figures in rows, each
+ * property type per card; the average sale price large (the median until 2026-10-20, Jon's decision); three figures in rows, each
  * with its label and comparison centred on its number. Nikki, 2026-10-18,
  * evening: nothing under 30 px, the place name a step smaller, the month
  * line and the median's label larger, the median itself smaller, the rows'
@@ -119,7 +119,7 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .hero .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$heroSize}px;line-height:1;letter-spacing:-.01em;margin-top:16px;white-space:nowrap}
 .chg{font-size:46px;font-weight:400;margin-top:30px;line-height:1.3}
 .chg i{font-style:normal;color:{$c['accent']};font-size:.78em;margin-right:12px;vertical-align:.1em}
-.stats{margin-top:40px;display:flex;flex-direction:column}
+.stats{margin-top:30px;display:flex;flex-direction:column}   /* 30, not 40: with the 2026-10-19 type a 12-character title (Eagle County, Routt County, the feed towns) sat 8 px past the post's bottom padding (found 2026-10-20) */
 .stat{display:flex;align-items:center;gap:42px;padding:30px 0}
 .stat+.stat{border-top:1px solid {$c['line']}}   /* lines between the rows only (Nikki, 2026-10-19) */
 .stat .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:100px;line-height:1;min-width:280px;white-space:nowrap}
