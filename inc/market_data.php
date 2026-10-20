@@ -317,7 +317,7 @@ function market_stat_catalog(): array {
     return [
         'sold'      => 'Closed sales',
         'dom'       => 'Avg days on market',
-        'ppsf'      => 'Median price per sq ft',
+        'ppsf'      => 'Median price/SqFt',   // short, so the label stays on one line on the card (Nikki, 2026-10-19)
         'inventory' => 'Homes for sale',
         'supply'    => 'Months of supply',
         'pct'       => '% of list price received',
