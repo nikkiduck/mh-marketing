@@ -1774,6 +1774,20 @@ Representation, Rentals. **An area with nothing in it is not sent at all**
   sql/hot_sheets_v5_fell_through.sql (the enum value); until it has run the
   deal is queued as before. A buyer-side deal on an MLS listing is still
   queued: that is a buyer rep.
+- **Off-market listings (2026-10-20).** Nikki asked whether a listing
+  agreement for an off-market property, entered in Paperless, reaches the
+  Hot Sheet. The path exists (listing side, no MLS number, no address match
+  → queued as a pocket listing → promoted on pipeline_review.php → Pocket
+  Listings while Active or Pending), but in the 26 events since 2026-08-15
+  no Paperless status outside Pending, Closed and Fell Through had ever
+  arrived, and `pl_map_status()` knew "listed" and "active" but not
+  Paperless's own "Listing" category ("20-listing"), so such a deal would
+  have sat in the queue unpromotable ("wait for a status that can be
+  published"). "listing" now maps to Active (negatives still win: "Listing
+  Cancelled" is null). Whether Paperless's Transaction Status Changed
+  trigger fires when a transaction is CREATED in the Listing category, or
+  only when one moves into it, was being tested the same day with a test
+  transaction; the Zap has only that one trigger (Paperless docs).
 - Preview: hot_sheet_preview.php lists every area with counts and whether
   it would be sent today; `?area=key` renders that email. Send:
   `send_hot_sheet.php --to=ADDR [--area=key]`. check_health.php now watches

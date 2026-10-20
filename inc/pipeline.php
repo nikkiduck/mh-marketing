@@ -37,7 +37,10 @@ function pl_map_status(?string $category, ?string $label): ?string {
         }
         if (str_contains($s, 'pending') || str_contains($s, 'under contract')) return 'Pending';
         if (str_contains($s, 'closed') || str_contains($s, 'sold'))            return 'Closed';
-        if (str_contains($s, 'active') || str_contains($s, 'coming soon') || str_contains($s, 'listed')) return 'Active';
+        // Paperless files a listing taken but not yet under contract in its
+        // "Listing" category ("20-listing"); until 2026-10-20 only "listed" was
+        // recognised, so such a deal would have sat in the queue unpromotable.
+        if (str_contains($s, 'active') || str_contains($s, 'coming soon') || str_contains($s, 'listed') || str_contains($s, 'listing')) return 'Active';
     }
     return null;
 }
