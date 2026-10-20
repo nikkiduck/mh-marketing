@@ -97,6 +97,13 @@ Rules for touching it:
   `sso_establish_session()` populate the same eight values, which is why
   `auth.php` needed no changes. If you add a session key, add it to both.
 
+- **`SSO_AUTO_REDIRECT` is true since 2026-10-20 (Nikki, the day the portal
+  opened).** A GET of /login.php goes straight to oauth_start.php?silent=1
+  (one silent prompt=none attempt per session, then the page). The password
+  form for break-glass is at **/login.php?staff=1**, which skips the redirect;
+  so does any `?error=` handed back by the callback. Server copy of
+  inc/sso_config.php before the change: ~/deploy-backups/20261020/inc/.
+
 Run the test suite after any change to `inc/sso.php` — see `TESTING.md`. It mints
 forged tokens and asserts each one is rejected.
 
@@ -132,6 +139,8 @@ SELECT email FROM users WHERE role='super_admin' AND password IS NOT NULL AND pa
 
 If the Entra client secret expires — it does, silently, on its expiry date —
 that password is the only way back in.
+With auto-redirect on (2026-10-20), reach the password form at
+`/login.php?staff=1`.
 
 ## Accounts and roles — users.php
 
