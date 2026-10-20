@@ -47,9 +47,8 @@ define('CREATIVES_DIR', __DIR__ . '/../../creatives/');
 // Each also needs a login with a role and users.intake_id set on users.php
 // (docs/AGENT_PORTAL_PLAN.md, section 2). Clear the list to open the site to
 // every Mont Haus login.
-define('ACCESS_ALLOWLIST', 'nikki.boxer@monthaus.com,jonathan.boxer@monthaus.com,jm.drai@monthaus.com,mary.lappe@monthaus.com,'
-    . 'scott.weber@monthaus.com,sara.perkowski@monthaus.com,bryan.cournoyer@monthaus.com,jackson.horn@monthaus.com,'
-    . 'megan.walz@monthaus.com');
+// Cleared 2026-10-20 (Nikki): the portal is open to every Mont Haus login.
+define('ACCESS_ALLOWLIST', '');
 
 /**
  * SOCIAL_BETA_EMAILS — who can see Instagram Posts on the agent portal
@@ -109,7 +108,8 @@ define('SITE_AGENT_SYNC_URL', 'https://monthaus.com/api/sync_agents.php');
  * hs_subscribers says. Comma-separated. Empty string = no restriction, which is
  * the go-live switch, not something to set casually.
  */
-define('HOT_SHEET_ALLOWED_RECIPIENTS', 'nikki.boxer@monthaus.com');
+// Cleared 2026-10-20 (Nikki): Hot Sheets go to every active subscriber.
+define('HOT_SHEET_ALLOWED_RECIPIENTS', '');
 
 // Sender, and where the email's images are served from (public, no sign-in).
 define('HOT_SHEET_FROM_EMAIL', 'hotsheet@monthaus.com');

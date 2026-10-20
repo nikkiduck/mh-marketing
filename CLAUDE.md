@@ -191,6 +191,13 @@ person's history stays visible.
 
 ### The allowlist is shown, not managed
 
+**Opened 2026-10-20 (Nikki):** `ACCESS_ALLOWLIST` is `''` on the server and
+in git, so every Microsoft sign-in with a `users` row gets in (all active
+agents had one by then). `HOT_SHEET_ALLOWED_RECIPIENTS` was cleared the same
+minute: the 13:00 UTC send reaches every active subscriber from 2026-10-21.
+The before copies are in ~/deploy-backups/20261020/inc/config.php.before-open.
+Checklist: docs/HANDOFF-portal-go-live.md.
+
 `ACCESS_ALLOWLIST` in `inc/config.php` is a **second gate**, enforced in
 `require_login()` and independent of `users.role`. Somebody added here signs in
 perfectly and then gets a 403 until their address is on that line — a confusing
