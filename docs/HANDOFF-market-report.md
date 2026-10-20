@@ -147,7 +147,13 @@ inc/market_card_render.php. tests/render_market_sample.php writes every
 card; a loop in the browser over its output measured all 84 within the
 budget on 2026-10-18 and again on 2026-10-19 after the month line grew
 (the head is 260 to 272 px; the three month lines all fit on one line
-with room to spare). Re-measure after any size change.
+with room to spare). Re-measure after any size change. **Two scales since
+2026-10-20:** the story keeps the InDesign sizes of 2026-10-19 (eyebrow 41,
+hero 162, change 46, rows 100 / 38 / 46, row padding 30); the post, 570 px
+shorter, runs one step smaller (eyebrow 34, hero 150, change 42, rows
+92 / 36 / 42, row padding 22) so about 60 px of air stays above and below
+the big figure (Nikki, 2026-10-20: the same type on the post was "crammed
+to the upper text").
 
 **Price per square foot on the CAR cards (Nikki, 2026-10-19: "if we
 have the data, that's a valuable option to offer"):** CAR's county reports

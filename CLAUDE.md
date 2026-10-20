@@ -2471,8 +2471,13 @@ a feature of the Instagram template area "dressed up a little".
   refresh), the median until then. Found the same morning: with the
   2026-10-19 type, every post whose title is 12 characters or fewer (Eagle
   County, Routt County, most feed towns: 60 of 208 cards) ran 8 px past the
-  bottom padding; `.stats` margin-top is 30 px now (was 40) and all 208
-  measure inside the budget.
+  bottom padding, and every post was packed edge to edge (Nikki: "crammed
+  to the upper text"). **The post has its own scale since 2026-10-20**
+  (`$z(post, story)` in market_card_render.php: eyebrow 34, hero 150,
+  change 42, rows 92 / 36 / 42, row padding 22, rows margin 36), which
+  leaves about 60 px of air above and below the big figure; the story keeps
+  Nikki's InDesign sizes of 2026-10-19 unchanged. All 208 measure inside
+  the budget.
 
 ### Render harnesses: run them on a server
 The stub-mysqli harnesses (`tests/render_*.php`) run pages under `php -n`

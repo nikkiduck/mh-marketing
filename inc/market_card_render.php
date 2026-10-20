@@ -28,9 +28,11 @@
  * the bottom, as the Instagram story does.
  *
  * The post's height budget: 1350 less 74 + 84 padding = 1192 for the head
- * (about 250), the hero (about 305) and three rows (about 410, a row's
- * label may wrap once); the two .gap spacers take whatever is left, and all
- * of the story's extra height. Measured on every card in both looks on
+ * (about 290), the hero (about 290) and three rows (about 410 at the post's
+ * scale); the two .gap spacers take whatever is left (about 70 px each on a
+ * post since 2026-10-20), and all of the story's extra height. The story
+ * keeps Nikki's InDesign sizes of 2026-10-19; the post runs one step smaller
+ * (eyebrow 34, hero 150, change 42, rows 92 / 36 / 42, row padding 22). Measured on every card in both looks on
  * 2026-10-18 (tests/render_market_sample.php, then the browser).
  */
 
@@ -92,10 +94,15 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
     $sub     = (string)($card['sub'] ?? '');
     // Sizes from Nikki's InDesign pass (2026-10-19, market-snapshot-story.pdf): eyebrow 41, title 105,
     // month line 50 regular, median label 36, median 162, change 46 in the text colour, rows 100 / 38 gold / 46.
+    // The story (1920 tall) takes those sizes as they are. The post (1350) is 570 px shorter and the same type
+    // filled it edge to edge (Nikki, 2026-10-20: "crammed to the upper text"), so the post runs one step
+    // smaller throughout and keeps about 70 px of air above and below the big figure. $z picks per format.
+    $story = $format === 'story';
+    $z = fn(int|string $post, int|string $storyV) => $story ? $storyV : $post;
     $titleSize = market_card_fit($title, 105, [12 => 94, 17 => 82, 22 => 70, 28 => 60]);   // one line across the full width
-    $heroSize  = market_card_fit($heroVal, 162, [6 => 150, 8 => 136, 10 => 120]);
+    $heroSize  = $story ? market_card_fit($heroVal, 162, [6 => 150, 8 => 136, 10 => 120]) : market_card_fit($heroVal, 150, [6 => 140, 8 => 126, 10 => 112]);
     $subSize   = market_card_fit($sub, 50, [38 => 44, 46 => 40]);   // 50 px since 2026-10-19 (Nikki: larger); never under 30, a long one wraps instead
-    $padTop = ($format === 'story' ? 150 : 74) + $top; $padBot = 84 + $bot;   // the story starts lower (Nikki's PDF: eyebrow at 345)
+    $padTop = ($story ? 150 : 74) + $top; $padBot = 84 + $bot;   // the story starts lower (Nikki's PDF: eyebrow at 345)
 
     $css = <<<CSS
 @font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url({$fCormorant}) format('woff2')}
@@ -110,22 +117,22 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .ghost.m{right:0;width:745px}
 .card{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;box-sizing:border-box;padding:{$padTop}px 94px {$padBot}px}
 .gap{flex:1 1 0;min-height:0}
-.eyebrow{font-size:41px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
+.eyebrow{font-size:{$z(34, 41)}px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
 .title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$titleSize}px;line-height:1.02;margin:18px 0 0;white-space:nowrap}
-.sub{font-size:{$subSize}px;font-weight:400;color:{$c['muted']};margin-top:20px;line-height:1.3;text-wrap:balance}
-.rule{width:90px;height:4px;background:{$c['accent']};margin-top:30px}
+.sub{font-size:{$subSize}px;font-weight:400;color:{$c['muted']};margin-top:{$z(16, 20)}px;line-height:1.3;text-wrap:balance}
+.rule{width:90px;height:4px;background:{$c['accent']};margin-top:{$z(26, 30)}px}
 .hero{margin-top:32px}
 .hero .lab{font-size:36px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
 .hero .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$heroSize}px;line-height:1;letter-spacing:-.01em;margin-top:16px;white-space:nowrap}
-.chg{font-size:46px;font-weight:400;margin-top:30px;line-height:1.3}
+.chg{font-size:{$z(42, 46)}px;font-weight:400;margin-top:{$z(22, 30)}px;line-height:1.3}
 .chg i{font-style:normal;color:{$c['accent']};font-size:.78em;margin-right:12px;vertical-align:.1em}
-.stats{margin-top:30px;display:flex;flex-direction:column}   /* 30, not 40: with the 2026-10-19 type a 12-character title (Eagle County, Routt County, the feed towns) sat 8 px past the post's bottom padding (found 2026-10-20) */
-.stat{display:flex;align-items:center;gap:42px;padding:30px 0}
+.stats{margin-top:{$z(36, 40)}px;display:flex;flex-direction:column}
+.stat{display:flex;align-items:center;gap:42px;padding:{$z(22, 30)}px 0}
 .stat+.stat{border-top:1px solid {$c['line']}}   /* lines between the rows only (Nikki, 2026-10-19) */
-.stat .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:100px;line-height:1;min-width:280px;white-space:nowrap}
+.stat .val{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$z(92, 100)}px;line-height:1;min-width:280px;white-space:nowrap}
 .stat .txt{display:flex;flex-direction:column;gap:6px;min-width:0}
-.stat .lab{font-size:38px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.2}
-.stat .note{font-size:46px;font-weight:400;color:{$c['soft']};line-height:1.3}
+.stat .lab{font-size:{$z(36, 38)}px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.2}
+.stat .note{font-size:{$z(42, 46)}px;font-weight:400;color:{$c['soft']};line-height:1.3}
 CSS;
 
     $bdHtml = $bd !== '' ? '<div class="bd"><img src="' . $e($bd) . '" alt=""></div>' : '';
