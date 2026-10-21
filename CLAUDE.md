@@ -138,7 +138,10 @@ SELECT email FROM users WHERE role='super_admin' AND password IS NOT NULL AND pa
 ```
 
 If the Entra client secret expires — it does, silently, on its expiry date —
-that password is the only way back in.
+that password is the only way back in. **The current secret expires
+2028-08-20** (Nikki, 2026-10-21); the same registration signs people into
+send.monthaus.com since 2026-10-21, so a new secret goes into both servers'
+inc/sso_config.php on the same day.
 With auto-redirect on (2026-10-20), reach the password form at
 `/login.php?staff=1`.
 
