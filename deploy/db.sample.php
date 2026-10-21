@@ -31,6 +31,10 @@ define('ANYPROP_MH_MEMBER_IDS', ['cren:13985', 'cren:13986']);
 // 24 characters or the feed refuses every request. Generate one with:
 //   php -r "echo bin2hex(random_bytes(32)), PHP_EOL;"
 define('ROSTER_FEED_TOKEN', 'PASTE_64_HEX_CHARS');
+// The B2B email tool's own token for the same feed (send.monthaus.com,
+// 2026-10-21); the same value sits in send's inc/db.php. Optional: absent
+// means only the website's token works.
+define('SEND_ROSTER_TOKEN', 'PASTE_64_HEX_CHARS');
 
 // ── Listings feed from site.monthaus.com (Hot Sheets) ────────────────────────
 // Same value as LISTINGS_FEED_TOKEN in the site's config.php.

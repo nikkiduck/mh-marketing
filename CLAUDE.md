@@ -1724,6 +1724,10 @@ they are for the servers.
 - `last_seen_at IS NULL` on an identity means Anyprop has never returned it.
   The sync never deactivates anyone over such a row. Keep that guard.
 - `api/roster.php` is public (no `auth.php`), guarded by `ROSTER_FEED_TOKEN`
+  (the website) or `SEND_ROSTER_TOKEN` (the B2B email tool, send.monthaus.com,
+  2026-10-21; its CLAUDE.md and docs/HANDOFF-feeds-for-send.md say what it
+  reads: identities for an agent's listings, name/phone/email/headshot for the
+  broker card, and `status` to open or close its accounts)
   in the `Authorization` header only. It publishes only photos this portal
   hosts; a Dropbox link is not an image.
 - Shared helpers (slugs, bio cleaning, phone format) live in

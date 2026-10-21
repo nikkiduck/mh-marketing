@@ -9,6 +9,10 @@
  * inc/auth.php. Access is a shared secret instead:
  *
  *   Authorization: Bearer <ROSTER_FEED_TOKEN>        (constant in inc/db.php)
+ *   Authorization: Bearer <SEND_ROSTER_TOKEN>        (the B2B email tool's own, 2026-10-21)
+ *
+ * Two tokens, one per consumer (the website; send.monthaus.com), so either
+ * can be rotated or revoked without touching the other. Same feed either way.
  *
  * Header only, never ?token= — query strings are written to the Apache access
  * log. An undefined or empty token refuses everything (fail closed).
@@ -43,7 +47,11 @@ require_once __DIR__ . '/../inc/db.php';
 if (!defined('ROSTER_FEED_TOKEN') || strlen((string)ROSTER_FEED_TOKEN) < 24) {
     feed_fail(503, 'feed not configured');
 }
-if ($bearer === '' || !hash_equals((string)ROSTER_FEED_TOKEN, $bearer)) {
+$ok = $bearer !== '' && hash_equals((string)ROSTER_FEED_TOKEN, $bearer);
+if (!$ok && $bearer !== '' && defined('SEND_ROSTER_TOKEN') && strlen((string)SEND_ROSTER_TOKEN) >= 24) {
+    $ok = hash_equals((string)SEND_ROSTER_TOKEN, $bearer);   // the B2B tool (send.monthaus.com)
+}
+if (!$ok) {
     feed_fail(401, 'unauthorized');
 }
 
