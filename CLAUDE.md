@@ -2520,6 +2520,31 @@ delete the copy. `render_users.php` is also intermittently flaky (a different
 single assertion fails now and then, before and after 2026-10-01): a race
 between rewriting scenario.json and the next request; rerun before chasing it.
 
+
+### Templates on the admin side (2026-10-21)
+
+Nikki asked for the portal's Templates area on the admin side with an agent
+dropdown, so an admin makes an agent's post or flyer without previewing
+their portal. `templates.php` (roster button "Templates", next to Market
+Report) shows the picker and the three tool cards; `template_social.php`
+and `template_flyer.php` take `?agent=<marketing account id>`, set
+`$_GET['preview']` to it and call `portal_context()`, exactly what the
+roster's eye icon does, so the listing list, photos, render and export act
+on that agent through `?preview=` with no new endpoints; `market_snapshot.php`
+needs no agent. The picker (`admin_agent_picker()`, `social_agent_choices()`:
+every active agent with their live listing count by board id) sits on every
+tool page. The page frame is `inc/admin_tool_shell.php` (header, nav, page
+title, portal.css tokens for social.css); market_snapshot.php uses it too.
+**The tools' forms are shared bodies now:** `inc/social_body.php` and
+`inc/flyer_body.php` hold everything from the no-listings check to the end
+of the script, included by portal/social.php and portal/flyer.php (the
+shells keep the heading, lead and back link) and by the admin pages;
+`social_status_words()` and `flyer_status_words()` moved to inc/social.php
+and inc/flyer.php. Uploads made from the admin pages are the admin's own
+(keyed by users.id), as on a preview. Checked 2026-10-21 by rendering every
+page under a simulated admin session on the server (Jonathan's 16 listings
+in both dropdowns, 26 agents in the picker).
+
 ## Upcoming projects (not started)
 
 - **Retire the frozen Spark-era roster views.** `office_roster` / `mh_brokers`

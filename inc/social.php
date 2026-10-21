@@ -497,3 +497,36 @@ function social_keep_copy(array $ctx, string $name, string $png): void {
     @file_put_contents($dir . '/' . $name, $png);
     @chmod($dir . '/' . $name, 0664);
 }
+
+/** "Under Contract" for the RESO value; the rest as sent. */
+function social_status_words(string $s): string {
+    return $s === 'Active Under Contract' ? 'Under Contract' : $s;
+}
+
+/**
+ * The agents an admin may build templates for (inc/admin_tool_shell.php's
+ * picker, 2026-10-21): every active agent account, with how many live
+ * listings the feed holds under their board ids (list or co-list side; the
+ * team-name matches social_listings() also makes are not counted here, so a
+ * team member may see more in the tool than the number promises).
+ * [id => ['id', 'agent_name', 'n']], by name.
+ */
+function social_agent_choices(mysqli $conn): array {
+    $out = [];
+    $hasState = mk_table_exists($conn, 'hs_listing_state');
+    $join = $hasState
+        ? "LEFT JOIN agent_mls_ids a ON a.intake_id = i.id AND a.mls_agent_id <> ''
+           LEFT JOIN hs_listing_state l ON l.market = a.market AND l.in_feed = 1
+                AND l.status IN ('Active','Active Under Contract','Pending','Coming Soon')
+                AND (l.list_agent_mls_id = a.mls_agent_id OR l.colist_agent_mls_id = a.mls_agent_id)"
+        : '';
+    $count = $hasState ? 'COUNT(DISTINCT l.market, l.listing_key)' : '0';
+    $type  = mk_column_exists($conn, 'marketing_intakes', 'entity_type') ? "AND COALESCE(i.entity_type, 'agent') = 'agent'" : '';
+    $r = $conn->query("SELECT i.id, i.agent_name, {$count} AS n
+                         FROM marketing_intakes i {$join}
+                        WHERE i.is_active = 1 AND COALESCE(i.status, '') <> 'archived' {$type}
+                        GROUP BY i.id, i.agent_name
+                        ORDER BY i.agent_name");
+    foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $row) $out[(int)$row['id']] = ['id' => (int)$row['id'], 'agent_name' => (string)$row['agent_name'], 'n' => (int)$row['n']];
+    return $out;
+}

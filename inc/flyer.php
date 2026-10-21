@@ -209,3 +209,8 @@ function flyer_export_pdf(string $html): ?string {
     }
     return $pdf;
 }
+
+/** "Under Contract" for the RESO value; the rest as sent. */
+function flyer_status_words(string $s): string {
+    return $s === 'Active Under Contract' ? 'Under Contract' : $s;
+}
