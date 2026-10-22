@@ -1,10 +1,10 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-22 07:22 from git HEAD in the Mont Haus Master folder.
+# Generated 2026-10-22 07:32 from git HEAD in the Mont Haus Master folder.
 20a0b03146f151869668b3ef7834b245  agent.php
 3953631202041ef45609216b36afb76b  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 abca2beeadfbb77d1ee32f935047d116  api/roster.php
-bbab8e8c48041b86b4860de679f76221  assets/css/market.css
+ec12d7b8d7f05c01575017e1aa8338d6  assets/css/market.css
 8e5d77ea17c9fad572ccb677a87fe910  assets/css/mh-theme.css
 b9ef4df7f0bd76b43002756edde10186  assets/css/portal.css
 1320a735c05d43579326161794cc3373  assets/css/social.css
