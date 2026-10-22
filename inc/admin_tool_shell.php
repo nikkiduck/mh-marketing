@@ -54,7 +54,8 @@ function admin_tool_header(array $o): void {
     /* The agent picker: whose listings the tool works from. */
     .tl-agent { display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#fff; border:1px solid #e8e2d6; border-radius:10px; padding:12px 14px; margin-bottom:20px; }
     .tl-agent label { font-weight:600; font-size:13px; color:#1c1a17; margin:0; }
-    .tl-agent select { font-size:14px; padding:6px 10px; border:1px solid #d9d2c4; border-radius:8px; background:#fff; min-width:260px; }
+    .tl-agent select { font-size:14px; padding:6px 36px 6px 10px; border:1px solid #d9d2c4; border-radius:8px; min-width:260px; cursor:pointer;
+                       appearance:none; -webkit-appearance:none; background:#fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><path d='M2.5 5l4.5 4.5L11.5 5' fill='none' stroke='%236f6857' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 12px center; }   /* the drawn chevron with room, as the template fields (2026-10-22) */
     .tl-agent .tl-count { font-size:13px; color:#6f6857; }
     /* The tool cards on templates.php, after the portal's. */
     .tl-group { font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#6f6857; margin:22px 0 10px; }

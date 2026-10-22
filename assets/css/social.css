@@ -93,11 +93,10 @@
 /* Words */
 .sp-fields { display: grid; grid-template-columns: 1fr; gap: 12px; }
 .sp-field { display: block; font-size: 14px; color: var(--muted); }
-/* Fields at 15px with a drawn chevron and room for it (Nikki, 2026-10-22: at 17px in Public Sans the dropdowns read huge and the native arrow sat on the edge). */
-.sp-field input, .sp-field select, .sp-field textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 15px; line-height: 1.4; color: var(--text); resize: vertical;
-                                    padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
-.sp-field select { appearance: none; -webkit-appearance: none; padding-right: 40px; cursor: pointer;
-                   background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><path d='M2.5 5l4.5 4.5L11.5 5' fill='none' stroke='%236f6857' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 14px center; }
+/* Fields the size of the admin agent picker (Nikki, 2026-10-22: 14px, the dropdowns read huge at 17px in Public Sans); selects draw their own chevron with room for it (the native arrow sat on the edge). */
+.sp-field input, .sp-field select, .sp-field textarea { display: block; width: 100%; margin-top: 4px; font: inherit; font-size: 14px; line-height: 1.45; color: var(--text); resize: vertical;
+                                    padding: 6px 10px; border: 1px solid #d9d2c4; border-radius: 8px; background: #fff; }
+.sp-field select { appearance: none; -webkit-appearance: none; padding-right: 36px; cursor: pointer; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><path d='M2.5 5l4.5 4.5L11.5 5' fill='none' stroke='%236f6857' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 12px center; }
 .sp-field input:focus, .sp-field select:focus { outline: none; border-color: var(--gold-deep); box-shadow: 0 0 0 3px rgba(138,109,54,.15); }
 .sp-two, .sp-when, .sp-line { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 560px) {
