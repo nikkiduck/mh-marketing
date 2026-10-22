@@ -317,11 +317,11 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // full width. No drop shadow (Nikki): a soft fade across the top of the photo, the
         // bottom fade's lighter twin, carries both the label and the logo instead.
         . ".photo::before{content:'';position:absolute;left:0;right:0;top:0;height:" . (320 + $top) . "px;z-index:1;background:linear-gradient(to bottom,{$c['topfade']})}"
-        . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:132px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
+        . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:152px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
         . ".body{z-index:2}"
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
         . ".ghost.m{right:0;width:745px}"
-        . ($format === 'story' ? ($storyLogo === 'top' ? '' : ".pill{left:auto;right:64px}") . ".slogo{display:block;height:140px;margin:0 0 32px}"
+        . ($format === 'story' ? ($storyLogo === 'top' ? '' : ".pill{left:auto;right:64px}") . ".slogo{display:block;height:160px;margin:0 0 32px}"
             . ".whentop{position:absolute;" . ($storyLogo === 'top' ? 'left:64px;text-align:left' : 'right:64px;text-align:right') . ";top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
             : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
@@ -346,15 +346,15 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .when{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.16;margin:0 0 8px;white-space:nowrap;overflow:hidden}
 .time{font-size:30px;font-weight:400;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 28px;white-space:nowrap;overflow:hidden}
 .whenline{font-size:28px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:{$c['accent']};margin:0 0 18px;white-space:nowrap;overflow:hidden;line-height:1.35}
-.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.12;margin:0 0 14px;padding-right:260px;overflow-wrap:anywhere;text-wrap:balance}
+.addr{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;line-height:1.12;margin:0 0 20px;padding-right:260px;overflow-wrap:anywhere;text-wrap:balance}
 .lines{padding-right:220px}
 .ln{margin:0 0 10px;white-space:nowrap;overflow:hidden;line-height:1.25}
-.ln-town{font-size:{$sz(31)}px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:{$c['accent']};margin-bottom:14px}
+.ln-town{font-size:{$sz(31)}px;font-weight:400;letter-spacing:.08em;text-transform:uppercase;color:{$c['accent']};margin-bottom:10px}
 .ln-price{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$sz(54)}px;line-height:1.18;margin-bottom:8px}
 .ln-details{font-size:{$sz(26)}px;font-weight:300;color:{$c['muted']};letter-spacing:.03em}
 .ln-note{font-family:'Cormorant Garamond',Georgia,serif;font-style:italic;font-size:{$sz(31)}px;line-height:1.3;color:{$c['soft']}}
 .ln-plain{font-size:{$sz(30)}px;font-weight:400;color:{$c['text']}}
-.logo{position:absolute;right:64px;bottom:56px;height:132px}
+.logo{position:absolute;right:64px;bottom:56px;height:152px}
 {$bodyCss}
 CSS;
 
