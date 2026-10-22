@@ -8,7 +8,7 @@
 :root {
   --ink: #0d0c0a; --gold: #c9a96a; --gold-deep: #8a6d36; --paper: #faf8f4; --card: #ffffff; --line: #e8e2d6;
   --text: #1c1a17; --muted: #6f6857; --ok: #2f6b45; --warn: #8a5a12;
-  --serif: 'Cormorant Garamond', Georgia, serif; --sans: 'Jost', 'Helvetica Neue', Arial, sans-serif;
+  --serif: 'Cormorant Garamond', Georgia, serif; --sans: 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 @page { size: Letter; margin: 0.6in 0.65in 0.7in; }
 *, *::before, *::after { box-sizing: border-box; }

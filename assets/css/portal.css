@@ -1,5 +1,5 @@
 /* portal.css — the agent portal (portal/*.php, inc/portal.php). 2026-10-01.
-   Mont Haus look (the public site's ink, champagne gold, Cormorant + Jost) on a
+   Mont Haus look (the public site's ink, champagne gold, Cormorant + Public Sans; Jost until 2026-10-22) on a
    light page. Phone first: big type, big tap targets, one column that widens. */
 
 :root {
@@ -14,7 +14,7 @@
   --ok: #2f6b45;
   --warn: #8a5a12;
   --serif: 'Cormorant Garamond', Georgia, serif;
-  --sans: 'Jost', 'Helvetica Neue', Arial, sans-serif;
+  --sans: 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }

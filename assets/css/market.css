@@ -7,7 +7,7 @@
 .mr {
   --mr-ink: #0d0c0a; --mr-gold: #c9a96a; --mr-gold-deep: #8a6d36; --mr-card: #ffffff; --mr-line: #e8e2d6;
   --mr-text: #1c1a17; --mr-muted: #6f6857; --mr-panel: #faf8f4; --mr-warn: #8a5a12; --mr-grid: #ece7dd; --mr-bar: #cfc6b3;
-  --mr-serif: 'Cormorant Garamond', Georgia, serif; --mr-sans: 'Jost', 'Helvetica Neue', Arial, sans-serif;
+  --mr-serif: 'Cormorant Garamond', Georgia, serif; --mr-sans: 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-family: var(--mr-sans); color: var(--mr-text); font-size: 16px; line-height: 1.5; font-weight: 400; letter-spacing: 0;
   display: flex; flex-direction: column; gap: 28px;
 }

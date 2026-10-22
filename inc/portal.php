@@ -162,7 +162,7 @@ function portal_stop(string $title, string $why): never {
     echo '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
        . '<meta name="viewport" content="width=device-width, initial-scale=1">'
        . '<title>' . htmlspecialchars($title) . '</title>'
-       . '<style>body{font-family:Jost,system-ui,-apple-system,sans-serif;max-width:34rem;'
+       . '<style>body{font-family:"Public Sans",system-ui,-apple-system,sans-serif;max-width:34rem;'
        . 'margin:16vh auto;padding:0 1.5rem;color:#1c1a17;line-height:1.6;background:#faf8f4}'
        . 'h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:2rem;margin:0 0 .6rem}'
        . 'p{color:#4a4539}code{background:#efe9dd;padding:.1rem .35rem;border-radius:3px;font-size:.9em}'
@@ -561,7 +561,7 @@ function portal_header(array $ctx, string $title, string $active, array $jump = 
 <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Public+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/css/portal.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/portal.css') ?>">
 </head>
 <body>

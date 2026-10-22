@@ -581,6 +581,19 @@ follow describe the old card layout; the optional card view keeps its spirit.
 - agent-photos/ must belong to www-data or every photo save fails
   (mk_photo_perm_hint() says so in the error).
 
+### The portal's type: Public Sans, not Jost (2026-10-22)
+Nikki found Jost hard to read on the portal, so every sans-serif the portal
+shows is Public Sans (`--mh-sans` in mh-theme.css, `--sans` in portal.css and
+admin_tool_shell.php, `--mr-sans` in market.css, the Elevation planner and
+its print/PDF, which embeds `assets/fonts/mh/PublicSans-VariableFont_wght.ttf`,
+and the Google Fonts links in inc/_nav.php and inc/portal.php). The admin
+pages were Public Sans already (the Able Pro theme). send.monthaus.com
+follows the same rule. What keeps Jost, on purpose: the public website, and
+the collateral the portal renders for the public with the website's brand
+type (Instagram posts and stories in social_render.php, the listing flyer in
+flyer_render.php, the Market Snapshot cards in market_card_render.php, and
+send's outbound email templates). Change those only if Nikki asks.
+
 ### One place for agents (2026-09-23)
 - **No per-agent Office (2026-10-05, Nikki).** The Office select on the agent
   page, the roster's office filter and the feed's `offices` (now always [])

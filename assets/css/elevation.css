@@ -1,6 +1,6 @@
 /* elevation.css — the Elevation Planner on the agent portal (portal/elevation.php, 2026-10-17).
    Sits on portal.css: its tokens (--ink, --gold, --gold-deep, --paper, --card, --line, --text,
-   --muted, --ok, --warn, --serif, --sans) and its buttons (.pt-btn). Jost throughout, Cormorant
+   --muted, --ok, --warn, --serif, --sans) and its buttons (.pt-btn). Public Sans throughout (Jost until 2026-10-22), Cormorant
    on the section headings only (Nikki, 2026-10-17). Every rule is scoped to an .ev- class, so
    the printed document (inc/elevation.php inlines this file beside elevation-print.css for the
    .ev-s-* summary blocks) can carry it without side effects. Ported from the standalone

@@ -220,6 +220,16 @@ $conn->close();
         color:#6b7280; font-size:.78rem; text-decoration:underline; cursor:pointer;
       }
       .staff-toggle:hover { color:#374151; }
+
+      /* The lake photo (Nikki, 2026-10-22) in place of the theme's stock
+         background, with a soft bottom gradient instead of the 85% dark
+         wash so the picture shows and the white footer still reads. */
+      .auth-main.v2 { background-image:url(/assets/images/authentication/mh-auth-bg.jpg); }
+      .auth-main.v2 .bg-overlay {
+        background:linear-gradient(180deg, rgba(13,12,10,.06) 0%, rgba(13,12,10,.22) 55%, rgba(13,12,10,.62) 100%) !important;
+        -webkit-backdrop-filter:none; backdrop-filter:none;
+      }
+      .login-mark { width:76px; height:auto; }
     </style>
 </head>
 <body data-pc-preset="preset-1" data-pc-sidebar-theme="light" data-pc-sidebar-caption="true" data-pc-direction="ltr" data-pc-theme="light">
@@ -243,7 +253,7 @@ $conn->close();
         <div class="auth-form">
             <div class="card my-5 mx-3">
                 <div class="card-body text-center fc-center">
-                    <img src="/assets/images/triangle_marks_blk.svg" style="max-width:20%;" class="img-fluid mb-4 d-block mx-auto" alt="MH" />
+                    <img src="/assets/images/M-mark_black.svg" class="login-mark mb-4 d-block mx-auto" alt="Mont Haus" />
                     <h2 class="mb-2">Mont Haus Marketing</h2>
                     <p class="mb-4 text-muted">Sign in with your Mont Haus Microsoft account.</p>
 
@@ -281,7 +291,7 @@ $conn->close();
 
                             <?php if ($sso_on): ?>
                                 <p class="text-muted mb-3" style="font-size:.78rem;">
-                                    Staff sign-in — for administrator accounts only.
+                                    Password sign-in for administrator accounts, for when Microsoft sign-in is unavailable.
                                 </p>
                             <?php endif; ?>
 

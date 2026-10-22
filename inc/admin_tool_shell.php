@@ -68,7 +68,7 @@ function admin_tool_header(array $o): void {
     .tl-card.off { opacity:.55; pointer-events:none; }
     /* The bodies reuse the portal's social.css, which expects portal.css's tokens. */
     .wrap { --ink:#0d0c0a; --gold:#c9a96a; --gold-deep:#8a6d36; --paper:#faf8f4; --card:#ffffff; --line:#e8e2d6; --text:#1c1a17; --muted:#6f6857;
-            --serif:'Cormorant Garamond', Georgia, serif; --sans:'Jost', 'Helvetica Neue', Arial, sans-serif; }
+            --serif:'Cormorant Garamond', Georgia, serif; --sans:'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif; }
     .wrap .pt-flash { border-radius:10px; padding:14px 16px; margin:0 0 20px; font-size:15px; }
     .wrap .pt-flash.err { background:#fbeaea; color:#8f2424; }
     <?= (string)($o['css'] ?? '') ?>

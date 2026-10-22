@@ -70,7 +70,7 @@ ob_start();
 include dirname(__DIR__) . '/inc/market_report_body.php';
 $body = ob_get_clean();
 file_put_contents("$out/report.html", '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-    . '<title>Market Report sample</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">'
+    . '<title>Market Report sample</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Public+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">'
     . '<link rel="stylesheet" href="/assets/css/portal.css"></head><body><main class="pt-main">' . $body . '</main></body></html>');
 
 $tiles = '';
@@ -95,7 +95,7 @@ ob_start();
 include dirname(__DIR__) . '/inc/market_post_body.php';
 $body = ob_get_clean();
 file_put_contents("$out/builder.html", '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">'
-    . '<title>Market Snapshot sample</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">'
+    . '<title>Market Snapshot sample</title><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Public+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">'
     . '<link rel="stylesheet" href="/assets/css/portal.css"></head><body><main class="pt-main"><p class="pt-soon">From the Market Report.</p><h1 class="pt-h1">Market Snapshot</h1>'
     . '<p class="pt-lead">One place\'s month on a card: the average sale price, closed sales, days on market and supply, Pick the place and the look, then download.</p>' . $body . '</main></body></html>');
 echo "Wrote builder.html\n";

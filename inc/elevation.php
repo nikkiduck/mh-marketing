@@ -251,7 +251,7 @@ function elevation_render(array $row, array $ctx, bool $export, string $back = '
     // elevation.css carries the .ev-s-* summary blocks the page shares; elevation-print.css the sheet, header and print rules.
     $css = (string)@file_get_contents(__DIR__ . '/../assets/css/elevation.css') . "\n" . (string)@file_get_contents(__DIR__ . '/../assets/css/elevation-print.css');
     $js  = (string)@file_get_contents(__DIR__ . '/../assets/js/elevation.js');
-    $fonts = "@font-face{font-family:'Jost';font-style:normal;font-weight:100 900;src:url(" . $fontUrl('Jost-normal.woff2') . ") format('woff2')}\n"
+    $fonts = "@font-face{font-family:'Public Sans';font-style:normal;font-weight:100 900;src:url(" . $fontUrl('PublicSans-VariableFont_wght.ttf') . ") format('truetype')}\n"
            . "@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url(" . $fontUrl('CormorantGaramond-normal.woff2') . ") format('woff2')}\n";
 
     $meta = [
