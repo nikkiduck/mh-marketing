@@ -27,7 +27,9 @@
  * Whose listings: hs_listing_state rows (the site's Mont Haus feed, synced
  * hourly) whose list or co-list agent id is one of the account's board
  * identities in agent_mls_ids (team aliases such as WebBoxGrp included) or
- * whose agent name is the account's, live statuses only, cross-board copies
+ * whose agent name is the account's, live statuses plus anything closed in
+ * the last SOCIAL_CLOSED_DAYS (Nikki, 2026-10-24: a "Just Sold" post the day
+ * of the closing, as the Hot Sheet keeps a sale in view), cross-board copies
  * collapsed. Photos: the site's api/listings.php?scope=photos, through its
  * img.php proxy; the list is kept in the session so a posted photo URL is
  * checked against it (never rendered from a free URL). Uploads live in
@@ -73,8 +75,45 @@ function social_img(string $raw, int $w): string {
 }
 
 /**
+ * How long a closed listing stays in the Templates dropdowns after the sync
+ * saw it close (Nikki, 2026-10-24: Allison's Brett Trl closing was gone the
+ * day of, so the Just Sold post could not be made). A week, as she asked; the
+ * Hot Sheet's own sold window is HS_SOLD_WINDOW_DAYS.
+ */
+const SOCIAL_CLOSED_DAYS = 7;
+
+/** True for a status that means the listing closed (sold, or leased for a rental). Same words as hs_is_closed(). */
+function social_is_closed(string $s): bool { return in_array(strtolower(trim($s)), ['closed', 'sold', 'leased'], true); }
+
+/**
+ * The SQL that says which hs_listing_state rows the Templates tools offer:
+ * in the feed and live (Active, Active Under Contract, Pending, Coming
+ * Soon), or closed within SOCIAL_CLOSED_DAYS: a `closed` row in
+ * hs_listing_changes since then (the sync writes one when a status turns
+ * closed), or a close_date since then for a listing first seen closed. One
+ * definition, used by social_listings() and the admin picker's counts
+ * (social_agent_choices()). $alias is the hs_listing_state alias with its
+ * dot ('st.'), and the table MUST carry one: hs_listing_changes has market
+ * and listing_key too, so an unqualified name inside the EXISTS would
+ * resolve to the change row and match every listing. The date is generated
+ * here, never from a request, so it is a literal.
+ */
+function social_live_sql(string $alias): string {
+    $since_dt = gmdate('Y-m-d H:i:s', time() - SOCIAL_CLOSED_DAYS * 86400);
+    $since_d  = gmdate('Y-m-d', time() - SOCIAL_CLOSED_DAYS * 86400);
+    return "{$alias}in_feed = 1 AND ({$alias}status IN ('Active','Active Under Contract','Pending','Coming Soon')
+              OR (LOWER({$alias}status) IN ('closed','sold','leased')
+                  AND ({$alias}close_date >= '{$since_d}'
+                       OR EXISTS (SELECT 1 FROM hs_listing_changes hc
+                                   WHERE hc.market = {$alias}market AND hc.listing_key = {$alias}listing_key
+                                     AND hc.change_type = 'closed' AND hc.detected_at >= '{$since_dt}'))))";
+}
+
+/**
  * The account's live listings, keyed "market|listing_key", with the words the
- * form pre-fills (price_text, specs_text, town) and a thumbnail.
+ * form pre-fills (price_text, specs_text, town) and a thumbnail. A listing
+ * closed in the last SOCIAL_CLOSED_DAYS is in the list too, `closed` => true,
+ * after the live ones (social_live_sql()).
  */
 function social_listings(mysqli $conn, array $ctx): array {
     static $cache = null;
@@ -100,11 +139,11 @@ function social_listings(mysqli $conn, array $ctx): array {
     if (!$conds) return $cache;
 
     $st = $conn->prepare("SELECT market, listing_key, mls_id, status, is_rental, property_type, address, city,
-                                 list_price, beds, baths, sqft, primary_photo, url
-                            FROM hs_listing_state
-                           WHERE in_feed = 1 AND status IN ('Active','Active Under Contract','Pending','Coming Soon')
+                                 list_price, close_price, close_date, beds, baths, sqft, primary_photo, url
+                            FROM hs_listing_state st
+                           WHERE " . social_live_sql('st.') . "
                              AND (" . implode(' OR ', $conds) . ")
-                           ORDER BY (market = 'recolorado'), list_price DESC, address");
+                           ORDER BY (LOWER(status) IN ('closed','sold','leased')), (market = 'recolorado'), list_price DESC, address");
     $st->bind_param($types, ...$vals);
     $st->execute();
     $seen = [];
@@ -114,11 +153,15 @@ function social_listings(mysqli $conn, array $ctx): array {
         if (isset($seen[$k])) continue;
         $seen[$k] = true;
         $id = $l['market'] . '|' . $l['listing_key'];
+        $closed = social_is_closed((string)$l['status']);
         $cache[$id] = $l + [
             'id'         => $id,
+            'closed'     => $closed,
             'headline'   => social_short_address((string)$l['address']),   // "610 S West End St #K103"
             // Rentals: no price by default (Nikki, 2026-10-12); the agent can type one into Text 2.
-            'price_text' => (int)$l['is_rental'] ? '' : social_price_text($l['list_price']),
+            // A closed listing: none either. The list price is no longer the figure, and the
+            // sold price is the agent's to publish or not; the dropdown says "Sold".
+            'price_text' => ((int)$l['is_rental'] || $closed) ? '' : social_price_text($l['list_price']),
             'specs_text' => social_specs_text($l['beds'], $l['baths'], $l['sqft']),
             'town'       => trim((string)$l['city']) !== '' ? trim((string)$l['city']) . ', Colorado' : '',
             'thumb'      => (string)$l['primary_photo'] !== '' ? social_img((string)$l['primary_photo'], 400) : '',
@@ -500,13 +543,15 @@ function social_keep_copy(array $ctx, string $name, string $png): void {
 
 /** "Under Contract" for the RESO value; the rest as sent. */
 function social_status_words(string $s): string {
+    if (social_is_closed($s)) return strtolower(trim($s)) === 'leased' ? 'Leased' : 'Sold';
     return $s === 'Active Under Contract' ? 'Under Contract' : $s;
 }
 
 /**
  * The agents an admin may build templates for (inc/admin_tool_shell.php's
  * picker, 2026-10-21): every active agent account, with how many live
- * listings the feed holds under their board ids (list or co-list side; the
+ * listings (recent closings included, social_live_sql()) the feed holds
+ * under their board ids (list or co-list side; the
  * team-name matches social_listings() also makes are not counted here, so a
  * team member may see more in the tool than the number promises).
  * [id => ['id', 'agent_name', 'n']], by name.
@@ -516,8 +561,7 @@ function social_agent_choices(mysqli $conn): array {
     $hasState = mk_table_exists($conn, 'hs_listing_state');
     $join = $hasState
         ? "LEFT JOIN agent_mls_ids a ON a.intake_id = i.id AND a.mls_agent_id <> ''
-           LEFT JOIN hs_listing_state l ON l.market = a.market AND l.in_feed = 1
-                AND l.status IN ('Active','Active Under Contract','Pending','Coming Soon')
+           LEFT JOIN hs_listing_state l ON l.market = a.market AND " . social_live_sql('l.') . "
                 AND (l.list_agent_mls_id = a.mls_agent_id OR l.colist_agent_mls_id = a.mls_agent_id)"
         : '';
     $count = $hasState ? 'COUNT(DISTINCT l.market, l.listing_key)' : '0';
