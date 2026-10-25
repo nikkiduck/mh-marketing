@@ -77,6 +77,12 @@ Docs link list appears to do nothing on monthausint.com. It works here.
 
 ## Sign-in — Microsoft Entra ID
 
+**Sign out stays signed out (2026-10-25).** With `SSO_AUTO_REDIRECT` on,
+login.php bounced straight to Microsoft, which still had the session, so
+"Sign out" looked like nothing happened (Nikki). logout.php now sends the
+browser to `/login.php?signed_out=1` and login.php skips the silent bounce
+when that parameter is present. The same fix is in send.monthaus.com.
+
 `inc/sso.php` implements the OIDC authorization-code flow with PKCE. It has **no
 Composer dependency**: the JWKS fetch, the JWK-to-PEM conversion and the RS256
 verification are all in that file, on top of ext/openssl and ext/curl.
@@ -1983,6 +1989,18 @@ the site). Migration `sql/leadership_v1.sql`.
   No `leadership` key before the migration = "old feed" to the site.
 
 ## Agent portal (portal/, 2026-10-01)
+
+### MH Send under My Tools (2026-10-25)
+
+`portal_send_item()` (inc/portal.php) puts **MH Send** (send.monthaus.com,
+the B2B emails) first under My Tools, in a new window, for a person whose
+account (or team) holds an identity on an Aspen or Vail board:
+`portal_context()` now returns `markets` (distinct `agent_mls_ids.market`
+for the context's ids). Nikki, 2026-10-25: only Aspen and Vail members for
+now, everyone later (then drop the board test). `MH_SEND_URL` and
+`MH_SEND_BOARDS` in inc/config.php override the defaults if ever needed.
+Deployed with MH Send's go-live, not before: until send.monthaus.com's
+allow-list opens, the link would land agents on a 403.
 
 Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 (creative uploads, 2026-10-06) and the Advertising / Print orders pages.

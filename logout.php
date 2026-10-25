@@ -45,5 +45,5 @@ if ($federated) {
     exit();
 }
 
-header('Location: /login.php');
+header('Location: /login.php?signed_out=1');   // the login page then skips its silent Microsoft bounce once (Nikki, 2026-10-25: Sign out looked like nothing happened)
 exit();

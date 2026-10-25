@@ -36,6 +36,7 @@ if (
     && $_SERVER['REQUEST_METHOD'] === 'GET'
     && !isset($_GET['error'])
     && !isset($_GET['staff'])
+    && !isset($_GET['signed_out'])   // just signed out: show the page, do not bounce back in (2026-10-25)
     && empty($_SESSION['sso_silent_tried'])
 ) {
     header('Location: /oauth_start.php?silent=1');

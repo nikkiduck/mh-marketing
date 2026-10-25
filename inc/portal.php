@@ -274,8 +274,14 @@ function portal_context(mysqli $conn): array {
     foreach ($teams as $t) $scopes[] = ['id' => $t['id'], 'name' => $t['name'], 'short' => $t['short'], 'team' => true];
 
     if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    // The boards the person (and their teams) hold an identity on: My Tools shows MH Send
+    // to Aspen and Vail members only, for now (Nikki, 2026-10-25).
+    $markets = [];
+    $in = implode(',', array_map('intval', array_values(array_unique($ids))));
+    $r  = $conn->query("SELECT DISTINCT market FROM agent_mls_ids WHERE intake_id IN ({$in}) AND mls_agent_id <> ''");
+    while ($r && ($m = $r->fetch_row())) $markets[] = (string)$m[0];
     return ['user' => $user, 'acct' => $acct, 'ids' => array_values(array_unique($ids)), 'preview' => $preview,
-            'teams' => $teams, 'scopes' => $scopes];
+            'teams' => $teams, 'scopes' => $scopes, 'markets' => $markets];
 }
 
 /** The account ids whose items this portal may show (the person and their teams), as a SQL IN list. Ints from the context only. */
@@ -547,8 +553,16 @@ function portal_nav_group(string $active): string {
  * Page top: dark header with the logo, the menu, and the preview banner.
  * $active is the nav key of the current page (a leaf key).
  */
+/** MH Send (send.monthaus.com, the B2B emails) for Aspen and Vail members: first under My Tools (Nikki, 2026-10-25). */
+function portal_send_item(array $ctx): array {
+    $boards = defined('MH_SEND_BOARDS') ? MH_SEND_BOARDS : ['aspen', 'vail'];
+    if (!array_intersect($boards, $ctx['markets'] ?? [])) return [];
+    return ['send' => ['MH Send', defined('MH_SEND_URL') ? MH_SEND_URL : 'https://send.monthaus.com/b2b/']];
+}
+
 function portal_header(array $ctx, string $title, string $active, array $jump = []): void {
     $nav   = portal_nav();
+    if ($send = portal_send_item($ctx)) $nav['tools'][2] = $send + $nav['tools'][2];
     $group = portal_nav_group($active);
     ?>
 <!DOCTYPE html>
@@ -591,7 +605,11 @@ function portal_header(array $ctx, string $title, string $active, array $jump = 
                   onclick="var g=this.parentNode;g.classList.toggle('open');this.setAttribute('aria-expanded',g.classList.contains('open'))"><?= ph($label) ?> <i class="pt-caret"></i></button>
           <div class="pt-sub">
             <?php foreach ($subs as $lk => [$l2, $p2]): ?>
+              <?php if (str_starts_with($p2, 'http')): // another site (MH Send): a new window ?>
+              <a href="<?= ph($p2) ?>" target="_blank" rel="noopener"><?= ph($l2) ?> <span aria-hidden="true">&#8599;</span></a>
+              <?php else: ?>
               <a href="<?= ph(portal_url($ctx, $p2)) ?>" class="<?= $lk === $active ? 'on' : '' ?>"><?= ph($l2) ?></a>
+              <?php endif; ?>
             <?php endforeach; ?>
           </div>
         </div>
