@@ -1,6 +1,6 @@
 -- ============================================================================
 -- qr_code_shares_v1.sql — one QR code on more than one agent's portal
--- STATUS: not yet run
+-- STATUS: run (Nikki, 2026-10-26)
 --
 -- Nikki, 2026-10-26: qr.monthaus.com/kc-open is printed on Kimberlee Coates's
 -- open house signs, but her son Jackson Horn works the open houses with her
