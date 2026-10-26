@@ -527,7 +527,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
               <?php if ($warn !== ''): ?><div class="warn"><i class="ti ti-alert-triangle"></i> <?= e($warn) ?></div><?php endif; ?>
               <?php if (!empty($shares[$qid])): ?>
                 <div class="qr-dest qr-shared"><i class="ti ti-users"></i>
-                  Also on <?= e(implode(', ', array_column($shares[$qid], 'name'))) ?>'s portal: they can change where it goes too.
+                  Also on <?= e(implode(', ', array_column($shares[$qid], 'name'))) ?>'s portal.
                 </div>
               <?php endif; ?>
               <div class="qr-meta">
