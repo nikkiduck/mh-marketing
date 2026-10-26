@@ -31,6 +31,9 @@ $ready = mk_table_exists($conn, 'qr_codes')
       && mk_table_exists($conn, 'qr_scans_daily');
 $has_team = mk_column_exists($conn, 'marketing_intakes', 'entity_type');
 $me       = (int) ($_SESSION['user_id'] ?? 0) ?: null;
+// sql/qr_code_shares_v1.sql (2026-10-26): a code on another agent's portal too.
+// Until it has run the Change form offers no "Also on the portal of" boxes.
+$has_shares = $ready && qr_shares_ready($conn);
 
 // ── CSRF (same pattern as users.php) ─────────────────────────────────────────
 if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -143,14 +146,49 @@ if ($ready && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $old_b = qr_broker($conn, (int) $cur['intake_id'], $has_team);
                     $changes[] = ['broker', $old_b['agent_name'] ?? '(none)', $broker['agent_name'] ?? '(none)'];
                 }
-                if (!$changes) {
+                // "Also on the portal of": the posted set against the stored one. Each id
+                // must be a current broker (never the owner, never staff), so a stale form
+                // cannot share with a row that is gone. Logged as shared / unshared by name.
+                $share_add = $share_drop = [];
+                if ($has_shares) {
+                    $want = [];
+                    foreach ((array) ($_POST['share_ids'] ?? []) as $sid) {
+                        $sid = (int) $sid;
+                        if ($sid <= 0 || $sid === (int) $bid) continue;
+                        $sb = qr_broker($conn, $sid, $has_team);
+                        if ($sb && ($sb['entity_type'] ?? 'agent') !== 'staff') $want[$sid] = $sb['agent_name'];
+                    }
+                    $have = [];
+                    foreach (qr_shares_for($conn, [$qid])[$qid] ?? [] as $sh) $have[$sh['id']] = $sh['name'];
+                    foreach ($want as $sid => $nm) if (!isset($have[$sid])) $share_add[$sid] = $nm;
+                    foreach ($have as $sid => $nm) if (!isset($want[$sid])) $share_drop[$sid] = $nm;
+                }
+                if (!$changes && !$share_add && !$share_drop) {
                     $flash = ['ok', 'Nothing had changed.'];
                 } else {
-                    $s = $conn->prepare("UPDATE qr_codes SET intake_id = ?, label = ?, dest_type = ?, dest_url = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?");
-                    $s->bind_param('isssi', $bid, $label, $type, $url, $qid);
-                    $s->execute(); $s->close();
-                    foreach ($changes as [$what, $o, $n]) qr_log_change($conn, $qid, $what, $o, $n, $me);
-                    $flash = ['ok', 'Saved. ' . qr_public_url($cur['code']) . ' now opens ' . ($type === 'profile' ? 'the profile page' : $url) . '.'];
+                    if ($changes) {
+                        $s = $conn->prepare("UPDATE qr_codes SET intake_id = ?, label = ?, dest_type = ?, dest_url = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?");
+                        $s->bind_param('isssi', $bid, $label, $type, $url, $qid);
+                        $s->execute(); $s->close();
+                        foreach ($changes as [$what, $o, $n]) qr_log_change($conn, $qid, $what, $o, $n, $me);
+                    }
+                    foreach ($share_add as $sid => $nm) {
+                        $s = $conn->prepare("INSERT IGNORE INTO qr_code_shares (qr_id, intake_id, added_by) VALUES (?, ?, ?)");
+                        $s->bind_param('iii', $qid, $sid, $me);
+                        $s->execute(); $s->close();
+                        qr_log_change($conn, $qid, 'shared', null, $nm, $me);
+                    }
+                    foreach ($share_drop as $sid => $nm) {
+                        $s = $conn->prepare("DELETE FROM qr_code_shares WHERE qr_id = ? AND intake_id = ?");
+                        $s->bind_param('ii', $qid, $sid);
+                        $s->execute(); $s->close();
+                        qr_log_change($conn, $qid, 'unshared', $nm, null, $me);
+                    }
+                    $bits = [];
+                    if ($changes)    $bits[] = 'now opens ' . ($type === 'profile' ? 'the profile page' : $url);
+                    if ($share_add)  $bits[] = 'is now on ' . implode(', ', $share_add) . "'s portal too";
+                    if ($share_drop) $bits[] = 'is no longer on ' . implode(', ', $share_drop) . "'s portal";
+                    $flash = ['ok', 'Saved. ' . qr_public_url($cur['code']) . ' ' . implode('; ', $bits) . '.'];
                 }
             }
         }
@@ -174,6 +212,7 @@ if ($ready && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($conn->affected_rows !== 1) throw new RuntimeException('it was scanned a moment ago, so it was kept.');
                 $conn->query("DELETE FROM qr_code_changes WHERE qr_id = {$qid}");
                 $conn->query("DELETE FROM qr_scans_daily WHERE qr_id = {$qid}");
+                if ($has_shares) $conn->query("DELETE FROM qr_code_shares WHERE qr_id = {$qid}");
                 $conn->commit();
                 $flash = ['ok', 'Deleted ' . qr_public_url($cur['code']) . '. The name can be used again.'];
             } catch (Throwable $e) {
@@ -201,10 +240,11 @@ $brokers = $conn->query("SELECT {$bcols} FROM marketing_intakes
                           WHERE is_active = 1 AND status <> 'archived'
                           ORDER BY agent_name")->fetch_all(MYSQLI_ASSOC);
 
-$codes = $changes = $recent = [];
+$codes = $changes = $recent = $shares = [];
 $taken = [];
 if ($ready) {
-    $where = $filter ? 'WHERE q.intake_id = ' . $filter : '';
+    // ?intake=N: the broker's own codes and any shared with them (qr_scope_sql).
+    $where = $filter ? 'WHERE ' . qr_scope_sql($conn, (string) $filter) : '';
     $tcol  = $has_team ? ', mi.entity_type' : '';
     $codes = $conn->query("SELECT q.*, mi.agent_name, mi.slug, mi.is_active AS agent_active, mi.status AS agent_status{$tcol}
                              FROM qr_codes q
@@ -227,6 +267,7 @@ if ($ready) {
             $k = (int) $r['qr_id'];
             if (count($changes[$k] ?? []) < 10) $changes[$k][] = $r;
         }
+        $shares = qr_shares_for($conn, array_column($codes, 'id'));   // [qr_id => [['id','name'], ...]]
     }
 }
 $conn->close();
@@ -314,6 +355,10 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     .qr-label { font-size:13px; color:#374151; margin:2px 0 6px; }
     .qr-dest { font-size:13px; color:#374151; word-break:break-all; }
     .qr-dest i { color:#9ca3af; }
+    .qr-shared { color:#4b5563; margin-top:2px; }
+    .share-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); gap:2px 14px; max-width:820px; margin-bottom:4px; }
+    .share-grid label { font-size:13px; display:flex; align-items:center; gap:6px; font-weight:400; cursor:pointer; }
+    .share-grid label[hidden] { display:none; }
     .qr-meta { font-size:12px; color:#6b7280; margin-top:6px; }
     .qr-actions { display:flex; flex-direction:column; gap:6px; align-items:stretch; min-width:130px; }
     .qr-actions form { margin:0; }
@@ -480,6 +525,11 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
                 <?php endif; ?>
               </div>
               <?php if ($warn !== ''): ?><div class="warn"><i class="ti ti-alert-triangle"></i> <?= e($warn) ?></div><?php endif; ?>
+              <?php if (!empty($shares[$qid])): ?>
+                <div class="qr-dest qr-shared"><i class="ti ti-users"></i>
+                  Also on <?= e(implode(', ', array_column($shares[$qid], 'name'))) ?>'s portal: they can change where it goes too.
+                </div>
+              <?php endif; ?>
               <div class="qr-meta">
                 <?= number_format((int) $c['scan_count']) ?> scan<?= (int) $c['scan_count'] === 1 ? '' : 's' ?>
                 &middot; <?= number_format($recent[$qid] ?? 0) ?> in the last 30 days
@@ -523,6 +573,18 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
                     <input type="url" name="dest_url" class="form-input" data-url-input placeholder="https://monthaus.com/listing/..."
                            value="<?= e($c['dest_url'] ?? '') ?>" style="max-width:640px;">
                   </div>
+                  <?php if ($has_shares): $shared_ids = array_column($shares[$qid] ?? [], 'id'); ?>
+                    <span class="fld-label">Also on the portal of</span>
+                    <div class="share-grid" data-share-grid>
+                      <?php foreach ($brokers as $b): if (($b['entity_type'] ?? '') === 'staff') continue; ?>
+                        <label data-share-id="<?= (int) $b['id'] ?>" <?= (int) $b['id'] === (int) $c['intake_id'] ? 'hidden' : '' ?>>
+                          <input type="checkbox" name="share_ids[]" value="<?= (int) $b['id'] ?>" <?= in_array((int) $b['id'], $shared_ids, true) ? 'checked' : '' ?>>
+                          <?= e($b['agent_name']) ?><?= ($b['entity_type'] ?? '') === 'team' ? ' (team)' : '' ?>
+                        </label>
+                      <?php endforeach; ?>
+                    </div>
+                    <p class="hint" style="margin:4px 0 10px;">A ticked agent sees this code on their portal and can change where it goes, the same as the owner. The code stays the owner's.</p>
+                  <?php endif; ?>
                   <button type="submit" class="btn btn-primary btn-sm">Save</button>
                   <span class="hint" style="margin-left:8px;">The printed code stays the same.</span>
                 </form>
@@ -678,6 +740,14 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     sel.addEventListener('change', function () { sync(true); });
     [prof, url].forEach(function (r) { r.addEventListener('change', function () { sync(false); if (url.checked) urlIn.focus(); }); });
     sync(false);
+    // "Also on the portal of": the owner is never a share, so their box follows the Broker select.
+    var grid = form.querySelector('[data-share-grid]');
+    if (grid) sel.addEventListener('change', function () {
+      grid.querySelectorAll('label[data-share-id]').forEach(function (l) {
+        var own = l.dataset.shareId === sel.value;
+        l.hidden = own; if (own) l.querySelector('input').checked = false;
+      });
+    });
   }
   document.querySelectorAll('#newForm, form.qr-edit').forEach(wire);
 

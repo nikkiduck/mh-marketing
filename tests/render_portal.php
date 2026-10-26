@@ -100,6 +100,13 @@ class mysqli {
     private static function in_list(string $sql): ?array {
         return preg_match('/intake_id IN \(([0-9, ]+)\)/', $sql, $m) ? array_map('intval', explode(',', $m[1])) : null;
     }
+    /** qr_scope_sql(): the code is owned by one of $in, or (only when the query names qr_code_shares) shared with one. */
+    private function qr_visible(array $q, array $in, string $sql): bool {
+        if (in_array((int)$q['intake_id'], $in, true)) return true;
+        if (stripos($sql, 'qr_code_shares') === false) return false;
+        foreach ($this->D['shares'] ?? [] as $sh) if ((int)$sh['qr_id'] === (int)$q['id'] && in_array((int)$sh['intake_id'], $in, true)) return true;
+        return false;
+    }
     private function write(string $what, array $vals): void {
         file_put_contents(__DIR__ . '/../writes.log', json_encode([$what, $vals]) . "\n", FILE_APPEND);
     }
@@ -107,6 +114,7 @@ class mysqli {
         $D = $this->D;
         if (stripos($sql, 'information_schema') !== false) {
             if (in_array('intake_id', $p, true) && in_array('users', $p, true)) return $D['migrated'] ? [[1]] : [];
+            if (in_array('qr_code_shares', $p, true)) return $D['shares_migrated'] ? [[1]] : [];
             return [[1]];
         }
         if (preg_match('/FROM users WHERE id = \?/', $sql)) {
@@ -124,9 +132,10 @@ class mysqli {
             foreach ($D['teams'] as $tid => $members) if (in_array((int)$p[0], $members, true)) $rows[] = ['id' => (int)$tid, 'agent_name' => $by[$tid]['agent_name'] ?? '', 'initials' => $by[$tid]['initials'] ?? null];
             return self::s($rows);
         }
-        if (preg_match('/SELECT COUNT\(\*\) FROM qr_codes WHERE intake_id IN/', $sql)) {
+        if (preg_match('/SELECT COUNT\(\*\) FROM qr_codes q WHERE/', $sql)) {
             $in = self::in_list($sql);
-            return [[ (string)count(array_filter($D['qr'], fn($q) => in_array((int)$q['intake_id'], $in, true))) ]];
+            if ($in === null) throw new RuntimeException("UNSCOPED qr_codes count:\n{$sql}");
+            return [[ (string)count(array_filter($D['qr'], fn($q) => $this->qr_visible($q, $in, $sql))) ]];
         }
         if (preg_match('/FROM qr_codes q LEFT JOIN marketing_intakes mi/', $sql)) {
             $in = self::in_list($sql);
@@ -135,7 +144,7 @@ class mysqli {
             $by  = array_column($D['intakes'], null, 'id');
             $rows = [];
             foreach ($D['qr'] as $q) {
-                if (!in_array((int)$q['intake_id'], $in, true)) continue;
+                if (!$this->qr_visible($q, $in, $sql)) continue;
                 if ($one !== null && (int)$q['id'] !== $one) continue;
                 $a = $by[$q['intake_id']] ?? [];
                 $rows[] = $q + ['agent_name' => $a['agent_name'] ?? null, 'slug' => $a['slug'] ?? null, 'entity_type' => $a['entity_type'] ?? 'agent'];
@@ -356,7 +365,11 @@ function scenario(array $over = []): array {
                 ['id' => 2, 'code' => 'wb-office',  'intake_id' => 8,  'label' => 'WB Office Window', 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/weber-boxer', 'is_active' => 1, 'scan_count' => 9],
                 ['id' => 3, 'code' => 'jboxer-yard','intake_id' => 30, 'label' => 'JB Yard Sign',     'dest_type' => 'profile', 'dest_url' => null, 'is_active' => 1, 'scan_count' => 1],
                 ['id' => 4, 'code' => 'kcoates-oh', 'intake_id' => 7,  'label' => 'KC Secret Sign',   'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/kc', 'is_active' => 1, 'scan_count' => 2],
+                ['id' => 6, 'code' => 'kc-open',    'intake_id' => 7,  'label' => 'Open House',       'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/listing/24972', 'is_active' => 1, 'scan_count' => 3],
             ],
+            // qr_code_shares (sql/qr_code_shares_v1.sql, 2026-10-26): Kim's open house code on Jackson's portal too.
+            'shares' => [['qr_id' => 6, 'intake_id' => 6]],
+            'shares_migrated' => true,
         ],
     ], $over);
 }
@@ -412,11 +425,11 @@ ok('Jackson sees his code', has($b, 'jhorn-yard') && has($b, 'JH Yard Sign'), $b
 ok('Jackson sees NOTHING of Kim\'s', !has($b, 'kcoates') && !has($b, 'KC Secret'));
 ok('Jackson sees NOTHING of Weber Boxer\'s', !has($b, 'wb-office') && !has($b, 'jboxer-yard') && !has($b, 'Weber'));
 ok('his paused code says paused and has no change button', has($b, 'JH Open House') && has($b, 'Paused')
-   && substr_count($b, 'Change where it goes') === 1);
+   && substr_count($b, 'Change where it goes') === 2);   // his live yard sign and Kim's shared code (2026-10-26), never the paused one
 ok('plain words for a profile destination', has($b, 'Your profile page on monthaus.com'));
 
 [$c, , $b] = req('jackson', '/portal/');
-ok('Jackson home renders and counts only his codes', $c === 200 && no_fatal($b) && has($b, 'You have 2 QR codes'), $b);
+ok('Jackson home renders and counts his codes and the one shared with him', $c === 200 && no_fatal($b) && has($b, 'You have 3 QR codes'), $b);
 ok('home (2026-10-12): My Profile card with the Hot Sheet line, My Marketing and My Tools sections', has($b, 'My Profile') && has($b, 'See and update')
    && has($b, 'Your public-facing info, Hot Sheet subscriptions, service areas and MLS boards.') && has($b, '>My Marketing<') && has($b, '>My Tools<') && has($b, 'Elevation Planner') && has($b, '>Templates<') && has($b, 'More coming soon') && has($b, 'Brand Tools')
    && has($b, 'href="mailto:jackson.horn@monthaus.com">jackson.horn@monthaus.com<') && has($b, 'href="tel:9705550100">970.555.0100<') && !has($b, 'Your marketing at Mont Haus') && !has($b, 'See the creative'), $b);
@@ -572,6 +585,28 @@ ok('POST for Kim\'s code writes nothing', writes() === [], json_encode(writes())
 ok('…and redirects back without an edit form', $c === 302 && !has($loc, 'edit='), "{$c} {$loc}");
 [$c, $loc] = req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest_type' => 'profile']);
 ok('Weber Boxer cannot change Jackson\'s code', writes() === [], json_encode(writes()));
+
+echo "\nA SHARED CODE (qr_code_shares, 2026-10-26)\n";
+[$c, , $b] = req('jackson', '/portal/qr.php');
+ok('Jackson sees Kim\'s open house code, named as hers and shared', has($b, 'kc-open') && has($b, 'Kimberlee Coates · shared with you'), $b);
+ok('…but still nothing of her unshared code', !has($b, 'kcoates') && !has($b, 'KC Secret'));
+[$c, , $b] = req('jackson', '/portal/qr.php?edit=6');
+ok('he can open it, is told whose it is, and may point it at HER profile page', has($b, 'Where should') && has($b, 'This code is Kimberlee Coates\'s, shared with you')
+   && has($b, 'Kimberlee\'s profile page') && !has($b, 'My profile page'), $b);
+[$c, $loc] = req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/listing/25001']);
+$w = writes();
+ok('…and change where it goes: the one shared row is updated, logged with his user id', ($w[0][0] ?? '') === 'update_qr' && ($w[0][1] ?? []) === ['url', 'https://monthaus.com/listing/25001', 6]
+   && ($w[1][0] ?? '') === 'log_change' && (int)($w[1][1][4] ?? 0) === 101 && $c === 302 && $loc === '/portal/qr.php', json_encode($w) . " {$c} {$loc}");
+[, , $b] = req('jon', '/portal/qr.php');
+ok('a share reaches only the agent named: Jonathan does not see it', !has($b, 'kc-open'), $b);
+req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/hijack']);
+ok('…and cannot change it', writes() === [], json_encode(writes()));
+[, , $b] = req('jackson', '/portal/qr.php', null, ['db' => ['shares_migrated' => false]]);
+ok('before qr_code_shares_v1.sql: the page works and the share simply is not there', has($b, 'jhorn-yard') && !has($b, 'kc-open'), $b);
+[, , $b] = req('jackson', '/portal/', null, ['db' => ['shares_migrated' => false]]);
+ok('…and home counts two', has($b, 'You have 2 QR codes'), $b);
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/x'], ['db' => ['shares_migrated' => false]]);
+ok('…and a POST for it writes nothing', writes() === [], json_encode(writes()));
 
 echo "\nCHANGING A DESTINATION\n";
 [$c, $loc] = req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/listing.php?k=1']);

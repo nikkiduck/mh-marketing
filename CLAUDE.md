@@ -1936,6 +1936,25 @@ same database as this site.
   code shows its count.
 - Migration: `sql/qr_codes_v1.sql`. Constants: `QR_*` in `inc/config.php`
   (defaults also in `inc/qr.php`). Never change `QR_BASE_URL` once printed.
+- **One code on two portals (2026-10-26, sql/qr_code_shares_v1.sql).** Nikki:
+  kc-open is on Kimberlee Coates's open house signs, but Jackson Horn (her
+  son, not a team row with her) runs the open houses and needs to repoint it.
+  `qr_code_shares` (qr_id, intake_id) puts a code on another agent's portal
+  WITHOUT moving it: `qr_codes.intake_id` stays the owner, so the admin page
+  still groups it under her and "profile page" still means hers. Both see
+  and change the same row (one destination, never two). `qr_scope_sql()` in
+  inc/qr.php is the one clause ("owned by one of these ids, or shared with
+  one") used by portal/qr.php (list and the owned check), portal/index.php
+  (the count), agent.php's QR card ("shared from …") and the admin page's
+  `?intake=` filter; `qr_shares_ready()` guards it until the migration has
+  run. Set ONLY on the admin page: "Also on the portal of" boxes in a code's
+  Change form (agents and teams, never staff, never the owner), logged in
+  qr_code_changes as `shared` / `unshared` with the agent's name; a delete
+  takes the shares with it. The portal shows "Kimberlee Coates · shared with
+  you" on the card and says whose it is on the edit page; it cannot share.
+  tests/render_portal.php covers it (Jackson sees and changes kc-open, never
+  her other code; Jonathan sees nothing; before the migration the share is
+  simply absent).
 - `marketing_intakes.coll_oh_qr_code` / `coll_oh_qr_url` (open house signs in
   the old intake form) predate this and are not connected to it.
 

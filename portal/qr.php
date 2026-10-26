@@ -10,8 +10,11 @@
  * deleting or renaming; a paused code is shown as paused and is not editable.
  *
  * Codes shown: qr_codes.intake_id IN portal_context()['ids'] (their account,
- * plus a team's members). A code id arriving in ?edit= or a POST is only ever
- * used after checking it is one of those (portal_qr_owned()).
+ * plus a team's members), and since 2026-10-26 any code SHARED with one of
+ * those ids (qr_code_shares, set on the admin page: Kimberlee Coates's open
+ * house code on Jackson Horn's portal too). qr_scope_sql() in inc/qr.php is
+ * the one clause for both. A code id arriving in ?edit= or a POST is only
+ * ever used after checking it is one of those (portal_qr_owned()).
  *
  * A destination is either the owner's profile page on the public site
  * (dest_type 'profile', resolved at scan time, so it follows go-live) or a
@@ -33,13 +36,18 @@ if (!mk_table_exists($conn, 'qr_codes')) {
 $in = implode(',', array_map('intval', $ctx['ids']));   // from portal_context, never the request
 $acct_id = (int)$ctx['acct']['id'];
 
-/** The code with this id, only if it belongs to this portal. */
+/** The code with this id, only if it belongs to this portal (owned, or shared with it). */
 function portal_qr_owned(mysqli $conn, string $in, int $qid): ?array {
     if ($qid <= 0) return null;
     $r = $conn->query("SELECT q.*, mi.agent_name, mi.slug, " . (mk_column_exists($conn, 'marketing_intakes', 'entity_type') ? 'mi.entity_type' : "'agent' AS entity_type") . "
                          FROM qr_codes q LEFT JOIN marketing_intakes mi ON mi.id = q.intake_id
-                        WHERE q.id = {$qid} AND q.intake_id IN ({$in}) LIMIT 1");
+                        WHERE q.id = {$qid} AND " . qr_scope_sql($conn, $in) . " LIMIT 1");
     return $r ? ($r->fetch_assoc() ?: null) : null;
+}
+
+/** True when the code is on this portal because it was shared, not owned (or a team's). */
+function portal_qr_is_shared(array $c, array $ctx): bool {
+    return !in_array((int)$c['intake_id'], array_map('intval', $ctx['ids']), true);
 }
 
 /** True when the code's owner has a profile page it can point at. */
@@ -177,7 +185,7 @@ $codes = [];
 if (!$edit && !$req_view && !$sent_view) {
     $r = $conn->query("SELECT q.*, mi.agent_name, mi.slug, " . (mk_column_exists($conn, 'marketing_intakes', 'entity_type') ? 'mi.entity_type' : "'agent' AS entity_type") . "
                          FROM qr_codes q LEFT JOIN marketing_intakes mi ON mi.id = q.intake_id
-                        WHERE q.intake_id IN ({$in})
+                        WHERE " . qr_scope_sql($conn, $in) . "
                         ORDER BY (q.intake_id = {$acct_id}) DESC, mi.agent_name, q.label, q.code");
     $codes = $r ? $r->fetch_all(MYSQLI_ASSOC) : [];
 }
@@ -221,7 +229,8 @@ if ($sent_view): ?>
     $profile_url = $can_profile ? qr_profile_url((string)$edit['slug']) : '';
 ?>
   <h1 class="pt-h1">Where should “<?= ph($edit['label'] ?: $edit['code']) ?>” go?</h1>
-  <p class="pt-lead">The printed code stays the same. Only the destination URL changes.</p>
+  <p class="pt-lead">The printed code stays the same. Only the destination URL changes.<?php if (portal_qr_is_shared($edit, $ctx)): ?>
+    This code is <?= ph($edit['agent_name']) ?>'s, shared with you: you both change the same destination.<?php endif; ?></p>
 
   <?php if (!(int)$edit['is_active']): ?>
     <div class="pt-flash err">This QR code is paused. Email <?= PORTAL_MARKETING_EMAIL ?> to turn it back on.</div>
@@ -270,7 +279,7 @@ if ($sent_view): ?>
       <div class="pt-qr-img" data-qr="<?= ph(qr_public_url((string)$c['code'])) ?>"></div>
       <div>
         <p class="pt-qr-label"><?= ph($c['label'] ?: 'QR code') ?><?php if (!$live): ?><span class="pt-badge">Paused</span><?php endif; ?></p>
-        <?php if (!$mine): ?><p class="pt-qr-owner"><?= ph($c['agent_name']) ?></p><?php endif; ?>
+        <?php if (!$mine): ?><p class="pt-qr-owner"><?= ph($c['agent_name']) ?><?= portal_qr_is_shared($c, $ctx) ? ' · shared with you' : '' ?></p><?php endif; ?>
         <p class="pt-qr-goes"><span>Goes to</span><b><?= ph(portal_qr_dest_words($c, $acct_id)) ?></b></p>
         <p class="pt-qr-meta">Scanned <?= $n === 1 ? 'once' : number_format($n) . ' times' ?></p>
         <?php if ($live): ?>

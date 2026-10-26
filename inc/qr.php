@@ -126,3 +126,49 @@ function qr_log_change(mysqli $conn, int $qr_id, string $what, ?string $old, ?st
 function qr_today(): string {
     return (new DateTime('now', new DateTimeZone('America/Denver')))->format('Y-m-d');
 }
+
+// ── Shares: one code on more than one agent's portal (2026-10-26) ───────────
+// sql/qr_code_shares_v1.sql. A share puts a code on another agent's portal
+// without moving it: qr_codes.intake_id stays the owner. The portal lists and
+// edits a code when the account owns it OR a share names the account (or one
+// of its teams), so two people change the same row and there is never a
+// second destination. Set on the admin page only; the portal cannot share.
+
+/** True once sql/qr_code_shares_v1.sql has run. Needs inc/schema.php. */
+function qr_shares_ready(mysqli $conn): bool {
+    static $ready = null;
+    if ($ready === null) $ready = function_exists('mk_table_exists') && mk_table_exists($conn, 'qr_code_shares');
+    return $ready;
+}
+
+/**
+ * The WHERE clause that picks the codes a set of account ids may see and
+ * change: owned by one of them, or shared with one of them. $in is a SQL IN
+ * list of ints the caller built from its own context, never from the request.
+ * $q is the qr_codes alias in the caller's query.
+ */
+function qr_scope_sql(mysqli $conn, string $in, string $q = 'q'): string {
+    $own = "{$q}.intake_id IN ({$in})";
+    if (!qr_shares_ready($conn)) return $own;
+    return "({$own} OR {$q}.id IN (SELECT qr_id FROM qr_code_shares WHERE intake_id IN ({$in})))";
+}
+
+/**
+ * Who each code is shared with: [qr_id => [['id' => intake id, 'name' => agent name], ...]],
+ * for the codes in $qr_ids (ints). Empty before the migration.
+ */
+function qr_shares_for(mysqli $conn, array $qr_ids): array {
+    $out = [];
+    $qr_ids = array_values(array_filter(array_map('intval', $qr_ids)));
+    if (!$qr_ids || !qr_shares_ready($conn)) return $out;
+    $list = implode(',', $qr_ids);
+    $r = $conn->query("SELECT s.qr_id, s.intake_id, mi.agent_name
+                         FROM qr_code_shares s
+                    LEFT JOIN marketing_intakes mi ON mi.id = s.intake_id
+                        WHERE s.qr_id IN ({$list})
+                     ORDER BY mi.agent_name, s.intake_id");
+    if ($r) foreach ($r as $row) {
+        $out[(int) $row['qr_id']][] = ['id' => (int) $row['intake_id'], 'name' => (string) ($row['agent_name'] ?? ('Broker #' . $row['intake_id']))];
+    }
+    return $out;
+}

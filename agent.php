@@ -1614,10 +1614,15 @@ $hs_ready = mk_hs_areas_ready($conn);
 $hs_sub   = $hs_ready && $hs_on ? mk_hs_subscription($conn, $id) : null;
 
 // QR codes (qr_codes.php). Read here because the connection closes just below.
+// Their own, then any shared with them (qr_code_shares, 2026-10-26: `owner`
+// carries the other agent's name on those).
 $qr_rows = [];
 if (mk_table_exists($conn, 'qr_codes')) {
-    $r_qr = $conn->query("SELECT id, code, label, dest_type, dest_url, is_active, scan_count
-                            FROM qr_codes WHERE intake_id = {$id} ORDER BY created_at");
+    $r_qr = $conn->query("SELECT q.id, q.code, q.label, q.dest_type, q.dest_url, q.is_active, q.scan_count, q.intake_id,
+                                 CASE WHEN q.intake_id = {$id} THEN '' ELSE COALESCE(mi.agent_name, '') END AS owner
+                            FROM qr_codes q LEFT JOIN marketing_intakes mi ON mi.id = q.intake_id
+                           WHERE " . qr_scope_sql($conn, (string) $id) . "
+                           ORDER BY (q.intake_id = {$id}) DESC, q.created_at");
     if ($r_qr) $qr_rows = $r_qr->fetch_all(MYSQLI_ASSOC);
 }
 
@@ -3213,6 +3218,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <div class="fld">
               <span class="fld-label"><?= e_attr($qr['label'] !== '' ? $qr['label'] : 'QR code') ?></span>
               <a href="qr_codes.php?intake=<?= $id ?>#qr-<?= (int) $qr['id'] ?>"><?= e_attr(preg_replace('~^https://~', '', qr_public_url($qr['code']))) ?></a>
+              <?php if (($qr['owner'] ?? '') !== ''): ?><span class="hint" style="margin-left:8px;">shared from <?= e_attr($qr['owner']) ?></span><?php endif; ?>
               <span style="flex:1;"></span>
               <span class="hint"><?= number_format((int) $qr['scan_count']) ?> scans</span>
               <span class="pill <?= (int) $qr['is_active'] ? 'w-approved' : 'w-inactive' ?>" style="margin-left:8px;"><?= (int) $qr['is_active'] ? 'Live' : 'Paused' ?></span>

@@ -8,6 +8,7 @@
  */
 require_once __DIR__ . '/../inc/portal.php';
 require_once __DIR__ . '/../inc/financials.php';
+require_once __DIR__ . '/../inc/qr.php';          // qr_scope_sql(): owned or shared codes (2026-10-26)
 
 $ctx = portal_context($conn);
 $ids = $ctx['ids'];
@@ -16,7 +17,7 @@ $acct = (int)$ctx['acct']['id'];
 
 $qr_n = 0;
 if (mk_table_exists($conn, 'qr_codes')) {
-    $qr_n = (int)$conn->query("SELECT COUNT(*) FROM qr_codes WHERE intake_id IN ({$in})")->fetch_row()[0];
+    $qr_n = (int)$conn->query("SELECT COUNT(*) FROM qr_codes q WHERE " . qr_scope_sql($conn, $in))->fetch_row()[0];
 }
 
 /**
