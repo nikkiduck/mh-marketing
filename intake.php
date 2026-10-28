@@ -408,7 +408,7 @@ function fint(array|null $row, string $key): string|null {
     .mh-nav-link {
       display:inline-flex; align-items:center; gap:5px;
       padding:5px 12px; font-size:.8rem; font-weight:500;
-      color:#aebbcc; text-decoration:none; border-radius:6px;
+      color:#eef1f5; text-decoration:none; border-radius:6px;
       white-space:nowrap; transition:color .2s, background .2s;
     }
     .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }

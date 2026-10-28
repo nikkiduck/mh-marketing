@@ -160,7 +160,7 @@ $conn->close();
     .mh-logo img { height:50px; display:block; }
     .mh-nav { display:flex; align-items:center; gap:4px; }
     .mh-nav-link { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; font-size:.8rem; font-weight:500;
-                   color:#aebbcc; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
+                   color:#eef1f5; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
     .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
     .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
