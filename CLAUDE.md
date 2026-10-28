@@ -2237,9 +2237,15 @@ but lost) and .13 on light (was .09).
 
 A post that is not about a listing, split out of the listing tool's "Other
 / General" kind (Nikki, 2026-10-28). Same builder (inc/social_body.php with
-`$sp_general = true`; admin side template_general.php, through the chosen
-account like the others because the endpoints act through ?preview=), the
-kind fixed to Other: the stock library and the person's uploads, every line
+`$sp_general = true`), the kind fixed to Other. **The admin side
+(template_general.php) needs no agent** (Nikki): the admin acts as
+themselves through `social_context()` in inc/social.php, which every social
+endpoint (render, export, photos, upload, delete, asset) calls instead of
+portal_context(): with `?preview=admin` and an elevated admin it returns a
+synthetic account (id 0, no listing ids, so social_listings() is empty),
+`social_url()` writes the endpoint URLs for it, uploads are the person's as
+always, and the export copy goes to CREATIVES_DIR/social/admin-<user id>/.
+Everything else: the stock library and the person's uploads, every line
 the agent's, no label by default. Three sizes: Post 4:5 (1080 x 1440),
 Square 1:1 (1080 x 1080, type `square_other`; `social_formats()`,
 `social_format_height()`, `social_template_format()` know 'square') and

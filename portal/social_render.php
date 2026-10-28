@@ -6,7 +6,7 @@
  */
 require_once __DIR__ . '/../inc/social.php';
 
-$ctx = portal_context($conn);
+$ctx = social_context($conn);   // or the admin's own context with ?preview=admin (2026-10-28)
 social_gate();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
     http_response_code(400);

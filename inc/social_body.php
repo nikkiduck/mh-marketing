@@ -161,7 +161,7 @@ $sp_general = !empty($sp_general);
 <script>
 (function () {
   const L = <?= json_encode($listings, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
-  const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode(portal_url($ctx, '/portal/social_delete.php')) ?>;
+  const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode(social_url($ctx, '/portal/social_delete.php')) ?>;
   const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
   const SIZES = { post: 1440, square: 1080, story: 1920 };
   const fmt = () => f('size').value, fmtH = () => SIZES[fmt()] || 1440;

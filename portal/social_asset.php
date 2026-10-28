@@ -7,7 +7,7 @@
  */
 require_once __DIR__ . '/../inc/social.php';
 
-$ctx = portal_context($conn);
+$ctx = social_context($conn);   // or the admin's own context with ?preview=admin (2026-10-28)
 social_gate();
 
 $id = (string)($_GET['id'] ?? '');

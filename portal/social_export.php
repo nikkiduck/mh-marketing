@@ -8,7 +8,7 @@
  */
 require_once __DIR__ . '/../inc/social.php';
 
-$ctx = portal_context($conn);
+$ctx = social_context($conn);   // or the admin's own context with ?preview=admin (2026-10-28)
 social_gate();
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
     portal_stop('Please try again', 'That page had been open too long. Go back, reload it, and download again.');

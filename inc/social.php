@@ -51,6 +51,39 @@ require_once __DIR__ . '/social_render.php';
 if (!defined('SOCIAL_CHROMIUM')) define('SOCIAL_CHROMIUM', '/usr/bin/chromium');
 const SOCIAL_UPLOAD_MAX = 20 * 1024 * 1024;    // bytes; the server allows 25M
 
+/**
+ * The context the social endpoints act in (2026-10-28). Normally portal_context():
+ * the signed-in agent's account, or the account an admin previews. With
+ * ?preview=admin, an elevated admin acts as THEMSELVES, with no agent account:
+ * the admin side's General Social (template_general.php) needs no agent (Nikki),
+ * and the renderer, the stock photos, the uploads (keyed by the person anyway)
+ * and the export need nothing from an account. The synthetic account has id 0;
+ * nothing listing-side is reachable from it (social_listings() returns nothing
+ * for an empty id list), and the export copy goes to social/admin-<user id>/.
+ */
+function social_context(mysqli $conn): array {
+    if (($_GET['preview'] ?? '') !== 'admin') return portal_context($conn);
+    require_login();
+    if (!is_elevated_admin()) portal_stop('No access', 'This page is for the marketing team.');
+    $uid = (int)($_SESSION['user_id'] ?? 0);
+    $st = $conn->prepare("SELECT id, first_name, last_name, email, role, is_active, intake_id FROM users WHERE id = ? LIMIT 1");
+    $st->bind_param('i', $uid);
+    $st->execute();
+    $user = $st->get_result()->fetch_assoc();
+    $st->close();
+    if (!$user || !(int)$user['is_active']) portal_stop('No access', 'This account is not active.');
+    $name = trim((string)$user['first_name'] . ' ' . (string)$user['last_name']) ?: (string)$user['email'];
+    $acct = ['id' => 0, 'agent_name' => $name, 'slug' => '', 'is_active' => 1, 'status' => 'approved', 'headshot_url' => null,
+             'headshot_face_url' => null, 'entity_type' => 'admin'];
+    return ['user' => $user, 'acct' => $acct, 'ids' => [], 'preview' => true, 'teams' => [], 'scopes' => [], 'markets' => []];
+}
+
+/** The URL of a social endpoint for this context: portal_url(), or ?preview=admin for the admin's own context. */
+function social_url(array $ctx, string $path, array $q = []): string {
+    if ((int)$ctx['acct']['id'] === 0) return $path . '?' . http_build_query(['preview' => 'admin'] + $q);
+    return portal_url($ctx, $path, $q);
+}
+
 /** True when this sign-in may see Social posts (SOCIAL_BETA_EMAILS, or everyone when it is empty). */
 function social_allowed(): bool {
     if (!defined('SOCIAL_BETA_EMAILS') || trim((string)SOCIAL_BETA_EMAILS) === '') return true;
@@ -121,6 +154,7 @@ function social_listings(mysqli $conn, array $ctx): array {
     $cache = [];
     if (!mk_table_exists($conn, 'hs_listing_state')) return $cache;
 
+    if (!$ctx['ids']) return [];                               // the admin's own context (social_context) has no account
     $ids = implode(',', array_map('intval', $ctx['ids']));   // from portal_context, never the request
     $conds = []; $types = ''; $vals = [];
     $r = $conn->query("SELECT DISTINCT market, mls_agent_id FROM agent_mls_ids WHERE intake_id IN ({$ids}) AND mls_agent_id <> ''");
@@ -268,7 +302,7 @@ function social_upload_file(array $ctx, string $id, bool $thumb = false): ?strin
 
 /** The portal URL that serves an upload (400 = thumbnail, else full size). Carries ?preview= like every portal link. */
 function social_upload_url(array $ctx, string $id, int $w): string {
-    return portal_url($ctx, '/portal/social_asset.php', ['id' => $id, 'w' => $w]);
+    return social_url($ctx, '/portal/social_asset.php', ['id' => $id, 'w' => $w]);   // social_url: the admin's own context too
 }
 
 /**
@@ -539,7 +573,7 @@ function social_export_png(string $html, int $height = SOCIAL_H): ?string {
 /** Keep a copy of an export under CREATIVES_DIR/social/<intake id>/ (best effort). */
 function social_keep_copy(array $ctx, string $name, string $png): void {
     if (!defined('CREATIVES_DIR')) return;
-    $dir = rtrim(CREATIVES_DIR, '/') . '/social/' . (int)$ctx['acct']['id'];
+    $dir = rtrim(CREATIVES_DIR, '/') . '/social/' . ((int)$ctx['acct']['id'] > 0 ? (int)$ctx['acct']['id'] : 'admin-' . (int)$ctx['user']['id']);
     if (!is_dir($dir)) {
         if (!@mkdir($dir, 02775, true)) return;
         social_open_dirs($dir);
