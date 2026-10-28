@@ -2218,6 +2218,44 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 
 ### Instagram Posts (portal/social.php, 2026-10-11, reworked and opened 2026-10-12)
 
+**Since 2026-10-28 the tool is "Listing Post/Story"** (the Templates card, the
+page, the admin page template_social.php) and offers Listing and Open House
+only; the Other kind moved to its own tool, General Social (next section).
+Everything below still holds for the listing tool. Changes the same day
+(Nikki): the logo switch is on every full-photo template, not the story's
+alone (`logo` = top | bottom | center | none, `social_logo_places()`; a
+post defaults to upper right, a story to lower left; the form keeps the
+size's default until the agent picks a place; `story_logo` is still read
+as a fallback name), so a listing post can drop the logo; the line style
+"Small Caps Gold" reads "Small Caps"; the LIGHT look was rebalanced (the
+bottom fade stops at 86 % instead of solid, so the photo and the ghosted
+mark show through, and the top fade is stronger, .82 at the edge, so the
+logo reads on a dark sky); the ghosted mark is .26 on dark (was .16, all
+but lost) and .13 on light (was .09).
+
+### General Social (portal/general.php, 2026-10-28)
+
+A post that is not about a listing, split out of the listing tool's "Other
+/ General" kind (Nikki, 2026-10-28). Same builder (inc/social_body.php with
+`$sp_general = true`; admin side template_general.php, through the chosen
+account like the others because the endpoints act through ?preview=), the
+kind fixed to Other: the stock library and the person's uploads, every line
+the agent's, no label by default. Three sizes: Post 4:5 (1080 x 1440),
+Square 1:1 (1080 x 1080, type `square_other`; `social_formats()`,
+`social_format_height()`, `social_template_format()` know 'square') and
+Story 9:16. A **Text** switch (`layout`, `social_layouts()`): Lower left
+(the usual words over the bottom fade) or Centered: the words sit in the
+middle of the photo, centred, the headline a textarea (Enter = a new line,
+120 characters, each line in the headline serif, sized by the longest
+line), Text 1 and 2 under it, a soft veil over the whole photo (`veil` in
+the palette: rgba(20,24,30,.42) dark, rgba(246,247,249,.50) light) instead
+of the bottom fade, and no top fade unless the logo or a label is up there.
+The logo: Upper right, Lower left, Center (above the rule and the centred
+words, 200 px; offered only with Centered, the form hides it otherwise and
+the server falls back to top) or None. The download name ends -square or
+-story. `tests/render_social_sample.php` renders the new cases (square,
+centred, no logo).
+
 Instagram-ready PNGs (1080 x 1440) of an agent's own listings: template
 (Listing General and Open House, keys photo and photo_openhouse: the photo fills the post, the words
 sit over a fade at the bottom, two lines; the split family, Featured
@@ -2225,7 +2263,7 @@ Listing and Open House with a text block below the photo, is kept in
 social_templates() but `offered => false` since 2026-10-12, Nikki) and
 look (dark, light), listing (a dropdown), photo (the listing's from
 the site, or the agent's own upload) framed by drag + zoom, words (a
-Headline and Text 1 to 4, each in a style: Small Caps Gold, Large Serif,
+Headline and Text 1 to 4, each in a style: Small Caps (was Small Caps Gold), Large Serif,
 Light, Italic Serif, Plain; a blank line takes no room), a label on the
 photo (solid gold pill; ready-made, none, or custom), the Mont Haus logo
 top-right on a soft top fade (2026-10-13; no drop shadow, Nikki), so the

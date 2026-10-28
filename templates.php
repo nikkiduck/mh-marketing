@@ -4,9 +4,11 @@
  * portal's template tools for any agent, so an admin can make an agent's
  * post or flyer without previewing their portal. Pick the agent at the top
  * (inc/admin_tool_shell.php's picker: every active agent, with their live
- * listing count), then a tool: Instagram Post/Story (template_social.php)
+ * listing count), then a tool: Listing Post/Story (template_social.php)
  * and Listing Flyer (template_flyer.php) work from that agent's listings;
- * Market Snapshot (market_snapshot.php) needs no agent. The tools are the
+ * General Social (template_general.php, 2026-10-28) needs no listing but
+ * still acts through the chosen account (its render and export endpoints
+ * do); Market Snapshot (market_snapshot.php) needs no agent. The tools are the
  * portal's own bodies (inc/social_body.php, inc/flyer_body.php), drawn under
  * the admin header; the endpoints act on the chosen account through
  * ?preview=, as the roster's eye icon does. Admins only.
@@ -24,7 +26,8 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 
 $groups = [
     'Instagram Templates' => [
-        ['Instagram Post/Story', 'template_social.php' . $q, 'An Instagram or Facebook ready post or story from one of the agent\'s listings, or a photo of your own.', 'Make a post ›', true],
+        ['Listing Post/Story', 'template_social.php' . $q, 'An Instagram or Facebook ready post or story from one of the agent\'s listings.', 'Make a post ›', true],
+        ['General Social', 'template_general.php' . $q, 'A post, square or story that is not about a listing: a Mont Haus stock photo or your own, your words, the logo where you want it.', 'Make a post ›', true],
         ['Market Snapshot', 'market_snapshot.php', 'One place\'s month on a card: the average sale price and three figures. A post or a story. No agent needed.', 'Make a snapshot ›', false],
     ],
     'Print Templates' => [
@@ -39,7 +42,7 @@ admin_tool_header([
 ]);
 admin_agent_picker($agents, $agent_id, 'templates.php');
 ?>
-    <?php if (!$agent_id): ?><div class="note">Choose an agent above to open the Instagram and flyer tools with their listings. Market Snapshot works without one.</div><?php endif; ?>
+    <?php if (!$agent_id): ?><div class="note">Choose an agent above to open the post and flyer tools (General Social needs one too, for its download). Market Snapshot works without one.</div><?php endif; ?>
     <?php foreach ($groups as $heading => $cards): ?>
     <div class="tl-group"><?= $e($heading) ?></div>
     <div class="tl-cards">

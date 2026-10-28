@@ -411,6 +411,10 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     $mark  = isset(social_marks()[(string)($in['mark'] ?? '')]) ? (string)$in['mark'] : 'triangle';   // the story's watermark
 
     $kind = social_template_kind($type);
+    $layout = $kind === 'other' && ($in['layout'] ?? '') === 'center' ? 'center' : 'corner';   // centred words: General Social only (2026-10-28)
+    $logo = (string)($in['logo'] ?? ($in['story_logo'] ?? ''));                                 // the logo's place; story_logo was its old name
+    if (!isset(social_logo_places()[$logo])) $logo = $format === 'story' ? 'bottom' : 'top';
+    if ($logo === 'center' && $layout !== 'center') $logo = 'top';
     $l = $kind === 'other' ? null : social_listing($conn, $ctx, (string)($in['listing'] ?? ''));   // Other: no listing, the agent's own photo and words
     if ($kind !== 'other' && !$l) return 'Choose one of your listings to see your post.';
 
@@ -460,7 +464,8 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'type'       => $type,
         'theme'      => $theme,
         'mark'       => $mark,
-        'story_logo' => in_array((string)($in['story_logo'] ?? ''), ['top', 'bottom', 'none'], true) ? (string)$in['story_logo'] : 'bottom',   // the story's logo: upper right, lower left (default) or none
+        'logo'       => $logo,
+        'layout'     => $layout,
         'format'     => $format,
         'listing'    => $l,
         'label'      => $label,
@@ -470,7 +475,8 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'zoom'       => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
         'focus_x'    => max(0, min(100, (int)($in['focus_x'] ?? 50))),
         'focus_y'    => max(0, min(100, (int)($in['focus_y'] ?? 50))),
-        'headline'   => mb_substr(trim((string)($in['headline'] ?? ($l['headline'] ?? ($kind === 'other' ? 'Alpine Roots. Global Vision.' : '')))), 0, 80),
+        // Centred, the headline keeps its line breaks (a textarea on General Social) and may run to 120 characters.
+        'headline'   => mb_substr(trim(str_replace("\r", '', (string)($in['headline'] ?? ($l['headline'] ?? ($kind === 'other' ? 'Alpine Roots. Global Vision.' : ''))))), 0, $layout === 'center' ? 120 : 80),
         'lines'      => $lines,
         'date_text'  => '',
         'time_text'  => '',
@@ -491,7 +497,8 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
 function social_filename(array $p): string {
     $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string)$p['headline']), '-')) ?: 'post';
     $kind = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string)($p['label'] ?: $p['type'])), '-')) ?: 'post';
-    return mb_substr($slug, 0, 60) . '-' . $kind . (($p['format'] ?? 'post') === 'story' ? '-story' : '') . '-' . date('Ymd-Hi') . '.png';
+    $fmt = (string)($p['format'] ?? 'post');
+    return mb_substr($slug, 0, 60) . '-' . $kind . ($fmt !== 'post' ? '-' . $fmt : '') . '-' . date('Ymd-Hi') . '.png';
 }
 
 /**

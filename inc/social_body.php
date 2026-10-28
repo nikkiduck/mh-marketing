@@ -8,10 +8,15 @@
  * $upload_url) built with portal_url() so an admin's ?preview= carries
  * through, and $_SESSION['csrf_token']. $tp_no_listings (HTML) replaces the
  * "under your name" message when set. Nothing here is page-specific; the
- * heading, lead and back link stay in the shells.
+ * heading, lead and back link stay in the shells. $sp_general = true draws the
+ * General Social tool (2026-10-28): no listing, the kind fixed to Other, a
+ * Square size, the Text layout switch (lower left / centred, a multi-line
+ * headline) and the Center logo place; the listing tool offers Listing and
+ * Open House, with the logo upper right, lower left or none.
  */
+$sp_general = !empty($sp_general);
 ?>
-<?php if (!$listings): ?>
+<?php if (!$listings && !$sp_general): ?>
   <div class="pt-flash err"><?= $tp_no_listings ?? 'We do not see any live listings under your name yet. If that is wrong, email <a href="mailto:' . PORTAL_MARKETING_EMAIL . '">' . PORTAL_MARKETING_EMAIL . '</a>.' ?></div>
 <?php else: ?>
   <div class="sp-grid">
@@ -26,15 +31,25 @@
         <div class="sp-look">
           <span class="sp-look-l">Size</span>
           <label class="sp-pillopt"><input type="radio" name="size" value="post" checked><span>Post · 4:5</span></label>
+          <?php if ($sp_general): ?><label class="sp-pillopt"><input type="radio" name="size" value="square"><span>Square · 1:1</span></label><?php endif; ?>
           <label class="sp-pillopt"><input type="radio" name="size" value="story"><span>Story · 9:16</span></label>
         </div>
+        <?php if ($sp_general): ?>
+        <input type="hidden" name="kind" value="other">
+        <div class="sp-look">
+          <span class="sp-look-l">Text</span>
+          <?php foreach (social_layouts() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="layout" value="<?= ph($k) ?>"<?= $k === 'corner' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <?php else: ?>
         <label class="sp-field sp-kind">Template
           <select name="kind">
             <option value="listing">Listing</option>
             <option value="openhouse">Open House</option>
-            <option value="other">Other / General</option>
           </select>
         </label>
+        <?php endif; ?>
         <div class="sp-look">
           <span class="sp-look-l">Look</span>
           <?php foreach ($themes as $k => $t): ?>
@@ -47,11 +62,12 @@
           <label class="sp-pillopt"><input type="radio" name="mark" value="<?= ph($k) ?>"<?= $k === 'triangle' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
           <?php endforeach; ?>
         </div>
-        <div class="sp-look sp-only-story" hidden>
+        <div class="sp-look">
           <span class="sp-look-l">Mont Haus logo</span>
-          <label class="sp-pillopt"><input type="radio" name="story_logo" value="top"><span>Upper right</span></label>
-          <label class="sp-pillopt"><input type="radio" name="story_logo" value="bottom" checked><span>Lower left</span></label>
-          <label class="sp-pillopt"><input type="radio" name="story_logo" value="none"><span>None</span></label>
+          <?php // Upper right (a post's default), lower left (a story's), centred (the centred layout only, General Social), none (2026-10-28).
+          foreach (social_logo_places() as $k => $t): if ($k === 'center' && !$sp_general) continue; ?>
+          <label class="sp-pillopt<?= $k === 'center' ? ' sp-only-center' : '' ?>"<?= $k === 'center' ? ' hidden' : '' ?>><input type="radio" name="logo" value="<?= ph($k) ?>"<?= $k === 'top' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
+          <?php endforeach; ?>
         </div>
       </section>
 
@@ -76,7 +92,7 @@
       </section>
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span>3</span>Photo</h2>
+        <h2 class="sp-step-h"><span><?= $sp_general ? 2 : 3 ?></span>Photo</h2>
         <p class="sp-hint" id="spPhotoHint" data-other="Choose a stock photo or upload your own below." data-listing="Choose a listing photo or upload your own below.">Choose a listing photo or upload your own below.</p>
         <div class="sp-photos" id="spPhotos"><div class="sp-wait">Loading photos…</div></div>
         <div class="sp-drop" id="spDrop">
@@ -92,7 +108,7 @@
       </section>
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span>4</span>Text</h2>
+        <h2 class="sp-step-h"><span><?= $sp_general ? 3 : 4 ?></span>Text</h2>
         <div class="sp-fields">
           <div class="sp-two">
             <label class="sp-field">Label on the photo
@@ -110,7 +126,11 @@
             <label class="sp-field">To <input type="time" name="oh_end" value="14:00" step="900"></label>
           </div>
           <label class="sp-field sp-only-openhouse" hidden>Date and time, as it will read (press Enter for a new line) <textarea name="oh_when" maxlength="90" rows="2" placeholder="Today 11am-2pm"></textarea></label>
+          <?php if ($sp_general): ?>
+          <label class="sp-field">Headline <span class="sp-only-center" hidden>(press Enter for a new line)</span> <textarea name="headline" maxlength="120" rows="2"></textarea></label>
+          <?php else: ?>
           <label class="sp-field">Headline <input name="headline" maxlength="80"></label>
+          <?php endif; ?>
           <?php foreach ($line_names as $i => $nm): ?>
           <div class="sp-line<?= $i >= 2 ? ' sp-only-long' : '' ?>">
             <label class="sp-field"><?= ph($nm) ?> <input name="line_text[]" maxlength="90"<?= $i === 3 ? ' placeholder="A West End Victorian, steps from downtown"' : '' ?>></label>
@@ -124,7 +144,7 @@
 
       <div class="sp-actions">
         <button type="submit" class="sp-btn">Download PNG</button>
-        <p class="sp-help">The download is a 1080 × 1440 PNG for a post, or 1080 × 1920 for a story.</p>
+        <p class="sp-help">The download is a 1080 × 1440 PNG for a post, <?= $sp_general ? '1080 × 1080 for a square, ' : '' ?>or 1080 × 1920 for a story.</p>
       </div>
     </form>
 
@@ -143,13 +163,25 @@
   const L = <?= json_encode($listings, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
   const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode(portal_url($ctx, '/portal/social_delete.php')) ?>;
   const PHOTO_H = <?= json_encode(array_map('social_photo_height', array_combine(array_keys($templates), array_keys($templates)))) ?>;
-  const fmt = () => (f('type').value.indexOf('story') === 0 ? 'story' : 'post'), fmtH = () => fmt() === 'story' ? 1920 : 1440;
+  const SIZES = { post: 1440, square: 1080, story: 1920 };
+  const fmt = () => f('size').value, fmtH = () => SIZES[fmt()] || 1440;
+  const LOGO_DEFAULT = s => s === 'story' ? 'bottom' : 'top';   // where the logo goes unless the agent moved it
+  let prevSize = 'post';                                         // set properly once the form is wired (below)
   const kind = () => f('kind').value, isOther = () => kind() === 'other';
   const PLACEHOLDER = { id: 'placeholder', thumb: '/assets/images/social-placeholder.jpg', large: '/assets/images/social-placeholder.jpg', own: false, caption: 'Aspen Highlands and the Maroon Bells, early snow on fall colour', group: 'Aspen & Roaring Fork Valley' };
   // The template key: size + kind (photo = a post).
   function setType() {
-    const base = f('size').value === 'story' ? 'story' : 'photo';
+    const base = fmt() === 'story' ? 'story' : (fmt() === 'square' ? 'square' : 'photo');
     f('type').value = base + (kind() === 'listing' ? '' : '_' + kind());
+  }
+  // The logo follows the size's default until the agent picks a place; Center only goes with centred words.
+  function syncLogo() {
+    const logo = f('logo'), layout = f('layout');
+    if (logo.value === LOGO_DEFAULT(prevSize) && prevSize !== fmt()) logo.value = LOGO_DEFAULT(fmt());
+    prevSize = fmt();
+    const centered = !!layout && layout.value === 'center';
+    form.querySelectorAll('.sp-only-center').forEach(el => el.hidden = !centered);
+    if (!centered && logo.value === 'center') logo.value = 'top';
   }
   // The date and time line, built from the pickers until the agent types their own ("Today 11am-2pm").
   const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -163,7 +195,7 @@
     return parts.join(fmt() === 'story' ? '\n' : '  ·  ');   // a story: the time under the date
   }
   function syncWhen() { if (!f('oh_when').dataset.touched) f('oh_when').value = whenFromPickers(); }
-  const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0 || t.indexOf('story') === 0;
+  const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0 || t.indexOf('square') === 0 || t.indexOf('story') === 0;
   const form = document.getElementById('spForm'), frame = document.getElementById('spFrame'),
         stage = document.getElementById('spStage'), photos = document.getElementById('spPhotos'),
         busy = document.getElementById('spBusy'),
@@ -193,7 +225,6 @@
     form.querySelectorAll('.sp-only-listing').forEach(el => el.hidden = isOther());
     dropMsg.innerHTML = isOther() ? dropMsg.dataset.other : dropMsg.dataset.listing;
     const hint = document.getElementById('spPhotoHint'); hint.textContent = isOther() ? hint.dataset.other : hint.dataset.listing;
-    form.querySelectorAll('.sp-only-story').forEach(el => el.hidden = t.indexOf('story') !== 0);
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = isFull(t));
     customWrap.hidden = labelSel.value !== '__custom';
     framer.style.aspectRatio = '1080 / ' + PHOTO_H[t];
@@ -346,7 +377,8 @@
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'listing') { fill(listing()); labelForType(); loadPhotos(); return; }
-    if (n === 'size') { setType(); showGroups(); scale(); syncWhen(); }
+    if (n === 'size') { setType(); syncLogo(); showGroups(); scale(); syncWhen(); }
+    if (n === 'layout') syncLogo();
     if (n === 'kind') { setType(); showGroups(); labelForType(); fill(listing()); scale(); loadPhotos(); return; }
     if (n === 'oh_when') f('oh_when').dataset.touched = '1';
     if (n === 'oh_date' || n === 'oh_start' || n === 'oh_end') syncWhen();
@@ -362,6 +394,7 @@
 
   new ResizeObserver(scale).observe(stage); scale();
   setType();
+  prevSize = fmt(); syncLogo();
   showGroups();
   syncWhen();
   fill(listing());

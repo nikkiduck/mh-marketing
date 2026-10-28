@@ -1,9 +1,12 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-26 from git HEAD (QR code shares).
+# Generated 2026-10-28 from git HEAD (General Social, logo places, light rebalance).
 8f5ea7f88a7f2ceb39a271c513495907  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 abca2beeadfbb77d1ee32f935047d116  api/roster.php
+86ee5a6b02d236dd967c94bc346d1cad  assets/css/elevation-print.css
+364a3315163a63150f8ab3663935fa29  assets/css/elevation.css
+ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
 2aac235ecae32ece776eca6fa74889d1  assets/css/market.css
 5f274506e002f8a7c1c76751d31e7e2d  assets/css/mh-theme.css
 d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
@@ -30,6 +33,7 @@ f32e288def93742e583d55fb02ab9b18  forgot-password.php
 4ba218c544f473278a06edf382693d3e  inc/_footer.php
 894ad84d160d5ef99084b00ebcd7c52d  inc/_nav.php
 8cf7fab783d903989871994744bd76a0  inc/_onboarding.php
+068e42389949d0ba455b5357dae73f35  inc/admin_tool_shell.php
 0f39b0500c3b4e8344f29c11b8f623a0  inc/agent_lifecycle.php
 adee107afca49bf84fe4181ed0aff97b  inc/agent_roster.php
 e8ad01ee0fbf13fab7e441fd7dcc5a3d  inc/auth.php
@@ -41,6 +45,7 @@ c9ace318036eda1d6510c96f94ac643c  inc/config.php
 5f5893a7287969d02e3f8217ace72853  inc/elevation.php
 13958d7c888d48b801e84186ed7ec2f2  inc/financials.php
 0d0c638898e992198f731363280d5106  inc/flyer.php
+86915858edd70057dd68af60e2bb771f  inc/flyer_body.php
 aa7c19a37df53359f5cb0e469f5a1c3f  inc/flyer_render.php
 1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
 ef0c14279cdbaef87219fc1ba01931ea  inc/hs_data.php
@@ -64,8 +69,9 @@ eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 0f0bc7ca27dcdcaae3dc7a0d2ea6f75b  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-4c3d9fe2d9a328a80564910dd7868d74  inc/social.php
-5e6ed85f35135f21c884ba2f06f8e46e  inc/social_render.php
+e06a59f863496cf7d7be87017994cee1  inc/social.php
+cdcdf28daa3f5a0fab8cb4d15bfb7180  inc/social_body.php
+b426a726011354ba5f20fc64c0619602  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 6571f3e3fed4a2b252e1b8c05d54c35b  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php
@@ -92,6 +98,7 @@ c631051215ccc3c7f229af2015586264  portal/elevation_save.php
 082c3cd93a6a9058620386254e6d0f8c  portal/flyer.php
 db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
+03b2a77e2a597f13fc056728330747f0  portal/general.php
 6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
 6bd2ee585e004b943476efe24c910016  portal/index.php
 3cfd20db36fa046a3e9287837d53bc1c  portal/market.php
@@ -103,7 +110,7 @@ e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
 bd1d3b37a7fcf713edb84313e59cddbb  portal/profile.php
 35ca7afd527862a3e19ba56cc63b6f24  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
-0553759739b36b5ba5ce4bf4955467e1  portal/social.php
+c100b7be0bbc3fa29c94576a1acb1f72  portal/social.php
 b4178bb297c9b2f159e24c02f559ac7b  portal/social_asset.php
 0d4a43e54ba21abc4d43bfc5ae7452ce  portal/social_delete.php
 cfea6b6cd41a82c90b01b321ee62d614  portal/social_export.php
@@ -111,7 +118,7 @@ a78c5de68cb391a2fe8bdd4087f51e66  portal/social_photos.php
 3b2ecd3bf5e7571ef9f9630e67208d3e  portal/social_render.php
 e6cafb63f213289c3e835aede4d2c27f  portal/social_upload.php
 2f6f6b397081287ed0190cebbd0b1bca  portal/spend.php
-ef028e4b75376128ff3ee9526b48278e  portal/templates.php
+9f8e42a25f32ce5cc74d5d5db6334751  portal/templates.php
 7f5e553082c8b06564ff9b72874e7f4f  portal/yard_signs.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 0c92cc6187a05fb5aec83e103b919b60  qr_codes.php
@@ -120,15 +127,10 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
+92c444733a2833398cef3e8df8898813  template_flyer.php
+74f8ea61cab50fc62b080df67b8f60a1  template_general.php
+7ed35fb57cfe66c721bc38d416516637  template_social.php
+d820738a23a42cb6a18e14d883d55fd6  templates.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 df9c9acc1b520b4ccd5374a16a4a5b94  users.php
 36bd7478b390b9af57fcad085903aab5  website_order.php
-068e42389949d0ba455b5357dae73f35  inc/admin_tool_shell.php
-b86b281b457b3d246cc5a5e3d14ec92c  inc/social_body.php
-86915858edd70057dd68af60e2bb771f  inc/flyer_body.php
-64e8bfa2167318c5e0614182ea01fc56  templates.php
-d49bfee3f729c6b0d4cdf89295eab39d  template_social.php
-92c444733a2833398cef3e8df8898813  template_flyer.php
-86ee5a6b02d236dd967c94bc346d1cad  assets/css/elevation-print.css
-364a3315163a63150f8ab3663935fa29  assets/css/elevation.css
-ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css

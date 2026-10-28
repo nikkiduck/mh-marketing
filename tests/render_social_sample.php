@@ -8,8 +8,7 @@
  *
  * The asset base defaults to this checkout as a file:// URL, so fonts and
  * logos come from the working folder; pass https://marketing.monthaus.com
- * to render against the live assets. Four files: featured and openhouse,
- * each dark and light.
+ * to render against the live assets. Every template, each dark and light.
  */
 require __DIR__ . '/../inc/social_render.php';
 
@@ -25,6 +24,7 @@ $lines = [
 ];
 $common = ['photo_url' => $photo, 'zoom' => 1.25, 'focus_x' => 55, 'focus_y' => 40, 'headline' => '633 W Main Street', 'lines' => $lines];
 $when = ['date_text' => social_date_text('2026-10-18'), 'time_text' => social_time_range_text('11:00', '14:00')];
+$other = ['label' => '', 'photo_url' => 'https://marketing.monthaus.com/assets/images/social-placeholder.jpg', 'zoom' => 1, 'focus_x' => 50, 'focus_y' => 50, 'headline' => 'Alpine Roots. Global Vision.', 'lines' => [['text' => 'Mont Haus International Realty', 'style' => 'town']], 'date_text' => '', 'time_text' => ''];
 $posts = [
     'photo'           => $common + ['type' => 'photo', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'photo-openhouse' => $common + ['type' => 'photo_openhouse', 'label' => 'Open House'] + $when,
@@ -32,10 +32,16 @@ $posts = [
     'openhouse'       => $common + ['type' => 'openhouse', 'label' => 'Open House'] + $when,
     'story'           => $common + ['type' => 'story', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'story-m'         => $common + ['type' => 'story', 'mark' => 'mmark', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
-    'story-logo'      => $common + ['type' => 'story', 'story_logo' => 'bottom', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
-    'story-logotop'   => $common + ['type' => 'story_openhouse', 'story_logo' => 'top', 'label' => 'Open House', 'when_text' => ''] + $when,
-    'story-oh'        => $common + ['type' => 'story_openhouse', 'story_logo' => 'bottom', 'label' => 'Open House', 'when_text' => ''] + $when,
-    'post-other'      => ['type' => 'photo_other', 'label' => '', 'photo_url' => 'https://marketing.monthaus.com/assets/images/social-placeholder.jpg', 'zoom' => 1, 'focus_x' => 50, 'focus_y' => 50, 'headline' => 'Alpine Roots. Global Vision.', 'lines' => [['text' => 'Mont Haus International Realty', 'style' => 'town']], 'date_text' => '', 'time_text' => ''],
+    'story-logo'      => $common + ['type' => 'story', 'logo' => 'bottom', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
+    'story-logotop'   => $common + ['type' => 'story_openhouse', 'logo' => 'top', 'label' => 'Open House', 'when_text' => ''] + $when,
+    'story-oh'        => $common + ['type' => 'story_openhouse', 'logo' => 'bottom', 'label' => 'Open House', 'when_text' => ''] + $when,
+    'photo-nologo'    => $common + ['type' => 'photo', 'logo' => 'none', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
+    'post-other'      => ['type' => 'photo_other'] + $other,
+    // General Social (2026-10-28): the square size, the centred layout with a multi-line headline, the logo centred above it.
+    'square-other'    => ['type' => 'square_other', 'logo' => 'bottom'] + $other,
+    'square-center'   => ['type' => 'square_other', 'layout' => 'center', 'logo' => 'center', 'headline' => "Alpine Roots.\nGlobal Vision."] + $other,
+    'post-center'     => ['type' => 'photo_other', 'layout' => 'center', 'logo' => 'center', 'headline' => "Alpine Roots.\nGlobal Vision.", 'label' => 'Coming Soon'] + $other,
+    'story-center'    => ['type' => 'story_other', 'layout' => 'center', 'logo' => 'none', 'headline' => "Happy Holidays\nfrom all of us"] + $other,
     'story-openhouse' => $common + ['type' => 'story_openhouse', 'label' => 'Open House'] + $when,
 ];
 foreach ($posts as $k => $p) {

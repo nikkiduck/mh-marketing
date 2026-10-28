@@ -1,7 +1,8 @@
 <?php
 /**
- * portal/templates.php — Templates (My Tools): the landing for the two
- * template tools, Instagram Post (portal/social.php) and Listing Flyer
+ * portal/templates.php — Templates (My Tools): the landing for the template
+ * tools, Listing Post/Story (portal/social.php), General Social
+ * (portal/general.php, 2026-10-28), Market Snapshot and Listing Flyer
  * (portal/flyer.php). The menu has two levels, so a third for the tools
  * would not fit; each tool page carries a switch to the other instead
  * (Nikki, 2026-10-13: "a dropdown under the Templates menu item").
@@ -15,7 +16,8 @@ social_gate();
 // Two groups (Nikki, 2026-10-15): the flyer is print, not Instagram.
 $groups = [
     'Instagram Templates' => [
-        ['Instagram Post/Story', '/portal/social.php', 'Create an Instagram or Facebook ready post or story.', 'Make a post ›'],
+        ['Listing Post/Story', '/portal/social.php', 'An Instagram or Facebook ready post or story from one of your listings.', 'Make a post ›'],
+        ['General Social', '/portal/general.php', 'A post, square or story that is not about a listing: a Mont Haus stock photo or your own, your words, the logo where you want it.', 'Make a post ›'],   // 2026-10-28
         ['Market Snapshot', '/portal/market_post.php', 'One place\'s month on a card: the median sale price, closed sales, days on market and months of supply. A post or a story.', 'Make a snapshot ›'],   // from the Market Report (2026-10-18)
     ],
     'Print Templates' => [

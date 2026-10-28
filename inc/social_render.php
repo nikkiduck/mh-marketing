@@ -33,7 +33,8 @@
  * mirrors exactly this CSS, which is the only place the post is "drawn"
  * twice, and only as a control.
  *
- * Format: Instagram portrait, 1080 x 1440. Assets by absolute URL under
+ * Format: Instagram portrait, 1080 x 1440 (a square, 1080 x 1080, and a story,
+ * 1080 x 1920, follow the template: social_formats()). Assets by absolute URL under
  * $base: self-hosted fonts (assets/fonts/mh), the vertical-stack logo in
  * white or black, the photo through the public site's img.php or (an
  * upload) the portal's own asset endpoint; for the export the upload is
@@ -53,10 +54,11 @@ const SOCIAL_H = 1440;
  * brochure cover, and the label pill sits upper right (Nikki, 2026-10-15).
  */
 function social_formats(): array {
-    return ['post' => 'Post', 'story' => 'Story'];
+    return ['post' => 'Post', 'square' => 'Square', 'story' => 'Story'];
 }
+/** 1440 for a post, 1080 for a square (General Social, 2026-10-28), 1920 for a story. */
 function social_format_height(string $format): int {
-    return $format === 'story' ? 1920 : SOCIAL_H;
+    return match ($format) { 'story' => 1920, 'square' => 1080, default => SOCIAL_H };
 }
 /** [top, bottom] insets in px. */
 function social_format_insets(string $format): array {
@@ -74,8 +76,9 @@ function social_templates(): array {
         'photo_openhouse' => ['name' => 'Post: Open House', 'blurb' => 'The same, with the date and time above the headline.',             'offered' => true],
         'story'           => ['name' => 'Story',            'blurb' => 'A 9:16 story: the photo fills it, a watermark lower right, the label upper right.', 'offered' => true],
         'story_openhouse' => ['name' => 'Story: Open House', 'blurb' => 'The story, with the date and time under the badge.', 'offered' => true],
-        'photo_other'     => ['name' => 'Post: Other',      'blurb' => 'A post from your own photo; every line is yours.', 'offered' => true],
-        'story_other'     => ['name' => 'Story: Other',     'blurb' => 'A story from your own photo; every line is yours.', 'offered' => true],
+        'photo_other'     => ['name' => 'Post: General',    'blurb' => 'A post from a stock photo or your own; every line is yours.', 'offered' => true],
+        'square_other'    => ['name' => 'Square: General',  'blurb' => 'The same at 1:1, 1080 x 1080 (2026-10-28).', 'offered' => true],
+        'story_other'     => ['name' => 'Story: General',   'blurb' => 'A story from a stock photo or your own; every line is yours.', 'offered' => true],
         'featured'        => ['name' => 'Featured Listing',      'blurb' => 'Photo on top, a text block below: headline and up to four lines.', 'offered' => false],
         'openhouse'       => ['name' => 'Open House',            'blurb' => 'Photo on top; the date and time lead the text block.',            'offered' => false],
     ];
@@ -91,9 +94,9 @@ function social_is_openhouse(string $type): bool {
     return str_contains($type, 'openhouse');
 }
 
-/** True for the two full-photo templates. */
+/** True for the full-photo templates (post, square and story). */
 function social_is_full(string $type): bool {
-    return str_starts_with($type, 'photo') || str_starts_with($type, 'story');
+    return str_starts_with($type, 'photo') || str_starts_with($type, 'square') || str_starts_with($type, 'story');
 }
 
 /** 'listing', 'openhouse' or 'other' (no listing: the agent's own photo and words; Nikki, 2026-10-15). */
@@ -102,9 +105,21 @@ function social_template_kind(string $type): string {
     return social_is_openhouse($type) ? 'openhouse' : 'listing';
 }
 
-/** 'story' for the story templates (1080 x 1920), 'post' for the rest (1080 x 1440). */
+/** 'story' for the story templates (1080 x 1920), 'square' for the 1:1 ones (1080 x 1080), 'post' for the rest (1080 x 1440). */
 function social_template_format(string $type): string {
-    return str_starts_with($type, 'story') ? 'story' : 'post';
+    if (str_starts_with($type, 'story')) return 'story';
+    if (str_starts_with($type, 'square')) return 'square';
+    return 'post';
+}
+
+/** The logo placements: upper right over the photo, lower left above the rule, centred above centred words, or none (2026-10-28; was the story's alone). */
+function social_logo_places(): array {
+    return ['top' => 'Upper right', 'bottom' => 'Lower left', 'center' => 'Center', 'none' => 'None'];
+}
+
+/** Where the words sit on a full-photo post: lower left over the fade (every template), or centred on the photo (General Social, 2026-10-28). */
+function social_layouts(): array {
+    return ['corner' => 'Lower left', 'center' => 'Centered'];
 }
 
 /** How many sub lines a template shows (the form hides the rest). */
@@ -159,10 +174,10 @@ function social_labels(): array {
     return ['Featured Listing', 'Just Listed', 'New Price', 'Under Contract', 'Just Sold', 'Featured Rental', 'Coming Soon', 'Open House'];
 }
 
-/** The styles a sub line can take: key => what the dropdown says (short descriptors: Nikki, 2026-10-12). */
+/** The styles a sub line can take: key => what the dropdown says (short descriptors: Nikki, 2026-10-12; "Gold" dropped with the slate scheme, 2026-10-28). */
 function social_line_styles(): array {
     return [
-        'town'    => 'Small Caps Gold',
+        'town'    => 'Small Caps',
         'price'   => 'Large Serif',
         'details' => 'Light',
         'note'    => 'Italic Serif',
@@ -280,7 +295,13 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     [$top, $bot] = social_format_insets($format);
     $photoH = social_photo_height($type);
     $bodyH  = $H - $photoH;
-    $storyLogo = in_array((string)($p['story_logo'] ?? ''), ['top', 'bottom', 'none'], true) ? (string)$p['story_logo'] : (!empty($p['story_logo']) ? 'bottom' : 'none');   // the story's logo: upper right, lower left, none
+    // The logo (2026-10-28, every full-photo template; was the story's alone as story_logo): upper right over
+    // the photo (a post's default), lower left above the rule (a story's default), centred above centred words
+    // (the centred layout only), or none (Nikki: an option to remove it from the listing post).
+    $layout = ($p['layout'] ?? 'corner') === 'center' ? 'center' : 'corner';
+    $logo = (string)($p['logo'] ?? ($p['story_logo'] ?? ''));
+    if (!isset(social_logo_places()[$logo])) $logo = $format === 'story' ? 'bottom' : 'top';
+    if ($logo === 'center' && $layout !== 'center') $logo = 'top';
 
     // The photo frame: zoom 1 to 3, focus 0 to 100 on each axis (see the header).
     $zoom = max(1.0, min(3.0, (float)($p['zoom'] ?? 1)));
@@ -297,12 +318,16 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         // warm paper from 2026-10-12): the scheme's page, type and accent, the black logo and M mark, and a fade that
         // starts higher and lands almost solid cream, because the words were hard to read.
         ? ['bg' => '#F6F7F9', 'text' => '#1F242C', 'accent' => '#55637A', 'muted' => '#434B57', 'soft' => '#3A414C', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',
-           'fade' => 'rgba(246,247,249,.42)', 'shadow' => 'none', 'topfade' => 'rgba(246,247,249,.62) 0%, rgba(246,247,249,0) 100%',
-           'fullfade' => 'rgba(246,247,249,0) 0%, rgba(246,247,249,.72) 38%, rgba(246,247,249,.94) 62%, rgba(246,247,249,1) 100%', 'fullfrac' => 0.56,
+           // Rebalanced 2026-10-28 (Nikki): the bottom no longer lands on solid white, so more of the photo and the ghosted
+           // mark show through; the top fade is stronger so the logo reads on a dark sky; a centred layout gets a veil instead.
+           'fade' => 'rgba(246,247,249,.42)', 'shadow' => 'none', 'topfade' => 'rgba(246,247,249,.82) 0%, rgba(246,247,249,.38) 55%, rgba(246,247,249,0) 100%',
+           'fullfade' => 'rgba(246,247,249,0) 0%, rgba(246,247,249,.56) 40%, rgba(246,247,249,.78) 70%, rgba(246,247,249,.86) 100%', 'fullfrac' => 0.54,
+           'veil' => 'rgba(246,247,249,.50)', 'ghost' => '.13',
            'logo' => $base . '/assets/images/MH_vert-stack_black.svg', 'mark' => $base . '/assets/images/M-mark_black.svg']
         : ['bg' => '#1F242C', 'text' => '#ffffff', 'accent' => '#D6DEE8', 'muted' => '#E3E8EE', 'soft' => '#EEF1F5', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',   // Slate, deeper buttons (2026-10-28): the light slate on the photo, the button tone for the badge
            'fade' => 'rgba(31,36,44,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(20,24,30,.5) 0%, rgba(20,24,30,0) 100%',
            'fullfade' => 'rgba(0,0,0,0) 0%, rgba(20,24,30,.86) 100%', 'fullfrac' => 0.58,
+           'veil' => 'rgba(20,24,30,.42)', 'ghost' => '.26',   // the ghosted mark was all but lost at .16 on the dark look (Nikki, 2026-10-28)
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
 
     // Open House text under a date block runs a size smaller (the split layout only).
@@ -319,10 +344,21 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".photo::before{content:'';position:absolute;left:0;right:0;top:0;height:" . (320 + $top) . "px;z-index:1;background:linear-gradient(to bottom,{$c['topfade']})}"
         . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:152px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
         . ".body{z-index:2}"
-        . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:" . ($theme === 'light' ? '.09' : '.16') . "}"
+        . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:{$c['ghost']}}"
         . ".ghost.m{right:0;width:745px}"
-        . ($format === 'story' ? ($storyLogo === 'top' ? '' : ".pill{left:auto;right:64px}") . ".slogo{display:block;height:160px;margin:0 0 32px}"
-            . ".whentop{position:absolute;" . ($storyLogo === 'top' ? 'left:64px;text-align:left' : 'right:64px;text-align:right') . ";top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
+        . ".slogo{display:block;height:160px;margin:0 0 32px}"
+        . ($format === 'story' ? ($logo === 'top' ? '' : ".pill{left:auto;right:64px}")
+            . ".whentop{position:absolute;" . ($logo === 'top' ? 'left:64px;text-align:left' : 'right:64px;text-align:right') . ";top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
+            : '')
+        // Centred (General Social, 2026-10-28): the words sit in the middle of the photo, centred, every line
+        // of the headline in the headline serif; a soft veil over the whole photo carries them instead of the
+        // bottom fade, and the logo may sit above the rule.
+        . ($layout === 'center'
+            ? ".body{top:{$top}px;bottom:{$bot}px;padding:0 90px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}"
+            . ".photo::after{height:100%;background:{$c['veil']}}"
+            . ".rule{margin:0 auto 30px}.addr{text-wrap:balance}.lines{padding:0}.ln{white-space:normal}"
+            . ".slogo{margin:0 0 36px}.clogo{display:block;height:200px;margin:0 auto 40px}"
+            . (($logo !== 'top' && trim((string)($p['label'] ?? '')) === '') ? ".photo::before{display:none}" : '')   // nothing up top: no top fade either
             : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
@@ -366,8 +402,10 @@ CSS;
     $pill  = $label !== '' ? '<div class="pill">' . $e($label) . '</div>' : '';
 
     $body = '';
-    if ($full && $format === 'story' && $storyLogo === 'bottom') {   // the full logo above the rule, lower left (Nikki, 2026-10-15)
+    if ($full && $logo === 'bottom') {        // the full logo above the rule, lower left (Nikki, 2026-10-15; any full template since 2026-10-28)
         $body .= '<img class="slogo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
+    } elseif ($full && $logo === 'center') {  // centred above the rule and the centred words
+        $body .= '<img class="clogo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
     }
     $body .= '<div class="rule"></div>';
     $whenTop = '';
@@ -396,10 +434,13 @@ CSS;
         // and may wrap to a second line when still long after social_short_address().
         // When it wraps the two lines are balanced (text-wrap) and the unit number stays
         // with the word before it, so "#1513" is never a line by itself (Nikki, 2026-10-13).
+        // Centred, the headline may run several lines (Enter in the form): sized by its longest line.
+        $hlines = $layout === 'center' ? array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $headline)), fn($x) => $x !== '')) : [$headline];
+        $longest = array_reduce($hlines, fn($m, $x) => mb_strlen($x) > mb_strlen($m) ? $x : $m, '');
         $size = ($oh && !$full) ? social_fit_size($headline, 46, [34 => 40, 42 => 34, 52 => 28])
-                                : social_fit_size($headline, 76, [20 => 68, 27 => 60, 36 => 52]);
+                                : social_fit_size($longest, $layout === 'center' ? 84 : 76, $layout === 'center' ? [16 => 76, 22 => 66, 28 => 56, 36 => 48] : [20 => 68, 27 => 60, 36 => 52]);
         $tag  = ($oh && !$full) ? 'h2' : 'h1';
-        $text = str_replace(' #', '&nbsp;#', $e($headline));
+        $text = str_replace(' #', '&nbsp;#', implode('<br>', array_map($e, $hlines)));
         $body .= "<{$tag} class=\"addr\" style=\"font-size:{$size}px\">" . $text . "</{$tag}>";
     }
     $styles = social_line_styles();
@@ -427,8 +468,8 @@ CSS;
             default => '<img class="ghost" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-dark.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">',
         };
     }
-    // Top-right logo: every post, and a story whose logo is set to upper right.
-    $topLogo = ($full && ($format !== 'story' || $storyLogo === 'top')) ? $logoHtml : '';
+    // Top-right logo over the photo, when the logo is set there.
+    $topLogo = ($full && $logo === 'top') ? $logoHtml : '';
     if (!$full) $body .= $logoHtml;
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'

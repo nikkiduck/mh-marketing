@@ -1,6 +1,6 @@
 <?php
 /**
- * template_social.php — Instagram Post/Story on the admin side (Nikki,
+ * template_social.php — Listing Post/Story on the admin side (Nikki,
  * 2026-10-21): the portal's tool (inc/social_body.php, the same form, script
  * and endpoints) for the agent chosen in the picker. ?agent=<marketing
  * account id>. The page sets $_GET['preview'] to that account and calls
@@ -41,7 +41,7 @@ if ($agent_id) {
 }
 
 admin_tool_header([
-    'title'   => 'Instagram Post/Story',
+    'title'   => 'Listing Post/Story',
     'hint'    => 'Pick a listing, choose and frame the photo, edit the text, and download. The post is made for the agent chosen above.',
     'actions' => '<a class="btn btn-outline btn-sm" href="templates.php' . ($agent_id ? '?agent=' . $agent_id : '') . '"><i class="ti ti-layout-grid"></i> Templates</a>'
                . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',

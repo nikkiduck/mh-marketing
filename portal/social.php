@@ -1,7 +1,8 @@
 <?php
 /**
- * portal/social.php — Social posts (Nikki, 2026-10-11; reworked 2026-10-12):
- * an Instagram-ready PNG of one of the agent's listings in four steps:
+ * portal/social.php — Listing Post/Story (Nikki, 2026-10-11; reworked 2026-10-12;
+ * named so 2026-10-28, when the Other kind moved to portal/general.php as
+ * General Social): an Instagram-ready PNG of one of the agent's listings in four steps:
  * template and look, listing, photo (the listing's or their own, framed by
  * drag and zoom), words (a headline and four sub lines with styles), with a
  * live preview and a download. inc/social.php has the rules;
@@ -35,11 +36,11 @@ $next_sat   = (new DateTimeImmutable('next saturday'))->format('Y-m-d');
 $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
 
 
-portal_header($ctx, 'Social posts', 'social');
+portal_header($ctx, 'Listing Post/Story', 'social');
 ?>
 <link rel="stylesheet" href="/assets/css/social.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/social.css') ?>">
-  <h1 class="pt-h1">Instagram Templates</h1>
-  <p class="pt-lead">Pick a listing, choose and frame the photo, edit the text, and download. If you'd like to create a custom post, you may download the MH logos from the Brand Tools tab.</p>
+  <h1 class="pt-h1">Listing Post/Story</h1>
+  <p class="pt-lead">Pick a listing, choose and frame the photo, edit the text, and download. For a post that is not about a listing, use <a href="<?= ph(portal_url($ctx, '/portal/general.php')) ?>">General Social</a>.</p>
   <p class="tp-back"><a href="<?= ph(portal_url($ctx, '/portal/templates.php')) ?>">‹ All templates</a></p>
 <?php include __DIR__ . '/../inc/social_body.php';   // the form and its script, shared with the admin side (2026-10-21)
 portal_footer();
