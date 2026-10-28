@@ -6,8 +6,8 @@
    and no contact block: a personal tool (Nikki, 2026-10-17). */
 
 :root {
-  --ink: #0d0c0a; --gold: #c9a96a; --gold-deep: #8a6d36; --paper: #faf8f4; --card: #ffffff; --line: #e8e2d6;
-  --text: #1c1a17; --muted: #6f6857; --ok: #2f6b45; --warn: #8a5a12;
+  --ink: #2b3038; --gold: #4a5566; --gold-deep: #4a5569; --paper: #f6f7f9; --card: #ffffff; --line: #dfe3e8;
+  --text: #1f242c; --muted: #6b7a8f; --ok: #2f6b45; --warn: #8a5a12;
   --serif: 'Cormorant Garamond', Georgia, serif; --sans: 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 @page { size: Letter; margin: 0.6in 0.65in 0.7in; }
@@ -17,12 +17,12 @@ body { background: #e9e5dd; color: var(--text); font: 14.5px/1.5 var(--sans); -w
 body.ev-export { background: #fff; }
 
 /* The browser view: a sheet on a grey desk, with the toolbar the printer never sees. */
-.ev-toolbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; background: var(--ink); color: #cfc6b3; padding: 10px 16px; font-size: 14px; }
-.ev-tb-back { color: #cfc6b3; text-decoration: none; }
+.ev-toolbar { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 10px; background: var(--ink); color: #c2c8d1; padding: 10px 16px; font-size: 14px; }
+.ev-tb-back { color: #c2c8d1; text-decoration: none; }
 .ev-tb-back:hover { color: #fff; }
 .ev-tb-sp { flex: 1; }
 .ev-tb-btn { font: 500 14px var(--sans); color: #fff; background: transparent; border: 1px solid #3a352c; border-radius: 10px; padding: 8px 14px; cursor: pointer; text-decoration: none; }
-.ev-tb-btn:hover { border-color: #cfc6b3; }
+.ev-tb-btn:hover { border-color: #c2c8d1; }
 .ev-tb-btn.main { background: var(--gold); color: var(--ink); border-color: var(--gold); }
 .ev-doc { max-width: 8.5in; margin: 24px auto; background: #fff; padding: 0.6in 0.65in 0.7in; box-shadow: 0 2px 16px rgba(0,0,0,.12); }
 body.ev-export .ev-doc { max-width: none; margin: 0; padding: 0; box-shadow: none; }

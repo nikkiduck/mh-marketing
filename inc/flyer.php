@@ -42,7 +42,12 @@ function flyer_agent(mysqli $conn, array $ctx): array {
 
 /** The banner colours (Nikki, 2026-10-13: preset per banner; a custom banner picks one). */
 function flyer_banner_colors(): array {
-    return ['blue' => '#1FA6DB', 'orange' => '#C9643A', 'green' => '#3E8F4A', 'bronze' => '#8A7350', 'gold' => '#C3A561', 'black' => '#231F20'];
+    return ['blue' => '#1FA6DB', 'orange' => '#C9643A', 'green' => '#3E8F4A', 'bronze' => '#55637A', 'gold' => '#4A5566', 'black' => '#231F20'   /* bronze = the scheme's slate, gold = its deeper button tone since 2026-10-28; the keys stay so saved choices resolve */];
+}
+
+/** What the colour picker calls a colour key: the scheme's two slates keep their old keys (saved choices), so they need their own words (2026-10-28). */
+function flyer_banner_color_label(string $k): string {
+    return ['bronze' => 'Slate', 'gold' => 'Slate, deep'][$k] ?? ucfirst($k);
 }
 
 /** The ready-made banners under the figures box: key => [words, colour key]. The form adds "No banner" and "Custom". */

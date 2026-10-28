@@ -348,7 +348,7 @@ $nav_active = 'billing';
   <link rel="stylesheet" href="/assets/css/style-preset.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    :root { --bs-primary: #0184BB; }
+    :root { --bs-primary: #55637a; }
     .pc-header    { padding:0; left:0; top:0; min-height:70px; }
     /* Overriding `top` on .pc-container leaves a phantom black gap — see CLAUDE.md */
     .pc-container { margin-left:0; top:0; margin-top:70px; min-height:calc(100vh - 70px); }
@@ -361,11 +361,11 @@ $nav_active = 'billing';
     .mh-nav-link {
       display:inline-flex; align-items:center; gap:5px;
       padding:5px 12px; font-size:.8rem; font-weight:500;
-      color:#75BDB6; text-decoration:none; border-radius:6px;
+      color:#aebbcc; text-decoration:none; border-radius:6px;
       white-space:nowrap; transition:color .2s, background .2s;
     }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
 
     body { font-family:'Public Sans',sans-serif; background:#f8f9fa; }
@@ -392,13 +392,13 @@ $nav_active = 'billing';
                 margin-bottom:12px; overflow:hidden; }
     .bl-agent-head { display:flex; align-items:center; gap:12px;
                      padding:12px 16px; border-bottom:1px solid #f3f4f6; }
-    /* A darker cut of the brand blue (#0184BB). The brand shade itself is only
+    /* A darker cut of the brand blue (#55637a). The brand shade itself is only
        4.2:1 on white, which fails AA at this size; this is 6.2:1. Colour rather
        than more weight because a card whose month rows are all white needs the
        name to be the one thing that is not near-black. */
-    .bl-agent-name { font-size:15px; font-weight:700; color:#01679A;
+    .bl-agent-name { font-size:15px; font-weight:700; color:#3f4b5e;
                      text-decoration:none; letter-spacing:.1px; }
-    .bl-agent-name:hover { color:#0184BB; text-decoration:underline; }
+    .bl-agent-name:hover { color:#55637a; text-decoration:underline; }
     .bl-agent-spacer { flex:1; }
     .bl-agent-due { font-size:13px; color:#6b7280; }
     .bl-agent-due strong { color:#1f2937; font-size:15px; }
@@ -448,7 +448,7 @@ $nav_active = 'billing';
                padding:9px 14px; border-bottom:2px solid transparent; margin-bottom:-1px;
                display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
     .bl-tab:hover  { color:#1f2937; }
-    .bl-tab.active { color:#01679A; border-bottom-color:#0184BB; }
+    .bl-tab.active { color:#3f4b5e; border-bottom-color:#55637a; }
     .bl-panel { display:none; }
     .bl-panel.active { display:block; }
     .bl-sub { display:none; }
@@ -467,7 +467,7 @@ $nav_active = 'billing';
     .bl-split tr:last-child td { border-bottom:none; }
     .bl-split tfoot td { border-top:1px solid #e9ecef; border-bottom:none;
                          font-weight:700; color:#1f2937; background:#fcfcfd; }
-    .bl-split .agent  { color:#01679A; font-weight:600; text-decoration:none; }
+    .bl-split .agent  { color:#3f4b5e; font-weight:600; text-decoration:none; }
     .bl-split .agent:hover { text-decoration:underline; }
     .bl-num  { font-weight:600; color:#1f2937; }
     .bl-mh   { font-weight:600; color:#0f766e; }
@@ -499,10 +499,10 @@ $nav_active = 'billing';
                   font:inherit; font-size:14px; font-weight:600; color:#1f2937;
                   cursor:pointer; display:inline-block; width:auto;
                   border-bottom:1px dashed #cbd5e1; }
-    .bl-amt-btn:hover { color:#0184BB; border-bottom-color:#0184BB; }
+    .bl-amt-btn:hover { color:#55637a; border-bottom-color:#55637a; }
     /* The separator matters: "$500.00 2" reads as one mangled figure. */
     .bl-amt-btn .n { font-size:11px; font-weight:500; color:#9ca3af; }
-    .bl-amt-btn:hover .n { color:#0184BB; }
+    .bl-amt-btn:hover .n { color:#55637a; }
 
     /* ── Breakdown modal ───────────────────────────────────────────────────
        A <dialog>, so Escape and the backdrop come from the browser rather than

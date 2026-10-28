@@ -414,7 +414,7 @@ function ago(?string $dt): string {
   <link rel="stylesheet" href="/assets/css/style-preset.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    :root { --bs-primary: #0184BB; }
+    :root { --bs-primary: #55637a; }
     .pc-header    { padding:0; left:0; top:0; min-height:70px; }
     .pc-container { margin-left:0; top:0; margin-top:70px; min-height:calc(100vh - 70px); }
     .mh-header-inner {
@@ -426,11 +426,11 @@ function ago(?string $dt): string {
     .mh-nav-link {
       display:inline-flex; align-items:center; gap:5px;
       padding:5px 12px; font-size:.8rem; font-weight:500;
-      color:#75BDB6; text-decoration:none; border-radius:6px;
+      color:#aebbcc; text-decoration:none; border-radius:6px;
       white-space:nowrap; transition:color .2s, background .2s;
     }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
 
     body { font-family:'Public Sans',sans-serif; background:#f8f9fa; }
@@ -469,7 +469,7 @@ function ago(?string $dt): string {
       width:100%; padding:8px 10px; font-size:13.5px; font-family:inherit;
       border:1px solid #d7dbe0; border-radius:6px; background:#fff; color:#1f2937;
     }
-    .us-f input:focus, .us-f select:focus { outline:2px solid #75BDB6; outline-offset:-1px; border-color:#75BDB6; }
+    .us-f input:focus, .us-f select:focus { outline:2px solid #aebbcc; outline-offset:-1px; border-color:#aebbcc; }
 
     .btn-mh { display:inline-flex; align-items:center; gap:6px; cursor:pointer;
               padding:8px 15px; font-size:13px; font-weight:600; font-family:inherit;
@@ -509,7 +509,7 @@ function ago(?string $dt): string {
     .chip { display:inline-block; padding:2px 8px; border-radius:999px;
             font-size:11px; font-weight:600; letter-spacing:.2px; white-space:nowrap; }
     .chip.role-super_admin { background:#efe6fa; color:#5b21b6; }
-    .chip.role-admin       { background:#e4f0fb; color:#1a5276; }
+    .chip.role-admin       { background:#e4f0fb; color:#4a5569; }
     .chip.role-agent       { background:#f1f3f5; color:#4b5563; }
     .chip.you              { background:#e8f6ee; color:#1e6b3f; margin-left:6px; }
     .chip.off              { background:#f1f3f5; color:#6b7280; }
@@ -587,7 +587,7 @@ function ago(?string $dt): string {
   <!-- ── Add ──────────────────────────────────────────────────────────────── -->
   <div class="us-card">
     <div class="us-card-hd">
-      <i class="ti ti-user-plus" style="color:#75BDB6"></i>
+      <i class="ti ti-user-plus" style="color:#aebbcc"></i>
       <h2>Add a user</h2>
     </div>
     <div class="us-card-bd">
@@ -644,7 +644,7 @@ function ago(?string $dt): string {
   <!-- ── List ─────────────────────────────────────────────────────────────── -->
   <div class="us-card">
     <div class="us-card-hd">
-      <i class="ti ti-users" style="color:#75BDB6"></i>
+      <i class="ti ti-users" style="color:#aebbcc"></i>
       <h2><?= count($users) ?> account<?= count($users) === 1 ? '' : 's' ?></h2>
     </div>
 

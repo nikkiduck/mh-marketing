@@ -405,7 +405,7 @@ function money0(?string $v): string {
   .f1 { flex:1; min-width:150px; }
   .btn { font-size:13px; font-weight:600; padding:8px 14px; border-radius:5px;
          border:1px solid transparent; cursor:pointer; }
-  .btn-go { background:#0184BB; color:#fff; }
+  .btn-go { background:#55637a; color:#fff; }
   .btn-no { background:#fff; color:#6b7280; border-color:#d1d5db; }
   .empty { text-align:center; color:#9ca3af; font-size:14px; padding:40px 0; }
   .topbar { background:#1a1a1a; color:#fff; padding:12px 20px; display:flex;
@@ -417,7 +417,7 @@ function money0(?string $v): string {
   table { width:100%; border-collapse:collapse; background:#fff; border:1px solid #e5e7eb; border-radius:8px; }
   td,th { padding:8px 12px; font-size:12px; text-align:left; border-bottom:1px solid #f3f4f6; }
   th { color:#6b7280; font-weight:600; }
-  a { color:#0184BB; }
+  a { color:#55637a; }
 </style>
 </head>
 <body>

@@ -95,7 +95,7 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#231F20;fo
 .stat small{font-size:9.5pt;letter-spacing:.2em;text-transform:uppercase;margin-top:3pt;color:#231F20}
 .notes{flex:none;font-size:10.5pt;font-weight:300;line-height:1.5;margin:14pt 0 0;max-height:120pt;overflow:hidden;white-space:pre-line}
 .photos{flex:1;min-height:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:{$layout['rows']};gap:10pt;margin-top:18pt}
-.photos .ph{min-height:0;min-width:0;overflow:hidden;background:#e8e2d6}
+.photos .ph{min-height:0;min-width:0;overflow:hidden;background:#dfe3e8}
 .photos img{display:block;width:100%;height:100%;object-fit:cover}
 .foot{flex:none;border-top:.75pt solid #231F20;margin-top:18pt;padding-top:16pt;display:flex;align-items:flex-start;gap:14pt}
 .foot .logo{height:74pt;width:auto;flex:none}
@@ -169,6 +169,6 @@ CSS;
 function flyer_placeholder_html(string $msg): string {
     $W = FLYER_W; $H = FLYER_H;
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0}body{width:' . $W . 'pt;height:' . $H . 'pt;'
-         . 'display:flex;align-items:center;justify-content:center;background:#fff;color:#6f6857;font:300 18pt/1.4 Jost,Arial,sans-serif;text-align:center;padding:0 60pt;box-sizing:border-box}'
+         . 'display:flex;align-items:center;justify-content:center;background:#fff;color:#6b7a8f;font:300 18pt/1.4 Jost,Arial,sans-serif;text-align:center;padding:0 60pt;box-sizing:border-box}'
          . '</style></head><body>' . htmlspecialchars($msg, ENT_QUOTES, 'UTF-8') . '</body></html>';
 }

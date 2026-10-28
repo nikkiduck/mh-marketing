@@ -293,16 +293,16 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
 
     // The two looks. The label pill is solid gold with ink text on both (it has to read in a fast scroll).
     $c = $theme === 'light'
-        // Light: espresso brown rather than black for the words and the logo (Nikki, 2026-10-12;
-        // MH_vert-stack_brown.svg is the black file with its fill changed), and a fade that
+        // Light (Slate, deeper buttons, the website's scheme since 2026-10-28; was espresso brown on
+        // warm paper from 2026-10-12): the scheme's page, type and accent, the black logo and M mark, and a fade that
         // starts higher and lands almost solid cream, because the words were hard to read.
-        ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31',
-           'fade' => 'rgba(241,236,226,.42)', 'shadow' => 'none', 'topfade' => 'rgba(241,236,226,.62) 0%, rgba(241,236,226,0) 100%',
-           'fullfade' => 'rgba(241,236,226,0) 0%, rgba(241,236,226,.72) 38%, rgba(241,236,226,.94) 62%, rgba(241,236,226,1) 100%', 'fullfrac' => 0.56,
-           'logo' => $base . '/assets/images/MH_vert-stack_brown.svg', 'mark' => $base . '/assets/images/M-mark_brown.svg']
-        : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da',
-           'fade' => 'rgba(20,18,16,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(12,11,9,.5) 0%, rgba(12,11,9,0) 100%',
-           'fullfade' => 'rgba(0,0,0,0) 0%, rgba(12,11,9,.86) 100%', 'fullfrac' => 0.58,
+        ? ['bg' => '#F6F7F9', 'text' => '#1F242C', 'accent' => '#55637A', 'muted' => '#434B57', 'soft' => '#3A414C', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',
+           'fade' => 'rgba(246,247,249,.42)', 'shadow' => 'none', 'topfade' => 'rgba(246,247,249,.62) 0%, rgba(246,247,249,0) 100%',
+           'fullfade' => 'rgba(246,247,249,0) 0%, rgba(246,247,249,.72) 38%, rgba(246,247,249,.94) 62%, rgba(246,247,249,1) 100%', 'fullfrac' => 0.56,
+           'logo' => $base . '/assets/images/MH_vert-stack_black.svg', 'mark' => $base . '/assets/images/M-mark_black.svg']
+        : ['bg' => '#1F242C', 'text' => '#ffffff', 'accent' => '#D6DEE8', 'muted' => '#E3E8EE', 'soft' => '#EEF1F5', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',   // Slate, deeper buttons (2026-10-28): the light slate on the photo, the button tone for the badge
+           'fade' => 'rgba(31,36,44,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(20,24,30,.5) 0%, rgba(20,24,30,0) 100%',
+           'fullfade' => 'rgba(0,0,0,0) 0%, rgba(20,24,30,.86) 100%', 'fullfrac' => 0.58,
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
 
     // Open House text under a date block runs a size smaller (the split layout only).
@@ -333,13 +333,13 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
 html,body{margin:0;padding:0}
 body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c['bg']};color:{$c['text']};
      font-family:'Jost','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased}
-.photo{position:absolute;left:0;top:0;width:{$W}px;height:{$photoH}px;overflow:hidden;background:#26221d}
+.photo{position:absolute;left:0;top:0;width:{$W}px;height:{$photoH}px;overflow:hidden;background:#2D333D}
 .photo img.pic{display:block;width:{$zpct}%;height:{$zpct}%;object-fit:cover;object-position:{$fx}% {$fy}%;transform:translate({$tx}px,{$ty}px)}
 .photo .none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:{$c['bg']}}
 .photo .none img{width:260px;opacity:.16}
 .photo::after{content:'';position:absolute;left:0;right:0;bottom:0;height:220px;
      background:linear-gradient(to bottom,rgba(0,0,0,0) 0%,{$c['fade']} 100%)}
-.pill{position:absolute;left:64px;top:64px;z-index:2;padding:21px 32px 19px;background:#C3A561;color:#141210;
+.pill{position:absolute;left:64px;top:64px;z-index:2;padding:21px 32px 19px;background:{$c['pill']};color:{$c['pilltext']};
      font-size:27px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;line-height:1;white-space:nowrap;
      box-shadow:0 4px 18px rgba(0,0,0,.22)}
 .rule{width:72px;height:3px;background:{$c['accent']};margin:0 0 26px}
@@ -442,6 +442,6 @@ CSS;
 function social_placeholder_html(string $msg): string {
     $W = SOCIAL_W; $H = SOCIAL_H;
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><style>html,body{margin:0}body{width:' . $W . 'px;height:' . $H . 'px;'
-         . 'display:flex;align-items:center;justify-content:center;background:#141210;color:#cfc6b3;font:300 40px/1.4 Jost,Arial,sans-serif;text-align:center;padding:0 120px;box-sizing:border-box}'
+         . 'display:flex;align-items:center;justify-content:center;background:#1F242C;color:#C2C8D1;font:300 40px/1.4 Jost,Arial,sans-serif;text-align:center;padding:0 120px;box-sizing:border-box}'
          . '</style></head><body>' . htmlspecialchars($msg, ENT_QUOTES, 'UTF-8') . '</body></html>';
 }

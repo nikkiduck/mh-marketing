@@ -37,7 +37,7 @@ if (!portal_csrf_ok()) {
     $html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;">'
           . '<p><strong>' . $e($who) . '</strong> (' . $e($ctx['acct']['agent_name']) . ') wrote from their agent portal'
           . ($back !== '/portal/' ? ' (' . $e($back) . ')' : '') . ':</p>'
-          . '<p style="white-space:pre-wrap;border-left:3px solid #c9a96a;padding-left:12px;">' . $e($message) . '</p>'
+          . '<p style="white-space:pre-wrap;border-left:3px solid #4a5566;padding-left:12px;">' . $e($message) . '</p>'
           . '<p style="color:#6b7280;font-size:12px;">Reply to this email to answer ' . $e($who) . ' directly.' . ($rid ? " Request #{$rid}." : '') . '</p></div>';
     [$st_mail, $detail] = portal_send_mail('Portal message: ' . $subject . ' (' . $ctx['acct']['agent_name'] . ')', $html, (string)$u['email'], $who);
     if ($rid) {

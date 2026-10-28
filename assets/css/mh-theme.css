@@ -15,14 +15,15 @@
    ========================================================================= */
 
 :root {
-    --mh-page:    #fdfbf6;   /* page: barely-there ivory */
+    /* Slate, deeper buttons: the website's scheme (2026-10-28; was warm paper and gold). */
+    --mh-page:    #f6f7f9;   /* page: cool off-white */
     --mh-panel:   #ffffff;   /* cards and panels */
-    --mh-line:    #e3dccb;   /* hairlines: light taupe */
-    --mh-ink:     #211d15;   /* primary text: warm near-black */
-    --mh-dim:     #5c5440;   /* secondary text */
-    --mh-label:   #564e3c;   /* small caps labels */
-    --mh-gold:    #c9a96a;
-    --mh-gold-dk: #8a6d3a;   /* gold that passes on white */
+    --mh-line:    #dfe3e8;   /* hairlines */
+    --mh-ink:     #1f242c;   /* primary text: slate near-black */
+    --mh-dim:     #5c6574;   /* secondary text */
+    --mh-label:   #434b57;   /* small caps labels */
+    --mh-gold:    #4a5566;   /* the button and badge tone (the name stays: every rule reads it) */
+    --mh-gold-dk: #4a5569;   /* links */
     --mh-serif:   'Cormorant Garamond', Georgia, 'Times New Roman', serif;
     --mh-sans:    'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
@@ -137,8 +138,8 @@ input[type="number"], input[type="date"], input[type="search"], select, textarea
 .roster-table, .mini-table, table.admin-table { background: var(--mh-panel); }
 .roster-table { border: 1px solid var(--mh-line); border-radius: 0; }
 .roster-table th { border-bottom: 1px solid var(--mh-line); background: transparent; }
-.roster-table td, .mini-table td { border-bottom: 1px solid #f1ece0; color: var(--mh-ink); }
-.roster-table tbody tr:hover { background: #faf7ef; }
+.roster-table td, .mini-table td { border-bottom: 1px solid #eceff3; color: var(--mh-ink); }
+.roster-table tbody tr:hover { background: #f6f7f9; }
 .who-name { font-family: var(--mh-serif); font-size: 1.05rem; color: var(--mh-ink); }
 .boards { color: var(--mh-dim); letter-spacing: 0.04em; font-size: 0.8rem; }
 
@@ -152,9 +153,9 @@ input[type="number"], input[type="date"], input[type="search"], select, textarea
     font-size: 0.58rem;
 }
 .pill.s-active, .pill.w-approved { background: #eef3ea; color: #4a7a4a; }
-.pill.s-inactive, .pill.w-inactive { background: #f4f1ea; color: #8a8271; }
-.pill.s-archived { background: #f4f1ea; color: #8a8271; }
-.pill.w-pending { background: #faf3e4; color: #8a6d3a; }
+.pill.s-inactive, .pill.w-inactive { background: #eceff3; color: #848d99; }
+.pill.s-archived { background: #eceff3; color: #848d99; }
+.pill.w-pending { background: #faf3e4; color: #4a5569; }
 .tag-team { background: var(--mh-ink); color: var(--mh-page); }
 .tag-member { border: 1px solid var(--mh-line); color: var(--mh-gold-dk); background: transparent; }
 .ck { color: var(--mh-gold-dk); letter-spacing: 0.08em; }
@@ -184,11 +185,11 @@ input[type="number"], input[type="date"], input[type="search"], select, textarea
     color: var(--mh-ink);
     border-bottom-color: var(--mh-gold);
 }
-.filter-tab .count { background: #f4f1ea; color: var(--mh-dim); border-radius: 0; }
+.filter-tab .count { background: #eceff3; color: var(--mh-dim); border-radius: 0; }
 .tab-bar { border-bottom: 1px solid var(--mh-line); }
 
 /* ── Meters and avatars ───────────────────────────────────────────────── */
-.meter-bar { background: #efe9dc; border-radius: 0; }
+.meter-bar { background: #eceff3; border-radius: 0; }
 .meter-bar i { background: var(--mh-gold); border-radius: 0; }
 .meter { color: var(--mh-dim); }
 .meter.full .meter-bar i { background: #4a7a4a; }
@@ -196,9 +197,9 @@ input[type="number"], input[type="date"], input[type="search"], select, textarea
 
 /* ── Flash ────────────────────────────────────────────────────────────── */
 .flash {
-    background: #fbf7ec;
+    background: #eceff3;
     border: 1px solid var(--mh-line);
-    color: #4c4636;
+    color: #3a414c;
     border-radius: 0;
 }
 .flash strong { font-family: var(--mh-serif); font-weight: 400; font-size: 1.05rem; }
@@ -218,11 +219,11 @@ input[type="number"], input[type="date"], input[type="search"], select, textarea
 
 /* ── Header ───────────────────────────────────────────────────────────── */
 .pc-header, .layout-extended .pc-header {
-    background: var(--mh-ink) !important;
-    border-bottom: 1px solid #3a3325;
+    background: #2b3038 !important;   /* the scheme's dark bar (2026-10-28) */
+    border-bottom: 1px solid #3b414c;
 }
 .mh-nav-link { font-family: var(--mh-sans); letter-spacing: 0.22em; text-transform: uppercase; font-size: 0.66rem; }
-.mh-nav-link.active, .mh-nav-link:hover { color: var(--mh-gold); }
+.mh-nav-link.active, .mh-nav-link:hover { color: #aebbcc; }   /* the light slate on the dark bar; the button tone would vanish there (2026-10-28) */
 
 /* ── Dialogs ──────────────────────────────────────────────────────────── */
 dialog.confirm {
@@ -261,10 +262,10 @@ dialog.confirm h3 { font-family: var(--mh-serif); font-weight: 400; }
     letter-spacing: 0.1em;
     font-size: 0.62rem;
 }
-.tasks-summary.has  { background: #fbf7ec; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
+.tasks-summary.has  { background: #eceff3; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
 .tasks-summary.clear { background: #f3f6f1; color: #4a7a4a; border: 1px solid #dfe6da; }
-.tasks-badge  { background: #fbf7ec; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
-.balance-badge { background: #fbf7ec; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
+.tasks-badge  { background: #eceff3; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
+.balance-badge { background: #eceff3; color: var(--mh-gold-dk); border: 1px solid var(--mh-line); }
 .tab-btn .count, .tab-btn span.badge, .tab-badge {
     background: var(--mh-gold); color: #fff; border-radius: 0; font-size: 0.58rem;
 }
@@ -275,7 +276,7 @@ dialog.confirm h3 { font-family: var(--mh-serif); font-weight: 400; }
 }
 .bio-tab-btn.active { color: var(--mh-ink); border-bottom-color: var(--mh-gold); }
 .bio-content, .bio-content.rich { font-family: var(--mh-sans); color: var(--mh-ink); line-height: 1.7; }
-.task-row { border-bottom: 1px solid #f1ece0; }
+.task-row { border-bottom: 1px solid #eceff3; }
 .kv-grid, .detail-table td { color: var(--mh-ink); }
 
 /* ── Billing (.bl-sub is the subtitle line under the heading, not a tab) ──────────────────────────────────────────────────────────── */
@@ -296,7 +297,7 @@ dialog.confirm h3 { font-family: var(--mh-serif); font-weight: 400; }
 }
 
 /* ── Anything still on the old theme blue ────────────────────────────── */
-a[style*="#0184BB"], .link-blue { color: var(--mh-gold-dk) !important; }
+a[style*="#55637a"], .link-blue { color: var(--mh-gold-dk) !important; }
 
 /* Small actions that sit next to a status, e.g. the website buttons on the
    Profile tab: they must not wrap onto two lines. */

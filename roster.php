@@ -129,13 +129,13 @@ $conn->close();
 .roster-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; cursor: pointer;
                  background: #f8f9fa; border-bottom: 1px solid #e6ebf1; }
 .roster-header:hover { background: #f0f3f7; }
-.agent-avatar { width: 38px; height: 38px; border-radius: 50%; background: #1a5276;
+.agent-avatar { width: 38px; height: 38px; border-radius: 50%; background: #4a5569;
                 color: #fff; display: flex; align-items: center; justify-content: center;
                 font-weight: 700; font-size: 14px; flex-shrink: 0; }
 .agent-name { font-weight: 600; font-size: 15px; color: #111827; }
 .agent-meta { font-size: 12px; color: #374151; }
 .badge-market { display:inline-block; font-size:11px; padding:2px 7px; border-radius:10px;
-                background:#d4e6f1; color:#1a5276; margin-right:3px; }
+                background:#d4e6f1; color:#4a5569; margin-right:3px; }
 .badge-market.vail { background:#d5f5e3; color:#1d8348; }
 .roster-body { display: none; padding: 16px; }
 .roster-body.open { display: block; }
@@ -153,7 +153,7 @@ $conn->close();
 /* Darken all form labels and linked record text */
 .form-label { color: #111827 !important; font-weight: 500; }
 .form-check-label { color: #111827 !important; }
-a { color: #1a5276; }
+a { color: #4a5569; }
 </style>
 </head>
 <body class="antialiased">
@@ -164,7 +164,7 @@ a { color: #1a5276; }
     <div class="navbar navbar-expand-md navbar-light d-print-none" style="border-bottom:1px solid #e6ebf1; background:#fff;">
       <div class="container-xl">
         <a class="navbar-brand" href="index.php">
-          <span style="font-weight:700; color:#1a5276;">Mont Haus</span>
+          <span style="font-weight:700; color:#4a5569;">Mont Haus</span>
           <span style="color:#6c757d; font-size:14px;"> / Marketing</span>
         </a>
         <div class="navbar-nav ms-auto">

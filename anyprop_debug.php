@@ -160,9 +160,9 @@ $conn->close();
     .mh-logo img { height:50px; display:block; }
     .mh-nav { display:flex; align-items:center; gap:4px; }
     .mh-nav-link { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; font-size:.8rem; font-weight:500;
-                   color:#75BDB6; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+                   color:#aebbcc; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
     .wrap { max-width:1100px; margin:32px auto 60px; padding:0 20px; }
     .mk-page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
@@ -183,11 +183,11 @@ $conn->close();
     .q { font-family:ui-monospace, SFMono-Regular, Menlo, monospace; font-size:12px; color:#374151; word-break:break-all; background:#f5f3ee; padding:8px 10px; border-radius:4px; }
     table.sum { width:100%; border-collapse:collapse; font-size:13px; margin-top:6px; }
     table.sum th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:#6b7280; padding:6px 8px; border-bottom:1px solid #e5e7eb; white-space:nowrap; }
-    table.sum td { padding:6px 8px; border-bottom:1px solid #f1ece0; vertical-align:top; }
+    table.sum td { padding:6px 8px; border-bottom:1px solid #eceff3; vertical-align:top; }
     table.sum td.mh { font-weight:600; color:#15803d; }
     .tbl-scroll { overflow-x:auto; }
     pre.json { background:#1a1a1a; color:#e5e7eb; font-size:12px; line-height:1.45; padding:16px; border-radius:6px; overflow:auto; max-height:70vh; margin:0; }
-    pre.json .k { color:#75BDB6; } pre.json .s { color:#f5e6a8; } pre.json .n { color:#c4b5fd; }
+    pre.json .k { color:#aebbcc; } pre.json .s { color:#f5e6a8; } pre.json .n { color:#c4b5fd; }
     .pre-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
     .btn-copy { border:1px solid #d1d5db; background:#fff; border-radius:4px; padding:5px 10px; font-size:12px; cursor:pointer; }
     @media (max-width:700px) { .form-row > div { flex:1 1 100%; } }

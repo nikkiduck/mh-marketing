@@ -110,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reque
           . '<tr><td style="padding:4px 12px 4px 0;color:#6b7280;vertical-align:top;">From</td><td>' . $e($u['email']) . '</td></tr>'
           . '</table>'
           . '<p style="margin-top:18px;"><a href="' . htmlspecialchars(rtrim(SITE_URL, '/') . '/qr_codes.php?intake=' . $acct_id) . '" '
-          . 'style="background:#0d0c0a;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;">Create it on the QR Codes page</a></p>'
+          . 'style="background:#2b3038;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;">Create it on the QR Codes page</a></p>'
           . '<p style="color:#6b7280;font-size:12px;">Reply to this email to reach ' . $e($who) . ' directly.' . ($rid ? " Request #{$rid}." : '') . '</p></div>';
     [$st_mail, $detail] = portal_send_mail('QR code request: ' . $f['title'] . ' (' . $ctx['acct']['agent_name'] . ')', $html, (string)$u['email'], $who);
     if ($rid) {

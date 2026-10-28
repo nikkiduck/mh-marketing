@@ -70,7 +70,7 @@
           <div class="sp-two" id="flBannerCustom" hidden>
             <label class="sp-field">Banner words <input name="banner_custom" maxlength="24" placeholder="Coming Soon"></label>
             <label class="sp-field">Banner colour
-              <select name="banner_color"><?php foreach (flyer_banner_colors() as $k => $hex): ?><option value="<?= ph($k) ?>"><?= ph(ucfirst($k)) ?></option><?php endforeach; ?></select>
+              <select name="banner_color"><?php foreach (flyer_banner_colors() as $k => $hex): ?><option value="<?= ph($k) ?>"><?= ph(flyer_banner_color_label($k)) ?></option><?php endforeach; ?></select>
             </label>
           </div>
           <label class="sp-field">Notes under the details (optional) <textarea name="notes" maxlength="900" rows="3" placeholder="A few lines about the home, or leave this empty."></textarea></label>

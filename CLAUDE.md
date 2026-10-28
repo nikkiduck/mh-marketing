@@ -2813,3 +2813,42 @@ its sync, its lead push). This portal holds no FUB key and no FUB ids. The
   ticked. The free-text Service area field stays for the public regional
   pages and office address; it no longer routes leads. Edit the town list on
   the site (its `_communities.php`), never here.
+
+## Colours: the website's scheme (2026-10-28)
+
+The portal, the admin side and the template renderers follow the website's
+scheme **Slate, deeper buttons** (site repo, branch design/colors,
+webroot/_palettes.php key `slate-deep`; Nikki chose it over Black and White +
+Ink Wash blue on 2026-10-28). The warm paper and gold are gone everywhere
+except the Hot Sheet and alert emails (inc/hs_template.php, inc/hs_helpers.php,
+inc/roster_alerts.php), which were left for a separate pass. The tones:
+
+- Page #F6F7F9, panels #FFFFFF, second panel #ECEFF3, hairlines #DFE3E8,
+  second rule #C9D0D9; text #1F242C, labels #434B57, captions #5C6574,
+  secondary #6B7A8F, placeholders #9AA2AD, muted captions #848D99.
+- Accent #55637A (eyebrows, rules, the admin's old Able Pro blue #0184BB),
+  hover #3F4B5E, links #4A5569, buttons and badges #4A5566 (hover #353E4B).
+- Dark bars (portal header, admin header, dark template ground) #2B3038,
+  with #4A5160 lines, #3B414C rules, #C2C8D1 text and #AEBBCC for the
+  accent on them (nav underline, hover); the template's dark ground is
+  #1F242C and its accent on a photo #D6DEE8 (the scheme's hero-accent).
+- Tokens: portal.css `:root` (--ink is the dark bar, --gold the accent,
+  --gold-deep links, --btn / --btn-hover, --on-dark, --panel, --line-2,
+  --text-2; the old names stay so social.css, flyer.css, elevation.css and
+  market.css keep working), mh-theme.css `--mh-*` (--mh-gold is now the
+  button tone, --mh-gold-dk the link tone; names kept, every rule reads
+  them), inc/admin_tool_shell.php mirrors portal.css's tokens for the admin
+  template pages. The admin pages' inline styles were recoloured by one
+  map (warm hexes, gold, #0184BB/#01679A/#1A5276, the teal #75BDB6 and
+  rgba(117,189,182) of the nav); status greens, reds and ambers were left.
+- Templates: social_render.php and market_card_render.php carry the two
+  looks' palettes (`$c`): dark = white type, #D6DEE8 accent, #4A5566 badge
+  with white text, #1F242C ground and fades in rgba(31,36,44) /
+  rgba(20,24,30); light = #F6F7F9 ground, #1F242C type, #55637A accent,
+  the black logo and M mark (MH_vert-stack_brown.svg and M-mark_brown.svg
+  are no longer used). The flyer's banner palette keeps its keys: `bronze`
+  is now the slate #55637A and `gold` the deeper #4A5566, named Slate and
+  Slate, deep by `flyer_banner_color_label()`.
+- Checked by rendering the post and story in both looks, the snapshot card
+  in both, and the portal home, Instagram page, admin roster and admin
+  Templates page under a simulated admin session.

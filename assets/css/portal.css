@@ -3,14 +3,23 @@
    light page. Phone first: big type, big tap targets, one column that widens. */
 
 :root {
-  --ink: #0d0c0a;
-  --gold: #c9a96a;
-  --gold-deep: #8a6d36;
-  --paper: #faf8f4;
+  /* Slate, deeper buttons: the website's scheme (2026-10-28; was warm paper and gold). ink = the dark bar, gold = the accent, gold-deep = links, btn = buttons and badges. */
+  --ink: #2b3038;
+  --ink-line: #4a5160;
+  --ink-text: #c2c8d1;
+  --gold: #55637a;
+  --gold-deep: #4a5569;
+  --btn: #4a5566;
+  --btn-hover: #353e4b;
+  --on-dark: #aebbcc;
+  --paper: #f6f7f9;
   --card: #ffffff;
-  --line: #e8e2d6;
-  --text: #1c1a17;
-  --muted: #6f6857;
+  --panel: #eceff3;
+  --line: #dfe3e8;
+  --line-2: #c9d0d9;
+  --text: #1f242c;
+  --text-2: #434b57;
+  --muted: #6b7a8f;
   --ok: #2f6b45;
   --warn: #8a5a12;
   --serif: 'Cormorant Garamond', Georgia, serif;
@@ -35,30 +44,30 @@ img { max-width: 100%; }
 .pt-top-in { max-width: 960px; margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
 .pt-logo img { height: 56px; display: block; }
 @media (min-width: 640px) { .pt-logo img { height: 64px; } }
-.pt-signout { color: #cfc6b3; font-size: 14px; text-decoration: none; }
+.pt-signout { color: #c2c8d1; font-size: 14px; text-decoration: none; }
 .pt-signout:hover { color: #fff; }
 /* ── Menu (2026-10-12): main tabs with sub-menus. Desktop: a row, groups drop
    down. Phone (< 720px): a Menu button opens a stacked list with every
    group's pages shown under its name, so nothing is two taps deep. ────── */
 .pt-top-right { display: flex; align-items: center; gap: 14px; }
-.pt-menu-btn { display: none; background: transparent; border: 1px solid #3a352c; border-radius: 10px; color: #fff; padding: 8px 12px;
+.pt-menu-btn { display: none; background: transparent; border: 1px solid #4a5160; border-radius: 10px; color: #fff; padding: 8px 12px;
                font: 500 14px var(--sans); cursor: pointer; align-items: center; gap: 4px; }
 .pt-menu-btn span { display: block; width: 18px; height: 2px; background: #fff; margin: 0; }
 .pt-menu-btn span + span { margin-top: 4px; }
 .pt-menu-btn b { font-weight: 500; margin-left: 8px; }
 .pt-nav { max-width: 960px; margin: 0 auto; padding: 0 8px; display: flex; gap: 2px; }
-.pt-nav-a { display: block; background: transparent; border: 0; color: #cfc6b3; text-decoration: none; padding: 12px 12px 13px;
+.pt-nav-a { display: block; background: transparent; border: 0; color: #c2c8d1; text-decoration: none; padding: 12px 12px 13px;
             font: 400 15px var(--sans); white-space: nowrap; border-bottom: 2px solid transparent; cursor: pointer; }
-.pt-nav-a.on, .pt-group.on > .pt-nav-a { color: #fff; border-bottom-color: var(--gold); }
+.pt-nav-a.on, .pt-group.on > .pt-nav-a { color: #fff; border-bottom-color: var(--on-dark); }
 .pt-nav-a:hover { color: #fff; }
 .pt-caret { display: inline-block; width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
             transform: rotate(45deg); margin: 0 0 3px 4px; }
 .pt-group { position: relative; }
-.pt-sub { display: none; position: absolute; left: 0; top: 100%; min-width: 220px; background: #1a1712; border: 1px solid #3a352c;
+.pt-sub { display: none; position: absolute; left: 0; top: 100%; min-width: 220px; background: #262b33; border: 1px solid #4a5160;
           border-radius: 0 0 12px 12px; padding: 6px 0; z-index: 30; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
 .pt-group.open > .pt-sub, .pt-group:hover > .pt-sub, .pt-group:focus-within > .pt-sub { display: block; }
-.pt-sub a { display: block; color: #cfc6b3; text-decoration: none; padding: 11px 18px; font-size: 15px; white-space: nowrap; }
-.pt-sub a:hover, .pt-sub a.on { color: #fff; background: #2a2620; }
+.pt-sub a { display: block; color: #c2c8d1; text-decoration: none; padding: 11px 18px; font-size: 15px; white-space: nowrap; }
+.pt-sub a:hover, .pt-sub a.on { color: #fff; background: #3b414c; }
 .pt-sub a.on { box-shadow: inset 3px 0 0 var(--gold); }
 /* The group's pages as a row under the header, on every page in the group. */
 .pt-subnav-wrap { background: #fff; border-bottom: 1px solid var(--line); }
@@ -76,7 +85,7 @@ img { max-width: 100%; }
   .pt-subnav-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 1px; width: 28px; pointer-events: none;
                            background: linear-gradient(90deg, rgba(255,255,255,0), #fff 80%); }
   .pt-subnav { padding-right: 24px; }
-  .pt-nav { display: none; flex-direction: column; gap: 0; padding: 0 0 8px; border-top: 1px solid #3a352c; }
+  .pt-nav { display: none; flex-direction: column; gap: 0; padding: 0 0 8px; border-top: 1px solid #4a5160; }
   body.pt-nav-open .pt-nav { display: flex; }
   .pt-nav-a { padding: 14px 20px; font-size: 17px; border-bottom: 0; border-left: 3px solid transparent; width: 100%; text-align: left; }
   .pt-nav-a.on, .pt-group.on > .pt-nav-a { border-bottom-color: transparent; border-left-color: var(--gold); }
@@ -85,7 +94,7 @@ img { max-width: 100%; }
   .pt-sub, .pt-group:hover > .pt-sub, .pt-group:focus-within > .pt-sub { display: block; position: static; min-width: 0; background: transparent;
           border: 0; border-radius: 0; padding: 0 0 6px; box-shadow: none; }
   .pt-sub a { padding: 11px 20px 11px 40px; font-size: 16px; }
-  .pt-sub a.on { background: #2a2620; box-shadow: inset 3px 0 0 var(--gold); }
+  .pt-sub a.on { background: #3b414c; box-shadow: inset 3px 0 0 var(--on-dark); }
 }
 
 /* ── Page ───────────────────────────────────────────────────────────────── */
@@ -118,7 +127,7 @@ a.pt-card:hover { border-color: var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,.
 @media (max-width: 639px) { .pt-contact a { display: block; } .pt-contact .pt-dot { display: none; } }
 /* "No advertising, collateral or memberships yet." in place of empty cards (2026-10-17); spans the card grid. */
 .pt-none { grid-column: 1 / -1; color: var(--muted); font-size: 16px; margin: 0; }
-.pt-avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; background: #e9e3d6; flex: none; }
+.pt-avatar { width: 72px; height: 72px; border-radius: 50%; object-fit: cover; background: #eceff3; flex: none; }
 
 /* ── QR codes ───────────────────────────────────────────────────────────── */
 .pt-qr { display: grid; grid-template-columns: 120px 1fr; gap: 18px; align-items: start; }
@@ -130,14 +139,14 @@ a.pt-card:hover { border-color: var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,.
 .pt-qr-goes span { display: block; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
 .pt-qr-goes b { font-weight: 500; overflow-wrap: anywhere; }
 .pt-qr-meta { color: var(--muted); font-size: 14px; margin-top: 8px; }
-.pt-badge { display: inline-block; background: #efe9dd; color: var(--warn); font-size: 13px; padding: 2px 10px; border-radius: 999px; margin-left: 6px; vertical-align: middle; font-family: var(--sans); }
+.pt-badge { display: inline-block; background: #eceff3; color: var(--warn); font-size: 13px; padding: 2px 10px; border-radius: 999px; margin-left: 6px; vertical-align: middle; font-family: var(--sans); }
 @media (max-width: 420px) { .pt-qr { grid-template-columns: 1fr; } .pt-qr-img { width: 140px; height: 140px; } }
 
 /* ── Buttons and the simple form ────────────────────────────────────────── */
 .pt-btn { display: inline-block; border: 0; border-radius: 10px; padding: 13px 20px; font: 500 16px var(--sans);
           cursor: pointer; text-decoration: none; text-align: center; }
-.pt-btn.main { background: var(--ink); color: #fff; }
-.pt-btn.main:hover { background: #2a2620; }
+.pt-btn.main { background: var(--btn); color: #fff; }
+.pt-btn.main:hover { background: var(--btn-hover); }
 .pt-btn.quiet { background: transparent; color: var(--text); border: 1px solid var(--line); }
 .pt-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 
@@ -160,10 +169,10 @@ a.pt-card:hover { border-color: var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,.
 .pt-check input[type=checkbox] { width: 22px; height: 22px; accent-color: var(--ink); flex: none; margin: 0; }
 .pt-check:has(input:checked) { border-color: var(--ink); }
 .pt-check small { display: block; color: var(--muted); font-size: 13px; }
-.pt-note { background: #fdf3e2; color: var(--warn); border-radius: 10px; padding: 12px 16px; font-size: 15px; margin: 0 0 18px; }
+.pt-note { background: var(--panel); color: var(--text-2); border-radius: 10px; padding: 12px 16px; font-size: 15px; margin: 0 0 18px; }
 .pt-status { display: inline-block; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; font-weight: 500;
              padding: 3px 12px; border-radius: 999px; background: #e8f3ec; color: var(--ok); }
-.pt-status.off { background: #efe9dd; color: var(--warn); }
+.pt-status.off { background: #eceff3; color: var(--warn); }
 
 /* ── Spend ──────────────────────────────────────────────────────────────── */
 .pt-h2 { font-family: var(--serif); font-weight: 500; font-size: 28px; margin: 0 0 12px; }
@@ -197,7 +206,7 @@ a.pt-card:hover { border-color: var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,.
 .pt-item-body { flex: 1; min-width: 0; }
 .pt-item .pt-card-h { font-size: 23px; margin-top: 2px; overflow-wrap: anywhere; }
 .pt-item .pt-card-go { margin-top: 10px; }
-.pt-pic { flex: none; width: 104px; height: 104px; border-radius: 10px; overflow: hidden; background: #f1ece2;
+.pt-pic { flex: none; width: 104px; height: 104px; border-radius: 10px; overflow: hidden; background: #f6f7f9;
           border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; }
 .pt-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .pt-pic.tile span { font-family: var(--serif); font-size: 18px; color: var(--gold-deep); text-align: center; padding: 0 8px; line-height: 1.2; }
@@ -248,7 +257,7 @@ a.pt-card:hover { border-color: var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,.
 .pt-list-row { display: flex; gap: 14px; align-items: center; background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
                padding: 10px 12px; color: inherit; text-decoration: none; }
 a.pt-list-row[href]:hover { border-color: var(--gold); }
-.pt-list-row img, .pt-list-nopic { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex: none; background: #e9e3d6; display: block; }
+.pt-list-row img, .pt-list-nopic { width: 64px; height: 64px; border-radius: 8px; object-fit: cover; flex: none; background: #eceff3; display: block; }
 .pt-list-text { min-width: 0; }
 .pt-list-text b { display: block; font-weight: 500; overflow-wrap: anywhere; }
 .pt-list-text span { color: var(--muted); font-size: 14px; }
@@ -275,13 +284,13 @@ a.pt-list-row[href]:hover { border-color: var(--gold); }
 .pt-lcard { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); border: 1px solid var(--line); }
 .pt-lphoto { width: 100%; height: 160px; object-fit: cover; display: block; background: #f3f4f6; }
 .pt-lbody { padding: 12px 14px 14px; }
-.pt-lstatus { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #6b7280; margin-bottom: 4px; }
+.pt-lstatus { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 4px; }
 .pt-lstatus.active { color: #10b981; }
 .pt-lstatus.pending { color: #f97316; }
-.pt-laddr { font-size: 17px; font-weight: 600; color: #111; margin-bottom: 2px; overflow-wrap: anywhere; }
-.pt-lcity { font-size: 14px; color: #9ca3af; margin-bottom: 8px; }
-.pt-lprice { font-size: 20px; font-weight: 600; color: #111; }
-.pt-llink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: #f97316; text-decoration: none; }
+.pt-laddr { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 2px; overflow-wrap: anywhere; }
+.pt-lcity { font-size: 14px; color: var(--muted); margin-bottom: 8px; }
+.pt-lprice { font-size: 20px; font-weight: 600; color: var(--text); }
+.pt-llink { display: inline-block; margin-top: 10px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--gold-deep); text-decoration: none; }
 .pt-llink:hover { text-decoration: underline; }
 /* Pocket listings (2026-10-14): off-MLS, entered by marketing */
 .pt-lpocket-badge { display: inline-block; background: #ecfdf5; color: #047857; border-radius: 8px; padding: 1px 7px; margin-left: 4px; font-size: 11px; letter-spacing: .02em; text-transform: none; }
@@ -298,7 +307,7 @@ a.pt-list-row[href]:hover { border-color: var(--gold); }
 .pt-gal-item { margin: 0; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; }
 .pt-gal-item img { width: 100%; height: auto; display: block; border-radius: 8px; cursor: zoom-in; background: #fff; }
 .pt-gal-item figcaption { padding: 10px 6px 2px; color: var(--muted); font-size: 14px; }
-.pt-lb { position: fixed; inset: 0; background: rgba(13,12,10,.92); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.pt-lb { position: fixed; inset: 0; background: rgba(31,36,44,.92); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .pt-lb[hidden] { display: none; }
 .pt-lb img { max-width: 100%; max-height: 100%; border-radius: 8px; background: #fff; }
 .pt-lb-x { position: absolute; top: 14px; right: 18px; background: transparent; border: 0; color: #fff; font-size: 40px; line-height: 1; cursor: pointer; }

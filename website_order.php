@@ -142,9 +142,9 @@ function wo_title(string $t): string {
     .mh-logo img { height:50px; display:block; }
     .mh-nav { display:flex; align-items:center; gap:4px; }
     .mh-nav-link { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; font-size:.8rem; font-weight:500;
-                   color:#75BDB6; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+                   color:#aebbcc; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
     .wrap { max-width:1180px; margin:32px auto 60px; padding:0 20px; }
     .mk-page-header { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:6px; }
@@ -184,9 +184,9 @@ function wo_title(string $t): string {
 
     .wo-card { position:relative; display:flex; flex-direction:column; background:#fff; border:1px solid #e5e7eb;
                border-radius:4px; overflow:hidden; cursor:grab; user-select:none; transition:border-color .15s, box-shadow .15s, opacity .15s; }
-    .wo-card:hover { border-color:#c9a96a; box-shadow:0 6px 18px rgba(33,29,21,.08); }
+    .wo-card:hover { border-color:#4a5566; box-shadow:0 6px 18px rgba(33,29,21,.08); }
     .wo-card.dragging { opacity:.35; cursor:grabbing; }
-    .wo-card.landed   { border-color:#c9a96a; box-shadow:0 0 0 2px rgba(201,169,106,.35); }
+    .wo-card.landed   { border-color:#4a5566; box-shadow:0 0 0 2px rgba(201,169,106,.35); }
     .wo-photo { aspect-ratio:4/5; background:#f3f4f6; display:flex; align-items:center; justify-content:center; overflow:hidden; }
     .wo-photo img { width:100%; height:100%; object-fit:cover; object-position:50% 0; pointer-events:none; }
     .wo-photo span { font-size:28px; color:#9ca3af; font-weight:600; }

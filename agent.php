@@ -1769,7 +1769,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    :root { --bs-primary: #0184BB; }
+    :root { --bs-primary: #55637a; }
     .pc-header    { padding:0; left:0; top:0; min-height:70px; }
     .pc-container { margin-left:0; top:0; margin-top:70px; min-height:calc(100vh - 70px); }
     .mh-header-inner {
@@ -1781,11 +1781,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .mh-nav-link {
       display:inline-flex; align-items:center; gap:5px;
       padding:5px 12px; font-size:.8rem; font-weight:500;
-      color:#75BDB6; text-decoration:none; border-radius:6px;
+      color:#aebbcc; text-decoration:none; border-radius:6px;
       white-space:nowrap; transition:color .2s, background .2s;
     }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
     .wrap { max-width:1100px; margin:0 auto; padding:28px 24px 80px; }
 
@@ -1939,7 +1939,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .info-label { font-weight:600; color:#6b7280; min-width:110px; flex-shrink:0; font-size:12px; text-transform:uppercase; letter-spacing:.3px; }
     .info-value { color:#111; }
     .info-value .unset { color:#b6b0a2; font-style:italic; }
-    .info-value a { color:#0184BB; text-decoration:none; }
+    .info-value a { color:#55637a; text-decoration:none; }
     .info-value a:hover { text-decoration:underline; }
 
     /* ── Onboarding Checklist ── */
@@ -1966,7 +1966,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .ob-done-link button { background:none; border:none; padding:0; cursor:pointer;
                            font-size:12px; font-weight:600; color:#9ca3af; display:inline-flex;
                            align-items:center; gap:5px; font-family:inherit; }
-    .ob-done-link button:hover { color:#0184BB; }
+    .ob-done-link button:hover { color:#55637a; }
     .done-chip { background:#f3f4f6; color:#6b7280; border-radius:10px;
                  padding:1px 8px; font-size:10px; font-weight:700;
                  text-transform:uppercase; letter-spacing:.03em; }
@@ -2005,7 +2005,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .ob-sub-actions { display:flex; align-items:center; gap:6px; margin-top:5px; flex-wrap:wrap; }
     .ob-file-link {
       display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600;
-      color:#0184BB; text-decoration:none;
+      color:#55637a; text-decoration:none;
       background:#eff6ff; padding:2px 8px; border-radius:3px; white-space:nowrap;
     }
     .ob-file-link:hover { background:#dbeafe; }
@@ -2019,7 +2019,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       flex:1; padding:5px 8px; font-size:12px; border:1px solid #d1d5db;
       border-radius:3px; font-family:inherit; color:#111; min-width:0;
     }
-    .ob-inline-input:focus { outline:none; border-color:#75BDB6; }
+    .ob-inline-input:focus { outline:none; border-color:#aebbcc; }
     .ob-date-label { font-size:11px; color:#6b7280; }
 
     /* ── MLS table ── */
@@ -2075,7 +2075,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .form-row label.admin-check input[type="checkbox"],
     label.admin-check input[type="checkbox"] { flex:0 0 auto; width:15px; height:15px; margin:0; }
     .form-input { padding:7px 10px; font-size:13px; border:1px solid #d1d5db; border-radius:4px; font-family:inherit; color:#111; width:100%; }
-    .form-input:focus { outline:none; border-color:#75BDB6; box-shadow:0 0 0 2px rgba(117,189,182,.2); }
+    .form-input:focus { outline:none; border-color:#aebbcc; box-shadow:0 0 0 2px rgba(174,187,204,.2); }
     textarea.form-input { resize:vertical; min-height:70px; }
 
     /* ── Collateral ── */
@@ -2094,7 +2094,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .campaign-card { border:1px solid #f3f4f6; border-radius:6px; padding:16px; margin-bottom:12px; }
     /* Sharing a placement among agents (2026-10-05) */
     .camp-shared { font-size:12.5px; color:#374151; margin-top:5px; line-height:1.6; }
-    .camp-shared a { color:#0184BB; text-decoration:none; font-weight:600; }
+    .camp-shared a { color:#55637a; text-decoration:none; font-weight:600; }
     .camp-shared a:hover { text-decoration:underline; }
     .camp-shared-who { display:block; color:#4b5563; }
     .camp-shared-who .sep { color:#d1d5db; margin:0 4px; }
@@ -2218,7 +2218,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .order-details { display:flex; gap:16px; flex-wrap:wrap; font-size:12px; color:#6b7280; margin-bottom:6px; }
     .order-details strong { color:#111; font-weight:600; }
     .order-link { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600;
-                  color:#0184BB; text-decoration:none; background:#eff6ff; padding:2px 8px; border-radius:3px; margin-right:4px; }
+                  color:#55637a; text-decoration:none; background:#eff6ff; padding:2px 8px; border-radius:3px; margin-right:4px; }
     .order-link:hover { background:#dbeafe; }
     .order-notes { font-size:12px; color:#6b7280; margin-top:4px; white-space:pre-wrap; }
     .order-actions { display:flex; gap:6px; margin-top:8px; }
@@ -2253,7 +2253,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .asset-link-row:last-child { border-bottom:none; }
     .asset-link-row > i { font-size:15px; color:#9ca3af; flex-shrink:0; }
     .asset-link-label { font-weight:600; color:#374151; min-width:130px; }
-    .asset-link-a { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#0184BB; text-decoration:none; }
+    .asset-link-a { display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#55637a; text-decoration:none; }
     .asset-link-a:hover { text-decoration:underline; }
     .asset-none  { font-size:12px; color:#d1d5db; }
     .asset-empty { font-size:13px; color:#9ca3af; margin:0; }
@@ -2296,7 +2296,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
     /* ── Financials tab ── */
     .broker     { color:#7c3aed; }
-    .mh         { color:#0184BB; }
+    .mh         { color:#55637a; }
     .unassigned { color:#b45309; }
 
     .fin-grand { display:flex; gap:14px; flex-wrap:wrap; margin-top:4px; }
@@ -2325,7 +2325,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .fin-table tr.fin-unassigned td { background:#fffbeb; }
     .fin-item-name { font-weight:600; color:#111; }
     .fin-item-link { color:#111; text-decoration:none; border-bottom:1px solid #d1d5db; }
-    .fin-item-link:hover { color:#0184BB; border-bottom-color:#0184BB; }
+    .fin-item-link:hover { color:#55637a; border-bottom-color:#55637a; }
     /* Brief highlight on the item you arrived at from Financials */
     .fin-target { box-shadow:0 0 0 2px #F49808; transition:box-shadow 1.2s ease; }
     .fin-item-sub  { font-size:11px; color:#9ca3af; margin-top:1px; }
@@ -2335,7 +2335,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .fin-kind.adv  { background:#e0f2fe; color:#075985; }
     .fin-kind.mem  { background:#ecfdf5; color:#047857; }
     .fin-flag { font-size:11px; color:#b45309; font-style:italic; }
-    .fin-billed { color:#0184BB; }
+    .fin-billed { color:#55637a; }
     /* A Financials line produced by a recurring monthly campaign. */
     .fin-recurring { color:#1d8348; }
     /* Chip on the campaign card: how it bills and over how many months. */
@@ -2379,7 +2379,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .mo-hint { font-size:11px; color:#6b7280; max-width:60ch; }
     .unit-hint { font-size:11px; color:#6b7280; background:#f9fafb; border-left:2px solid #d1d5db;
                  padding:6px 10px; margin:0 0 10px; max-width:70ch; }
-    .fin-invoice { color:#0184BB; text-decoration:none; margin-right:10px; font-size:11px; }
+    .fin-invoice { color:#55637a; text-decoration:none; margin-right:10px; font-size:11px; }
     .fin-invoice:hover { text-decoration:underline; }
     .fin-table tfoot td { border-top:2px solid #e5e7eb; padding-top:10px; font-size:13px; }
     .fin-foot-label { text-align:right; font-size:11px; font-weight:700; text-transform:uppercase;
@@ -2447,7 +2447,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .bio-content.rich ul, .bio-content.rich ol { margin:0 0 12px; padding-left:22px; }
     .bio-content.rich h3 { font-size:15px; font-weight:700; margin:0 0 8px; }
     .bio-content.rich h4 { font-size:14px; font-weight:700; margin:0 0 6px; }
-    .bio-content.rich a { color:#0184BB; }
+    .bio-content.rich a { color:#55637a; }
 
     /* ── Saved flash ── */
     .saved-flash { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
@@ -2485,7 +2485,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
     /* ── Campaign extra fields ── */
     .camp-url-link { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600;
-                     color:#0184BB; text-decoration:none; background:#eff6ff; padding:2px 8px; border-radius:3px; }
+                     color:#55637a; text-decoration:none; background:#eff6ff; padding:2px 8px; border-radius:3px; }
     .camp-url-link:hover { background:#dbeafe; }
     .sent-badge { display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700;
                   text-transform:uppercase; letter-spacing:.4px; padding:2px 8px; border-radius:10px; }
@@ -2685,7 +2685,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         <span class="saved-flash"><i class="ti ti-check"></i> Saved</span>
       <?php endif; ?>
       <?php if (!empty($_GET['note'])): ?>
-        <span class="saved-flash" style="background:#fbf7ec;color:#7a5f30;max-width:640px;white-space:normal;text-align:left;">
+        <span class="saved-flash" style="background:#eceff3;color:#7a5f30;max-width:640px;white-space:normal;text-align:left;">
           <i class="ti ti-color-swatch"></i> <?= htmlspecialchars($_GET['note']) ?>
         </span>
       <?php endif; ?>
@@ -3923,7 +3923,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       $pb = $row['paid_by'] ?? '';
       if ($pb === '' || $pb === null) return;
       $labels = ['broker' => 'Broker', 'mont_haus' => 'Mont Haus', 'split' => 'Split'];
-      $colors = ['broker' => '#7c3aed', 'mont_haus' => '#0184BB', 'split' => '#F49808'];
+      $colors = ['broker' => '#7c3aed', 'mont_haus' => '#55637a', 'split' => '#F49808'];
   ?>
     <div class="pay-summary">
       <span class="pay-chip" style="background:<?= $colors[$pb] ?? '#6b7280' ?>;">

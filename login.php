@@ -227,7 +227,7 @@ $conn->close();
          wash so the picture shows and the white footer still reads. */
       .auth-main.v2 { background-image:url(/assets/images/authentication/mh-auth-bg.jpg); }
       .auth-main.v2 .bg-overlay {
-        background:linear-gradient(180deg, rgba(13,12,10,.06) 0%, rgba(13,12,10,.22) 55%, rgba(13,12,10,.62) 100%) !important;
+        background:linear-gradient(180deg, rgba(31,36,44,.06) 0%, rgba(31,36,44,.22) 55%, rgba(31,36,44,.62) 100%) !important;
         -webkit-backdrop-filter:none; backdrop-filter:none;
       }
       .login-mark { width:76px; height:auto; }

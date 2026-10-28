@@ -396,7 +396,7 @@ function fint(array|null $row, string $key): string|null {
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    :root { --bs-primary: #0184BB; }
+    :root { --bs-primary: #55637a; }
     .pc-header    { padding:0; left:0; top:0; min-height:70px; }
     .pc-container { margin-left:0; top:0; margin-top:70px; min-height:calc(100vh - 70px); }
     .mh-header-inner {
@@ -408,11 +408,11 @@ function fint(array|null $row, string $key): string|null {
     .mh-nav-link {
       display:inline-flex; align-items:center; gap:5px;
       padding:5px 12px; font-size:.8rem; font-weight:500;
-      color:#75BDB6; text-decoration:none; border-radius:6px;
+      color:#aebbcc; text-decoration:none; border-radius:6px;
       white-space:nowrap; transition:color .2s, background .2s;
     }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
 
     .wrap { max-width:860px; margin:32px auto; padding:0 24px 80px; }
@@ -456,7 +456,7 @@ function fint(array|null $row, string $key): string|null {
     }
     .field input:focus,
     .field textarea:focus,
-    .field select:focus { outline:none; border-color:#0184BB; box-shadow:0 0 0 2px rgba(1,132,187,.12); }
+    .field select:focus { outline:none; border-color:#55637a; box-shadow:0 0 0 2px rgba(1,132,187,.12); }
     .field input[readonly] { background:#f9fafb; color:#6b7280; cursor:default; }
     .field textarea { resize:vertical; min-height:80px; }
     .field .hint { font-size:11px; color:#9ca3af; margin-top:2px; }
@@ -473,7 +473,7 @@ function fint(array|null $row, string $key): string|null {
     .checklist { display:flex; flex-direction:column; gap:10px; margin-top:4px; }
     .check-item { display:flex; align-items:center; gap:10px; cursor:pointer; }
     .check-item input[type="checkbox"] {
-      width:16px; height:16px; cursor:pointer; accent-color:#0184BB; flex-shrink:0;
+      width:16px; height:16px; cursor:pointer; accent-color:#55637a; flex-shrink:0;
     }
     .check-item span { font-size:14px; color:#111; }
     .check-item input:checked ~ span { font-weight:600; }
@@ -481,7 +481,7 @@ function fint(array|null $row, string $key): string|null {
     /* Checklist item with an inline date */
     .check-item-dated { display:flex; align-items:center; gap:10px; cursor:pointer; flex-wrap:wrap; }
     .check-item-dated input[type="checkbox"] {
-      width:16px; height:16px; cursor:pointer; accent-color:#0184BB; flex-shrink:0;
+      width:16px; height:16px; cursor:pointer; accent-color:#55637a; flex-shrink:0;
     }
     .check-item-dated span { font-size:14px; color:#111; }
     .check-item-dated input:checked ~ span { font-weight:600; }
@@ -489,7 +489,7 @@ function fint(array|null $row, string $key): string|null {
       border:1px solid #d1d5db; border-radius:4px; padding:4px 8px;
       font-size:13px; font-family:inherit; color:#374151;
     }
-    .inline-date:focus { outline:none; border-color:#0184BB; }
+    .inline-date:focus { outline:none; border-color:#55637a; }
 
     /* Horizontal check rows */
     .check-row { flex-direction:row; flex-wrap:wrap; gap:10px 24px; }
@@ -497,7 +497,7 @@ function fint(array|null $row, string $key): string|null {
     /* Inline radio groups */
     .radio-group { display:flex; gap:20px; margin-top:4px; flex-wrap:wrap; }
     .radio-item  { display:flex; align-items:center; gap:7px; cursor:pointer; font-size:14px; }
-    .radio-item input { accent-color:#0184BB; width:15px; height:15px; cursor:pointer; }
+    .radio-item input { accent-color:#55637a; width:15px; height:15px; cursor:pointer; }
 
     /* Collapsible sections */
     .collapse-target { overflow:hidden; transition:max-height .25s ease, opacity .2s; }
@@ -534,7 +534,7 @@ function fint(array|null $row, string $key): string|null {
     /* Collateral header row — checkbox label + PDF link side by side */
     .coll-header-row { display:flex; align-items:center; gap:8px; }
     .coll-pdf-link { color:#9ca3af; font-size:14px; text-decoration:none; line-height:1; flex-shrink:0; }
-    .coll-pdf-link:hover { color:#0184BB; }
+    .coll-pdf-link:hover { color:#55637a; }
 
     /* URL fields with open-link button */
     .url-wrap { display: flex; align-items: center; gap: 6px; }
@@ -546,7 +546,7 @@ function fint(array|null $row, string $key): string|null {
       color: #6b7280; text-decoration: none;
       transition: color .15s, border-color .15s, background .15s;
     }
-    .url-open-btn:hover { color: #0184BB; border-color: #0184BB; background: #f0f9ff; }
+    .url-open-btn:hover { color: #55637a; border-color: #55637a; background: #f0f9ff; }
     .url-open-btn.hidden { visibility: hidden; pointer-events: none; }
 
     /* Check items with indented sub-fields */

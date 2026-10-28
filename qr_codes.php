@@ -314,9 +314,9 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     .mh-logo img { height:50px; display:block; }
     .mh-nav { display:flex; align-items:center; gap:4px; }
     .mh-nav-link { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; font-size:.8rem; font-weight:500;
-                   color:#75BDB6; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+                   color:#aebbcc; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
     .hdr-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .wrap { max-width:1100px; margin:32px auto 60px; padding:0 20px; }
@@ -338,20 +338,20 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     .flash { padding:10px 14px; border-radius:6px; margin-bottom:16px; font-size:14px; }
     .flash.ok  { background:#f0fdf4; color:#15803d; }
     .flash.err { background:#fef2f2; color:#b91c1c; }
-    .note { background:#fbf7ec; border:1px solid #e3dccb; padding:12px 14px; font-size:13px; color:#5c4a28; margin-bottom:18px; }
+    .note { background:#eceff3; border:1px solid #dfe3e8; padding:12px 14px; font-size:13px; color:#434b57; margin-bottom:18px; }
     .hint { font-size:12px; color:#9ca3af; }
     .pill { display:inline-block; font-size:11px; padding:2px 9px; border-radius:10px; white-space:nowrap; }
     .pill.live   { background:#f0fdf4; color:#15803d; }
     .pill.paused { background:#fff7ed; color:#c2410c; }
     .warn { color:#b45309; font-size:12px; margin-top:4px; }
 
-    .qr-row { display:grid; grid-template-columns:96px 1fr auto; gap:18px; padding:16px 0; border-top:1px solid #f1ece0; align-items:start; }
+    .qr-row { display:grid; grid-template-columns:96px 1fr auto; gap:18px; padding:16px 0; border-top:1px solid #eceff3; align-items:start; }
     .qr-row:first-of-type { border-top:0; padding-top:0; }
     .qr-row:target { background:#fdf6e3; box-shadow:0 0 0 10px #fdf6e3; border-radius:4px; }
     .qr-img { width:96px; height:96px; background:#fff; border:1px solid #eee; border-radius:4px; }
     .qr-img svg { width:100%; height:100%; display:block; }
     .qr-url { font-size:15px; font-weight:600; word-break:break-all; }
-    .qr-url button { border:0; background:none; color:#75BDB6; cursor:pointer; padding:0 4px; font-size:15px; vertical-align:-2px; }
+    .qr-url button { border:0; background:none; color:#aebbcc; cursor:pointer; padding:0 4px; font-size:15px; vertical-align:-2px; }
     .qr-label { font-size:13px; color:#374151; margin:2px 0 6px; }
     .qr-dest { font-size:13px; color:#374151; word-break:break-all; }
     .qr-dest i { color:#9ca3af; }
@@ -366,10 +366,10 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     .qr-actions .qr-del { color:#b91c1c; border-color:#fecaca; }
     .btn-xs { padding:4px 10px; font-size:11px; line-height:1.3; white-space:nowrap; }
     details.qr-more { margin-top:10px; }
-    details.qr-more summary { cursor:pointer; font-size:12px; color:#75BDB6; font-weight:600; display:inline-block; margin-right:14px; }
+    details.qr-more summary { cursor:pointer; font-size:12px; color:#aebbcc; font-weight:600; display:inline-block; margin-right:14px; }
     .qr-edit { background:#fafaf7; border:1px solid #eee; border-radius:6px; padding:14px 16px; margin-top:8px; }
     .hist { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
-    .hist td { padding:4px 8px 4px 0; border-top:1px solid #f1ece0; vertical-align:top; word-break:break-all; }
+    .hist td { padding:4px 8px 4px 0; border-top:1px solid #eceff3; vertical-align:top; word-break:break-all; }
     .hist td:first-child { white-space:nowrap; color:#6b7280; word-break:normal; }
     .hist td:last-child  { white-space:nowrap; word-break:normal; color:#6b7280; }
     @media (max-width:720px) {

@@ -77,11 +77,11 @@ $mh_active = $nav_active ?? 'marketing';
   .mh-user-avatar {
     width:28px; height:28px; border-radius:50%;
     display:inline-flex; align-items:center; justify-content:center;
-    background:rgba(117,189,182,.35); color:#fff;
+    background:rgba(174,187,204,.35); color:#fff;
     font-size:.66rem; font-weight:600; letter-spacing:.4px; flex:none;
   }
   .mh-user-name {
-    color:#cfe6e3; font-size:.76rem; font-weight:500;
+    color:#c2c8d1; font-size:.76rem; font-weight:500;
     max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   @media (max-width: 720px) { .mh-user-name { display:none; } }
@@ -90,11 +90,11 @@ $mh_active = $nav_active ?? 'marketing';
   .mh-user-cog {
     display:inline-flex; align-items:center; justify-content:center;
     width:26px; height:26px; flex:none; border-radius:6px;
-    color:#75BDB6; text-decoration:none; font-size:15px;
+    color:#aebbcc; text-decoration:none; font-size:15px;
     transition:color .2s, background .2s;
   }
-  .mh-user-cog:hover        { color:#fff; background:rgba(117,189,182,.25); }
-  .mh-user-cog.active       { color:#fff; background:rgba(117,189,182,.45); }
+  .mh-user-cog:hover        { color:#fff; background:rgba(174,187,204,.25); }
+  .mh-user-cog.active       { color:#fff; background:rgba(174,187,204,.45); }
 
   /* ── Mobile: the nav collapses into a hamburger panel ──────────────────────
      Above the breakpoint nothing below applies and the desktop header is
@@ -118,7 +118,7 @@ $mh_active = $nav_active ?? 'marketing';
       display:inline-flex; align-items:center; justify-content:center;
       width:40px; height:40px; flex:none; padding:0;
       background:transparent; border:1px solid rgba(255,255,255,.22);
-      border-radius:8px; color:#cfe6e3; font-size:22px; line-height:1;
+      border-radius:8px; color:#c2c8d1; font-size:22px; line-height:1;
       cursor:pointer; transition:color .15s, border-color .15s;
     }
     .mh-nav-toggle:hover,
@@ -128,7 +128,7 @@ $mh_active = $nav_active ?? 'marketing';
       display:none;
       position:absolute; top:100%; left:0; right:0; z-index:1035;
       flex-direction:column; align-items:stretch; gap:2px;
-      background:var(--pc-header-background, #131920);
+      background:var(--pc-header-background, #2b3038);
       padding:8px 12px 12px;
       border-top:1px solid rgba(255,255,255,.12);
       box-shadow:0 10px 24px rgba(0,0,0,.32);

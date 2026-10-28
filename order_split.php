@@ -653,7 +653,7 @@ $page_title = $invoice_id > 0 ? 'Split an Invoice — ' . ($inv['vendor'] ?: 'In
   <link rel="stylesheet" href="/assets/css/style-preset.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; }
-    :root { --bs-primary: #0184BB; }
+    :root { --bs-primary: #55637a; }
     .pc-header    { padding:0; left:0; top:0; min-height:70px; }
     /* Overriding `top` on .pc-container leaves a phantom black gap — see CLAUDE.md */
     .pc-container { margin-left:0; top:0; margin-top:70px; min-height:calc(100vh - 70px); }
@@ -666,11 +666,11 @@ $page_title = $invoice_id > 0 ? 'Split an Invoice — ' . ($inv['vendor'] ?: 'In
     .mh-nav-link {
       display:inline-flex; align-items:center; gap:5px;
       padding:5px 12px; font-size:.8rem; font-weight:500;
-      color:#75BDB6; text-decoration:none; border-radius:6px;
+      color:#aebbcc; text-decoration:none; border-radius:6px;
       white-space:nowrap; transition:color .2s, background .2s;
     }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
 
     body { font-family:'Public Sans',sans-serif; background:#f8f9fa; }
@@ -697,7 +697,7 @@ $page_title = $invoice_id > 0 ? 'Split an Invoice — ' . ($inv['vendor'] ?: 'In
       width:100%; padding:7px 9px; font-size:13px; font-family:inherit;
       border:1px solid #dee2e6; border-radius:6px; background:#fff; color:#1f2937;
     }
-    .os-field input:focus, .os-field select:focus { outline:2px solid #0184BB33; border-color:#0184BB; }
+    .os-field input:focus, .os-field select:focus { outline:2px solid #0184BB33; border-color:#55637a; }
     .os-field small { font-size:11px; color:#9ca3af; font-weight:400; }
 
     /* The line table. Scrolls inside itself rather than pushing the page wide. */
@@ -753,7 +753,7 @@ $page_title = $invoice_id > 0 ? 'Split an Invoice — ' . ($inv['vendor'] ?: 'In
     .os-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 16px;
               font-size:13px; font-weight:600; border-radius:7px; border:1px solid transparent;
               cursor:pointer; text-decoration:none; font-family:inherit; }
-    .os-btn.primary { background:#0184BB; color:#fff; }
+    .os-btn.primary { background:#55637a; color:#fff; }
     .os-btn.primary:hover { background:#016d9c; }
     .os-btn.ghost   { background:#fff; color:#374151; border-color:#dee2e6; }
     .os-btn.ghost:hover { background:#f8f9fa; }
@@ -766,7 +766,7 @@ $page_title = $invoice_id > 0 ? 'Split an Invoice — ' . ($inv['vendor'] ?: 'In
                  font-size:13px; flex-wrap:wrap; }
     .os-list a:last-child { border-bottom:none; }
     .os-list a:hover { background:#f8f9fa; }
-    .os-list .vn { font-weight:700; color:#01679A; }
+    .os-list .vn { font-weight:700; color:#3f4b5e; }
     .os-list .sp { flex:1; }
     .os-list .tot { font-weight:700; }
     .os-empty { padding:32px 16px; text-align:center; color:#9ca3af; font-size:13px; }

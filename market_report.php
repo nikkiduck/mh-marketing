@@ -32,14 +32,14 @@ $boot  = $data ? market_boot($data, ['post' => '/market_snapshot.php', 'self' =>
     .mh-logo img { height:50px; display:block; }
     .mh-nav { display:flex; align-items:center; gap:4px; }
     .mh-nav-link { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; font-size:.8rem; font-weight:500;
-                   color:#75BDB6; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
-    .mh-nav-link:hover  { color:#fff; background:rgba(117,189,182,.25); }
-    .mh-nav-link.active { color:#fff; background:rgba(117,189,182,.45); }
+                   color:#aebbcc; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
+    .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+    .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
     .hdr-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
     .wrap { max-width:1100px; margin:32px auto 60px; padding:0 20px; }
     .mk-page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
-    .note { background:#fbf7ec; border:1px solid #e3dccb; padding:12px 14px; font-size:13px; color:#5c4a28; margin-bottom:18px; }
+    .note { background:#eceff3; border:1px solid #dfe3e8; padding:12px 14px; font-size:13px; color:#434b57; margin-bottom:18px; }
     /* The report draws its own title; the roster-style header carries only the way back. */
     .mk-page-header.slim { margin-bottom:6px; justify-content:flex-end; }
   </style>

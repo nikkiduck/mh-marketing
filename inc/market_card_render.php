@@ -81,11 +81,11 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
     // The two looks, the Instagram posts' palettes. The shade over the photo
     // is lighter at the top so the picture shows, darker where the figures sit.
     $c = $theme === 'light'
-        ? ['bg' => '#F1ECE2', 'text' => '#3A2E23', 'accent' => '#8A7350', 'muted' => '#4E4034', 'soft' => '#4A3D31', 'line' => 'rgba(58,46,35,.22)',
-           'shade' => 'rgba(241,236,226,.78) 0%, rgba(241,236,226,.86) 50%, rgba(241,236,226,.92) 100%', 'ghost' => '.05',
+        ? ['bg' => '#F6F7F9', 'text' => '#1F242C', 'accent' => '#55637A', 'muted' => '#434B57', 'soft' => '#3A414C', 'line' => 'rgba(31,36,44,.22)',   // Slate, deeper buttons (2026-10-28)
+           'shade' => 'rgba(246,247,249,.78) 0%, rgba(246,247,249,.86) 50%, rgba(246,247,249,.92) 100%', 'ghost' => '.05',
            'tri'  => $asset('assets/images/triangle_mark-dark.svg', 'image/svg+xml'), 'm' => $asset('assets/images/M-mark_black.svg', 'image/svg+xml')]
-        : ['bg' => '#141210', 'text' => '#ffffff', 'accent' => '#C3A561', 'muted' => '#e4ddcf', 'soft' => '#ece6da', 'line' => 'rgba(255,255,255,.22)',
-           'shade' => 'rgba(20,18,16,.68) 0%, rgba(20,18,16,.78) 50%, rgba(20,18,16,.86) 100%', 'ghost' => '.08',   // eased from the flat 90 % so more of the photo shows (Nikki, 2026-10-19)
+        : ['bg' => '#1F242C', 'text' => '#ffffff', 'accent' => '#D6DEE8', 'muted' => '#E3E8EE', 'soft' => '#EEF1F5', 'line' => 'rgba(255,255,255,.22)',   // the light slate on the photo (2026-10-28)
+           'shade' => 'rgba(31,36,44,.68) 0%, rgba(31,36,44,.78) 50%, rgba(31,36,44,.86) 100%', 'ghost' => '.08',   // eased from the flat 90 % so more of the photo shows (Nikki, 2026-10-19)
            'tri'  => $asset('assets/images/triangle_mark-white.svg', 'image/svg+xml'), 'm' => $asset('assets/images/M-mark_white.svg', 'image/svg+xml')];
 
     $title   = (string)($card['title'] ?? '');

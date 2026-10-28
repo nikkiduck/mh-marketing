@@ -6,8 +6,8 @@
    reads larger than Jost did and the page looked crammed); the county table is 13px. */
 
 .mr {
-  --mr-ink: #0d0c0a; --mr-gold: #c9a96a; --mr-gold-deep: #8a6d36; --mr-card: #ffffff; --mr-line: #e8e2d6;
-  --mr-text: #1c1a17; --mr-muted: #6f6857; --mr-panel: #faf8f4; --mr-warn: #8a5a12; --mr-grid: #ece7dd; --mr-bar: #cfc6b3;
+  --mr-ink: #2b3038; --mr-gold: #4a5566; --mr-gold-deep: #4a5569; --mr-card: #ffffff; --mr-line: #dfe3e8;
+  --mr-text: #1f242c; --mr-muted: #6b7a8f; --mr-panel: #f6f7f9; --mr-warn: #8a5a12; --mr-grid: #ece7dd; --mr-bar: #c2c8d1;
   --mr-serif: 'Cormorant Garamond', Georgia, serif; --mr-sans: 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-family: var(--mr-sans); color: var(--mr-text); font-size: 14px; line-height: 1.5; font-weight: 400; letter-spacing: 0;
   display: flex; flex-direction: column; gap: 24px;
@@ -22,7 +22,7 @@
 .mr-month { font-size: 13px; color: var(--mr-muted); display: flex; align-items: center; gap: 8px; }
 .mr-month select { font: 14px var(--mr-sans); color: var(--mr-text); padding: 7px 10px; border: 1px solid var(--mr-line); border-radius: 10px; background: #fff; }
 .mr-postlink, .mr-btn { display: inline-block; font: 500 14px var(--mr-sans); color: var(--mr-ink); background: var(--mr-gold); border-radius: 999px; padding: 9px 16px; text-decoration: none; white-space: nowrap; }
-.mr-postlink:hover, .mr-btn:hover { background: #d4b67a; text-decoration: none; color: var(--mr-ink); }
+.mr-postlink:hover, .mr-btn:hover { background: #353e4b; text-decoration: none; color: var(--mr-ink); }
 .mr-take { margin: -8px 0 0; font-size: 16px; max-width: 70ch; text-wrap: pretty; color: var(--mr-text); }
 .mr-take span { font-weight: 500; }
 

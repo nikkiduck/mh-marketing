@@ -92,7 +92,7 @@ function portal_change_alert(mysqli $conn, array $ctx, string $what, array $chan
           . '<th style="text-align:left;padding:0 12px 6px 0;color:#6b7280;font-weight:normal;">Before</th><th style="text-align:left;padding:0 0 6px;color:#6b7280;font-weight:normal;">After</th></tr>'
           . $rows . '</table>'
           . '<p style="margin-top:18px;"><a href="' . htmlspecialchars(rtrim(SITE_URL, '/') . '/agent.php?id=' . (int)$ctx['acct']['id']) . '" '
-          . 'style="background:#0d0c0a;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;">Open their agent page</a></p>'
+          . 'style="background:#2b3038;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;">Open their agent page</a></p>'
           . '<p style="color:#6b7280;font-size:12px;">The website picks profile changes up within the hour. Reply to this email to reach ' . $e($who) . ' directly.</p></div>';
     [$status] = portal_send_mail("Profile change: {$acct} ({$what})", $html, (string)$u['email'], $who);
     return $status;
@@ -163,13 +163,13 @@ function portal_stop(string $title, string $why): never {
        . '<meta name="viewport" content="width=device-width, initial-scale=1">'
        . '<title>' . htmlspecialchars($title) . '</title>'
        . '<style>body{font-family:"Public Sans",system-ui,-apple-system,sans-serif;max-width:34rem;'
-       . 'margin:16vh auto;padding:0 1.5rem;color:#1c1a17;line-height:1.6;background:#faf8f4}'
+       . 'margin:16vh auto;padding:0 1.5rem;color:#1f242c;line-height:1.6;background:#f6f7f9}'
        . 'h1{font-family:"Cormorant Garamond",Georgia,serif;font-weight:500;font-size:2rem;margin:0 0 .6rem}'
-       . 'p{color:#4a4539}code{background:#efe9dd;padding:.1rem .35rem;border-radius:3px;font-size:.9em}'
-       . 'a{color:#8a6d36}</style></head><body>'
+       . 'p{color:#434b57}code{background:#eceff3;padding:.1rem .35rem;border-radius:3px;font-size:.9em}'
+       . 'a{color:#4a5569}</style></head><body>'
        . '<h1>' . htmlspecialchars($title) . '</h1>'
        . '<p>' . $why . '</p>'
-       . ($email !== '' ? '<p style="font-size:.9em;color:#8a8370">Signed in as <code>' . $email . '</code>. '
+       . ($email !== '' ? '<p style="font-size:.9em;color:#848d99">Signed in as <code>' . $email . '</code>. '
        . '<a href="/logout.php">Sign out</a></p>' : '')
        . '</body></html>';
     exit;

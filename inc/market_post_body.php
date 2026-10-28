@@ -55,25 +55,25 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
   .mp-rows { display: grid; grid-template-columns: 1fr; gap: 10px; }   /* stacked: the form column is never wide enough for three */
   .sp-form .mp-rows .sp-field select { font-size: 15px; padding: 8px 34px 8px 12px; max-width: 340px; appearance: none; -webkit-appearance: none;
       background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a6d36' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center; }
-  .sp-form .mp-rows .sp-field { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6f6857); }
-  .mp-rows option:disabled { color: #b5ad9e; }
+  .sp-form .mp-rows .sp-field { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6b7a8f); }
+  .mp-rows option:disabled { color: #9aa2ad; }
   .sp-form .sp-field.sp-kind select { font-size: 15px; padding: 8px 34px 8px 12px; max-width: 340px; width: 100%; appearance: none; -webkit-appearance: none;
       background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%238a6d36' stroke-width='1.6'/%3E%3C/svg%3E") no-repeat right 12px center; }
-  .sp-form .sp-field.sp-kind { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6f6857); }
+  .sp-form .sp-field.sp-kind { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted, #6b7a8f); }
   .mp-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 12px; margin-top: 10px; }
   @media (min-width: 560px) { .mp-photos { grid-template-columns: repeat(5, 1fr); } }
   .mp-photo { position: relative; cursor: pointer; display: block; text-align: center; }
   .mp-photo input { position: absolute; opacity: 0; width: 0; height: 0; }
-  .mp-photo img, .mp-none { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; border: 3px solid transparent; background: #e8e2d6; transition: border-color .15s; }
-  .mp-none { background: linear-gradient(135deg, #141210 50%, #F1ECE2 50%); }
-  .mp-photo input:checked + img, .mp-photo input:checked + .mp-none { border-color: var(--gold-deep, #8a6d36); }
-  .mp-photo input:focus-visible + img, .mp-photo input:focus-visible + .mp-none { outline: 2px solid var(--gold-deep, #8a6d36); outline-offset: 2px; }
-  .mp-group { grid-column: 1 / -1; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted, #6f6857); margin: 8px 0 -2px; }
+  .mp-photo img, .mp-none { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; border: 3px solid transparent; background: #dfe3e8; transition: border-color .15s; }
+  .mp-none { background: linear-gradient(135deg, #1f242c 50%, #f6f7f9 50%); }
+  .mp-photo input:checked + img, .mp-photo input:checked + .mp-none { border-color: var(--gold-deep, #4a5569); }
+  .mp-photo input:focus-visible + img, .mp-photo input:focus-visible + .mp-none { outline: 2px solid var(--gold-deep, #4a5569); outline-offset: 2px; }
+  .mp-group { grid-column: 1 / -1; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted, #6b7a8f); margin: 8px 0 -2px; }
   .mp-photo:hover .sp-del, .mp-photo .sp-del:focus-visible { opacity: 1; }   /* the x on an own photo, as on the Instagram grid */
-  .mp-photo small { display: block; margin-top: 5px; font-size: 12.5px; line-height: 1.25; color: var(--muted, #6f6857); }
-  .mp-photo input:checked ~ small { color: var(--gold-deep, #8a6d36); font-weight: 500; }
-  .mp-note { color: var(--muted, #6f6857); font-size: 14px; margin: 12px 0 0; }
-  .mp-note a { color: var(--gold-deep, #8a6d36); }
+  .mp-photo small { display: block; margin-top: 5px; font-size: 12.5px; line-height: 1.25; color: var(--muted, #6b7a8f); }
+  .mp-photo input:checked ~ small { color: var(--gold-deep, #4a5569); font-weight: 500; }
+  .mp-note { color: var(--muted, #6b7a8f); font-size: 14px; margin: 12px 0 0; }
+  .mp-note a { color: var(--gold-deep, #4a5569); }
   .sp-stage.story { max-width: 300px; }
 </style>
   <div class="sp-grid">
