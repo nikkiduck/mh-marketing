@@ -5,8 +5,8 @@
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 abca2beeadfbb77d1ee32f935047d116  api/roster.php
 2aac235ecae32ece776eca6fa74889d1  assets/css/market.css
-b1425bb16045f0fc6fb95d3b8f62504c  assets/css/mh-theme.css
-2a76253360c95ffc4e73e38ffc8180d9  assets/css/portal.css
+5f274506e002f8a7c1c76751d31e7e2d  assets/css/mh-theme.css
+d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
 38c8c6306c942d395f7daa71ae1a7209  assets/css/social.css
 fc21c7628d6d4e564b6502274aeb56fc  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
@@ -28,7 +28,7 @@ da62007ac84d4e02444e4aa252bb3ca3  cron/send_hot_sheet.php
 f32e288def93742e583d55fb02ab9b18  forgot-password.php
 4bf6ee0e92a34f05cb3092f621d3df05  hot_sheet_preview.php
 4ba218c544f473278a06edf382693d3e  inc/_footer.php
-faa6b5d924ee796515321a51bc1ab7d2  inc/_nav.php
+894ad84d160d5ef99084b00ebcd7c52d  inc/_nav.php
 8cf7fab783d903989871994744bd76a0  inc/_onboarding.php
 0f39b0500c3b4e8344f29c11b8f623a0  inc/agent_lifecycle.php
 adee107afca49bf84fe4181ed0aff97b  inc/agent_roster.php
