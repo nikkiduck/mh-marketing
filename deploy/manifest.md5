@@ -7,7 +7,7 @@ abca2beeadfbb77d1ee32f935047d116  api/roster.php
 2aac235ecae32ece776eca6fa74889d1  assets/css/market.css
 5f274506e002f8a7c1c76751d31e7e2d  assets/css/mh-theme.css
 d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
-38c8c6306c942d395f7daa71ae1a7209  assets/css/social.css
+541ea5c742a16c8f5a10dbff4d8f9ebe  assets/css/social.css
 fc21c7628d6d4e564b6502274aeb56fc  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 2d85cea4712b33eb75b1bb384e92e261  billing.php
@@ -50,7 +50,7 @@ e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
 58913e4194d92f378295f6ce642a5aa4  inc/mailer.php
 8bcd2252552b967ed112ca9efca7fa69  inc/market.php
-9d307517c8b9aa138b5842211f2df74d  inc/market_card_render.php
+ea0157ed3088c193eaa5a6c26bc6ee88  inc/market_card_render.php
 e74da8828c4bed68acd3aa17959bc44e  inc/market_data.php
 ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 0aeac91bf91e6379d8ed88950c87c18a  inc/market_post_body.php
