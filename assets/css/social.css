@@ -108,7 +108,7 @@
 
 /* Actions */
 .sp-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 4px 0 8px; }
-.sp-btn { font: inherit; font-size: 17px; font-weight: 500; color: var(--ink); background: var(--gold); border: 0; border-radius: 999px;
+.sp-btn { font: inherit; font-size: 17px; font-weight: 500; color: #fff; background: var(--btn, #4a5566); border: 0; border-radius: 999px;   /* white on the button tone (Nikki, 2026-10-28; the ink-on-gold pair went dark on dark with the scheme) */
           padding: 14px 26px; cursor: pointer; }
 .sp-btn:hover { background: var(--btn-hover, #353e4b); }
 .sp-btn:disabled { opacity: .6; cursor: default; }
