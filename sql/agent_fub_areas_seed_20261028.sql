@@ -15,7 +15,7 @@
 --
 -- Run once as master in TablePlus. The website picks the ticks up on its next
 -- hourly roster sync (:30), or at once with "Sync to Website".
--- STATUS: proposed 2026-10-28, not yet run.
+-- STATUS: run by Nikki in TablePlus 2026-10-28 (15 rows).
 
 -- Grant Langham: Greater Denver
 UPDATE marketing_intakes SET fub_areas = '["greater-denver"]' WHERE slug = 'grant-langham' AND (fub_areas IS NULL OR fub_areas IN ('', '[]'));
