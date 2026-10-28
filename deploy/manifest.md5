@@ -77,7 +77,7 @@ b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 e55e413a4d83f451c678aee863fe6d05  intake.php
 0f76181f22712da050ea376c236e2301  leadership.php
 df2d52f3615178d71d9ee78291e954b8  login.php
-bb73a2b0b1ccb8ca4b160bb7a05ff140  logout.php
+48345dd02111e4387cc3305d1c677d13  logout.php
 b2ad9c459b7d150893d83f1cd33332f2  market_report.php
 655ea727bc386c5379fef05c6504c170  market_snapshot.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
@@ -107,7 +107,7 @@ d11b1b570b09764e3a760efe4c66ad9b  portal/market_post.php
 9a09ec5ad2d6fe7e47f548392f60550c  portal/market_render.php
 2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
 e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
-bd1d3b37a7fcf713edb84313e59cddbb  portal/profile.php
+e570c8c9f5565a8ce67b86377185e7d0  portal/profile.php
 35ca7afd527862a3e19ba56cc63b6f24  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
 c100b7be0bbc3fa29c94576a1acb1f72  portal/social.php
