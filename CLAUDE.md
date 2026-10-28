@@ -1788,6 +1788,11 @@ Representation, Rentals. **An area with nothing in it is not sent at all**
   pipeline_review.php when promoted (pre-selected from the MLS match) and
   changeable under Recently reviewed; one with no area is in no email and
   the preview page lists it.
+- A card with no photo (a buyer rep, a pocket listing without one) shows
+  the Mont Haus mountains placeholder, `assets/hotsheet/photo_placeholder.jpg`
+  (400x260, the hub's old picture; `mh_photo_placeholder_url()`). The
+  standalone build had shipped a flat gray square there until 2026-10-28
+  (Nikki: "we lost our placeholder image").
 - `hs_subscribers.areas` is a JSON list of area keys (NULL/[] = nothing
   sent, flagged on subscribers.php); `frequency` is `daily` or
   `twice_weekly` (Monday + Thursday, Mountain; `weekly` is legacy, Mondays).

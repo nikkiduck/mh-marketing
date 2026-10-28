@@ -44,7 +44,7 @@ c9ace318036eda1d6510c96f94ac643c  inc/config.php
 aa7c19a37df53359f5cb0e469f5a1c3f  inc/flyer_render.php
 1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
 ef0c14279cdbaef87219fc1ba01931ea  inc/hs_data.php
-e41f12b34fb43cfea2d2ded88667557e  inc/hs_helpers.php
+e2475866b1e99360f59246920a5eff56  inc/hs_helpers.php
 98ca55f6491ad80b3d49d1c6ad78a9a5  inc/hs_mail.php
 06406477f9bc1bf6dc3ceaf577ba202d  inc/hs_template.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php

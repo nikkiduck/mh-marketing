@@ -90,10 +90,12 @@ if (!function_exists('mh_abbreviate_address')) {
     }
 }
 
-// 1x1 light-gray placeholder used when a listing has no cached photo yet
-// (e.g. synced before primary_photo_url existed, or Spark had no photos).
+// The Mont Haus mountains placeholder (assets/hotsheet/photo_placeholder.jpg, 400x260,
+// the card shows it at 200x130) for a listing with no photo, e.g. a buyer-side
+// representation. It was the hub's placeholder too; the standalone build had
+// shipped a flat gray PNG instead until 2026-10-28 (Nikki).
 if (!function_exists('mh_photo_placeholder_url')) {
     function mh_photo_placeholder_url(): string {
-        return HOT_SHEET_ASSET_BASE . 'photo_placeholder.png';
+        return HOT_SHEET_ASSET_BASE . 'photo_placeholder.jpg';
     }
 }
