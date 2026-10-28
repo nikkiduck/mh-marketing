@@ -85,7 +85,7 @@ function portal_profile_save(mysqli $conn, array $ctx, array $me, string $what, 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = (string)($_POST['action'] ?? '');
     $key = 'pt_pf_' . preg_replace('/[^a-z]/', '', $action);
-    $anchor = ['bio' => 'bio', 'social' => 'social', 'areas' => 'areas'][$action] ?? 'top';
+    $anchor = ['bio' => 'bio', 'social' => 'social', 'areas' => 'areas', 'towns' => 'areas'][$action] ?? 'top';
     if (!portal_csrf_ok()) {
         $_SESSION[$key] = ['err', 'That page had been open too long. Please try again.'];
     } elseif ($ctx['preview']) {
@@ -110,13 +110,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $lines = array_values(array_filter(array_map('trim', preg_split('/[\r\n;]+/', (string)($_POST['service_area'] ?? ''))), fn($x) => $x !== ''));
         $areas = mb_substr(implode('; ', $lines), 0, 255);
         portal_profile_save($conn, $ctx, $me, 'service areas', ['service_area' => ['Service areas', $areas]], $key);
+    } elseif ($action === 'towns' && array_key_exists('fub_areas', $me)) {
+        // The towns ticked (2026-10-28): the website's community pages list the agent under "Agents Who Know"; lead routing reads them too when in the FUB rotation.
+        $keys = array_values(array_intersect(mk_area_keys(), array_map('strval', (array)($_POST['fub_areas'] ?? []))));
+        sort($keys);
+        portal_profile_save($conn, $ctx, $me, 'towns served', ['fub_areas' => ['Towns', json_encode($keys)]], $key);
     }
     header('Location: ' . $back($anchor)); exit;
 }
 
 // ── Read ────────────────────────────────────────────────────────────────────
 $flash = [];
-foreach (['bio', 'social', 'areas'] as $k) { $flash[$k] = $_SESSION['pt_pf_' . $k] ?? null; unset($_SESSION['pt_pf_' . $k]); }
+foreach (['bio', 'social', 'areas', 'towns'] as $k) { $flash[$k] = $_SESSION['pt_pf_' . $k] ?? null; unset($_SESSION['pt_pf_' . $k]); }
 $hs_flash = $_SESSION['pt_hs_flash'] ?? null; unset($_SESSION['pt_hs_flash']);
 
 $identities = [];
@@ -213,6 +218,50 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
       <textarea id="serviceArea" name="service_area" rows="4" maxlength="255" placeholder="Aspen and the Roaring Fork Valley"><?= ph(implode("\n", array_filter(array_map('trim', explode(';', (string)($me['service_area'] ?? ''))), fn($x) => $x !== ''))) ?></textarea>
       <div class="pt-row"><button type="submit" class="pt-btn main">Save service areas</button></div>
     </form>
+    <?php if (array_key_exists('fub_areas', $me)): $pt_ticked = array_map('strval', json_decode((string)($me['fub_areas'] ?? ''), true) ?: []); ?>
+    <!-- The towns ticked (2026-10-28): the website lists the agent under "Agents Who Know" on each town's community page; lead routing reads the same ticks for agents in the FUB rotation. Ticking an area ticks its towns. -->
+    <h3 class="pt-card-h" style="margin-top:1.6rem;font-size:1rem;">Towns you serve</h3>
+    <p class="pt-card-sub">Tick the towns you work. Each one lists you under "Agents Who Know" on that community's page on monthaus.com. Ticking an area ticks all of its towns.</p>
+    <?= $flash_html($flash['towns']) ?>
+    <form method="post" class="pt-form" action="<?= ph(portal_url($ctx, '/portal/profile.php')) ?>">
+      <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
+      <input type="hidden" name="action" value="towns">
+      <div id="ptTowns" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px 22px;margin:0 0 1rem;">
+        <?php foreach (mk_areas() as $ai => $area): $akeys = array_column($area['towns'], 'key'); $all_on = $akeys && !array_diff($akeys, $pt_ticked); ?>
+          <div>
+            <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:6px;">
+              <input type="checkbox" class="pt-area-head" data-area="<?= $ai ?>" <?= $all_on ? 'checked' : '' ?>> <?= ph($area['area']) ?>
+            </label>
+            <?php foreach ($area['towns'] as $t): ?>
+              <label style="display:flex;align-items:center;gap:8px;margin:2px 0 2px 22px;font-weight:400;">
+                <input type="checkbox" name="fub_areas[]" class="pt-town" data-area="<?= $ai ?>" value="<?= ph($t['key']) ?>" <?= in_array($t['key'], $pt_ticked, true) ? 'checked' : '' ?>> <?= ph($t['label']) ?>
+              </label>
+            <?php endforeach; ?>
+          </div>
+        <?php endforeach; ?>
+      </div>
+      <div class="pt-row"><button type="submit" class="pt-btn main">Save towns</button></div>
+    </form>
+    <script>
+    (function () {
+      var box = document.getElementById('ptTowns');
+      if (!box) return;
+      function towns(a) { return box.querySelectorAll('.pt-town[data-area="' + a + '"]'); }
+      function syncHead(a) {
+        var ts = towns(a), on = 0;
+        ts.forEach(function (t) { if (t.checked) on++; });
+        var h = box.querySelector('.pt-area-head[data-area="' + a + '"]');
+        h.checked = ts.length > 0 && on === ts.length;
+        h.indeterminate = on > 0 && on < ts.length;
+      }
+      box.querySelectorAll('.pt-area-head').forEach(function (h) {
+        h.addEventListener('change', function () { towns(h.dataset.area).forEach(function (t) { t.checked = h.checked; }); h.indeterminate = false; });
+        syncHead(h.dataset.area);
+      });
+      box.querySelectorAll('.pt-town').forEach(function (t) { t.addEventListener('change', function () { syncHead(t.dataset.area); }); });
+    })();
+    </script>
+    <?php endif; ?>
   </section>
 
   <!-- Boards: read-only -->

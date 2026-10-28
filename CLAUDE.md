@@ -2791,7 +2791,19 @@ its sync, its lead push). This portal holds no FUB key and no FUB ids. The
   usable for leads when ticked AND Active. FUB bills per user, so only agents
   who work website leads are added there (Nikki).
 - **Service areas** (`marketing_intakes.fub_areas`, JSON list of town keys,
-  sql/agent_fub_areas.sql): the website's Communities list, which the site
+  sql/agent_fub_areas.sql). **Since 2026-10-28 its own card on the Profile
+  tab (action `update_areas`), above Follow Up Boss, and a "Towns you serve"
+  grid under Service areas on the agent portal profile (portal/profile.php,
+  action `towns`): Nikki, after finding only the 9 FUB-ticked agents showed
+  under "Agents Who Know" on the website's community pages. The ticks are
+  the ONE record of where an agent works: the website lists every agent who
+  ticked a town on that town's page (an area page, anyone who ticked one of
+  its towns), and routing reads the same ticks for agents in the rotation.
+  The 15 agents with no ticks were seeded from their free-text Service area
+  (sql/agent_fub_areas_seed_20261028.sql, a whole area for "Aspen and the
+  Roaring Fork Valley", one town for "Colorado Springs" or "Denver Metro",
+  the board's towns for a blank text); Nikki adjusts individuals.**
+  Before that: the website's Communities list, which the site
   publishes as `areas` in the same api/boards.php this portal already caches
   (inc/boards.php: `mk_areas()`, `mk_area_keys()`; MK_AREAS_FALLBACK only
   until the first fetch). An area header ticks all its towns. The roster feed

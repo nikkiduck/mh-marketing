@@ -1157,18 +1157,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
        firm's listing to an opted-in, Active FUB user who ticked its town. */
     if ($action === 'update_fub') {
         $fub = isset($_POST['in_fub']) ? 1 : 0;
+        $st = $conn->prepare("UPDATE marketing_intakes SET in_fub = ? WHERE id = ?");
+        $st->bind_param('ii', $fub, $id);
+        $st->execute(); $st->close();
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+    }
+
+    /* Service areas, their own card since 2026-10-28 (Nikki): the ticks are the
+       one record of where an agent works. The website's community pages list
+       the agents who ticked the town under "Agents Who Know" (every agent), and
+       lead routing reads the same ticks for agents in the FUB rotation. */
+    if ($action === 'update_areas') {
         if (mk_column_exists($conn, 'marketing_intakes', 'fub_areas')) {
             require_once __DIR__ . '/inc/boards.php';
             $keys = array_values(array_intersect(mk_area_keys(), array_map('strval', (array)($_POST['fub_areas'] ?? []))));
             sort($keys);
             $json = json_encode($keys);
-            $st = $conn->prepare("UPDATE marketing_intakes SET in_fub = ?, fub_areas = ? WHERE id = ?");
-            $st->bind_param('isi', $fub, $json, $id);
-        } else {
-            $st = $conn->prepare("UPDATE marketing_intakes SET in_fub = ? WHERE id = ?");
-            $st->bind_param('ii', $fub, $id);
+            $st = $conn->prepare("UPDATE marketing_intakes SET fub_areas = ? WHERE id = ?");
+            $st->bind_param('si', $json, $id);
+            $st->execute(); $st->close();
         }
-        $st->execute(); $st->close();
         header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
     }
 
@@ -2946,15 +2954,47 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           </form>
         </div>
 
-        <!-- ── Follow Up Boss (2026-10-06) ──────────────────────────────── -->
+        <!-- ── Service areas (2026-10-28, Nikki: out of the Follow Up Boss card, every agent ticks it) ── -->
         <?php
           require_once __DIR__ . '/inc/boards.php';
+          require_once __DIR__ . '/inc/fub.php';   // mk_fub_areas_decode()
+          $sa_ok     = array_key_exists('fub_areas', $agent);
+          $sa_ticked = $sa_ok ? mk_fub_areas_decode($agent['fub_areas'] ?? null) : [];
+        ?>
+        <div class="card">
+          <div class="card-title"><i class="ti ti-map-pin" style="margin-right:6px;"></i> Service areas</div>
+          <p class="hint" style="margin:0 0 12px;">The towns this agent works. They list the agent under "Agents Who Know" on the website's community pages, and route website leads in those towns to the agent when in the FUB rotation. Ticking an area ticks all of its towns.</p>
+          <?php if ($sa_ok): ?>
+          <form method="POST">
+            <input type="hidden" name="_action" value="update_areas">
+            <?php $sa_area_list = mk_areas(); ?>
+            <div id="fubAreas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px 22px;margin-bottom:14px;">
+              <?php foreach ($sa_area_list as $ai => $area): $akeys = array_column($area['towns'], 'key'); $all_on = $akeys && !array_diff($akeys, $sa_ticked); ?>
+                <div>
+                  <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:6px;">
+                    <input type="checkbox" class="fub-area-head" data-area="<?= $ai ?>" <?= $all_on ? 'checked' : '' ?>> <?= htmlspecialchars($area['area']) ?>
+                  </label>
+                  <?php foreach ($area['towns'] as $t): ?>
+                    <label style="display:flex;align-items:center;gap:8px;margin:2px 0 2px 22px;font-weight:400;">
+                      <input type="checkbox" name="fub_areas[]" class="fub-town" data-area="<?= $ai ?>" value="<?= e_attr($t['key']) ?>" <?= in_array($t['key'], $sa_ticked, true) ? 'checked' : '' ?>> <?= htmlspecialchars($t['label']) ?>
+                    </label>
+                  <?php endforeach; ?>
+                </div>
+              <?php endforeach; ?>
+            </div>
+            <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save service areas</button></div>
+          </form>
+          <?php else: ?>
+            <p class="hint" style="margin:0 0 12px;">Service areas appear here once sql/agent_fub_areas.sql has been run.</p>
+          <?php endif; ?>
+        </div>
+
+        <!-- ── Follow Up Boss (2026-10-06) ──────────────────────────────── -->
+        <?php
           require_once __DIR__ . '/inc/fub.php';
           // No database call here: $conn is closed before rendering (see CLAUDE.md
           // "agent.php closes its connection early"). $agent is SELECT *, so the
           // column's presence is read off the row.
-          $fub_areas_ok = array_key_exists('fub_areas', $agent);
-          $fub_ticked   = $fub_areas_ok ? mk_fub_areas_decode($agent['fub_areas'] ?? null) : [];
           $fub_site     = mk_fub_site_status($agent_slug);
           $fub_me       = $fub_site['agent'];
           $fub_email    = strtolower(trim((string)($agent['mh_email'] ?: $agent['mls_email'])));
@@ -2975,7 +3015,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               <span class="pill w-inactive">Not a FUB user</span>
             <?php endif; ?>
           </div>
-          <?php // The explanations that sat here (who has a FUB user, when the website last checked, what opting in does, how the town list works) were removed 2026-10-16 (Nikki): the pill, the checkbox and the town boxes say enough. ?>
+          <?php // The explanations that sat here (who has a FUB user, when the website last checked, what opting in does, how the town list works) were removed 2026-10-16 (Nikki): the pill and the checkbox say enough. The Service areas grid moved to its own card above on 2026-10-28; routing reads the same ticks. ?>
 
           <form method="POST">
             <input type="hidden" name="_action" value="update_fub">
@@ -2983,26 +3023,6 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               <input type="checkbox" name="in_fub" value="1" <?= !empty($agent['in_fub']) ? 'checked' : '' ?>> In the FUB lead rotation
             </label>
 
-            <?php if ($fub_areas_ok): ?>
-              <?php $fub_area_list = mk_areas(); ?>
-              <div class="fld-label" style="margin-bottom:6px;">Service areas</div>
-              <div id="fubAreas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px 22px;margin-bottom:14px;">
-                <?php foreach ($fub_area_list as $ai => $area): $akeys = array_column($area['towns'], 'key'); $all_on = $akeys && !array_diff($akeys, $fub_ticked); ?>
-                  <div>
-                    <label style="display:flex;align-items:center;gap:8px;font-weight:600;margin-bottom:6px;">
-                      <input type="checkbox" class="fub-area-head" data-area="<?= $ai ?>" <?= $all_on ? 'checked' : '' ?>> <?= htmlspecialchars($area['area']) ?>
-                    </label>
-                    <?php foreach ($area['towns'] as $t): ?>
-                      <label style="display:flex;align-items:center;gap:8px;margin:2px 0 2px 22px;font-weight:400;">
-                        <input type="checkbox" name="fub_areas[]" class="fub-town" data-area="<?= $ai ?>" value="<?= e_attr($t['key']) ?>" <?= in_array($t['key'], $fub_ticked, true) ? 'checked' : '' ?>> <?= htmlspecialchars($t['label']) ?>
-                      </label>
-                    <?php endforeach; ?>
-                  </div>
-                <?php endforeach; ?>
-              </div>
-            <?php else: ?>
-              <p class="hint" style="margin:0 0 12px;">Service areas appear here once sql/agent_fub_areas.sql has been run.</p>
-            <?php endif; ?>
             <div class="btn-row"><button type="submit" class="btn btn-primary btn-sm">Save Follow Up Boss</button></div>
           </form>
         </div>
