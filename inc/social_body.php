@@ -59,9 +59,11 @@
         <h2 class="sp-step-h"><span>2</span>Listing</h2>
         <label class="sp-field">Which listing
           <select name="listing">
-            <?php // Sales first, then rentals, under headers (Nikki, 2026-10-12: a team's list is long).
-            $groups = ['Listings' => array_filter($listings, fn($l) => !(int)$l['is_rental']),
-                       'Rentals'  => array_filter($listings, fn($l) => (int)$l['is_rental'])];
+            <?php // Sales first, then rentals, under headers (Nikki, 2026-10-12: a team's list is long);
+            // closings of the last week last (Nikki, 2026-10-24), so the Just Sold post can still be made.
+            $groups = ['Listings'    => array_filter($listings, fn($l) => !(int)$l['is_rental'] && empty($l['closed'])),
+                       'Rentals'     => array_filter($listings, fn($l) => (int)$l['is_rental'] && empty($l['closed'])),
+                       'Just Closed' => array_filter($listings, fn($l) => !empty($l['closed']))];
             foreach ($groups as $gname => $group): if (!$group) continue; ?>
             <optgroup label="<?= ph($gname) ?>">
               <?php foreach ($group as $l): ?>
@@ -197,12 +199,13 @@
     framer.style.aspectRatio = '1080 / ' + PHOTO_H[t];
   }
   // The default label follows the template and the listing (a rental's is Featured
-  // Rental, Nikki 2026-10-12) unless the agent chose something else.
-  const DEFAULT_LABELS = ['Featured Listing', 'Featured Rental', 'Open House', '__none'];
+  // Rental, Nikki 2026-10-12; a closing's is Just Sold, 2026-10-24) unless the agent chose something else.
+  const DEFAULT_LABELS = ['Featured Listing', 'Featured Rental', 'Just Sold', 'Open House', '__none'];
   function defaultLabel() {
     if (isOH(f('type').value)) return 'Open House';
     if (isOther()) return '__none';
     const l = listing();
+    if (l && l.closed) return 'Just Sold';
     return (l && +l.is_rental) ? 'Featured Rental' : 'Featured Listing';
   }
   function labelForType() {

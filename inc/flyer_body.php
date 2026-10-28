@@ -23,8 +23,10 @@
         <h2 class="sp-step-h"><span>1</span>Listing</h2>
         <label class="sp-field">Which listing
           <select name="listing">
-            <?php $groups = ['Listings' => array_filter($listings, fn($l) => !(int)$l['is_rental']),
-                             'Rentals'  => array_filter($listings, fn($l) => (int)$l['is_rental'])];
+            <?php // Same groups as the Instagram tool: sales, rentals, then the last week's closings (2026-10-24).
+            $groups = ['Listings'    => array_filter($listings, fn($l) => !(int)$l['is_rental'] && empty($l['closed'])),
+                       'Rentals'     => array_filter($listings, fn($l) => (int)$l['is_rental'] && empty($l['closed'])),
+                       'Just Closed' => array_filter($listings, fn($l) => !empty($l['closed']))];
             foreach ($groups as $gname => $group): if (!$group) continue; ?>
             <optgroup label="<?= ph($gname) ?>">
               <?php foreach ($group as $l): ?>

@@ -2278,11 +2278,30 @@ mechanics: `docs/HANDOFF-social-posts.md`. The rules that must hold:
 - Everything posted is checked in `social_post_from_request()`
   (inc/social.php): the listing must be one of the account's
   (`social_listings()`: hs_listing_state by the account's and its teams'
-  agent_mls_ids identities or name, live statuses), the photo one the site
+  agent_mls_ids identities or name, live statuses plus the last week's
+  closings, below), the photo one the site
   listed for it (session-cached by `social_photos()`) or an upload under
   THIS account's folder (`upload:<hex>`), else its primary; labels from
   `social_labels()` or 28 custom chars; line styles from
   `social_line_styles()`; lengths capped.
+- **A closing stays in the listing dropdowns for a week (Nikki, 2026-10-24).**
+  Allison Decent's Brett Trl closed in the MLS the morning she wanted its
+  Just Sold post, and the dropdown (live statuses only) had already dropped
+  it. `social_live_sql($alias)` in inc/social.php is the one definition of
+  what the Templates tools offer: in the feed and Active / Active Under
+  Contract / Pending / Coming Soon, OR closed (Closed, Sold, Leased) with a
+  `closed` row in hs_listing_changes, or a close_date, within
+  `SOCIAL_CLOSED_DAYS` (7; the Hot Sheet's own sold window is 14). Used by
+  `social_listings()` (Instagram and flyer, portal and admin) and the admin
+  picker's counts. The hs_listing_state table MUST be aliased in that SQL:
+  hs_listing_changes has market and listing_key too, so an unqualified name
+  inside the EXISTS matches every listing. Each listing carries `closed`;
+  the dropdowns group them last under "Just Closed" and say "Sold" /
+  "Leased" (`social_status_words()`, which flyer_status_words() now calls),
+  the Instagram label defaults to Just Sold and the flyer banner to Sold,
+  and `price_text` is blank (the list price is no longer the figure; the
+  sold price is the agent's to type or not, as with rentals). My Profile's
+  and the agent page's Current Listings are unchanged: live only.
 - Uploads: CREATIVES_DIR/social/users/<users.id>/uploads/<hex>.jpg (2000 px)
   + -thumb.jpg (400), EXIF rotation applied, JPG/PNG/WEBP up to 20 MB
   (`social_store_upload()`). **Keyed by the signed-in PERSON since

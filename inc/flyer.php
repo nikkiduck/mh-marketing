@@ -61,6 +61,7 @@ function flyer_banners(): array {
 
 /** The banner a listing starts with: its status, a rental, else none. */
 function flyer_default_banner(array $l): string {
+    if (!empty($l['closed'])) return 'sold';   // a closing kept in the list for a week (2026-10-24)
     if ($l['status'] === 'Pending') return 'pending';
     if ($l['status'] === 'Active Under Contract') return 'under_contract';
     if ((int)$l['is_rental']) return 'long_term_rental';
@@ -212,5 +213,5 @@ function flyer_export_pdf(string $html): ?string {
 
 /** "Under Contract" for the RESO value; the rest as sent. */
 function flyer_status_words(string $s): string {
-    return $s === 'Active Under Contract' ? 'Under Contract' : $s;
+    return social_status_words($s);   // one set of words for both dropdowns (Sold / Leased / Under Contract)
 }
