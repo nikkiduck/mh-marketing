@@ -6,7 +6,7 @@
   /* Slate, deeper buttons: the website's scheme (2026-10-28; was warm paper and gold). ink = the dark bar, gold = the accent, gold-deep = links, btn = buttons and badges. */
   --ink: #2b3038;
   --ink-line: #4a5160;
-  --ink-text: #c2c8d1;
+  --ink-text: #eef1f5;   /* nav items on the dark bar: near white (Nikki, 2026-10-28: lighter) */
   --gold: #55637a;
   --gold-deep: #4a5569;
   --btn: #4a5566;
@@ -44,7 +44,7 @@ img { max-width: 100%; }
 .pt-top-in { max-width: 960px; margin: 0 auto; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; }
 .pt-logo img { height: 56px; display: block; }
 @media (min-width: 640px) { .pt-logo img { height: 64px; } }
-.pt-signout { color: #c2c8d1; font-size: 14px; text-decoration: none; }
+.pt-signout { color: var(--ink-text); font-size: 14px; text-decoration: none; }
 .pt-signout:hover { color: #fff; }
 /* ── Menu (2026-10-12): main tabs with sub-menus. Desktop: a row, groups drop
    down. Phone (< 720px): a Menu button opens a stacked list with every
@@ -56,7 +56,7 @@ img { max-width: 100%; }
 .pt-menu-btn span + span { margin-top: 4px; }
 .pt-menu-btn b { font-weight: 500; margin-left: 8px; }
 .pt-nav { max-width: 960px; margin: 0 auto; padding: 0 8px; display: flex; gap: 2px; }
-.pt-nav-a { display: block; background: transparent; border: 0; color: #c2c8d1; text-decoration: none; padding: 12px 12px 13px;
+.pt-nav-a { display: block; background: transparent; border: 0; color: var(--ink-text); text-decoration: none; padding: 12px 12px 13px;
             font: 400 15px var(--sans); white-space: nowrap; border-bottom: 2px solid transparent; cursor: pointer; }
 .pt-nav-a.on, .pt-group.on > .pt-nav-a { color: #fff; border-bottom-color: var(--on-dark); }
 .pt-nav-a:hover { color: #fff; }
@@ -66,7 +66,7 @@ img { max-width: 100%; }
 .pt-sub { display: none; position: absolute; left: 0; top: 100%; min-width: 220px; background: #262b33; border: 1px solid #4a5160;
           border-radius: 0 0 12px 12px; padding: 6px 0; z-index: 30; box-shadow: 0 10px 24px rgba(0,0,0,.25); }
 .pt-group.open > .pt-sub, .pt-group:hover > .pt-sub, .pt-group:focus-within > .pt-sub { display: block; }
-.pt-sub a { display: block; color: #c2c8d1; text-decoration: none; padding: 11px 18px; font-size: 15px; white-space: nowrap; }
+.pt-sub a { display: block; color: var(--ink-text); text-decoration: none; padding: 11px 18px; font-size: 15px; white-space: nowrap; }
 .pt-sub a:hover, .pt-sub a.on { color: #fff; background: #3b414c; }
 .pt-sub a.on { box-shadow: inset 3px 0 0 var(--gold); }
 /* The group's pages as a row under the header, on every page in the group. */

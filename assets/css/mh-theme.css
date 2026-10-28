@@ -223,7 +223,7 @@ input[type="number"], input[type="date"], input[type="search"], select, textarea
     border-bottom: 1px solid #3b414c;
 }
 .mh-nav-link { font-family: var(--mh-sans); letter-spacing: 0.22em; text-transform: uppercase; font-size: 0.66rem; }
-.mh-nav-link.active, .mh-nav-link:hover { color: #aebbcc; }   /* the light slate on the dark bar; the button tone would vanish there (2026-10-28) */
+.mh-nav-link.active, .mh-nav-link:hover { color: #ffffff; }   /* the light slate on the dark bar; the button tone would vanish there (2026-10-28) */
 
 /* ── Dialogs ──────────────────────────────────────────────────────────── */
 dialog.confirm {

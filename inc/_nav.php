@@ -81,7 +81,7 @@ $mh_active = $nav_active ?? 'marketing';
     font-size:.66rem; font-weight:600; letter-spacing:.4px; flex:none;
   }
   .mh-user-name {
-    color:#c2c8d1; font-size:.76rem; font-weight:500;
+    color:#eef1f5; font-size:.76rem; font-weight:500;
     max-width:150px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
   @media (max-width: 720px) { .mh-user-name { display:none; } }
@@ -90,7 +90,7 @@ $mh_active = $nav_active ?? 'marketing';
   .mh-user-cog {
     display:inline-flex; align-items:center; justify-content:center;
     width:26px; height:26px; flex:none; border-radius:6px;
-    color:#aebbcc; text-decoration:none; font-size:15px;
+    color:#eef1f5; text-decoration:none; font-size:15px;   /* near white (Nikki, 2026-10-28: lighter) */
     transition:color .2s, background .2s;
   }
   .mh-user-cog:hover        { color:#fff; background:rgba(174,187,204,.25); }
@@ -118,7 +118,7 @@ $mh_active = $nav_active ?? 'marketing';
       display:inline-flex; align-items:center; justify-content:center;
       width:40px; height:40px; flex:none; padding:0;
       background:transparent; border:1px solid rgba(255,255,255,.22);
-      border-radius:8px; color:#c2c8d1; font-size:22px; line-height:1;
+      border-radius:8px; color:#eef1f5; font-size:22px; line-height:1;
       cursor:pointer; transition:color .15s, border-color .15s;
     }
     .mh-nav-toggle:hover,
