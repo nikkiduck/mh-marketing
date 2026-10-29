@@ -2139,8 +2139,13 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   `brand-guidelines/business-cards/` and `brand-guidelines/yard-signs/`
   (static HTML + PNGs, no sign-in, like the guidelines). The whole
   `brand-guidelines/` folder is in git since that day (it was published
-  from Nova before; local and server matched). monthausint.com's
-  openhousesigns.html was not moved (not asked for). Hot Sheets come first in the nav and the home cards and are
+  from Nova before; local and server matched). Since 2026-10-29 (Nikki)
+  the yard sign gallery is broker-only (the team versions are deleted) and
+  carries the open house signs too (corporate, team, broker, arrow left or
+  right; moved that day from monthausint.com's openhousesigns.html, the
+  last gallery left there). portal/yard_signs.php mirrors the public page
+  and must change with it. The guidelines page links both galleries under
+  its business card figures. Hot Sheets come first in the nav and the home cards and are
   called "Internal" (Nikki, 2026-10-07) because a Client Hot Sheets
   section (Phase 2) will sit beside them; portal/hotsheets.php is their
   own areas and frequency (see "Hot Sheets" above). **In an admin preview
