@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Moved from monthausint.com/assets/marketing on 2026-10-10 (Nikki): the portal links here. -->
-  <title>Yard Sign Templates — Mont Haus</title>
+  <title>Yard Sign Templates, Mont Haus</title>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -46,13 +46,16 @@
       margin-bottom: 20px;
     }
 
-    .sign-pair {
+    .sign-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
     }
-    @media (max-width: 560px) {
-      .sign-pair { grid-template-columns: 1fr; }
+    @media (max-width: 720px) {
+      .sign-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 480px) {
+      .sign-grid { grid-template-columns: 1fr; }
     }
 
     .sign-item { /* plain container — no card appearance */ }
@@ -84,50 +87,24 @@
 <header class="page-header">
     <p style="margin:0 0 6px"><a href="/brand-guidelines/" style="color:#9ca3af;font-size:12px;text-decoration:none">&larr; Brand guidelines</a></p>
   <h1>Yard Sign Templates</h1>
-  <p>Mont Haus International Realty — design options for reference</p>
+  <p>Mont Haus International Realty. Design options for reference.</p>
 </header>
 
 <div class="content">
 
-  <div class="option-section">
-    <p class="option-label">Option 1</p>
-    <div class="sign-pair">
-      <div class="sign-item">
-        <img class="sign-image" src="img/option-1-team.png" alt="Option 1 (Team)">
-        <div class="sign-label">Option 1 (Team)</div>
-      </div>
-      <div class="sign-item">
-        <img class="sign-image" src="img/option-1-broker.png" alt="Option 1 (Broker)">
-        <div class="sign-label">Option 1 (Broker)</div>
-      </div>
+  <!-- Team versions removed 2026-10-29 (Nikki): broker signs only. -->
+  <div class="sign-grid">
+    <div class="sign-item">
+      <img class="sign-image" src="img/option-1-broker.png" alt="Yard sign, option 1">
+      <div class="sign-label">Option 1</div>
     </div>
-  </div>
-
-  <div class="option-section">
-    <p class="option-label">Option 2</p>
-    <div class="sign-pair">
-      <div class="sign-item">
-        <img class="sign-image" src="img/option-2-team.png" alt="Option 2 (Team)">
-        <div class="sign-label">Option 2 (Team)</div>
-      </div>
-      <div class="sign-item">
-        <img class="sign-image" src="img/option-2-broker.png" alt="Option 2 (Broker)">
-        <div class="sign-label">Option 2 (Broker)</div>
-      </div>
+    <div class="sign-item">
+      <img class="sign-image" src="img/option-2-broker.png" alt="Yard sign, option 2">
+      <div class="sign-label">Option 2</div>
     </div>
-  </div>
-
-  <div class="option-section">
-    <p class="option-label">Option 3</p>
-    <div class="sign-pair">
-      <div class="sign-item">
-        <img class="sign-image" src="img/option-3-team.png" alt="Option 3 (Team)">
-        <div class="sign-label">Option 3 (Team)</div>
-      </div>
-      <div class="sign-item">
-        <img class="sign-image" src="img/option-3-broker.png" alt="Option 3 (Broker)">
-        <div class="sign-label">Option 3 (Broker)</div>
-      </div>
+    <div class="sign-item">
+      <img class="sign-image" src="img/option-3-broker.png" alt="Yard sign, option 3">
+      <div class="sign-label">Option 3</div>
     </div>
   </div>
 
