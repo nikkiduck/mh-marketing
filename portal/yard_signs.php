@@ -1,28 +1,45 @@
 <?php
 /**
- * portal/yard_signs.php — the yard sign layouts, in the portal (Nikki,
- * 2026-10-18; the public gallery at brand-guidelines/yard-signs/ stays for
- * sign shops). A team version and a broker version of each option.
+ * portal/yard_signs.php — the yard sign and open house sign layouts, in the
+ * portal (Nikki, 2026-10-18; the public gallery at brand-guidelines/yard-signs/
+ * stays for sign shops). Yard signs are broker-only since 2026-10-29 (the team
+ * versions were dropped); the open house signs (corporate, team, broker, each
+ * with the arrow left or right) were added the same day.
  */
 require_once __DIR__ . '/../inc/portal.php';
 
 $ctx = portal_context($conn);
 $img = '/brand-guidelines/yard-signs/img/';
 
-portal_header($ctx, 'Yard Sign Templates', 'brand');
+$open_house = [
+    ['corporate', 'Corporate', 'openhouse_MH'],
+    ['team',      'Team',      'openhouse_Team'],
+    ['broker',    'Broker',    'openhouse_Agent'],
+];
+
+portal_header($ctx, 'Yard and Open House Sign Templates', 'brand');
 ?>
   <p class="pt-back"><a href="<?= ph(portal_url($ctx, '/portal/brand.php')) ?>">← Brand Tools</a></p>
-  <h1 class="pt-h1">Yard Sign Templates</h1>
-  <p class="pt-lead">The current Mont Haus yard sign layouts, each as a team sign and a broker sign. Tap one to see it larger. To order signs, use the form at the bottom of the page.</p>
-  <nav class="pt-jump" aria-label="On this page"><a href="#option-1">Option 1</a><a href="#option-2">Option 2</a><a href="#option-3">Option 3</a></nav>
+  <h1 class="pt-h1">Yard and Open House Sign Templates</h1>
+  <p class="pt-lead">The current Mont Haus yard sign layouts, and the open house signs with the arrow pointing left or right. Tap one to see it larger. To order signs, use the form at the bottom of the page.</p>
+  <nav class="pt-jump" aria-label="On this page"><a href="#yard">Yard signs</a><?php foreach ($open_house as [$id, $label]): ?><a href="#open-house-<?= $id ?>">Open house, <?= strtolower($label) ?></a><?php endforeach; ?></nav>
 
-  <?php for ($o = 1; $o <= 3; $o++): ?>
-  <section class="pt-section" id="option-<?= $o ?>">
-    <h2 class="pt-h2">Option <?= $o ?></h2>
-    <div class="pt-gal two">
-      <figure class="pt-gal-item"><img src="<?= ph($img . "option-{$o}-team.png") ?>" alt="Option <?= $o ?>, team" loading="lazy" data-lb><figcaption>Team</figcaption></figure>
-      <figure class="pt-gal-item"><img src="<?= ph($img . "option-{$o}-broker.png") ?>" alt="Option <?= $o ?>, broker" loading="lazy" data-lb><figcaption>Broker</figcaption></figure>
+  <section class="pt-section" id="yard">
+    <h2 class="pt-h2">Yard signs</h2>
+    <div class="pt-gal">
+      <?php for ($o = 1; $o <= 3; $o++): ?>
+      <figure class="pt-gal-item"><img src="<?= ph($img . "option-{$o}-broker.png") ?>" alt="Yard sign, option <?= $o ?>" loading="lazy" data-lb><figcaption>Option <?= $o ?></figcaption></figure>
+      <?php endfor; ?>
     </div>
   </section>
-  <?php endfor; ?>
+
+  <?php foreach ($open_house as [$id, $label, $file]): ?>
+  <section class="pt-section" id="open-house-<?= $id ?>">
+    <h2 class="pt-h2">Open house signs, <?= strtolower($label) ?></h2>
+    <div class="pt-gal two">
+      <figure class="pt-gal-item"><img src="<?= ph($img . $file . '_qr-L.jpg') ?>" alt="Open house sign, <?= strtolower($label) ?>, arrow left" loading="lazy" data-lb><figcaption>Arrow left</figcaption></figure>
+      <figure class="pt-gal-item"><img src="<?= ph($img . $file . '_qr-R.jpg') ?>" alt="Open house sign, <?= strtolower($label) ?>, arrow right" loading="lazy" data-lb><figcaption>Arrow right</figcaption></figure>
+    </div>
+  </section>
+  <?php endforeach; ?>
 <?php portal_lightbox(); portal_footer();

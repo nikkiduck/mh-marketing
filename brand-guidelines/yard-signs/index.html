@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Moved from monthausint.com/assets/marketing on 2026-10-10 (Nikki): the portal links here. -->
-  <title>Yard Sign Templates, Mont Haus</title>
+  <title>Yard and Open House Sign Templates, Mont Haus</title>
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -54,8 +54,9 @@
     @media (max-width: 720px) {
       .sign-grid { grid-template-columns: 1fr 1fr; }
     }
+    .sign-grid.two { grid-template-columns: 1fr 1fr; }
     @media (max-width: 480px) {
-      .sign-grid { grid-template-columns: 1fr; }
+      .sign-grid, .sign-grid.two { grid-template-columns: 1fr; }
     }
 
     .sign-item { /* plain container — no card appearance */ }
@@ -86,25 +87,71 @@
 
 <header class="page-header">
     <p style="margin:0 0 6px"><a href="/brand-guidelines/" style="color:#9ca3af;font-size:12px;text-decoration:none">&larr; Brand guidelines</a></p>
-  <h1>Yard Sign Templates</h1>
+  <h1>Yard and Open House Sign Templates</h1>
   <p>Mont Haus International Realty. Design options for reference.</p>
 </header>
 
 <div class="content">
 
-  <!-- Team versions removed 2026-10-29 (Nikki): broker signs only. -->
-  <div class="sign-grid">
-    <div class="sign-item">
-      <img class="sign-image" src="img/option-1-broker.png" alt="Yard sign, option 1">
-      <div class="sign-label">Option 1</div>
+  <!-- Team yard signs removed 2026-10-29 (Nikki): broker signs only.
+       Open house signs added the same day from monthausint.com/assets/marketing/openhousesigns.html. -->
+  <div class="option-section">
+    <p class="option-label">Yard signs</p>
+    <div class="sign-grid">
+      <div class="sign-item">
+        <img class="sign-image" src="img/option-1-broker.png" alt="Yard sign, option 1">
+        <div class="sign-label">Option 1</div>
+      </div>
+      <div class="sign-item">
+        <img class="sign-image" src="img/option-2-broker.png" alt="Yard sign, option 2">
+        <div class="sign-label">Option 2</div>
+      </div>
+      <div class="sign-item">
+        <img class="sign-image" src="img/option-3-broker.png" alt="Yard sign, option 3">
+        <div class="sign-label">Option 3</div>
+      </div>
     </div>
-    <div class="sign-item">
-      <img class="sign-image" src="img/option-2-broker.png" alt="Yard sign, option 2">
-      <div class="sign-label">Option 2</div>
+  </div>
+
+  <div class="option-section">
+    <p class="option-label">Open house signs, corporate</p>
+    <div class="sign-grid two">
+      <div class="sign-item">
+        <img class="sign-image" src="img/openhouse_MH_qr-L.jpg" alt="Open house sign, corporate, arrow left">
+        <div class="sign-label">Arrow left</div>
+      </div>
+      <div class="sign-item">
+        <img class="sign-image" src="img/openhouse_MH_qr-R.jpg" alt="Open house sign, corporate, arrow right">
+        <div class="sign-label">Arrow right</div>
+      </div>
     </div>
-    <div class="sign-item">
-      <img class="sign-image" src="img/option-3-broker.png" alt="Yard sign, option 3">
-      <div class="sign-label">Option 3</div>
+  </div>
+
+  <div class="option-section">
+    <p class="option-label">Open house signs, team</p>
+    <div class="sign-grid two">
+      <div class="sign-item">
+        <img class="sign-image" src="img/openhouse_Team_qr-L.jpg" alt="Open house sign, team, arrow left">
+        <div class="sign-label">Arrow left</div>
+      </div>
+      <div class="sign-item">
+        <img class="sign-image" src="img/openhouse_Team_qr-R.jpg" alt="Open house sign, team, arrow right">
+        <div class="sign-label">Arrow right</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option-section">
+    <p class="option-label">Open house signs, broker</p>
+    <div class="sign-grid two">
+      <div class="sign-item">
+        <img class="sign-image" src="img/openhouse_Agent_qr-L.jpg" alt="Open house sign, broker, arrow left">
+        <div class="sign-label">Arrow left</div>
+      </div>
+      <div class="sign-item">
+        <img class="sign-image" src="img/openhouse_Agent_qr-R.jpg" alt="Open house sign, broker, arrow right">
+        <div class="sign-label">Arrow right</div>
+      </div>
     </div>
   </div>
 

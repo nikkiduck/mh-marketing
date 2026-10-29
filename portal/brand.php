@@ -19,8 +19,8 @@ $items = [
     ['Business card templates', portal_url($ctx, '/portal/business_cards.php'),
      'Current MH business card designs.',
      'See the designs ›'],
-    ['Yard sign templates', portal_url($ctx, '/portal/yard_signs.php'),
-     'Current MH yard sign layouts.',
+    ['Yard and open house sign templates', portal_url($ctx, '/portal/yard_signs.php'),
+     'Current MH yard sign and open house sign layouts.',
      'See the designs ›'],
 ];
 
