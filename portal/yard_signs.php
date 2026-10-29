@@ -3,7 +3,7 @@
  * portal/yard_signs.php — the yard sign and open house sign layouts, in the
  * portal (Nikki, 2026-10-18; the public gallery at brand-guidelines/yard-signs/
  * stays for sign shops). Yard signs are broker-only since 2026-10-29 (the team
- * versions were dropped); the open house signs (corporate, team, broker, each
+ * versions were dropped); the open house signs (broker, team, corporate, each
  * with the arrow left or right) were added the same day.
  */
 require_once __DIR__ . '/../inc/portal.php';
@@ -11,10 +11,10 @@ require_once __DIR__ . '/../inc/portal.php';
 $ctx = portal_context($conn);
 $img = '/brand-guidelines/yard-signs/img/';
 
-$open_house = [
-    ['corporate', 'Corporate', 'openhouse_MH'],
-    ['team',      'Team',      'openhouse_Team'],
+$open_house = [   // Broker, Team, Corporate (Nikki, 2026-10-29)
     ['broker',    'Broker',    'openhouse_Agent'],
+    ['team',      'Team',      'openhouse_Team'],
+    ['corporate', 'Corporate', 'openhouse_MH'],
 ];
 
 portal_header($ctx, 'Yard and Open House Sign Templates', 'brand');
