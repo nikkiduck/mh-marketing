@@ -64,7 +64,7 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
     $W      = MARKET_CARD_W;
     $format = ($opts['format'] ?? 'post') === 'story' ? 'story' : 'post';
     $theme  = ($opts['theme'] ?? 'dark') === 'light' ? 'light' : 'dark';
-    $mark   = in_array((string)($opts['mark'] ?? ''), ['triangle', 'mmark', 'none'], true) ? (string)$opts['mark'] : 'triangle';
+    $mark   = in_array((string)($opts['mark'] ?? ''), ['triangle', 'faint', 'mmark', 'none'], true) ? (string)$opts['mark'] : 'triangle';   // faint = the triangle at half strength (2026-10-28)
     $bd     = (string)($opts['backdrop'] ?? '');
     $H      = market_card_height($format);
     [$top, $bot] = market_card_insets($format);
@@ -104,6 +104,7 @@ function market_card_render(array $card, array $opts = [], ?string $base = null,
     $subSize   = market_card_fit($sub, 50, [38 => 44, 46 => 40]);   // 50 px since 2026-10-19 (Nikki: larger); never under 30, a long one wraps instead
     $padTop = ($story ? 150 : 74) + $top; $padBot = 84 + $bot;   // the story starts lower (Nikki's PDF: eyebrow at 345)
 
+    $ghostFaint = round((float)$c['ghost'] / 2, 3);   // Faint triangle: half the look's strength (2026-10-28)
     $css = <<<CSS
 @font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url({$fCormorant}) format('woff2')}
 @font-face{font-family:'Jost';font-style:normal;font-weight:100 900;src:url({$fJost}) format('woff2')}
@@ -115,6 +116,7 @@ body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c
 .bd::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,{$c['shade']})}
 .ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:{$c['ghost']}}
 .ghost.m{right:0;width:745px}
+.ghost.faint{opacity:{$ghostFaint}}
 .card{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;box-sizing:border-box;padding:{$padTop}px 94px {$padBot}px}
 .gap{flex:1 1 0;min-height:0}
 .eyebrow{font-size:{$z(34, 41)}px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:{$c['accent']};line-height:1.3}
@@ -139,6 +141,7 @@ CSS;
     $ghostHtml = match ($mark) {
         'mmark' => '<img class="ghost m" src="' . $e($c['m']) . '" alt="">',
         'none'  => '',
+        'faint' => '<img class="ghost faint" src="' . $e($c['tri']) . '" alt="">',
         default => '<img class="ghost" src="' . $e($c['tri']) . '" alt="">',
     };
     $arrow = fn(int $dir) => $dir > 0 ? '<i>▲</i>' : ($dir < 0 ? '<i>▼</i>' : '');

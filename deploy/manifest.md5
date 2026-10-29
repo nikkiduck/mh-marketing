@@ -55,7 +55,7 @@ e2475866b1e99360f59246920a5eff56  inc/hs_helpers.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
 58913e4194d92f378295f6ce642a5aa4  inc/mailer.php
 8bcd2252552b967ed112ca9efca7fa69  inc/market.php
-ea0157ed3088c193eaa5a6c26bc6ee88  inc/market_card_render.php
+d76fc8f7ecac10c2f2458530485ec92d  inc/market_card_render.php
 e74da8828c4bed68acd3aa17959bc44e  inc/market_data.php
 ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 0aeac91bf91e6379d8ed88950c87c18a  inc/market_post_body.php
@@ -71,7 +71,7 @@ eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 7df17c40e030a6e411e71fb145eb1ac3  inc/social.php
 c0fe31e69f5d580c216bf6356c8ffcd0  inc/social_body.php
-df019370c5c1cbc22ad3af12217cfa14  inc/social_render.php
+11ef0f3b7851e3a046a055649c4f043c  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 6571f3e3fed4a2b252e1b8c05d54c35b  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php

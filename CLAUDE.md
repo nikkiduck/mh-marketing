@@ -2233,7 +2233,11 @@ the mark a touch shorter in each place, later that day); the line style
 bottom fade stops at 86 % instead of solid, so the photo and the ghosted
 mark show through, and the top fade is stronger, .82 at the edge, so the
 logo reads on a dark sky); the ghosted mark is .20 on dark (.16 was all
-but lost, .26 too prominent) and .13 on light (was .09).
+but lost, .26 too prominent) and .13 on light (was .09). The Watermark row
+also offers "Faint triangle" (`mark` = faint, later that evening: Nikki's
+Trick or Treat post wanted it quieter still): the same triangle at half the
+look's strength, in these tools and on the Market Snapshot
+(inc/market_card_render.php), which shares `social_marks()`.
 
 ### General Social (portal/general.php, 2026-10-28)
 

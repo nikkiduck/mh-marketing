@@ -169,11 +169,6 @@ function social_marks(): array {
     return ['triangle' => 'Triangle', 'faint' => 'Faint triangle', 'mmark' => 'M mark', 'none' => 'None'];
 }
 
-/** What the logo is (2026-10-28, Nikki: the M mark where the full logo sits): the vertical stack, or the M mark alone. Applies wherever the logo is placed. */
-function social_logo_styles(): array {
-    return ['stack' => 'Full logo', 'mark' => 'M mark'];
-}
-
 /** The two looks. */
 function social_themes(): array {
     return ['dark' => 'Dark', 'light' => 'Light'];
@@ -357,7 +352,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:152px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
         . ".body{z-index:2}"
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:{$c['ghost']}}"
-        . ".ghost.m{right:0;width:745px}"
+        . ".ghost.m{right:0;width:745px}.ghost.faint{opacity:" . round((float)$c['ghost'] / 2, 3) . "}"   // Faint triangle: half the look's strength (Nikki, 2026-10-28)
         . ".slogo{display:block;height:160px;margin:0 0 32px}"
         . ($format === 'story' ? ($logo === 'top' ? '' : ".pill{left:auto;right:64px}")
             . ".whentop{position:absolute;" . ($logo === 'top' ? 'left:64px;text-align:left' : 'right:64px;text-align:right') . ";top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
@@ -480,6 +475,7 @@ CSS;
         $ghostHtml = match ($mark) {
             'mmark' => '<img class="ghost m" src="' . $e($base . ($theme === 'light' ? '/assets/images/M-mark_black.svg' : '/assets/images/M-mark_white.svg')) . '" alt="">',
             'none'  => '',
+            'faint' => '<img class="ghost faint" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-dark.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">',
             default => '<img class="ghost" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-dark.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">',
         };
     }
