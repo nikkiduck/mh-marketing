@@ -1860,6 +1860,15 @@ notified_at flag. Paperless Pipeline: `api/pipeline_webhook.php` (header
 token only; Zapier posts to BOTH the hub and here since 2026-09-30, hub step
 first) → `cron/parse_pipeline_events.php` → `pipeline_review.php`;
 `pl_map_status()` returning null means "never publish", keep it that way.
+Promoting asks the site's `api/listings.php?scope=lookup` for the photo, city,
+MLS number and listing page (`pl_enrich_address()`); since 2026-10-29 the
+site requires only the street number and the first street word, because
+CREN stored "10528 Bostwick" for Paperless's "10528 Bostwick Park Road" and
+the buyer-rep card went out with no photo or link. Re-review re-runs the
+lookup and overwrites photo and link. Deals waiting for review show as a red
+count (`.hdr-badge`, mh-theme.css) on the roster's Hot Sheets button and on
+the Hot Sheets page's Pipeline Review button, as well as the roster chip and
+the email (Nikki, 2026-10-29: the email alone was missed one week).
 Until go-live the hub's review queue is mirrored here by the import. Hot Sheets moves here from the hub. Listings come
 from site.monthaus.com's `api/listings.php` (the site is the only Anyprop
 listings consumer); change tracking, subscribers, emails and Paperless Pipeline

@@ -26,6 +26,12 @@ $chk = $conn->query("SHOW COLUMNS FROM hs_subscribers LIKE 'areas'");
 $migrated = $chk && $chk->fetch_row();
 
 $data  = build_hs_data($conn);
+// Pipeline deals waiting for review: the red badge on the Pipeline Review button
+// (Nikki, 2026-10-29: the email alone was missed one week). index.php does the same.
+$pipeline_pending = 0;
+if ($conn->query("SHOW TABLES LIKE 'hs_pipeline_transactions'")->num_rows) {
+    $pipeline_pending = (int)$conn->query("SELECT COUNT(*) FROM hs_pipeline_transactions WHERE review_status = 'pending'")->fetch_row()[0];
+}
 $conn->close();
 // ── Nothing below this line may touch the database. ─────────────────────────
 
@@ -104,7 +110,7 @@ $allowed = array_values(array_filter(array_map('trim', explode(',', defined('HOT
       </div>
       <div class="hdr-actions">
         <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>
-        <a class="btn btn-outline btn-sm" href="pipeline_review.php"><i class="ti ti-list-check"></i> Pipeline Review</a>
+        <a class="btn btn-outline btn-sm" href="pipeline_review.php"><i class="ti ti-list-check"></i> Pipeline Review<?php if ($pipeline_pending): ?><span class="hdr-badge" title="<?= $pipeline_pending ?> Pipeline deal<?= $pipeline_pending === 1 ? '' : 's' ?> to review"><?= $pipeline_pending ?></span><?php endif; ?></a>
       </div>
     </div>
     <div class="hs-tabs">

@@ -108,6 +108,11 @@ a:hover { color: var(--mh-gold); }
 }
 .btn-outline:hover { border-color: var(--mh-gold); color: var(--mh-ink); }
 .btn-sm { padding: 0.5rem 1.1rem; font-size: 0.6rem; }
+/* Red count on a header button: Pipeline deals waiting for review, on the Hot Sheets
+   button (roster) and the Pipeline Review button (Hot Sheets) (Nikki, 2026-10-29). */
+.hdr-badge { display:inline-flex; align-items:center; justify-content:center; min-width:18px; height:18px;
+    padding:0 5px; margin-left:8px; border-radius:999px; background:#dc2626; color:#fff;
+    font-size:0.62rem; font-weight:700; letter-spacing:0; line-height:1; vertical-align:middle; }
 .btn-danger { color: #a13434; background: transparent; border: 1px solid #e3c9c9; }
 .btn-danger:hover { background: #a13434; color: #fff; border-color: #a13434; }
 .btn-ghost { color: var(--mh-dim); background: transparent; border: 0; }

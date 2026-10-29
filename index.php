@@ -692,7 +692,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
     <div class="mk-page-header">
       <h1>Agent Roster</h1>
       <div class="hdr-actions">
-        <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Hot Sheets</a>
+        <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Hot Sheets<?php if ($pipeline_pending): ?><span class="hdr-badge" title="<?= $pipeline_pending ?> Pipeline deal<?= $pipeline_pending === 1 ? '' : 's' ?> to review"><?= $pipeline_pending ?></span><?php endif; ?></a>
         <a class="btn btn-outline btn-sm" href="market_report.php" title="The monthly market report and the snapshot cards (2026-10-18)"><i class="ti ti-chart-bar"></i> Market Report</a>
         <a class="btn btn-outline btn-sm" href="templates.php" title="The portal's template tools for any agent: Instagram Post/Story, Market Snapshot, Listing Flyer (2026-10-21)"><i class="ti ti-layout-grid"></i> Templates</a>
         <a class="btn btn-outline btn-sm" href="qr_codes.php"><i class="ti ti-qrcode"></i> QR Codes</a>
