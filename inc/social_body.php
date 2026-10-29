@@ -63,7 +63,13 @@ $sp_general = !empty($sp_general);
           <?php endforeach; ?>
         </div>
         <div class="sp-look">
-          <span class="sp-look-l">Mont Haus logo</span>
+          <span class="sp-look-l">Logo</span>
+          <?php foreach (social_logo_kinds() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="logo_kind" value="<?= ph($k) ?>"<?= $k === 'full' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Logo place</span>
           <?php // Upper right (a post's default), lower left (a story's), centred (the centred layout only, General Social), none (2026-10-28).
           foreach (social_logo_places() as $k => $t): if ($k === 'center' && !$sp_general) continue; ?>
           <label class="sp-pillopt<?= $k === 'center' ? ' sp-only-center' : '' ?>"<?= $k === 'center' ? ' hidden' : '' ?>><input type="radio" name="logo" value="<?= ph($k) ?>"<?= $k === 'top' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>

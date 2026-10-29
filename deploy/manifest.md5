@@ -69,9 +69,9 @@ eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 9c06dec34a5fede8a59292877a4b6112  inc/roster_alerts.php
 0f0bc7ca27dcdcaae3dc7a0d2ea6f75b  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-6b34d80d5d5ff9f6b91efc939f069b28  inc/social.php
-b4415ca4d1f97051cf3728b9d7f50859  inc/social_body.php
-b426a726011354ba5f20fc64c0619602  inc/social_render.php
+7df17c40e030a6e411e71fb145eb1ac3  inc/social.php
+c0fe31e69f5d580c216bf6356c8ffcd0  inc/social_body.php
+df019370c5c1cbc22ad3af12217cfa14  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 6571f3e3fed4a2b252e1b8c05d54c35b  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php

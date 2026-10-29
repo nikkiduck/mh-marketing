@@ -117,6 +117,11 @@ function social_logo_places(): array {
     return ['top' => 'Upper right', 'bottom' => 'Lower left', 'center' => 'Center', 'none' => 'None'];
 }
 
+/** What the logo is: the full vertical stack, or the M mark alone (2026-10-28). */
+function social_logo_kinds(): array {
+    return ['full' => 'Full logo', 'mark' => 'M mark'];
+}
+
 /** Where the words sit on a full-photo post: lower left over the fade (every template), or centred on the photo (General Social, 2026-10-28). */
 function social_layouts(): array {
     return ['corner' => 'Lower left', 'center' => 'Centered'];
@@ -159,9 +164,14 @@ function social_stock_region_order(): array {
         'Telluride, Ridgway & the San Juans', 'Front Range', 'Colorado', 'Beyond Colorado'];
 }
 
-/** The story's watermark, lower right (Nikki, 2026-10-15): the ghosted triangle (default), the M mark flush to the corner, or none. */
+/** The watermark, lower right (Nikki, 2026-10-15): the ghosted triangle (default), the same at half strength (2026-10-28), the M mark flush to the corner, or none. */
 function social_marks(): array {
-    return ['triangle' => 'Triangle', 'mmark' => 'M mark', 'none' => 'None'];
+    return ['triangle' => 'Triangle', 'faint' => 'Faint triangle', 'mmark' => 'M mark', 'none' => 'None'];
+}
+
+/** What the logo is (2026-10-28, Nikki: the M mark where the full logo sits): the vertical stack, or the M mark alone. Applies wherever the logo is placed. */
+function social_logo_styles(): array {
+    return ['stack' => 'Full logo', 'mark' => 'M mark'];
 }
 
 /** The two looks. */
@@ -302,6 +312,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $logo = (string)($p['logo'] ?? ($p['story_logo'] ?? ''));
     if (!isset(social_logo_places()[$logo])) $logo = $format === 'story' ? 'bottom' : 'top';
     if ($logo === 'center' && $layout !== 'center') $logo = 'top';
+    // The logo itself (Nikki, 2026-10-28): the full vertical stack, or the M mark alone, in the same place.
+    $logoKind = ($p['logo_kind'] ?? 'full') === 'mark' ? 'mark' : 'full';
 
     // The photo frame: zoom 1 to 3, focus 0 to 100 on each axis (see the header).
     $zoom = max(1.0, min(3.0, (float)($p['zoom'] ?? 1)));
@@ -327,7 +339,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         : ['bg' => '#1F242C', 'text' => '#ffffff', 'accent' => '#D6DEE8', 'muted' => '#E3E8EE', 'soft' => '#EEF1F5', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',   // Slate, deeper buttons (2026-10-28): the light slate on the photo, the button tone for the badge
            'fade' => 'rgba(31,36,44,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(20,24,30,.5) 0%, rgba(20,24,30,0) 100%',
            'fullfade' => 'rgba(0,0,0,0) 0%, rgba(20,24,30,.86) 100%', 'fullfrac' => 0.58,
-           'veil' => 'rgba(20,24,30,.42)', 'ghost' => '.26',   // the ghosted mark was all but lost at .16 on the dark look (Nikki, 2026-10-28)
+           'veil' => 'rgba(20,24,30,.42)', 'ghost' => '.20',   // .16 was all but lost, .26 too prominent (Nikki, 2026-10-28)
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
 
     // Open House text under a date block runs a size smaller (the split layout only).
@@ -360,6 +372,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
             . ".slogo{margin:0 0 36px}.clogo{display:block;height:200px;margin:0 auto 40px}"
             . (($logo !== 'top' && trim((string)($p['label'] ?? '')) === '') ? ".photo::before{display:none}" : '')   // nothing up top: no top fade either
             : '')
+        // The M mark is one glyph, nearly square: a touch shorter than the stack in each place.
+        . ($logoKind === 'mark' ? ".logo{height:118px}.slogo{height:126px}.clogo{height:166px}" : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
@@ -402,10 +416,11 @@ CSS;
     $pill  = $label !== '' ? '<div class="pill">' . $e($label) . '</div>' : '';
 
     $body = '';
-    if ($full && $logo === 'bottom') {        // the full logo above the rule, lower left (Nikki, 2026-10-15; any full template since 2026-10-28)
-        $body .= '<img class="slogo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
+    $logoSrc = $logoKind === 'mark' ? $c['mark'] : $c['logo'];
+    if ($full && $logo === 'bottom') {        // the logo above the rule, lower left (Nikki, 2026-10-15; any full template since 2026-10-28)
+        $body .= '<img class="slogo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">';
     } elseif ($full && $logo === 'center') {  // centred above the rule and the centred words
-        $body .= '<img class="clogo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
+        $body .= '<img class="clogo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">';
     }
     $body .= '<div class="rule"></div>';
     $whenTop = '';
@@ -454,7 +469,7 @@ CSS;
     if ($lines !== '') $body .= '<div class="lines">' . $lines . '</div>';
     // The full-photo family carries the logo at page level (top-right over the photo);
     // the split family keeps it inside the text block, bottom-right.
-    $logoHtml = '<img class="logo" src="' . $e($c['logo']) . '" alt="Mont Haus International Realty">';
+    $logoHtml = '<img class="logo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">';
     // The full-photo families also carry a ghosted watermark lower right (Nikki, 2026-10-15:
     // posts too): the triangle cut off by the edge, the M mark flush to the corner, or none.
     // The dark triangle is triangle_mark-dark.svg (tight canvas); triangle_mark-black.svg has a

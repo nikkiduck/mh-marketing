@@ -2226,12 +2226,14 @@ Everything below still holds for the listing tool. Changes the same day
 alone (`logo` = top | bottom | center | none, `social_logo_places()`; a
 post defaults to upper right, a story to lower left; the form keeps the
 size's default until the agent picks a place; `story_logo` is still read
-as a fallback name), so a listing post can drop the logo; the line style
+as a fallback name), so a listing post can drop the logo; the logo itself
+is the full stack or the M mark alone (`logo_kind`, `social_logo_kinds()`,
+the mark a touch shorter in each place, later that day); the line style
 "Small Caps Gold" reads "Small Caps"; the LIGHT look was rebalanced (the
 bottom fade stops at 86 % instead of solid, so the photo and the ghosted
 mark show through, and the top fade is stronger, .82 at the edge, so the
-logo reads on a dark sky); the ghosted mark is .26 on dark (was .16, all
-but lost) and .13 on light (was .09).
+logo reads on a dark sky); the ghosted mark is .20 on dark (.16 was all
+but lost, .26 too prominent) and .13 on light (was .09).
 
 ### General Social (portal/general.php, 2026-10-28)
 
