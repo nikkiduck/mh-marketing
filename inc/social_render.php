@@ -117,6 +117,11 @@ function social_logo_places(): array {
     return ['top' => 'Upper right', 'bottom' => 'Lower left', 'center' => 'Center', 'none' => 'None'];
 }
 
+/** Where the label badge sits (Nikki, 2026-10-28): upper left (a post's default) or upper right (a story's; under the logo when that is upper right too). */
+function social_badge_places(): array {
+    return ['left' => 'Upper left', 'right' => 'Upper right'];
+}
+
 /** What the logo is: the full vertical stack, or the M mark alone (2026-10-28). */
 function social_logo_kinds(): array {
     return ['full' => 'Full logo', 'mark' => 'M mark'];
@@ -309,6 +314,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     if ($logo === 'center' && $layout !== 'center') $logo = 'top';
     // The logo itself (Nikki, 2026-10-28): the full vertical stack, or the M mark alone, in the same place.
     $logoKind = ($p['logo_kind'] ?? 'full') === 'mark' ? 'mark' : 'full';
+    $badge = (string)($p['badge'] ?? '');
+    if (!isset(social_badge_places()[$badge])) $badge = ($format === 'story' && $logo !== 'top') ? 'right' : 'left';
 
     // The photo frame: zoom 1 to 3, focus 0 to 100 on each axis (see the header).
     $zoom = max(1.0, min(3.0, (float)($p['zoom'] ?? 1)));
@@ -354,8 +361,9 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:{$c['ghost']}}"
         . ".ghost.m{right:0;width:745px}.ghost.faint{opacity:" . round((float)$c['ghost'] / 2, 3) . "}"   // Faint triangle: half the look's strength (Nikki, 2026-10-28)
         . ".slogo{display:block;height:160px;margin:0 0 32px}"
-        . ($format === 'story' ? ($logo === 'top' ? '' : ".pill{left:auto;right:64px}")
-            . ".whentop{position:absolute;" . ($logo === 'top' ? 'left:64px;text-align:left' : 'right:64px;text-align:right') . ";top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
+        // The badge upper right (2026-10-28): flush right; under the logo when the logo is upper right too.
+        . ($badge === 'right' ? ".pill{left:auto;right:64px" . ($logo === 'top' ? ";top:" . (64 + $top + ($logoKind === 'mark' ? 118 : 152) + 28) . "px" : '') . "}" : '')
+        . ($format === 'story' ? ".whentop{position:absolute;" . ($logo === 'top' ? 'left:64px;text-align:left' : 'right:64px;text-align:right') . ";top:" . (64 + $top + 92) . "px;z-index:2;max-width:760px;margin:0;font-size:34px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:{$c['text']};line-height:1.35}"
             : '')
         // Centred (General Social, 2026-10-28): the words sit in the middle of the photo, centred, every line
         // of the headline in the headline serif; a soft veil over the whole photo carries them instead of the

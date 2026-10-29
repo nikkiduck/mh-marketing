@@ -2228,7 +2228,10 @@ post defaults to upper right, a story to lower left; the form keeps the
 size's default until the agent picks a place; `story_logo` is still read
 as a fallback name), so a listing post can drop the logo; the logo itself
 is the full stack or the M mark alone (`logo_kind`, `social_logo_kinds()`,
-the mark a touch shorter in each place, later that day); the line style
+the mark a touch shorter in each place, later that day); the label badge
+sits upper left or upper right (`badge`, `social_badge_places()`; a post
+defaults left, a story right; upper right with the logo upper right puts
+the badge under the logo); the line style
 "Small Caps Gold" reads "Small Caps"; the LIGHT look was rebalanced (the
 bottom fade stops at 86 % instead of solid, so the photo and the ghosted
 mark show through, and the top fade is stronger, .82 at the edge, so the

@@ -500,6 +500,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'mark'       => $mark,
         'logo'       => $logo,
         'logo_kind'  => isset(social_logo_kinds()[(string)($in['logo_kind'] ?? '')]) ? (string)$in['logo_kind'] : 'full',   // the stack or the M mark
+        'badge'      => isset(social_badge_places()[(string)($in['badge'] ?? '')]) ? (string)$in['badge'] : ($format === 'story' && $logo !== 'top' ? 'right' : 'left'),   // the label's corner
         'layout'     => $layout,
         'format'     => $format,
         'listing'    => $l,

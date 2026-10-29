@@ -41,6 +41,7 @@ $posts = [
     'square-other'    => ['type' => 'square_other', 'logo' => 'bottom'] + $other,
     'square-center'   => ['type' => 'square_other', 'layout' => 'center', 'logo' => 'center', 'headline' => "Alpine Roots.\nGlobal Vision."] + $other,
     'post-center'     => ['type' => 'photo_other', 'layout' => 'center', 'logo' => 'center', 'headline' => "Alpine Roots.\nGlobal Vision.", 'label' => 'Coming Soon'] + $other,
+    'photo-badge-r'   => $common + ['type' => 'photo', 'badge' => 'right', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'photo-mmark'     => $common + ['type' => 'photo', 'logo_kind' => 'mark', 'label' => 'Just Listed', 'date_text' => '', 'time_text' => ''],
     'square-center-m' => ['type' => 'square_other', 'layout' => 'center', 'logo' => 'center', 'logo_kind' => 'mark', 'headline' => "Alpine Roots.\nGlobal Vision."] + $other,
     'story-center'    => ['type' => 'story_other', 'layout' => 'center', 'logo' => 'none', 'headline' => "Happy Holidays\nfrom all of us"] + $other,

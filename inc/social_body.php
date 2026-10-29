@@ -75,6 +75,12 @@ $sp_general = !empty($sp_general);
           <label class="sp-pillopt<?= $k === 'center' ? ' sp-only-center' : '' ?>"<?= $k === 'center' ? ' hidden' : '' ?>><input type="radio" name="logo" value="<?= ph($k) ?>"<?= $k === 'top' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
           <?php endforeach; ?>
         </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Badge</span>
+          <?php foreach (social_badge_places() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="badge" value="<?= ph($k) ?>"<?= $k === 'left' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
       </section>
 
       <section class="sp-step sp-only-listing">
@@ -172,6 +178,7 @@ $sp_general = !empty($sp_general);
   const SIZES = { post: 1440, square: 1080, story: 1920 };
   const fmt = () => f('size').value, fmtH = () => SIZES[fmt()] || 1440;
   const LOGO_DEFAULT = s => s === 'story' ? 'bottom' : 'top';   // where the logo goes unless the agent moved it
+  const BADGE_DEFAULT = s => s === 'story' ? 'right' : 'left';  // and the label badge (2026-10-28)
   let prevSize = 'post';                                         // set properly once the form is wired (below)
   const kind = () => f('kind').value, isOther = () => kind() === 'other';
   const PLACEHOLDER = { id: 'placeholder', thumb: '/assets/images/social-placeholder.jpg', large: '/assets/images/social-placeholder.jpg', own: false, caption: 'Aspen Highlands and the Maroon Bells, early snow on fall colour', group: 'Aspen & Roaring Fork Valley' };
@@ -184,6 +191,7 @@ $sp_general = !empty($sp_general);
   function syncLogo() {
     const logo = f('logo'), layout = f('layout');
     if (logo.value === LOGO_DEFAULT(prevSize) && prevSize !== fmt()) logo.value = LOGO_DEFAULT(fmt());
+    if (f('badge').value === BADGE_DEFAULT(prevSize) && prevSize !== fmt()) f('badge').value = BADGE_DEFAULT(fmt());
     prevSize = fmt();
     const centered = !!layout && layout.value === 'center';
     form.querySelectorAll('.sp-only-center').forEach(el => el.hidden = !centered);
