@@ -169,9 +169,9 @@ function social_stock_region_order(): array {
         'Telluride, Ridgway & the San Juans', 'Front Range', 'Colorado', 'Beyond Colorado'];
 }
 
-/** The watermark, lower right (Nikki, 2026-10-15): the ghosted triangle (default), the same at half strength (2026-10-28), the M mark flush to the corner, or none. */
+/** The watermark, lower right (Nikki, 2026-10-15): the ghosted triangle (default), the M mark flush to the corner, or none. ("Faint triangle", a half-strength copy, was offered for one evening on 2026-10-28 and dropped: too close to the plain one.) */
 function social_marks(): array {
-    return ['triangle' => 'Triangle', 'faint' => 'Faint triangle', 'mmark' => 'M mark', 'none' => 'None'];
+    return ['triangle' => 'Triangle', 'mmark' => 'M mark', 'none' => 'None'];
 }
 
 /** The two looks. */
@@ -359,7 +359,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         . ".logo{top:" . (64 + $top) . "px;right:64px;bottom:auto;height:152px;z-index:2}.pill{top:" . (64 + $top) . "px}.lines{padding-right:0}.addr{padding-right:0}.rule{margin-bottom:22px}"
         . ".body{z-index:2}"
         . ".ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:1;opacity:{$c['ghost']}}"
-        . ".ghost.m{right:0;width:745px}.ghost.faint{opacity:" . round((float)$c['ghost'] / 2, 3) . "}"   // Faint triangle: half the look's strength (Nikki, 2026-10-28)
+        . ".ghost.m{right:0;width:745px}"
         . ".slogo{display:block;height:160px;margin:0 0 32px}"
         // The badge upper right (2026-10-28): flush right; under the logo when the logo is upper right too.
         . ($badge === 'right' ? ".pill{left:auto;right:64px" . ($logo === 'top' ? ";top:" . (64 + $top + ($logoKind === 'mark' ? 118 : 152) + 28) . "px" : '') . "}" : '')
@@ -483,7 +483,6 @@ CSS;
         $ghostHtml = match ($mark) {
             'mmark' => '<img class="ghost m" src="' . $e($base . ($theme === 'light' ? '/assets/images/M-mark_black.svg' : '/assets/images/M-mark_white.svg')) . '" alt="">',
             'none'  => '',
-            'faint' => '<img class="ghost faint" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-dark.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">',
             default => '<img class="ghost" src="' . $e($base . ($theme === 'light' ? '/assets/images/triangle_mark-dark.svg' : '/assets/images/triangle_mark-white.svg')) . '" alt="">',
         };
     }
