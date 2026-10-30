@@ -266,11 +266,12 @@ a { color: #1a5276; }
 :root {
   --brand-sans:  apparat-semicond, 'Public Sans', 'Helvetica Neue', Arial, sans-serif;
   --brand-serif: freight-big-pro, 'Cormorant Garamond', 'Times New Roman', Times, serif;
-  --mh-ink:      #231F20;
-  --mh-rich:     #131210;
-  --mh-bronze:   #8A7350;
-  --mh-brass:    #C3A561;
-  --mh-cream:    #EFECE6;
+  /* The website's Slate scheme (2026-10-30); the logo black stays #231F20. */
+  --mh-ink:      #1F242C;
+  --mh-rich:     #2B3038;
+  --mh-slate:    #55637A;
+  --mh-pale:     #AEBBCC;
+  --mh-black:    #231F20;
 }
 
 /* ── Callout ──────────────────────────────────────────────── */
@@ -297,8 +298,8 @@ a { color: #1a5276; }
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1px;
-  border: 1px solid #34302B;
-  background: #34302B;
+  border: 1px solid #3B414C;
+  background: #3B414C;
 }
 .bg-cmp > div { padding: 26px 20px 20px; text-align: center; background: var(--mh-rich); }
 .bg-cmp .bg-cmp-art { height: 120px; display: flex; align-items: center; justify-content: center; }
@@ -309,7 +310,7 @@ a { color: #1a5276; }
 }
 .bg-cmp .wrong .bg-cmp-tag { color: #E4796B; }
 .bg-cmp .right .bg-cmp-tag { color: #9DBA72; }
-.bg-cmp .bg-cmp-why { font-size: 12px; line-height: 1.5; color: #A8A29A; margin-top: 6px; }
+.bg-cmp .bg-cmp-why { font-size: 12px; line-height: 1.5; color: #C2C8D1; margin-top: 6px; }
 
 /* ── Diagram panel ────────────────────────────────────────── */
 
@@ -384,14 +385,14 @@ a { color: #1a5276; }
 .bg-treatment h4 { font-size: 13px; font-weight: 700; margin-bottom: 6px; }
 .bg-treatment p { font-size: 13.5px; color: #374151; }
 
-.d-eyebrow { font-family: var(--brand-sans); font-size: 12px; letter-spacing: .25em; text-transform: uppercase; color: var(--mh-bronze); }
+.d-eyebrow { font-family: var(--brand-sans); font-size: 12px; letter-spacing: .25em; text-transform: uppercase; color: var(--mh-slate); }
 .d-title   { font-family: var(--brand-serif); font-weight: 300; font-size: 34px; line-height: 1; color: var(--mh-ink); }
 .d-sub     { font-family: var(--brand-serif); font-style: italic; font-weight: 300; font-size: 15px; color: var(--muted); margin-top: 4px; }
 .d-stats   { display: flex; gap: 28px; align-items: flex-end; }
 .d-stats > div { text-align: center; }
 .d-stats .v { font-family: var(--brand-serif); font-weight: 600; font-size: 26px; line-height: 1; font-variant-numeric: tabular-nums; color: var(--mh-ink); }
-.d-stats .k { font-family: var(--brand-sans); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--mh-bronze); margin-top: 5px; }
-.d-mix     { font-family: var(--brand-sans); font-size: 26px; line-height: 1.08; text-transform: uppercase; letter-spacing: -.01em; font-weight: 400; color: var(--mh-cream); text-align: center; }
+.d-stats .k { font-family: var(--brand-sans); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: var(--mh-slate); margin-top: 5px; }
+.d-mix     { font-family: var(--brand-sans); font-size: 26px; line-height: 1.08; text-transform: uppercase; letter-spacing: -.01em; font-weight: 400; color: #F4F5F7; text-align: center; }
 .d-mix strong { font-weight: 700; }
 
 /* ── Figure galleries ─────────────────────────────────────── */
@@ -435,7 +436,7 @@ a { color: #1a5276; }
 .bg-taglines { list-style: none; display: grid; gap: 14px; max-width: 68ch; }
 .bg-taglines li { padding-left: 16px; border-left: 2px solid var(--rule); }
 .bg-taglines .line { font-family: var(--brand-serif); font-weight: 300; font-size: 21px; line-height: 1.25; color: var(--ink); }
-.bg-taglines .use { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--mh-bronze); margin-top: 5px; }
+.bg-taglines .use { font-size: 11px; text-transform: uppercase; letter-spacing: .7px; color: var(--mh-slate); margin-top: 5px; }
 
 /* ── Two-column prose ─────────────────────────────────────── */
 

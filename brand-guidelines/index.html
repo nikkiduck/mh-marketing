@@ -25,6 +25,12 @@
   Logos artwork. Point sizes, tracking values and color builds are measured
   from those files rather than estimated.
 
+  COLOR (2026-10-30, Nikki): the palette is the website's Slate scheme (the
+  light-theme :root block of the site's main.css). Cream, bronze, brass and the
+  presentation golds are gone from this page; the reference pieces made in
+  them (brochures, direct mail, corporate presentation) are commented out
+  until there is new work to show. Business cards stay (black and white).
+
   LOGOS: assets/logos/ now holds Final Logos exports, not the app's copies.
   Only five directories in Final Logos are live (MH Full Stack, M Mark,
   Triangle Mark, Triangle Groups, MH Full Horizontal); everything else there
@@ -178,7 +184,7 @@
     <div class="bg-rules" style="margin-top:28px">
       <div class="bg-rule yes">
         <div class="bg-rule-label">Do</div>
-        <p>Use the drawn white files whenever the mark sits on a dark ground. A cream tint is made by recoloring the reversed artwork, never the black.</p>
+        <p>Use the drawn white files whenever the mark sits on a dark ground.</p>
       </div>
       <div class="bg-rule no">
         <div class="bg-rule-label">Don't</div>
@@ -196,15 +202,15 @@
         <svg viewBox="0 0 580 400" role="img" aria-label="Clear space diagram: one cap height of the MONT letterforms on all four sides">
           <rect x="0" y="0" width="580" height="400" fill="#ffffff"></rect>
           <rect x="30" y="30" width="460" height="340" fill="none" stroke="#d1d5db" stroke-width="1" stroke-dasharray="5 5"></rect>
-          <rect x="141" y="103" width="238" height="194" fill="none" stroke="#8A7350" stroke-width="1"></rect>
+          <rect x="141" y="103" width="238" height="194" fill="none" stroke="#55637A" stroke-width="1"></rect>
           <image href="assets/logos/MH_vert-stack_black.svg" x="141" y="103" width="238" height="194" preserveAspectRatio="xMidYMid meet"></image>
-          <g fill="#8A7350" opacity="0.16">
+          <g fill="#55637A" opacity="0.16">
             <rect x="141" y="31" width="238" height="72"></rect>
             <rect x="141" y="297" width="238" height="72"></rect>
             <rect x="69" y="103" width="72" height="194"></rect>
             <rect x="379" y="103" width="72" height="194"></rect>
           </g>
-          <g font-family="'Public Sans', sans-serif" font-size="14" fill="#8A7350" font-weight="700">
+          <g font-family="'Public Sans', sans-serif" font-size="14" fill="#55637A" font-weight="700">
             <text x="260" y="74" text-anchor="middle">X</text>
             <text x="260" y="340" text-anchor="middle">X</text>
             <text x="105" y="206" text-anchor="middle">X</text>
@@ -258,88 +264,57 @@
     <h2 class="bg-section-title">Color</h2>
 
     <p class="bg-p">
-      The current palette is rich black, cream, and a bronze that shifts to brass when it
-      sits on dark. Photography provides additional color.
+      The palette is ink, slate and a cool off-white, as on monthaus.com since October 2026.
+      Photography provides the rest of the color. The earlier cream, bronze and brass are
+      retired: nothing new is made with them.
     </p>
 
     <h3 class="bg-sub">Core</h3>
     <div class="bg-swatches detail">
       <div>
-        <div class="bg-swatch-chip" style="background:#231F20"></div>
-        <div class="bg-swatch-name">Ink Black</div>
+        <div class="bg-swatch-chip" style="background:#1F242C"></div>
+        <div class="bg-swatch-name">Ink</div>
         <dl class="bg-swatch-values">
-          <dt>Hex</dt><dd>#231F20</dd>
-          <dt>RGB</dt><dd>35 31 32</dd>
-          <dt>CMYK</dt><dd>0 0 0 100</dd>
+          <dt>Hex</dt><dd>#1F242C</dd>
+          <dt>RGB</dt><dd>31 36 44</dd>
         </dl>
+        <div class="bg-swatch-use">Text on light grounds. The logo artwork is drawn in #231F20; keep that black in the files.</div>
       </div>
       <div>
-        <div class="bg-swatch-chip" style="background:#131210"></div>
-        <div class="bg-swatch-name">Rich Black</div>
+        <div class="bg-swatch-chip" style="background:#55637A"></div>
+        <div class="bg-swatch-name">Slate</div>
         <dl class="bg-swatch-values">
-          <dt>Hex</dt><dd>#131210</dd>
-          <dt>RGB</dt><dd>19 18 16</dd>
-          <dt>CMYK</dt><dd>71 66 68 80</dd>
+          <dt>Hex</dt><dd>#55637A</dd>
+          <dt>RGB</dt><dd>85 99 122</dd>
         </dl>
+        <div class="bg-swatch-use">The accent: eyebrows, rules, outlined buttons, links.</div>
       </div>
       <div>
-        <div class="bg-swatch-chip" style="background:#8A7350"></div>
-        <div class="bg-swatch-name">Bronze</div>
+        <div class="bg-swatch-chip" style="background:#4A5566"></div>
+        <div class="bg-swatch-name">Deep Slate</div>
         <dl class="bg-swatch-values">
-          <dt>Hex</dt><dd>#8A7350</dd>
-          <dt>RGB</dt><dd>138 115 80</dd>
-          <dt>CMYK</dt><dd>23 31 62 1</dd>
+          <dt>Hex</dt><dd>#4A5566</dd>
+          <dt>RGB</dt><dd>74 85 102</dd>
         </dl>
+        <div class="bg-swatch-use">Solid buttons and the EXCLUSIVE badge. Hover #353E4B.</div>
       </div>
       <div>
-        <div class="bg-swatch-chip" style="background:#C3A561"></div>
-        <div class="bg-swatch-name">Brass</div>
+        <div class="bg-swatch-chip" style="background:#6B7A8F"></div>
+        <div class="bg-swatch-name">Slate Gray</div>
         <dl class="bg-swatch-values">
-          <dt>Hex</dt><dd>#C3A561</dd>
-          <dt>RGB</dt><dd>195 165 97</dd>
-          <dt>CMYK</dt><dd>25 33 70 3</dd>
+          <dt>Hex</dt><dd>#6B7A8F</dd>
+          <dt>RGB</dt><dd>107 122 143</dd>
         </dl>
+        <div class="bg-swatch-use">Secondary text, captions.</div>
       </div>
       <div>
-        <div class="bg-swatch-chip" style="background:#EFECE6"></div>
-        <div class="bg-swatch-name">Cream</div>
+        <div class="bg-swatch-chip" style="background:#F6F7F9"></div>
+        <div class="bg-swatch-name">Off-White</div>
         <dl class="bg-swatch-values">
-          <dt>Hex</dt><dd>#EFECE6</dd>
-          <dt>RGB</dt><dd>239 236 230</dd>
-          <dt>CMYK</dt><dd>5 4 8 0</dd>
+          <dt>Hex</dt><dd>#F6F7F9</dd>
+          <dt>RGB</dt><dd>246 247 249</dd>
         </dl>
-      </div>
-    </div>
-
-    <!--//<h3 class="bg-sub">Neutrals</h3>
-    <div class="bg-swatches detail">
-      <div>
-        <div class="bg-swatch-chip" style="background:#F1ECE2"></div>
-        <div class="bg-swatch-name">Paper Cream</div>
-        <dl class="bg-swatch-values">
-          <dt>Hex</dt><dd>#F1ECE2</dd>
-          <dt>RGB</dt><dd>241 236 226</dd>
-          <dt>CMYK</dt><dd>5 6 11 0</dd>
-        </dl>
-      </div>
-      <div>
-        <div class="bg-swatch-chip" style="background:#E9E8E5"></div>
-        <div class="bg-swatch-name">Mist</div>
-        <dl class="bg-swatch-values">
-          <dt>Hex</dt><dd>#E9E8E5</dd>
-          <dt>RGB</dt><dd>233 232 229</dd>
-          <dt>CMYK</dt><dd>8 6 7 0</dd>
-        </dl>
-      </div>
-      <div>
-        <div class="bg-swatch-chip" style="background:#808285"></div>
-        <div class="bg-swatch-name">Stone Gray</div>
-        <dl class="bg-swatch-values">
-          <dt>Hex</dt><dd>#808285</dd>
-          <dt>RGB</dt><dd>128 130 133</dd>
-          <dt>CMYK</dt><dd>0 0 0 58</dd>
-        </dl>
-        <div class="bg-swatch-use">The gray logo variant, captions, photo credits, disclaimer type.</div>
+        <div class="bg-swatch-use">The page ground. Cool, never warm.</div>
       </div>
       <div>
         <div class="bg-swatch-chip" style="background:#FFFFFF"></div>
@@ -347,32 +322,79 @@
         <dl class="bg-swatch-values">
           <dt>Hex</dt><dd>#FFFFFF</dd>
           <dt>RGB</dt><dd>255 255 255</dd>
-          <dt>CMYK</dt><dd>0 0 0 0</dd>
         </dl>
+        <div class="bg-swatch-use">Cards, panels, reversed type.</div>
       </div>
     </div>
 
-    <h3 class="bg-sub">Presentation accents, restricted</h3>
-    <p class="bg-p">
-      Three colors exist in the 2026 Listing Presentation and nowhere else: the duotone section
-      dividers and the editorial pull quotes. <strong>They are not available for listing marketing</strong> — no
-      flyers, postcards, signs or listing social posts.
-    </p>
+    <h3 class="bg-sub">Dark grounds</h3>
     <div class="bg-swatches detail">
       <div>
-        <div class="bg-swatch-chip" style="background:#E0B526;height:64px"></div>
-        <div class="bg-swatch-name">Alpine Gold</div>
-        <div class="bg-swatch-hex">#E0B526 · duotone dividers</div>
+        <div class="bg-swatch-chip" style="background:#2B3038"></div>
+        <div class="bg-swatch-name">Charcoal Blue</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#2B3038</dd>
+          <dt>RGB</dt><dd>43 48 56</dd>
+        </dl>
+        <div class="bg-swatch-use">The footer and other dark grounds on the website.</div>
       </div>
       <div>
-        <div class="bg-swatch-chip" style="background:#CE9411;height:64px"></div>
-        <div class="bg-swatch-name">Editorial Gold</div>
-        <div class="bg-swatch-hex">#CE9411 · pull quotes</div>
+        <div class="bg-swatch-chip" style="background:#AEBBCC"></div>
+        <div class="bg-swatch-name">Pale Slate</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#AEBBCC</dd>
+          <dt>RGB</dt><dd>174 187 204</dd>
+        </dl>
+        <div class="bg-swatch-use">Headings, links and the Send button on Charcoal Blue.</div>
       </div>
       <div>
-        <div class="bg-swatch-chip" style="background:#3E8FA8;height:64px"></div>
-        <div class="bg-swatch-name">Glacier Blue</div>
-        <div class="bg-swatch-hex">#3E8FA8 · duotone dividers</div>
+        <div class="bg-swatch-chip" style="background:#231F20"></div>
+        <div class="bg-swatch-name">Black</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#231F20</dd>
+          <dt>RGB</dt><dd>35 31 32</dd>
+        </dl>
+        <div class="bg-swatch-use">The logo black. Business cards, signs and print grounds.</div>
+      </div>
+    </div>
+
+    <h3 class="bg-sub">Supporting tones</h3>
+    <div class="bg-swatches detail">
+      <div>
+        <div class="bg-swatch-chip" style="background:#ECEFF3"></div>
+        <div class="bg-swatch-name">Panel</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#ECEFF3</dd>
+          <dt>RGB</dt><dd>236 239 243</dd>
+        </dl>
+        <div class="bg-swatch-use">Second panel tone, image placeholders.</div>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#DFE3E8"></div>
+        <div class="bg-swatch-name">Hairline</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#DFE3E8</dd>
+          <dt>RGB</dt><dd>223 227 232</dd>
+        </dl>
+        <div class="bg-swatch-use">Rules and card borders.</div>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#C9D0D9"></div>
+        <div class="bg-swatch-name">Rule</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#C9D0D9</dd>
+          <dt>RGB</dt><dd>201 208 217</dd>
+        </dl>
+        <div class="bg-swatch-use">A heavier rule where one hairline is not enough.</div>
+      </div>
+      <div>
+        <div class="bg-swatch-chip" style="background:#9AA2AD"></div>
+        <div class="bg-swatch-name">Placeholder</div>
+        <dl class="bg-swatch-values">
+          <dt>Hex</dt><dd>#9AA2AD</dd>
+          <dt>RGB</dt><dd>154 162 173</dd>
+        </dl>
+        <div class="bg-swatch-use">Form placeholders, disabled text.</div>
       </div>
     </div>
 
@@ -382,13 +404,13 @@
         <thead><tr><th>Share</th><th>Color</th><th>Where</th></tr></thead>
         <tbody>
           <tr><td class="num">~60%</td><td><strong>Photography</strong></td><td>Full-bleed imagery carries the piece</td></tr>
-          <tr><td class="num">~30%</td><td><strong>Black and cream</strong></td><td>Panels, type, page grounds</td></tr>
-          <tr><td class="num">~8%</td><td><strong>White</strong></td><td>Reversed type, plan pages</td></tr>
-          <tr><td class="num">~2%</td><td><strong>Bronze / brass</strong></td><td>Eyebrows, hairlines, numerals</td></tr>
+          <tr><td class="num">~30%</td><td><strong>Off-white, white and ink</strong></td><td>Page grounds, panels, type</td></tr>
+          <tr><td class="num">~8%</td><td><strong>Charcoal Blue and black</strong></td><td>Footer, dark panels, cards and signs</td></tr>
+          <tr><td class="num">~2%</td><td><strong>Slate</strong></td><td>Eyebrows, hairlines, buttons, the EXCLUSIVE badge</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="bg-tablenote">Bronze is a seasoning, not an ingredient. If a piece looks gold, there is too much of it. Pantone equivalents have not been specified: ask before running a spot job.</p>//-->
+    <p class="bg-tablenote">Slate is a seasoning, not an ingredient. Print builds (CMYK, Pantone) have not been specified for this palette: ask before a print job.</p>
   </section>
 
   <!-- ══ TYPE ═════════════════════════════════════════════════════════ -->
@@ -403,7 +425,7 @@
           <span class="bg-specimen-src">Adobe Fonts · Light / Regular / Medium / Semibold</span>
         </div>
         <div class="bg-specimen-glyphs is-brand-sans" style="letter-spacing:.05em">ABCDEFGHIJKLM<br>NOPQRSTUVWXYZ</div>
-        <div class="bg-specimen-line is-brand-sans" style="letter-spacing:.24em;text-transform:uppercase;font-size:14px;color:#8A7350">Stunning Brush Creek Remodel</div>
+        <div class="bg-specimen-line is-brand-sans" style="letter-spacing:.24em;text-transform:uppercase;font-size:14px;color:#55637A">Stunning Brush Creek Remodel</div>
         <p class="bg-specimen-note">
           The working typeface. Weight determined by context and background for readability.
         </p>
@@ -475,7 +497,7 @@
         <div class="bg-treatment-demo"><span class="d-eyebrow">Aspen · Colorado</span></div>
         <div>
           <h4>The tracked eyebrow</h4>
-          <p>All caps, Apparat SemiCondensed, tracked between +100 and +250, bronze on light or brass on dark. Interpuncts separate the parts, not hyphens and not slashes.</p>
+          <p>All caps, Apparat SemiCondensed, tracked between +100 and +250, slate on light or pale slate on dark. Interpuncts separate the parts, not hyphens and not slashes.</p>
         </div>
       </div>
       <div class="bg-treatment">
@@ -499,7 +521,7 @@
         </div>
         <div>
           <h4>The statistic row</h4>
-          <p>Serif numerals over tracked-caps labels, evenly spaced, sitting between two hairlines. Numerals use tabular figures so columns line up. Labels are bronze or brass; values take the ground's text color.</p>
+          <p>Serif numerals over tracked-caps labels, evenly spaced, sitting between two hairlines. Numerals use tabular figures so columns line up. Labels are slate on light or pale slate on dark; values take the ground's text color.</p>
         </div>
       </div>
       <div class="bg-treatment">
@@ -663,7 +685,7 @@
       <figure>
         <div class="bg-dd-frame" style="background:#3E8FA8"><img src="assets/logos/MH_vert-stack_white.svg" style="filter:sepia(1) saturate(6) hue-rotate(320deg);max-height:66px" alt="Recolored logo"></div>
         <span class="bg-dd-tag">Do not recolor</span>
-        <figcaption>Black, cream, white or the supplied gray. Never a listing's accent color, never a gradient.</figcaption>
+        <figcaption>Black, white or the supplied gray. Never a listing's accent color, never a gradient.</figcaption>
       </figure>
       <figure>
         <div class="bg-dd-frame"><img src="assets/logos/MH_vert-stack_black.svg" style="max-height:66px;filter:drop-shadow(4px 5px 3px rgba(0,0,0,.55))" alt="Logo with drop shadow"></div>
@@ -700,7 +722,7 @@
       <li>Do not tighten the tracking on caps eyebrows to make a line fit. Shorten the line.</li>
       <li>Do not set body copy in the display serif, and do not set headlines in Apparat outside the Listing Presentation dividers.</li>
       <li>Do not add borders, rounded corners, gradients or drop shadows to photographs, panels or text blocks.</li>
-      <li>Do not use the restricted presentation colors — Alpine Gold, Editorial Gold, Glacier Blue — on listing marketing.</li>
+      <li>Do not use gold, bronze, brass or cream. The palette changed in October 2026; see Color.</li>
       <li>Do not build a personal sub-brand. Agent team names, personal logos, alternate color schemes and custom marks are not permitted on Mont Haus collateral.</li>
       <li>Do not send anything to print without a proof to marketing. A five-minute question is cheaper than a reprint.</li>
     </ul>
@@ -712,6 +734,7 @@
   <section class="bg-section" id="reference">
     <h2 class="bg-section-title">On-brand reference pieces</h2>
 
+<!-- Cream/gold era, hidden 2026-10-30 (Nikki) until new work replaces it.
     <h3 class="bg-sub">Listing brochure</h3>
     <div class="bg-figs">
       <figure><img src="assets/img/ex_draw_cover.jpg" alt="294 Draw Drive brochure cover"><figcaption><strong>Cover</strong></figcaption></figure>
@@ -735,6 +758,8 @@
       <figure><img src="assets/img/ex_postcard_front.jpg" alt="450 Solar Way postcard front"><figcaption><strong>Front</strong></figcaption></figure>
       <figure><img src="assets/img/ex_postcard_back.jpg" alt="450 Solar Way postcard back"><figcaption><strong>Back</strong></figcaption></figure>
     </div>
+-->
+
 <!--
     <h3 class="bg-sub">Corporate social</h3>
     <div class="bg-figs">
@@ -764,11 +789,13 @@
     </div>
     <p class="bg-p" style="margin-top:16px">Every option at full size: <a href="business-cards/">business card templates</a> and <a href="yard-signs/">yard and open house sign templates</a>.</p>
 
+<!-- Cream/gold era, hidden 2026-10-30 (Nikki).
     <h3 class="bg-sub">Corporate presentation</h3>
     <div class="bg-figs wide">
       <figure><img src="assets/img/ex_lp_divider.jpg" alt="Listing presentation divider"><figcaption><strong>Divider</strong></figcaption></figure>
       <figure><img src="assets/img/ex_lp_editorial.jpg" alt="Listing presentation editorial page"><figcaption><strong>Editorial page</strong></figcaption></figure>
     </div>
+-->
 <!--
     <h3 class="bg-sub">The source files</h3>
     <div class="bg-downloads">
@@ -801,7 +828,6 @@
       <a class="bg-download" href="assets/logos/M-mark_white.svg"><span class="bg-download-name">M Mark, white</span><span class="bg-download-meta">SVG</span></a>
       <a class="bg-download" href="assets/logos/triangle_mark-black.svg"><span class="bg-download-name">Triangle Mark, black</span><span class="bg-download-meta">SVG</span></a>
       <a class="bg-download" href="assets/logos/triangle_mark-white.svg"><span class="bg-download-name">Triangle Mark, white</span><span class="bg-download-meta">SVG</span></a>
-      <a class="bg-download" href="assets/logos/triangle_mark-bronze.svg"><span class="bg-download-name">Triangle Mark, bronze outlined</span><span class="bg-download-meta">SVG</span></a>
       <a class="bg-download" href="assets/logos/triangle_marks_blk.svg"><span class="bg-download-name">Triangle Groups, black</span><span class="bg-download-meta">SVG</span></a>
       <a class="bg-download" href="assets/logos/triangle_marks_wht.svg"><span class="bg-download-name">Triangle Groups, white</span><span class="bg-download-meta">SVG</span></a>
       <a class="bg-download" href="assets/logos/mh_horz-black.svg"><span class="bg-download-name">MH Full Horizontal, black</span><span class="bg-download-meta">SVG · restricted use</span></a>
