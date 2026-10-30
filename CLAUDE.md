@@ -2154,7 +2154,15 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   right; moved that day from monthausint.com's openhousesigns.html, the
   last gallery left there). portal/yard_signs.php mirrors the public page
   and must change with it. The guidelines page links both galleries under
-  its business card figures. Hot Sheets come first in the nav and the home cards and are
+  its business card figures. **Palette (2026-10-30, Nikki):** the guidelines'
+  Color section is the website's Slate scheme (site main.css, light-theme
+  :root: ink #1F242C, slate #55637A, deep slate #4A5566, off-white #F6F7F9,
+  charcoal blue #2B3038, pale slate #AEBBCC; the logo black stays #231F20).
+  Cream, bronze, brass and the presentation golds are retired; the brochure,
+  direct mail and corporate presentation samples are commented out until
+  new work in the new palette exists (business cards stay). A scheme change
+  on the site means editing the swatches here by hand. The admin roster
+  toolbar links the public page (Brand Guidelines button). Hot Sheets come first in the nav and the home cards and are
   called "Internal" (Nikki, 2026-10-07) because a Client Hot Sheets
   section (Phase 2) will sit beside them; portal/hotsheets.php is their
   own areas and frequency (see "Hot Sheets" above). **In an admin preview
