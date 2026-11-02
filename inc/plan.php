@@ -577,8 +577,8 @@ function plan_layouts(): array { return ['photo' => 'Full photo', 'split' => 'Fr
 /** Where the label badge may sit in the plan tools: the Instagram tool's two corners, or above the headline (2026-11-02: a badge in the corner covered a broker's face). */
 function plan_badge_places(): array { return social_badge_places() + ['body' => 'Above headline']; }
 
-/** The looks a tool offers: the Broker Feature is dark only until the light look is redesigned (Nikki, 2026-11-02). */
-function plan_themes(string $kind): array { return $kind === 'broker' ? ['dark' => 'Dark'] : social_themes(); }
+/** The looks a tool offers: both, everywhere. (The Broker Feature was dark only for a few hours on 2026-11-02, until its designs stopped fading the photo.) */
+function plan_themes(string $kind): array { return social_themes(); }
 
 /** The logo colours the plan tools offer: the look's own (white on dark, black on light), or forced. */
 function plan_logo_colors(): array { return ['auto' => 'Auto', 'white' => 'White', 'black' => 'Black']; }
