@@ -308,13 +308,38 @@ function social_palette(string $theme, string $base = ''): array {
            // mark show through; the top fade is stronger so the logo reads on a dark sky; a centred layout gets a veil instead.
            'fade' => 'rgba(246,247,249,.42)', 'shadow' => 'none', 'topfade' => 'rgba(246,247,249,.82) 0%, rgba(246,247,249,.38) 55%, rgba(246,247,249,0) 100%',
            'fullfade' => 'rgba(246,247,249,0) 0%, rgba(246,247,249,.56) 40%, rgba(246,247,249,.78) 70%, rgba(246,247,249,.86) 100%', 'fullfrac' => 0.54,
-           'veil' => 'rgba(246,247,249,.50)', 'ghost' => '.13',
+           'veil' => 'rgba(246,247,249,.68)', 'ghost' => '.13',   // .50 until 2026-11-02 (Nikki: centred text on light unreadable)
            'logo' => $base . '/assets/images/MH_vert-stack_black.svg', 'mark' => $base . '/assets/images/M-mark_black.svg']
         : ['bg' => '#1F242C', 'text' => '#ffffff', 'accent' => '#D6DEE8', 'muted' => '#E3E8EE', 'soft' => '#EEF1F5', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',   // Slate, deeper buttons (2026-10-28): the light slate on the photo, the button tone for the badge
            'fade' => 'rgba(31,36,44,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(20,24,30,.5) 0%, rgba(20,24,30,0) 100%',
            'fullfade' => 'rgba(0,0,0,0) 0%, rgba(20,24,30,.86) 100%', 'fullfrac' => 0.58,
            'veil' => 'rgba(20,24,30,.42)', 'ghost' => '.20',   // .16 was all but lost, .26 too prominent (Nikki, 2026-10-28)
            'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
+}
+
+/**
+ * The admin tools' logo and shadow options (2026-11-02), checked: color auto |
+ * white | black (auto = the look's), scale 0.5 to 1.6, dx / dy a nudge in px,
+ * text_shadow 0 to 100 (null = the look's own), logo_shadow 0 to 100. The
+ * agents' forms post none of these, so every default leaves their posts as
+ * they were.
+ */
+function social_logo_options(array $p): array {
+    $color = (string)($p['logo_color'] ?? 'auto');
+    return [
+        'color'       => in_array($color, ['white', 'black'], true) ? $color : 'auto',
+        'scale'       => max(0.5, min(1.6, round((float)($p['logo_scale'] ?? 1), 2))),
+        'dx'          => max(-300, min(300, (int)($p['logo_dx'] ?? 0))),
+        'dy'          => max(-300, min(300, (int)($p['logo_dy'] ?? 0))),
+        'text_shadow' => isset($p['text_shadow']) && $p['text_shadow'] !== '' ? max(0, min(100, (int)$p['text_shadow'])) : null,
+        'logo_shadow' => max(0, min(100, (int)($p['logo_shadow'] ?? 0))),
+    ];
+}
+
+/** A shadow for a strength 0 to 100: "0 2px 16px rgba(0,0,0,.35)" at 35; 'none' at 0. */
+function social_shadow_css(int $pct): string {
+    if ($pct <= 0) return 'none';
+    return '0 2px ' . (int)round(6 + $pct * 0.28) . 'px rgba(0,0,0,' . round($pct / 100, 2) . ')';
 }
 
 /**
@@ -349,7 +374,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     // The logo itself (Nikki, 2026-10-28): the full vertical stack, or the M mark alone, in the same place.
     $logoKind = ($p['logo_kind'] ?? 'full') === 'mark' ? 'mark' : 'full';
     $badge = (string)($p['badge'] ?? '');
-    if (!isset(social_badge_places()[$badge])) $badge = ($format === 'story' && $logo !== 'top') ? 'right' : 'left';
+    if (!isset(social_badge_places()[$badge]) && $badge !== 'body') $badge = ($format === 'story' && $logo !== 'top') ? 'right' : 'left';   // 'body': above the headline (the plan tools, 2026-11-02)
+    $opt = social_logo_options($p);   // the admin tools' logo colour, size, nudge and shadows (2026-11-02); defaults leave every agent post as it was
 
     // The photo frame: zoom 1 to 3, focus 0 to 100 on each axis (see the header).
     $zoom = max(1.0, min(3.0, (float)($p['zoom'] ?? 1)));
@@ -362,6 +388,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
 
     // The two looks (social_palette(), shared with the plan templates since 2026-11-02).
     $c = social_palette($theme, $base);
+    if ($opt['color'] !== 'auto') { $c['logo'] = $base . '/assets/images/MH_vert-stack_' . $opt['color'] . '.svg'; $c['mark'] = $base . '/assets/images/M-mark_' . $opt['color'] . '.svg'; }
+    if ($opt['text_shadow'] !== null) $c['shadow'] = social_shadow_css($opt['text_shadow']);
 
     // Open House text under a date block runs a size smaller (the split layout only).
     $k  = ($oh && !$full) ? 0.86 : 1.0;
@@ -392,11 +420,17 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
             . ".photo::after{height:100%;background:{$c['veil']}}"
             . ".rule{margin:0 auto 30px}.addr{text-wrap:balance}.lines{padding:0}.ln{white-space:normal}"
             . ".slogo{margin:0 0 36px}.clogo{display:block;height:200px;margin:0 auto 40px}"
-            . (($logo !== 'top' && trim((string)($p['label'] ?? '')) === '') ? ".photo::before{display:none}" : '')   // nothing up top: no top fade either
+            . (($logo !== 'top' && (trim((string)($p['label'] ?? '')) === '' || $badge === 'body')) ? ".photo::before{display:none}" : '')   // nothing up top: no top fade either
             : '')
         // The M mark is one glyph, nearly square: a touch shorter than the stack in each place.
         . ($logoKind === 'mark' ? ".logo{height:118px}.slogo{height:126px}.clogo{height:166px}" : '')
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
+    // The logo's size, nudge and shadow (the plan tools' sliders; agents' posts post none of these, so the sizes above stand).
+    $z = fn(int $px) => (int)round($px * $opt['scale']);
+    $bodyCss .= ($opt['scale'] !== 1.0 ? ".logo{height:{$z($logoKind === 'mark' ? 118 : 152)}px}.slogo{height:{$z($logoKind === 'mark' ? 126 : 160)}px}.clogo{height:{$z($logoKind === 'mark' ? 166 : 200)}px}" : '')
+             . (($opt['dx'] || $opt['dy']) ? ".logo,.slogo,.clogo{transform:translate({$opt['dx']}px,{$opt['dy']}px)}" : '')
+             . ($opt['logo_shadow'] > 0 ? ".logo,.slogo,.clogo{filter:drop-shadow(" . social_shadow_css($opt['logo_shadow']) . ")}" : '')
+             . ".pill.inbody{position:static;display:inline-block;margin:0 0 24px;box-shadow:none}" . ($layout === 'center' ? ".pill.inbody{margin:0 auto 28px}" : '');
 
     $css = <<<CSS
 {$fontCss}
@@ -433,7 +467,7 @@ CSS;
         : '<div class="none"><img src="' . $e($c['mark']) . '" alt=""></div>';
 
     $label = trim((string)($p['label'] ?? ''));
-    $pill  = $label !== '' ? '<div class="pill">' . $e($label) . '</div>' : '';
+    $pill  = ($label !== '' && $badge !== 'body') ? '<div class="pill">' . $e($label) . '</div>' : '';
 
     $body = '';
     $logoSrc = $logoKind === 'mark' ? $c['mark'] : $c['logo'];
@@ -442,6 +476,7 @@ CSS;
     } elseif ($full && $logo === 'center') {  // centred above the rule and the centred words
         $body .= '<img class="clogo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">';
     }
+    if ($label !== '' && $badge === 'body') $body .= '<div class="pill inbody">' . $e($label) . '</div>';   // the badge above the headline, under the logo (2026-11-02)
     $body .= '<div class="rule"></div>';
     $whenTop = '';
     if ($oh) {

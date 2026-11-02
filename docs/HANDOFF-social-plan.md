@@ -109,13 +109,37 @@ Holidays from November 20 through December). The listing suggestions are
 live data: the newest new listing, the highest-priced live listing, the
 latest closing (or a rental when there is none).
 
+## Nikki's first review (2026-11-02, afternoon)
+
+- The framed layout ("Photo + text block") was redrawn: the photo had sat
+  at the very top, which put a headshot's face under the badge and under
+  Instagram's story controls, and left a hole under the words. Now a band at
+  the top holds the badge and the logo, the photo window sits below it and
+  fades into the ground at its foot, and the words follow at once
+  (`plan_split_geometry()` in inc/plan_render.php has the numbers).
+- New admin-only controls on every plan builder: Logo colour (Auto / White
+  / Black, so a white logo on the light look), Logo size, Nudge across and
+  down, Text shadow and Logo shadow sliders, a Reset link. They travel as
+  `logo_color`, `logo_scale` (percent), `logo_dx`, `logo_dy`, `text_shadow`,
+  `logo_shadow`, checked by `social_logo_options()`; social_render() and
+  plan_render_split() both honour them. The agents' tools post none, so
+  their renders are unchanged.
+- Badge: a third place, "Above headline" (`badge=body`), draws the pill
+  inside the text block so it never covers a face.
+- The light look's veil behind centred words went from .50 to .68 (the
+  centred text was unreadable). The Broker Feature offers Dark only until
+  the light look is redesigned (the likely fix: a light ground behind the
+  headshot rather than a fade).
+- The admin builders: smaller pills, lighter step numbers, room between a
+  dropdown and the row under it (`plan_admin_css()`).
+
 ## Sizes and the look
 
 Post 1080 x 1440, Square 1080 x 1080, Story 1080 x 1920 with the 190 / 170 px
-safe areas, as the Instagram tools. The split layout gives the photo 900 /
-640 / 1230 px and the block the rest; with a team row the block fits two
-lines, without one four (three on a square); `plan_render_split()` trims to
-what fits. Palette: Slate, deeper buttons (the website's scheme), through
+safe areas, as the Instagram tools. The framed layout: band, then the photo
+window (860 / 780 / 520 px on story / post / square), then the words; with a
+team row one or two lines fit, without one three or four;
+`plan_render_split()` trims to what fits. Palette: Slate, deeper buttons (the website's scheme), through
 `social_palette()`.
 
 ## Not done / ideas

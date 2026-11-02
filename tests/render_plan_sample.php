@@ -39,7 +39,11 @@ $office = ['theme' => 'light', 'mark' => 'mmark', 'logo_kind' => 'mark', 'logo' 
            'headline' => "Mont Haus Aspen", 'lines' => [['text' => 'Aspen, Colorado', 'style' => 'town'], ['text' => 'Mont Haus International Realty', 'style' => 'details'], ['text' => 'The valley from the office window, every day.', 'style' => 'note'], ['text' => '', 'style' => 'plain']],
            'team' => []];
 
+$opts = ['logo_color' => 'white', 'logo_scale' => 1.3, 'logo_dx' => -20, 'logo_dy' => 10, 'logo_shadow' => 60, 'text_shadow' => 50];
 $splits = [
+    'broker-badge-body' => ['badge' => 'body'] + $broker + ['format' => 'story'],
+    'broker-options'    => $opts + $broker + ['format' => 'post'],
+    'location-light-white-logo' => ['logo_color' => 'white', 'logo_shadow' => 40] + $office + ['format' => 'post'],
     'broker-post'       => $broker + ['format' => 'post'],
     'broker-story'      => $broker + ['format' => 'story'],
     'broker-square'     => $broker + ['format' => 'square'],
@@ -66,6 +70,12 @@ $set = [
                                  'lines' => [['text' => '633 W Main St', 'style' => 'town'], ['text' => 'Aspen  ·  $9,500,000', 'style' => 'details']]],
     'set-03-end'   => $common + ['layout' => 'center', 'logo' => 'center', 'label' => 'New Listing', 'headline' => "633 W Main St\nAspen",
                                  'lines' => [['text' => '$9,500,000', 'style' => 'price'], ['text' => 'Listed by Jonathan Boxer', 'style' => 'note']]],
+    'full-badge-body' => ['badge' => 'body', 'focus_y' => 20] + $common + ['layout' => 'corner', 'logo' => 'top', 'badge' => 'body', 'label' => 'Broker Spotlight', 'photo_url' => $head, 'focus_y' => 20, 'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn with Mont Haus.',
+                                 'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Mont Haus International Realty · Montrose', 'style' => 'details']]],
+    'branding-light'  => ['theme' => 'light'] + $common + ['layout' => 'center', 'logo' => 'center', 'label' => '', 'photo_url' => $stock('vail-aspens-fall-1746156502'), 'headline' => "Gold season.",
+                                 'lines' => [['text' => 'Mont Haus International Realty', 'style' => 'town']]],
+    'branding-options' => ['badge' => 'body'] + $common + ['layout' => 'center', 'logo' => 'center', 'label' => 'Coming Soon', 'photo_url' => $stock('vail-aspens-fall-1746156502'), 'headline' => "Gold season.", 'logo_scale' => 1.4, 'logo_dy' => -30, 'logo_shadow' => 70, 'text_shadow' => 80,
+                                 'lines' => [['text' => 'Mont Haus International Realty', 'style' => 'town']]],
     'branding'     => $common + ['layout' => 'center', 'logo' => 'center', 'label' => '', 'photo_url' => $stock('vail-aspens-fall-1746156502'), 'headline' => "Gold season.",
                                  'lines' => [['text' => 'Mont Haus International Realty', 'style' => 'town']]],
 ];

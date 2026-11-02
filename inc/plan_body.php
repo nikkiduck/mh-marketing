@@ -36,7 +36,7 @@ $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (s
 // centred words, else the Instagram tool's defaults (upper right on a post, lower left on a story); the badge likewise.
 $default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : ($default_size === 'story' ? 'bottom' : 'top'));
 $default_badge = ($default_size === 'story' && $default_logo !== 'top') ? 'right' : 'left';
-$themes = social_themes(); $labels = plan_labels(); $styles = social_line_styles(); $defaults = social_line_defaults();
+$themes = plan_themes($pk); $labels = plan_labels(); $styles = social_line_styles(); $defaults = social_line_defaults();
 $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
 $step = 1;
 ?>
@@ -88,8 +88,22 @@ $step = 1;
           <?php endforeach; ?>
         </div>
         <div class="sp-look">
+          <span class="sp-look-l">Logo colour</span>
+          <?php foreach (plan_logo_colors() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="logo_color" value="<?= $e($k) ?>"<?= $k === 'auto' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-ranges">
+          <label class="sp-range">Logo size <input type="range" name="logo_scale" min="50" max="160" step="2" value="100"><output>100%</output></label>
+          <label class="sp-range">Nudge across <input type="range" name="logo_dx" min="-200" max="200" step="2" value="0"><output>0</output></label>
+          <label class="sp-range">Nudge down <input type="range" name="logo_dy" min="-200" max="200" step="2" value="0"><output>0</output></label>
+          <label class="sp-range">Text shadow <input type="range" name="text_shadow" min="0" max="100" step="5" value="35"><output>35</output></label>
+          <label class="sp-range">Logo shadow <input type="range" name="logo_shadow" min="0" max="100" step="5" value="0"><output>0</output></label>
+          <button type="button" class="sp-link sp-reset" id="spResetLogo">Reset logo and shadows</button>
+        </div>
+        <div class="sp-look">
           <span class="sp-look-l">Badge</span>
-          <?php foreach (social_badge_places() as $k => $t): ?>
+          <?php foreach (plan_badge_places() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="badge" value="<?= $e($k) ?>"<?= $k === $default_badge ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
@@ -346,7 +360,7 @@ $step = 1;
     if (L !== 'center' && logo.value === 'center') logo.value = 'top';
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = L !== 'split');
     form.querySelectorAll('.sp-only-multi').forEach(el => el.hidden = L === 'photo');
-    framer.style.aspectRatio = '1080 / ' + (L === 'split' ? ({ post: 900, square: 640, story: 1230 })[fmt()] : fmtH());
+    framer.style.aspectRatio = '1080 / ' + (L === 'split' ? ({ post: 780, square: 520, story: 860 })[fmt()] : fmtH());
     customWrap.hidden = labelSel.value !== '__custom';
   }
 
@@ -413,6 +427,17 @@ $step = 1;
     if (on.length > 6) { e.target.checked = false; alert('Six faces at most: the row has no room for more.'); }
   });
 
+  // ── The logo sliders: show each value; the text shadow follows the look (35 on dark, 0 on light) until it is moved. ──
+  function showRange(r) { const o = r.parentElement.querySelector('output'); if (o) o.textContent = r.name === 'logo_scale' ? r.value + '%' : r.value; }
+  function syncShadowDefault() { const r = f('text_shadow'); if (!r.dataset.touched) { r.value = f('theme').value === 'light' ? 0 : 35; showRange(r); } }
+  form.querySelectorAll('.sp-range input').forEach(showRange);
+  document.getElementById('spResetLogo').addEventListener('click', () => {
+    for (const [n, v] of [['logo_scale', 100], ['logo_dx', 0], ['logo_dy', 0], ['logo_shadow', 0]]) { f(n).value = v; delete f(n).dataset.touched; showRange(f(n)); }
+    delete f('text_shadow').dataset.touched; syncShadowDefault();
+    f('logo_color').value = 'auto';
+    update();
+  });
+
   // ── Preview ──
   let timer, seq = 0;
   function update() { clearTimeout(timer); timer = setTimeout(render, 250); }
@@ -463,7 +488,7 @@ $step = 1;
       const cover = form.querySelector('input[name="photo"][value="' + CSS.escape(frames[0]) + '"]'); if (cover && setOn()) cover.checked = true;
     }
     const sel = allTiles.find(p => p.id === (form.querySelector('input[name="photo"]:checked') || {}).value);
-    framerSet(sel ? sel.large : ''); syncSet(); update();
+    framerSet(sel ? sel.large : '', sel ? sel.id : ''); syncSet(); update();
   }
   // In set mode a click on a tile adds it to (or removes it from) the play order; the cover is the first.
   photos.addEventListener('click', e => {
@@ -509,8 +534,8 @@ $step = 1;
   });
 
   // ── Framing: the same CSS the picture uses, as a control ──
-  function framerSet(src) {
-    f('focus_x').value = 50; f('focus_y').value = 50; f('zoom').value = 1;
+  function framerSet(src, id) {
+    f('focus_x').value = 50; f('focus_y').value = (id && /^(headshot|face):/.test(id)) ? 22 : 50; f('zoom').value = 1;   // a headshot: start on the face
     framer.classList.toggle('empty', !src);
     fimg.src = src || '';
     framerApply();
@@ -564,7 +589,9 @@ $step = 1;
     if (n === 'layout') syncLayout();
     if (n === 'set' || n === 'endcard') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
-    if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } framerSet(e.target.dataset.large); }
+    if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } framerSet(e.target.dataset.large, e.target.value); }
+    if (n === 'theme') syncShadowDefault();
+    if (['logo_scale', 'logo_dx', 'logo_dy', 'text_shadow', 'logo_shadow'].includes(n)) { showRange(e.target); e.target.dataset.touched = '1'; }
     if (n === 'zoom') framerApply();
     update();
   });

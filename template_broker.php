@@ -27,6 +27,7 @@ admin_tool_header([
                . '<a class="btn btn-outline btn-sm" href="templates.php"><i class="ti ti-layout-grid"></i> Templates</a>'
                . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],
+    'css'     => plan_admin_css(),
 ]);
 if (!$pk_agents) {
     echo '<div class="note">No approved agents are on the roster yet.</div>';

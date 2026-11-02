@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-02 from git HEAD (Social Media Plan templates, admin only).
+# Generated 2026-11-02 from git HEAD (Social Media Plan templates: framed layout, logo and shadow controls).
 8f5ea7f88a7f2ceb39a271c513495907  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -62,9 +62,9 @@ ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-24ad32c335f6dbb236b4e363642a9397  inc/plan.php
-a28dc82a5f2e5736b3c71c871bfc7924  inc/plan_body.php
-97407152d28a4300ccd287f1c57935ca  inc/plan_render.php
+89b3377af8ab85af83d9c7fa487d065a  inc/plan.php
+c792e2db41ad2607c3c252275d9ae33d  inc/plan_body.php
+3f89f545d6448850df7fbc25c20142a2  inc/plan_render.php
 0ca7e986a6c7a6f080f48e4d3ffe9e3d  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
@@ -74,7 +74,7 @@ eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 b61906846907a3ab02607008800f38ad  inc/social.php
 7848a7ea81a9e1ffec65fdae2e65073f  inc/social_body.php
-3f9f97f5ff352075d506801bc79e83ac  inc/social_render.php
+0e62531008ea274c88be292094eaddbf  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 34dd307ecabbdd8b5e48a7e1bb7f81da  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php
@@ -134,12 +134,12 @@ ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 e313f700457026d51c8e40d137c27ab3  social_plan.php
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
-6cd3995bcb84b9ab315a6baca9c00f77  template_branding.php
-cccf7e061edb113ecbb23b5a00c97966  template_broker.php
+66f959bd6ba944e4d6ed7c7d1abeb24c  template_branding.php
+442d8ab5db3e38be9f129e6ab30ae785  template_broker.php
 92c444733a2833398cef3e8df8898813  template_flyer.php
 55e4a582c433280e0a44ac4312371119  template_general.php
-cbce2f756e847eabf585df1442a10f62  template_location.php
-4976f2bf5aeb43f1ba0c300474656ea4  template_property.php
+482b3385274efcf84c95648f6b5d9464  template_location.php
+59ba350d054a977c9b1dda18d35425a5  template_property.php
 7ed35fb57cfe66c721bc38d416516637  template_social.php
 428f2ad8d05fa9a8411326bf7ea5d1cc  templates.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php

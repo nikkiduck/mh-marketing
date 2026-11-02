@@ -2758,6 +2758,24 @@ admin Templates page's "Social Media Plan (admin only)" group.
   listed for the chosen listing.
 - Harness: `tests/render_plan_sample.php` (no database). The builder's
   JavaScript was exercised against a stub router locally on 2026-11-02.
+- **Nikki's first review, same day:** the framed layout was redrawn (the
+  photo had sat at the top, so a headshot's face hid under the badge and
+  Instagram's story controls, with a hole under the words): now a band at
+  the top carries the badge and the logo (190 + 56 px down on a story), the
+  photo window sits under it (430 to 1290 on a story, 240 to 1020 on a post,
+  200 to 720 on a square) and fades into the ground at its foot, and the
+  words follow at once (`plan_split_geometry()`). The admin builders got
+  Nikki-only controls: logo colour Auto / White / Black (white on the light
+  look too), logo size, nudge across and down, text shadow and logo shadow
+  sliders (`social_logo_options()` and `social_shadow_css()` in
+  social_render.php; the agents' forms post none of them, so their renders
+  are unchanged except the light look's veil behind centred words, .50 to
+  .68, which was unreadable), and the badge may sit "Above headline"
+  (`plan_badge_places()`; badge `body`) so it never covers a face. The
+  Broker Feature offers Dark only (`plan_themes()`) until the light look is
+  redesigned; a headshot starts framed on the face (focus_y 22). The admin
+  pages' pills are smaller and the step numbers lighter (`plan_admin_css()`,
+  passed as `css` to admin_tool_header(); the agents' tools keep social.css).
 
 ## Upcoming projects (not started)
 

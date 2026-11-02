@@ -47,6 +47,30 @@ const PLAN_MAX_FRAMES  = 6;    // photo frames in a story set, cover included; t
 
 // ── Access ───────────────────────────────────────────────────────────────────
 
+/**
+ * The admin-side look of the plan builders (Nikki, 2026-11-02, "just for me,
+ * the admin"): smaller pills, lighter numbers in the step circles, room
+ * between a dropdown and the row under it, and the logo sliders. Passed as
+ * `css` to admin_tool_header() by the four template pages; the agents' tools
+ * keep social.css as it is.
+ */
+function plan_admin_css(): string {
+    return '
+    .sp-step-h span { color:#d6dee8; }
+    .sp-pillopt span { padding:4px 11px; font-size:12.5px; border-width:1.5px; }
+    .sp-look { margin-top:9px; gap:6px; }
+    .sp-look-l { font-size:13px; min-width:84px; }
+    .sp-field + .sp-look, .sp-two + .sp-look, .sp-field + .sp-hint, .sp-two + .sp-hint, .sp-look + .sp-team { margin-top:18px; }
+    .sp-set { margin-top:18px; }
+    .sp-ranges { display:grid; grid-template-columns:1fr; gap:4px 18px; margin-top:12px; padding:10px 12px 8px; background:#f6f7f9; border-radius:10px; }
+    @media (min-width:640px) { .sp-ranges { grid-template-columns:1fr 1fr; } }
+    .sp-range { display:flex; align-items:center; gap:10px; font-size:12.5px; color:#6b7a8f; margin:0; }
+    .sp-range input[type=range] { flex:1; min-width:0; accent-color:#4a5569; }
+    .sp-range output { min-width:40px; text-align:right; color:#1f242c; font-variant-numeric:tabular-nums; }
+    .sp-reset { background:none; border:0; padding:4px 0 0; font:inherit; font-size:12.5px; text-align:left; }
+    ';
+}
+
 /** Admins only; the admin's own social context (uploads, stock, export copies), a CSRF token made. */
 function plan_gate(mysqli $conn): array {
     require_login();
@@ -545,8 +569,17 @@ function plan_photo(array $ctx, string $photo, ?array $listing = null, ?array $a
 /** The plan tools' kinds. */
 function plan_kinds(): array { return ['property' => 'Property', 'broker' => 'Broker Feature', 'location' => 'Location Feature', 'branding' => 'Branding']; }
 
-/** The layouts: the full photo with the words lower left (the Instagram look), the split (photo on top, words below), or centred words. */
-function plan_layouts(): array { return ['photo' => 'Full photo', 'split' => 'Photo + text block', 'center' => 'Centered']; }
+/** The layouts: the full photo with the words lower left (the Instagram look), the framed photo (a band, the photo window, the words; inc/plan_render.php), or centred words. */
+function plan_layouts(): array { return ['photo' => 'Full photo', 'split' => 'Framed', 'center' => 'Centered']; }
+
+/** Where the label badge may sit in the plan tools: the Instagram tool's two corners, or above the headline (2026-11-02: a badge in the corner covered a broker's face). */
+function plan_badge_places(): array { return social_badge_places() + ['body' => 'Above headline']; }
+
+/** The looks a tool offers: the Broker Feature is dark only until the light look is redesigned (Nikki, 2026-11-02). */
+function plan_themes(string $kind): array { return $kind === 'broker' ? ['dark' => 'Dark'] : social_themes(); }
+
+/** The logo colours the plan tools offer: the look's own (white on dark, black on light), or forced. */
+function plan_logo_colors(): array { return ['auto' => 'Auto', 'white' => 'White', 'black' => 'Black']; }
 
 /** The social_render() template key for a size: the "other" family (no listing rules, no open house). */
 function plan_social_type(string $format): string {
@@ -566,7 +599,7 @@ function plan_social_type(string $format): string {
 function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|string {
     $kind   = isset(plan_kinds()[(string)($in['kind'] ?? '')]) ? (string)$in['kind'] : 'property';
     $format = isset(social_formats()[(string)($in['size'] ?? '')]) ? (string)$in['size'] : 'post';
-    $theme  = isset(social_themes()[(string)($in['theme'] ?? '')]) ? (string)$in['theme'] : 'dark';
+    $theme  = isset(plan_themes($kind)[(string)($in['theme'] ?? '')]) ? (string)$in['theme'] : 'dark';
     $mark   = isset(social_marks()[(string)($in['mark'] ?? '')]) ? (string)$in['mark'] : 'triangle';
     $logoKind = isset(social_logo_kinds()[(string)($in['logo_kind'] ?? '')]) ? (string)$in['logo_kind'] : 'full';
     $layout = isset(plan_layouts()[(string)($in['layout'] ?? '')]) ? (string)$in['layout'] : ($kind === 'branding' ? 'center' : 'photo');
@@ -574,7 +607,11 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     if (!isset(social_logo_places()[$logo])) $logo = $format === 'story' ? 'bottom' : 'top';
     if ($layout === 'split' && !in_array($logo, ['top', 'none'], true)) $logo = 'top';
     if ($logo === 'center' && $layout !== 'center') $logo = 'top';
-    $badge  = isset(social_badge_places()[(string)($in['badge'] ?? '')]) ? (string)$in['badge'] : ($format === 'story' && $logo !== 'top' ? 'right' : 'left');
+    $badge  = isset(plan_badge_places()[(string)($in['badge'] ?? '')]) ? (string)$in['badge'] : ($format === 'story' && $logo !== 'top' ? 'right' : 'left');
+    // The logo's colour, size, nudge and the shadows (2026-11-02): checked by social_logo_options() in the renderers; carried as posted.
+    $logoOpts = ['logo_color' => (string)($in['logo_color'] ?? 'auto'), 'logo_scale' => round((int)($in['logo_scale'] ?? 100) / 100, 2),
+                 'logo_dx' => (int)($in['logo_dx'] ?? 0), 'logo_dy' => (int)($in['logo_dy'] ?? 0),
+                 'text_shadow' => ($in['text_shadow'] ?? '') === '' ? null : (int)$in['text_shadow'], 'logo_shadow' => (int)($in['logo_shadow'] ?? 0)];
 
     // The subject.
     $listing = null; $agent = null; $loc = null; $team = [];
@@ -617,7 +654,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         'focus_y' => max(0, min(100, (int)($in['focus_y'] ?? 50))),
     ];
     $common = ['theme' => $theme, 'mark' => $mark, 'logo_kind' => $logoKind, 'logo' => $logo, 'badge' => $badge, 'format' => $format,
-               'label' => $label, 'photo' => (string)($in['photo'] ?? ''), 'photo_url' => $photo_url, 'photo_file' => $photo_file] + $frame;
+               'label' => $label, 'photo' => (string)($in['photo'] ?? ''), 'photo_url' => $photo_url, 'photo_file' => $photo_file] + $frame + $logoOpts;
     $slug = fn(string $s) => mb_substr(strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $s), '-')), 0, 60) ?: 'post';
 
     $main = $layout === 'split'
