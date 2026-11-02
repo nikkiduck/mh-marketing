@@ -130,10 +130,10 @@ $step = 1;
           <label class="sp-pillopt"><input type="radio" name="variant" value="<?= $e($k) ?>"<?= $k === $pv ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
-        <div class="sp-set sp-only-story" hidden>
-          <label class="sp-check"><input type="checkbox" name="set" value="1" checked> Make a story <b>set</b>: a multi-image slideshow (the plan: not a single photo)</label>
-          <label class="sp-check sp-only-set"><input type="checkbox" name="endcard" value="1" checked> End with a closing card: the logo, the address and who listed it</label>
-          <p class="sp-hint sp-only-set">Tick the photos below in the order they should play; the first is the cover with the words, the rest carry a one-line caption. Up to <?= PLAN_MAX_FRAMES ?> photos.</p>
+        <div class="sp-set">
+          <label class="sp-check"><input type="checkbox" name="set" value="1"<?= $default_size === 'story' ? ' checked' : '' ?>> Make a <b>set</b>: a multi-image slideshow (a story, or a carousel at the post and square sizes)</label>
+          <label class="sp-check sp-only-set"><input type="checkbox" name="endcard" value="1"> Add a closing card at the end: the logo, the address and who listed it (optional)</label>
+          <p class="sp-hint sp-only-set">Tick the photos below in the order they should play: the first is the cover with the words, the rest are the photo alone, every other one with the logo lower right. The cover plus up to <?= PLAN_MAX_FRAMES - 1 ?> more.</p>
         </div>
       </section>
       <?php elseif ($pk === 'broker'): ?>
@@ -315,10 +315,8 @@ $step = 1;
   let allTiles = [];        // the photos the picker holds
 
   // ── The story set (property, story size) ──
-  const setOn = () => KIND === 'property' && fmt() === 'story' && f('set') && f('set').checked;
+  const setOn = () => KIND === 'property' && f('set') && f('set').checked;   // any size since 2026-11-02 (a post or square set is a carousel)
   function syncSet() {
-    const story = KIND === 'property' && fmt() === 'story';
-    form.querySelectorAll('.sp-only-story').forEach(el => el.hidden = !story);
     form.querySelectorAll('.sp-only-set').forEach(el => el.hidden = !setOn());
     const on = setOn();
     framesBox.innerHTML = on ? frames.map(id => '<input type="hidden" name="frames[]" value="' + esc(id) + '">').join('') : '';
@@ -340,8 +338,8 @@ $step = 1;
       }
       pills.innerHTML = html;
     } else f('frame').value = 0;
-    dl.textContent = dl2.textContent = on ? 'Download story set (ZIP)' : 'Download PNG';
-    help.textContent = on ? 'The download is a ZIP of ' + n + ' PNGs at 1080 × 1920, numbered in play order: post them as one story.'
+    dl.textContent = dl2.textContent = on ? 'Download the set (ZIP)' : 'Download PNG';
+    help.textContent = on ? 'The download is a ZIP of ' + n + ' PNGs at 1080 × ' + fmtH() + ', numbered in play order: post them as one ' + (fmt() === 'story' ? 'story' : 'carousel') + '.'
                           : 'The download is a 1080 × 1440 PNG for a post, 1080 × 1080 for a square, or 1080 × 1920 for a story.';
   }
   pills.addEventListener('input', e => { if (e.target.name === '_pill') { f('frame').value = e.target.value; update(); } });
@@ -481,7 +479,7 @@ $step = 1;
     // A fresh listing: the set starts with its first photos in feed order (the cover first), up to the limit.
     if (KIND === 'property') {
       const own = allTiles.filter(p => !p.own).map(p => p.id);
-      frames = (selectId && frames.length) ? frames.filter(id => allTiles.some(p => p.id === id)) : own.slice(0, Math.min(MAX_FRAMES, 4));
+      frames = (selectId && frames.length) ? frames.filter(id => allTiles.some(p => p.id === id)) : own.slice(0, Math.min(MAX_FRAMES, 5));
       if (selectId && !frames.includes(selectId)) frames.push(selectId);
       if (!frames.length) frames = [first];
       if (frames.length > MAX_FRAMES) frames = frames.slice(0, MAX_FRAMES);

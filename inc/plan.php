@@ -10,9 +10,10 @@
  *
  *   social_plan.php          the plan: this week's six days, each with the
  *                            rotation's pick and a button to its tool
- *   template_property.php    Property post + story SET (a multi-frame story
- *                            slideshow, downloaded as a ZIP of PNGs), from
- *                            EVERY Mont Haus listing in the feed, not one agent's
+ *   template_property.php    Property post + SET (a multi-frame slideshow at
+ *                            any size, a story or a carousel, downloaded as a
+ *                            ZIP of PNGs), from EVERY Mont Haus listing in the
+ *                            feed, not one agent's
  *   template_broker.php      Broker Feature: a hook with the broker's name
  *                            and market swapped in, their headshot or a
  *                            lifestyle shot, post or story
@@ -43,7 +44,7 @@ require_once __DIR__ . '/market_data.php';     // market_card_defs(): the Market
 
 const PLAN_NEW_DAYS    = 21;   // a listing is "new" this long after the feed first saw it (or its new_listing change)
 const PLAN_CLOSED_DAYS = 30;   // a closing stays in the Just Sold list this long (the agents' tools keep 7)
-const PLAN_MAX_FRAMES  = 6;    // photo frames in a story set, cover included; the end card is extra
+const PLAN_MAX_FRAMES  = 9;    // photos in a set: the cover plus up to 8 more (Nikki, 2026-11-02); the end card is extra
 
 // ── Access ───────────────────────────────────────────────────────────────────
 
@@ -665,10 +666,11 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
 
     $out = ['kind' => $kind, 'set' => false, 'preview' => 0, 'frames' => [$main]];
 
-    // The property story SET (the plan: "each story should be a multi-image slideshow, not a single photo"):
-    // the cover is the post's words on the first photo; each further photo is a frame with a one-line caption
-    // over the fade and no logo; an end card closes with the logo centred, the address and the broker.
-    if ($kind === 'property' && $format === 'story' && !empty($in['set'])) {
+    // The property SET (the plan: "each story should be a multi-image slideshow, not a single photo"; a post
+    // or square set is a carousel, 2026-11-02): the cover is the post's words on the first photo; each further
+    // photo is the photo alone, every other one with the logo lower right (plan_render_photo_frame()); an end
+    // card, when asked for, closes with the logo centred, the address and the broker.
+    if ($kind === 'property' && !empty($in['set'])) {
         $frames = [];
         $seen = [];
         foreach ((array)($in['frames'] ?? []) as $pid) {
@@ -684,21 +686,19 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         $cover['name'] = '01-cover';
         $set = [$cover];
         $addrLine = $headline !== '' ? $headline : (string)$listing['headline'];
-        $sub = implode('  ·  ', array_filter([trim((string)$listing['city']), $lines[1]['text'] ?? '']));
         $n = 2;
-        foreach (array_slice($frames, 1) as $fr) {
-            $set[] = ['renderer' => 'social', 'name' => sprintf('%02d', $n++),
-                      'post' => $common + ['type' => plan_social_type('story'), 'layout' => 'corner', 'logo' => 'none', 'label' => '', 'badge' => 'left',
-                                           'photo' => $fr['id'], 'photo_url' => $fr['url'], 'photo_file' => $fr['file'], 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 50,
-                                           'headline' => '', 'lines' => [['text' => $addrLine, 'style' => 'town'], ['text' => $sub, 'style' => 'details']],
-                                           'date_text' => '', 'time_text' => '', 'when_text' => '']];
+        foreach (array_slice($frames, 1) as $i => $fr) {
+            // The photo alone; the logo lower right on the first after the cover, the third, the fifth ... (none at all when the cover has none).
+            $set[] = ['renderer' => 'frame', 'name' => sprintf('%02d', $n++),
+                      'post' => $common + ['photo' => $fr['id'], 'photo_url' => $fr['url'], 'photo_file' => $fr['file'], 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 50,
+                                           'show_logo' => $logo !== 'none' && $i % 2 === 0]];
         }
         if (!empty($in['endcard'])) {
             $agentName = (string)$listing['agent'];
             $endLines = [['text' => $lines[1]['text'] ?? '', 'style' => 'price'],
                          ['text' => $agentName !== '' ? 'Listed by ' . $agentName : 'Mont Haus International Realty', 'style' => 'note']];
             $set[] = ['renderer' => 'social', 'name' => sprintf('%02d-end', $n),
-                      'post' => $common + ['type' => plan_social_type('story'), 'layout' => 'center', 'logo' => 'center', 'label' => $label, 'badge' => 'left',
+                      'post' => $common + ['type' => plan_social_type($format), 'layout' => 'center', 'logo' => 'center', 'label' => $label, 'badge' => $badge === 'body' ? 'body' : 'left',
                                            'photo' => $frames[0]['id'], 'photo_url' => $frames[0]['url'], 'photo_file' => $frames[0]['file'],
                                            'headline' => trim($addrLine . "\n" . trim((string)$listing['city'])),
                                            'lines' => $endLines, 'date_text' => '', 'time_text' => '', 'when_text' => '']];
@@ -706,7 +706,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         $out['set'] = true;
         $out['frames'] = $set;
         $out['preview'] = max(0, min(count($set) - 1, (int)($in['frame'] ?? 0)));
-        $out['name'] = $slug((string)$listing['headline']) . '-story-set';
+        $out['name'] = $slug((string)$listing['headline']) . '-' . ($format === 'story' ? 'story' : ($format === 'square' ? 'square' : 'post')) . '-set';
     }
     return $out;
 }
@@ -725,7 +725,11 @@ function plan_team_for_render(array $team): array {
 
 /** One frame as HTML through its renderer (the preview, or the export with the photo read from disk). */
 function plan_render_frame(array $frame, ?string $base = null, bool $export = false): string {
-    return $frame['renderer'] === 'split' ? plan_render_split($frame['post'], $base, $export) : social_render($frame['post'], $base, $export);
+    return match ($frame['renderer']) {
+        'split' => plan_render_split($frame['post'], $base, $export),
+        'frame' => plan_render_photo_frame($frame['post'], $base, $export),
+        default => social_render($frame['post'], $base, $export),
+    };
 }
 
 /** The frame's height in px. */
@@ -739,7 +743,7 @@ function plan_filename(array $r, array $frame): string {
 }
 
 /**
- * The story set as a ZIP of PNGs (01-cover.png, 02.png, …, 0N-end.png), each
+ * The set as a ZIP of PNGs (01-cover.png, 02.png, …, 0N-end.png), each
  * frame screenshotted by Chromium in turn (social_export_png(); one at a
  * time, about 3 s each). Null when any frame failed or ZipArchive is missing.
  */

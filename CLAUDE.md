@@ -2776,6 +2776,15 @@ admin Templates page's "Social Media Plan (admin only)" group.
   redesigned; a headshot starts framed on the face (focus_y 22). The admin
   pages' pills are smaller and the step numbers lighter (`plan_admin_css()`,
   passed as `css` to admin_tool_header(); the agents' tools keep social.css).
+- **The set, second pass (Nikki, same day):** offered at every size (a post
+  or square set is a carousel), the cover plus up to 8 more photos
+  (`PLAN_MAX_FRAMES` 9), the frames after the cover are the photo ALONE
+  (`plan_render_photo_frame()` in inc/plan_render.php: no words, fade or
+  watermark) with the logo lower right on every other one (the first after
+  the cover, the third ...; none when the cover's logo is None; the logo
+  colour, size, nudge and shadow sliders apply), and the closing card is
+  optional and off unless ticked. The ZIP is named -story-set, -post-set or
+  -square-set.
 
 ## Upcoming projects (not started)
 

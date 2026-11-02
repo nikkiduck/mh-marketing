@@ -133,6 +133,15 @@ latest closing (or a rental when there is none).
 - The admin builders: smaller pills, lighter step numbers, room between a
   dropdown and the row under it (`plan_admin_css()`).
 
+## The set, second pass (2026-11-02, evening)
+
+Nikki: "Love this make a set option." Changes: the set is offered at the
+post and square sizes too (a carousel); the frames after the cover are the
+photo alone, with the white or black logo lower right on every other one
+(`plan_render_photo_frame()`; none when the cover has no logo); the cover
+plus up to eight more photos (`PLAN_MAX_FRAMES` = 9); the closing card is
+optional and off by default.
+
 ## Sizes and the look
 
 Post 1080 x 1440, Square 1080 x 1080, Story 1080 x 1920 with the 190 / 170 px

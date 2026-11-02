@@ -45,7 +45,7 @@ $lq = fn(?array $l, string $v, string $size) => $l ? 'template_property.php?' . 
 // The rows: day => [piece words, the pick's words, [[button words, href], …]]
 $rows = [
     ['Monday',    'Property · New Listing',       $lwords($pickNew),
-                  $pickNew ? [['Post', $lq($pickNew, 'new', 'post')], ['Story set', $lq($pickNew, 'new', 'story')]] : []],
+                  $pickNew ? [['Post', $lq($pickNew, 'new', 'post')], ['Story set', $lq($pickNew, 'new', 'story')]] : []],   // the story size starts with the set ticked
     ['Tuesday',   'Market Stats',                 ($cards[$mKey]['title'] ?? '') . ' (next week: ' . ($cards[$mNext]['title'] ?? '') . ')',
                   [['Story', 'market_snapshot.php?market=' . rawurlencode((string)$mKey)]]],
     ['Tuesday',   'Branding',                     $season['name'] . ': "' . str_replace("\n", ' ', $season['taglines'][0]) . '"',

@@ -83,3 +83,11 @@ foreach ($set as $k => $p) {
     file_put_contents("$out/plan-$k.html", social_render($p, $base));
     echo "$out/plan-$k.html\n";
 }
+// The set's photo frames (2026-11-02): the photo alone, the logo lower right on every other one.
+$frame = ['theme' => 'dark', 'logo_kind' => 'full', 'photo_url' => $listingPhoto, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 50];
+foreach (['frame-story-logo' => $frame + ['format' => 'story', 'show_logo' => true], 'frame-story-plain' => $frame + ['format' => 'story', 'show_logo' => false],
+          'frame-post-logo' => $frame + ['format' => 'post', 'show_logo' => true, 'logo_color' => 'black', 'logo_scale' => 0.8, 'logo_shadow' => 50],
+          'frame-square-mark' => $frame + ['format' => 'square', 'show_logo' => true, 'logo_kind' => 'mark']] as $k => $p) {
+    file_put_contents("$out/plan-$k.html", plan_render_photo_frame($p, $base));
+    echo "$out/plan-$k.html\n";
+}

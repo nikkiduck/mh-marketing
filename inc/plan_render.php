@@ -36,6 +36,52 @@
  */
 require_once __DIR__ . '/social_render.php';
 
+/**
+ * A photo frame of a property set (2026-11-02): the photo alone, framed by
+ * zoom and focus as everywhere, and, when `show_logo`, the Mont Haus logo
+ * lower right (the stack or the M mark, in the look's colour or the colour
+ * forced by logo_color, sized by logo_scale, nudged by logo_dx / logo_dy,
+ * with logo_shadow), clear of a story's bottom safe area. No words, no
+ * fade, no watermark: Nikki asked for "just the photo", the logo on every
+ * other one. $export = true reads the photo from disk and embeds nothing
+ * (there is no type on the frame).
+ */
+function plan_render_photo_frame(array $p, ?string $base = null, bool $export = false): string {
+    $base   = rtrim($base ?? (defined('SITE_URL') ? SITE_URL : ''), '/');
+    $e      = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    $W      = SOCIAL_W;
+    $format = isset(social_formats()[(string)($p['format'] ?? '')]) ? (string)$p['format'] : 'post';
+    $theme  = ($p['theme'] ?? 'dark') === 'light' ? 'light' : 'dark';
+    $H      = social_format_height($format);
+    [, $bot] = social_format_insets($format);
+    $c      = social_palette($theme, $base);
+    $opt    = social_logo_options($p);
+    if ($opt['color'] !== 'auto') { $c['logo'] = $base . '/assets/images/MH_vert-stack_' . $opt['color'] . '.svg'; $c['mark'] = $base . '/assets/images/M-mark_' . $opt['color'] . '.svg'; }
+    $logoKind = ($p['logo_kind'] ?? 'full') === 'mark' ? 'mark' : 'full';
+    $logoH  = (int)round(($logoKind === 'mark' ? 118 : 152) * $opt['scale']);
+
+    $zoom = max(1.0, min(3.0, (float)($p['zoom'] ?? 1)));
+    $fx   = max(0, min(100, (int)($p['focus_x'] ?? 50)));
+    $fy   = max(0, min(100, (int)($p['focus_y'] ?? 50)));
+    $tx   = -round(($zoom - 1) * $fx / 100 * $W, 1);
+    $ty   = -round(($zoom - 1) * $fy / 100 * $H, 1);
+    $zpct = round($zoom * 100, 2);
+    $photo = ($export && !empty($p['photo_file'])) ? 'file://' . $p['photo_file'] : (string)($p['photo_url'] ?? '');
+
+    $logoCss = ".logo{position:absolute;right:64px;bottom:" . (64 + $bot) . "px;height:{$logoH}px;z-index:2"
+             . (($opt['dx'] || $opt['dy']) ? ";transform:translate({$opt['dx']}px,{$opt['dy']}px)" : '')
+             . ($opt['logo_shadow'] > 0 ? ";filter:drop-shadow(" . social_shadow_css($opt['logo_shadow']) . ")" : '') . "}";
+    $css = "html,body{margin:0;padding:0}body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c['bg']}}"
+         . ".photo{position:absolute;inset:0;overflow:hidden;background:#2D333D}"
+         . ".photo img.pic{display:block;width:{$zpct}%;height:{$zpct}%;object-fit:cover;object-position:{$fx}% {$fy}%;transform:translate({$tx}px,{$ty}px)}"
+         . ".photo .none{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}.photo .none img{width:260px;opacity:.16}"
+         . $logoCss;
+    $photoHtml = $photo !== '' ? '<img class="pic" src="' . $e($photo) . '" alt="">' : '<div class="none"><img src="' . $e($c['mark']) . '" alt=""></div>';
+    $logoHtml  = !empty($p['show_logo']) ? '<img class="logo" src="' . $e($logoKind === 'mark' ? $c['mark'] : $c['logo']) . '" alt="Mont Haus International Realty">' : '';
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Photo</title><style>' . $css . '</style></head><body>'
+         . '<div class="photo">' . $photoHtml . '</div>' . $logoHtml . '</body></html>';
+}
+
 /** [band top (where the badge and logo sit), photo top, photo bottom, logo height] per format. */
 function plan_split_geometry(string $format): array {
     return match ($format) {
