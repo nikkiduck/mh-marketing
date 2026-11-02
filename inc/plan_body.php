@@ -28,9 +28,13 @@ $layouts = plan_layouts();
 $offered_layouts = match ($pk) {
     'property' => ['photo', 'center'],
     'branding' => ['center', 'photo'],
+    'broker'   => ['photo'],                 // the Broker Feature picks a Style instead (plan_agent_styles(), 2026-11-02 evening)
     default    => ['split', 'photo', 'center'],
 };
 $default_layout = $offered_layouts[0];
+$agent_styles = $pk === 'broker' ? plan_agent_styles() : [];
+$agent_windows = [];   // style => format => [w, h] of the photo window, for the framing box
+foreach ($agent_styles as $sk => $sn) foreach (['post', 'square', 'story'] as $fmt) { [, , $ww, $wh] = plan_agent_window($sk, $fmt); $agent_windows[$sk][$fmt] = [$ww, max(1, $wh)]; }
 $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (string)$pk_preset['size'] : ($pk === 'property' ? 'post' : 'story');
 // Where the logo starts: upper right over the photo on the split layout (its only place besides none), centred above
 // centred words, else the Instagram tool's defaults (upper right on a post, lower left on a story); the badge likewise.
@@ -57,12 +61,22 @@ $step = 1;
           <label class="sp-pillopt"><input type="radio" name="size" value="<?= $e($k) ?>"<?= $k === $default_size ? ' checked' : '' ?>><span><?= $e($t) ?> · <?= $k === 'post' ? '4:5' : ($k === 'square' ? '1:1' : '9:16') ?></span></label>
           <?php endforeach; ?>
         </div>
+        <?php if ($agent_styles): ?>
+        <input type="hidden" name="layout" value="photo">
+        <div class="sp-look">
+          <span class="sp-look-l">Style</span>
+          <?php $ws = (string)($pk_preset['style'] ?? 'editorial'); foreach ($agent_styles as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="style" value="<?= $e($k) ?>"<?= $k === (isset($agent_styles[$ws]) ? $ws : 'editorial') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <?php else: ?>
         <div class="sp-look">
           <span class="sp-look-l">Layout</span>
           <?php foreach ($offered_layouts as $k): ?>
-          <label class="sp-pillopt"><input type="radio" name="layout" value="<?= $e($k) ?>"<?= $k === $default_layout ? ' checked' : '' ?>><span><?= $e($layouts[$k]) ?></span></label>
+          <label class="sp-pillopt"><input type="radio" name="layout" value="<?= $e($k) ?>"<?= $k === $default_layout ? ' checked' : '' ?>><span><?= $e($t = $layouts[$k]) ?></span></label>
           <?php endforeach; ?>
         </div>
+        <?php endif; ?>
         <div class="sp-look">
           <span class="sp-look-l">Look</span>
           <?php foreach ($themes as $k => $t): ?>
@@ -246,7 +260,7 @@ $step = 1;
           </div>
           <label class="sp-field">Headline <span class="sp-only-multi">(press Enter for a new line)</span> <textarea name="headline" maxlength="140" rows="2"></textarea></label>
           <?php foreach ($line_names as $i => $nm): ?>
-          <div class="sp-line<?= $i >= 2 ? ' sp-only-long' : '' ?>">
+          <div class="sp-line<?= $i === 2 ? ' sp-only-long sp-only-3' : ($i === 3 ? ' sp-only-long' : '') ?>">
             <label class="sp-field"><?= $e($nm) ?> <input name="line_text[]" maxlength="90"></label>
             <label class="sp-field sp-style"><?= $e($nm) ?> style
               <select name="line_style[]"><?php foreach ($styles as $k => $w): ?><option value="<?= $e($k) ?>"<?= $k === $defaults[$i] ? ' selected' : '' ?>><?= $e($w) ?></option><?php endforeach; ?></select>
@@ -282,6 +296,7 @@ $step = 1;
 <script>
 (function () {
   const KIND = <?= json_encode($pk) ?>;
+  const AGENT_WINDOWS = <?= json_encode($agent_windows) ?>;   // the Broker Feature's photo window per style and size
   const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>;
   const SIZES = { post: 1440, square: 1080, story: 1920 };
   const MAX_FRAMES = <?= (int)PLAN_MAX_FRAMES ?>;
@@ -374,15 +389,18 @@ $step = 1;
     if (logo.value === LOGO_DEFAULT(prevSize) && prevSize !== fmt()) logo.value = LOGO_DEFAULT(fmt());
     if (f('badge').value === BADGE_DEFAULT(prevSize) && prevSize !== fmt()) f('badge').value = BADGE_DEFAULT(fmt());
     prevSize = fmt();
+    const agent = KIND === 'broker';   // the agent styles place the logo themselves: Upper right means "on", None off
     form.querySelectorAll('[data-logo]').forEach(el => {
       const k = el.dataset.logo;
-      el.hidden = (L === 'split' && (k === 'bottom' || k === 'center')) || (L !== 'center' && k === 'center');
+      el.hidden = agent ? (k === 'bottom' || k === 'center') : ((L === 'split' && (k === 'bottom' || k === 'center')) || (L !== 'center' && k === 'center'));
     });
-    if (L === 'split' && (logo.value === 'bottom' || logo.value === 'center')) logo.value = 'top';
+    if ((agent || L === 'split') && (logo.value === 'bottom' || logo.value === 'center')) logo.value = 'top';
     if (L !== 'center' && logo.value === 'center') logo.value = 'top';
-    form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = L !== 'split');
-    form.querySelectorAll('.sp-only-multi').forEach(el => el.hidden = L === 'photo');
-    framer.style.aspectRatio = '1080 / ' + (L === 'split' ? ({ post: 780, square: 520, story: 860 })[fmt()] : fmtH());
+    form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = agent ? true : L !== 'split');
+    form.querySelectorAll('.sp-only-3').forEach(el => el.hidden = !agent);
+    form.querySelectorAll('.sp-only-multi').forEach(el => el.hidden = !agent && L === 'photo');
+    if (agent) { const w = (AGENT_WINDOWS[f('style').value] || {})[fmt()] || [1080, 1440]; framer.style.aspectRatio = w[0] + ' / ' + w[1]; }
+    else framer.style.aspectRatio = '1080 / ' + (L === 'split' ? ({ post: 780, square: 520, story: 860 })[fmt()] : fmtH());
     customWrap.hidden = labelSel.value !== '__custom';
   }
 
@@ -557,7 +575,7 @@ $step = 1;
 
   // ── Framing: the same CSS the picture uses, as a control ──
   function framerSet(src, id) {
-    f('focus_x').value = 50; f('focus_y').value = (id && /^(headshot|face):/.test(id)) ? 22 : 50; f('zoom').value = 1;   // a headshot: start on the face
+    f('focus_x').value = 50; f('focus_y').value = KIND === 'broker' ? 0 : ((id && /^(headshot|face):/.test(id)) ? 22 : 50); f('zoom').value = 1;   // a headshot: from the top, the head never cut
     framer.classList.toggle('empty', !src);
     fimg.src = src || '';
     framerApply();
@@ -608,7 +626,7 @@ $step = 1;
     if (n === 'variant' || n === 'hook' || n === 'market' || n === 'tagline') fill();
     if (n === 'angle') { if (e.target.value === 'team') f('layout').value = 'split'; fillTeam(true); fill(); syncLayout(); }
     if (n === 'size') { syncLayout(); scale(); syncSet(); }
-    if (n === 'layout') syncLayout();
+    if (n === 'layout' || n === 'style') { syncLayout(); framerApply(); }
     if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
     if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } framerSet(e.target.dataset.large, e.target.value); }

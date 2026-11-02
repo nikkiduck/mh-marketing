@@ -133,6 +133,30 @@ latest closing (or a rental when there is none).
 - The admin builders: smaller pills, lighter step numbers, room between a
   dropdown and the row under it (`plan_admin_css()`).
 
+## The Broker Feature, from a clean sheet (2026-11-02, evening)
+
+Nikki: "go 100% back to the drawing board on the Featured Agent design ...
+keep 1) the agent's face from shoulders to top of head, completely
+unobscured, nothing covering; and 2) our current color scheme." The broker
+tool now has a Style switch (inc/plan_agent_render.php, `plan_render_agent()`)
+instead of the layouts. In every style the headshot sits in its own window on
+the Slate ground, positioned from the top so the head is whole, and the
+badge, logo and words live around it, never on it:
+
+- Editorial: a band with the badge left and the logo right; the photo in an
+  inset window with a hairline frame; the words below, left-aligned beside
+  a vertical accent bar.
+- Arch: the label as a small-caps eyebrow; the photo in a tall outlined
+  arch; the words centred under it; the logo centred at the foot.
+- Card: the photo edge to edge in the upper part; a card in the other tone
+  (light on dark, dark on light) rises over the chest line with the badge,
+  the hook and the name; the logo on the ground below.
+- Headline first: the hook large at the top, the photo under it, a solid
+  strip at the foot with the firm line and the logo.
+
+Both looks are offered again. The logo colour, size, nudge and shadow
+sliders apply; the watermark sits on the ground behind everything.
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the

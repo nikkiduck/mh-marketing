@@ -12,6 +12,7 @@
  * against served assets. The faces and headshots are the live portal's.
  */
 require __DIR__ . '/../inc/plan_render.php';
+require __DIR__ . '/../inc/plan_agent_render.php';
 
 $out  = rtrim($argv[1] ?? sys_get_temp_dir(), '/');
 $base = $argv[2] ?? ('file://' . realpath(__DIR__ . '/..'));
@@ -90,4 +91,17 @@ foreach (['frame-story-logo' => $frame + ['format' => 'story', 'show_logo' => tr
           'frame-square-mark' => $frame + ['format' => 'square', 'show_logo' => true, 'logo_kind' => 'mark']] as $k => $p) {
     file_put_contents("$out/plan-$k.html", plan_render_photo_frame($p, $base));
     echo "$out/plan-$k.html\n";
+}
+
+// The Featured Agent designs (2026-11-02 evening): four styles, every size, both looks, Jackson's headshot kept whole.
+$agent = ['mark' => 'triangle', 'logo' => 'top', 'logo_kind' => 'full', 'badge' => 'left', 'label' => 'Broker Spotlight', 'photo_url' => $head, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 0,
+          'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn with Mont Haus.',
+          'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Mont Haus International Realty · Montrose', 'style' => 'details'], ['text' => 'Broker Associate', 'style' => 'plain']]];
+foreach (plan_agent_styles() as $style => $name) {
+    foreach (['story', 'post', 'square'] as $format) {
+        foreach (['dark', 'light'] as $theme) {
+            file_put_contents("$out/agent-$style-$format-$theme.html", plan_render_agent(['style' => $style, 'format' => $format, 'theme' => $theme] + $agent, $base));
+            echo "$out/agent-$style-$format-$theme.html\n";
+        }
+    }
 }

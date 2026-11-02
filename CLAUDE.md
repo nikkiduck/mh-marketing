@@ -2776,6 +2776,22 @@ admin Templates page's "Social Media Plan (admin only)" group.
   redesigned; a headshot starts framed on the face (focus_y 22). The admin
   pages' pills are smaller and the step numbers lighter (`plan_admin_css()`,
   passed as `css` to admin_tool_header(); the agents' tools keep social.css).
+- **The Broker Feature from a clean sheet (Nikki, same evening: "scrap
+  what you have now"; keep the face, shoulders to the top of the head,
+  unobscured, and the Slate scheme):** `inc/plan_agent_render.php`,
+  `plan_render_agent()`, four STYLES in place of the layouts (`style`,
+  `plan_agent_styles()`: Editorial, Arch, Card, Headline first), each with
+  the headshot in its own window on the ground colour, positioned from the
+  top (focus_y 0 by default) so nothing covers or cuts the head: a band
+  with badge and logo over an inset framed window and left-aligned words
+  beside an accent bar; a small-caps eyebrow over an outlined arch with the
+  words centred and the logo at the foot; the photo edge to edge with a card
+  in the other tone rising over the chest line; the hook first at the top,
+  the photo under it and a solid strip at the foot with the firm line and
+  the logo. `plan_agent_geometry()` holds every number; `plan_agent_window()`
+  gives the builder the window's aspect for the framing box. Both looks are
+  offered again (no fades, so the light look holds). The hook keeps its line
+  breaks; three lines under it (name, firm and market, title).
 - **The set, second pass (Nikki, same day):** offered at every size (a post
   or square set is a carousel), the cover plus up to 8 more photos
   (`PLAN_MAX_FRAMES` 9), the frames after the cover are the photo ALONE

@@ -39,6 +39,7 @@
  */
 require_once __DIR__ . '/social.php';
 require_once __DIR__ . '/plan_render.php';
+require_once __DIR__ . '/plan_agent_render.php';   // the Featured Agent designs (2026-11-02 evening)
 require_once __DIR__ . '/boards.php';          // mk_areas(): the website's Communities, the locations and the brokers' markets
 require_once __DIR__ . '/market_data.php';     // market_card_defs(): the Market Snapshot's places, for the stats rotation
 
@@ -604,6 +605,8 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $mark   = isset(social_marks()[(string)($in['mark'] ?? '')]) ? (string)$in['mark'] : 'triangle';
     $logoKind = isset(social_logo_kinds()[(string)($in['logo_kind'] ?? '')]) ? (string)$in['logo_kind'] : 'full';
     $layout = isset(plan_layouts()[(string)($in['layout'] ?? '')]) ? (string)$in['layout'] : ($kind === 'branding' ? 'center' : 'photo');
+    // The Broker Feature has its own designs (inc/plan_agent_render.php) in place of the layouts: `style`.
+    $style = $kind === 'broker' ? (isset(plan_agent_styles()[(string)($in['style'] ?? '')]) ? (string)$in['style'] : 'editorial') : '';
     $logo   = (string)($in['logo'] ?? '');
     if (!isset(social_logo_places()[$logo])) $logo = $format === 'story' ? 'bottom' : 'top';
     if ($layout === 'split' && !in_array($logo, ['top', 'none'], true)) $logo = 'top';
@@ -639,7 +642,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     // The words: a headline (Enter = a new line on the centred and split layouts) and up to four lines, each in a style.
     $styles = social_line_styles(); $defaults = social_line_defaults();
     $texts = (array)($in['line_text'] ?? []); $kinds = (array)($in['line_style'] ?? []);
-    $nlines = $layout === 'split' ? 4 : 2;
+    $nlines = $kind === 'broker' ? 3 : ($layout === 'split' ? 4 : 2);
     $lines = [];
     for ($i = 0; $i < $nlines; $i++) {
         $s = (string)($kinds[$i] ?? $defaults[$i]);
@@ -652,16 +655,19 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $frame = [
         'zoom' => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
         'focus_x' => max(0, min(100, (int)($in['focus_x'] ?? 50))),
-        'focus_y' => max(0, min(100, (int)($in['focus_y'] ?? 50))),
+        'focus_y' => max(0, min(100, (int)($in['focus_y'] ?? ($kind === 'broker' ? 0 : 50)))),   // a headshot starts from the top: the head is never cut
     ];
     $common = ['theme' => $theme, 'mark' => $mark, 'logo_kind' => $logoKind, 'logo' => $logo, 'badge' => $badge, 'format' => $format,
                'label' => $label, 'photo' => (string)($in['photo'] ?? ''), 'photo_url' => $photo_url, 'photo_file' => $photo_file] + $frame + $logoOpts;
     $slug = fn(string $s) => mb_substr(strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $s), '-')), 0, 60) ?: 'post';
 
-    $main = $layout === 'split'
+    if ($kind === 'broker') $headline = mb_substr(trim(str_replace("\r", '', (string)($in['headline'] ?? ''))), 0, 140);   // the hook keeps its line breaks in every agent style
+    $main = $kind === 'broker'
+        ? ['renderer' => 'agent', 'post' => $common + ['style' => $style, 'headline' => $headline, 'lines' => $lines]]
+        : ($layout === 'split'
         ? ['renderer' => 'split', 'post' => $common + ['headline' => $headline, 'lines' => $lines, 'team' => plan_team_for_render($team), 'kind' => $kind]]
         : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner',
-                                                         'headline' => $headline, 'lines' => $lines, 'date_text' => '', 'time_text' => '', 'when_text' => '']];
+                                                         'headline' => $headline, 'lines' => $lines, 'date_text' => '', 'time_text' => '', 'when_text' => '']]);
     $main['name'] = $slug($headline !== '' ? $headline : ($label ?: $kind));
 
     $out = ['kind' => $kind, 'set' => false, 'preview' => 0, 'frames' => [$main]];
@@ -731,6 +737,7 @@ function plan_team_for_render(array $team): array {
 /** One frame as HTML through its renderer (the preview, or the export with the photo read from disk). */
 function plan_render_frame(array $frame, ?string $base = null, bool $export = false): string {
     return match ($frame['renderer']) {
+        'agent' => plan_render_agent($frame['post'], $base, $export),
         'split' => plan_render_split($frame['post'], $base, $export),
         'frame' => plan_render_photo_frame($frame['post'], $base, $export),
         default => social_render($frame['post'], $base, $export),
