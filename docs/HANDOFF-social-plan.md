@@ -168,8 +168,10 @@ Claude session: upload the headshot as an asset, image_remove_background,
 download the PNG, deploy it); `plan_agents()` reports `cutout_url` when the
 file exists, the picker offers it first, the style uses it in place of a
 picked headshot, and the form defaults to Cutout for brokers who have one.
-Jackson Horn's was the first; the other approved brokers follow once the
-direction is confirmed.
+All 26 approved brokers' cutouts were made and deployed on 2026-11-02 (the
+originals are untouched; Lynn Emmert's keeps her dog, Jean-Michel's is
+cropped at the top of the head as the original is). A new broker or a new
+headshot needs a new cutout the same way.
 
 ## The set, second pass (2026-11-02, evening)
 

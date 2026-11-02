@@ -2804,7 +2804,8 @@ admin Templates page's "Social Media Plan (admin only)" group.
   them), reported by `plan_agents()` as `cutout_url`, offered as the
   `cutout:<id>` tile first in the Headshot group, and chosen by the style in
   place of a picked headshot. The form picks Cutout for a broker who has
-  one and Editorial otherwise, until a style is chosen. A new broker (or a
+  one and Editorial otherwise, until a style is chosen. All 26 approved
+  brokers' cutouts were made and deployed on 2026-11-02. A new broker (or a
   new headshot) needs a new cutout made the same way.
 - **The set, second pass (Nikki, same day):** offered at every size (a post
   or square set is a carousel), the cover plus up to 8 more photos
