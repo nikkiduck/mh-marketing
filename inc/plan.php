@@ -234,7 +234,9 @@ function plan_agents(mysqli $conn): array {
             'face_url'     => trim((string)$a['headshot_face_url']),
         ];
         $entry['market'] = plan_agent_market($entry);
-        $entry['region'] = plan_region_for_towns($areas) ?? plan_office_region($entry['office']);
+        // The stock library leads with the market's region (Jackson Horn: Montrose, so the San Juans, though
+        // his ticked towns begin alphabetically with Aspen), else the first ticked town's, else the office's.
+        $entry['region'] = plan_region_for_market($entry['market']) ?? plan_region_for_towns($areas) ?? plan_office_region($entry['office']);
         $cache[$entry['id']] = $entry;
     }
     return $cache;
@@ -283,6 +285,17 @@ function plan_area_region(string $area_key): string {
 function plan_office_region(string $office): string {
     return ['aspen' => 'Aspen & Roaring Fork Valley', 'vail' => 'Vail Valley', 'colorado-springs' => 'Front Range', 'denver' => 'Front Range'][$office] ?? 'Colorado';
 }
+/** The region of the Communities town or area whose label is these words ("Montrose", "Vail Valley"), or null. */
+function plan_region_for_market(string $words): ?string {
+    $w = mb_strtolower(trim($words));
+    if ($w === '') return null;
+    foreach (mk_areas() as $a) {
+        if (mb_strtolower($a['area']) === $w) return plan_area_region($a['key']);
+        foreach ($a['towns'] as $t) if (mb_strtolower($t['label']) === $w) return plan_area_region($a['key']);
+    }
+    return null;
+}
+
 /** The region of the first ticked town's area, or null when none is ticked. */
 function plan_region_for_towns(array $town_keys): ?string {
     foreach ($town_keys as $k) { $a = mk_town_area($k); if ($a !== null && $a !== '') return plan_area_region($a); }
@@ -401,8 +414,10 @@ function plan_listings(mysqli $conn): array {
         $id = $l['market'] . '|' . $l['listing_key'];
         $closed = social_is_closed((string)$l['status']);
         $addr = trim((string)$l['address']);
-        $agent = trim((string)$l['list_agent_name']);
-        if (trim((string)$l['colist_agent_name']) !== '') $agent .= ' & ' . trim((string)$l['colist_agent_name']);
+        // A team's feed name reads "Weber Boxer Group | Jonathan Boxer Scott Weber": the team name alone.
+        $side = fn(string $n) => trim(explode('|', $n)[0]);
+        $agent = $side((string)$l['list_agent_name']);
+        if ($side((string)$l['colist_agent_name']) !== '') $agent .= ' & ' . $side((string)$l['colist_agent_name']);
         $cache[$id] = $l + [
             'id'         => $id,
             'closed'     => $closed,
