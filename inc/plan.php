@@ -671,8 +671,15 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $slug = fn(string $s) => mb_substr(strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $s), '-')), 0, 60) ?: 'post';
 
     if ($kind === 'broker') $headline = mb_substr(trim(str_replace("\r", '', (string)($in['headline'] ?? ''))), 0, 140);   // the hook keeps its line breaks in every agent style
+    // The Cutout style's backdrop (2026-11-02): a stock location photo or one of the person's uploads, under a veil; '' = none.
+    $bdIn = (string)($in['backdrop'] ?? '');
+    $backdrop = ['backdrop_url' => '', 'backdrop_file' => null, 'backdrop_veil' => max(30, min(97, (int)($in['backdrop_veil'] ?? 82)))];
+    if ($kind === 'broker' && (str_starts_with($bdIn, 'stock:') || str_starts_with($bdIn, 'upload:'))) {
+        [$bu, $bf] = plan_photo($ctx, $bdIn, null, null);
+        if (!str_ends_with($bu, '/social-placeholder.jpg')) { $backdrop['backdrop_url'] = $bu; $backdrop['backdrop_file'] = $bf; }   // the placeholder means an id that is not theirs
+    }
     $main = $kind === 'broker'
-        ? ['renderer' => 'agent', 'post' => $common + ['style' => $style, 'headline' => $headline, 'lines' => $lines]]
+        ? ['renderer' => 'agent', 'post' => $common + $backdrop + ['style' => $style, 'headline' => $headline, 'lines' => $lines]]
         : ($layout === 'split'
         ? ['renderer' => 'split', 'post' => $common + ['headline' => $headline, 'lines' => $lines, 'team' => plan_team_for_render($team), 'kind' => $kind]]
         : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner',

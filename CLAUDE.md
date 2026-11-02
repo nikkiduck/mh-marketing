@@ -2814,6 +2814,14 @@ admin Templates page's "Social Media Plan (admin only)" group.
   Associate · Aspen" with no company line (the broker form's default lines
   changed to match, every style), and the geometry is the real triangle
   mark ghosted large at the lower right (the Watermark choice picks it).
+  Then a BACKDROP (Nikki: "a subtle image in the background with the slate
+  overlay"): a Backdrop step on the broker tool, shown for the Cutout
+  style, with None, the stock library by region (the broker's region's
+  first photo chosen by default until a pick is made) and the person's
+  uploads, plus an Overlay slider (`backdrop_veil`, 40 to 96, default 82):
+  the photo fills the canvas under a veil of the ground colour, behind the
+  ghost and everything else (`backdrop_url` / `backdrop_file`, resolved
+  through plan_photo(); an id that is not theirs falls to none).
 
 - **The set, second pass (Nikki, same day):** offered at every size (a post
   or square set is a carousel), the cover plus up to 8 more photos

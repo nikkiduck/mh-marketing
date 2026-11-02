@@ -98,10 +98,11 @@ $agent = ['mark' => 'triangle', 'logo' => 'top', 'logo_kind' => 'full', 'badge' 
           'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn.',
           'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Broker Associate · Montrose', 'style' => 'details']]];
 $cutout = $argv[3] ?? ($live . '/agent-photos/jackson-horn-cutout.png');   // the cutout PNG's URL (pass a local one to design against)
+$agentBd = ['backdrop_url' => $stock('ridgway-mount-sneffels-fall-198784448'), 'backdrop_veil' => 82];
 foreach (plan_agent_styles() as $style => $name) {
     foreach (['story', 'post', 'square'] as $format) {
         foreach (['dark', 'light'] as $theme) {
-            $p = ['style' => $style, 'format' => $format, 'theme' => $theme] + ($style === 'cutout' ? ['photo_url' => $cutout] : []) + $agent;
+            $p = ['style' => $style, 'format' => $format, 'theme' => $theme] + ($style === 'cutout' ? ['photo_url' => $cutout] + $agentBd : []) + $agent;
             file_put_contents("$out/agent-$style-$format-$theme.html", plan_render_agent($p, $base));
             echo "$out/agent-$style-$format-$theme.html\n";
         }

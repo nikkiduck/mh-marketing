@@ -28,7 +28,12 @@
  *              covered. Needs a cutout PNG (agent-photos/<slug>-cutout.png,
  *              made with Adobe's background removal; plan_agents() reports
  *              it as cutout_url); with an ordinary photo the style still
- *              draws, with the photo's own background.
+ *              draws, with the photo's own background. A BACKDROP (2026-11-02,
+ *              late: "a subtle image in the background with the slate
+ *              overlay"): backdrop_url / backdrop_file, a stock location photo
+ *              or an upload, under a veil of the ground colour at
+ *              backdrop_veil percent (default 82), behind the ghost and
+ *              everything else.
  *
  * Shares social_palette(), social_font_css() and social_logo_options() with
  * the other renderers; the logo colour, size, nudge and shadow sliders
@@ -205,11 +210,17 @@ CSS;
             $figLeft2 = $g['figLeft'] + (int)round(($fx - 50) / 100 * 700);
             $figTop2 = $H - $figH2 + (int)round($fy / 100 * 300);   // dragging down drops the figure off the foot
             $hookW = $W - 128;
+            // The backdrop: a location photo under a veil of the ground colour, behind everything (2026-11-02).
+            $bd = ($export && !empty($p['backdrop_file'])) ? 'file://' . $p['backdrop_file'] : (string)($p['backdrop_url'] ?? '');
+            $veil = max(0.3, min(0.97, ((int)($p['backdrop_veil'] ?? 82)) / 100));
+            $veilRgb = $theme === 'light' ? '246,247,249' : '31,36,44';
             // The hook's sentences each on their own line with air between them (Nikki, 2026-11-02), unless the admin broke the lines.
             $sentences = count($hlines) > 1 ? $hlines : array_values(array_filter(array_map('trim', preg_split('/(?<=[.?!])\s+/u', $headline)), fn($x) => $x !== ''));
             $hHtml = '';
             foreach ($sentences as $sn) $hHtml .= '<p class="hook">' . $e($sn) . '</p>';
-            $css = ".band{position:absolute;left:64px;top:{$g['bandY']}px;z-index:4}"
+            $css = ".bd{position:absolute;inset:0;z-index:0}.bd img{display:block;width:100%;height:100%;object-fit:cover}.bd::after{content:'';position:absolute;inset:0;background:rgba({$veilRgb},{$veil})}"
+                 . ".ghost{z-index:1}"
+                 . ".band{position:absolute;left:64px;top:{$g['bandY']}px;z-index:4}"
                  . ".logo{right:64px;top:{$g['bandY']}px;z-index:5}"
                  . ".words{left:64px;width:{$hookW}px;top:{$g['hookTop']}px;z-index:4}"
                  . ".words .hook{margin:0 0 {$sz(26)}px}"
@@ -223,7 +234,8 @@ CSS;
                  . ".fig{position:absolute;left:{$figLeft2}px;top:{$figTop2}px;height:{$figH2}px;z-index:3}"
                  . ".fig img{display:block;height:100%;width:auto;filter:drop-shadow(0 24px 40px rgba(0,0,0,.35))}";
             $figHtml = $photo !== '' ? '<div class="fig"><img src="' . $e($photo) . '" alt=""></div>' : '';
-            $html .= '<div class="band">' . ($label !== '' ? $pillHtml : '') . '</div>'
+            $html = ($bd !== '' ? '<div class="bd"><img src="' . $e($bd) . '" alt=""></div>' : '') . $html
+                   . '<div class="band">' . ($label !== '' ? $pillHtml : '') . '</div>'
                    . ($logoOn ? '<img class="logo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">' : '')
                    . '<div class="words">' . $hHtml . '</div>'
                    . '<div class="sband">' . $lHtml . '</div>'

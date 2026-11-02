@@ -132,3 +132,7 @@
 .sp-framelogo { margin-top: 8px; align-items: center; }
 .sp-framelogo .sp-look-l { flex-basis: 100%; text-align: center; font-size: 12.5px; margin: 0 0 2px; }
 .sp-ord.wide { width: auto; min-width: 26px; padding: 0 8px; border-radius: 13px; }
+
+/* The Cutout style's backdrop picker (2026-11-02): a None tile beside the stock thumbnails. */
+.sp-none { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border-radius: 8px; border: 3px solid transparent; background: linear-gradient(135deg, #1f242c 50%, #f6f7f9 50%); color: #fff; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+.sp-photo input:checked + .sp-none { border-color: var(--gold-deep); }
