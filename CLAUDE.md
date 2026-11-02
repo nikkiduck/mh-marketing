@@ -2784,7 +2784,11 @@ admin Templates page's "Social Media Plan (admin only)" group.
   the cover, the third ...; none when the cover's logo is None; the logo
   colour, size, nudge and shadow sliders apply), and the closing card is
   optional and off unless ticked. The ZIP is named -story-set, -post-set or
-  -square-set.
+  -square-set. **Per frame (Nikki, same evening):** selecting an internal
+  frame's pill under the preview shows "Logo on this frame": Auto (the
+  every-other pattern), None, Logo or M mark, posted as `frame_logo[]`
+  aligned with `frames[]`; the tile's number badge reads "2 L" / "3 M" for
+  what the frame will carry.
 
 ## Upcoming projects (not started)
 

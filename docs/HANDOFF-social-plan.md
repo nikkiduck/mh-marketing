@@ -140,7 +140,10 @@ post and square sizes too (a carousel); the frames after the cover are the
 photo alone, with the white or black logo lower right on every other one
 (`plan_render_photo_frame()`; none when the cover has no logo); the cover
 plus up to eight more photos (`PLAN_MAX_FRAMES` = 9); the closing card is
-optional and off by default.
+optional and off by default. Then, per frame: select an internal frame's
+pill under the preview and choose Auto / None / Logo / M mark for it
+(`frame_logo[]`, aligned with `frames[]`); the tile's number badge shows an
+L or an M for what the frame will carry.
 
 ## Sizes and the look
 

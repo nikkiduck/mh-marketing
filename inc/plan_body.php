@@ -268,6 +268,12 @@ $step = 1;
         <div class="sp-busy" id="spBusy"></div>
       </div>
       <div class="sp-framepills" id="spFramePills" hidden></div>
+      <div class="sp-framepills sp-framelogo" id="spFrameLogo" hidden>
+        <span class="sp-look-l">Logo on this frame</span>
+        <?php foreach (['auto' => 'Auto', 'none' => 'None', 'full' => 'Logo', 'mark' => 'M mark'] as $k => $t): ?>
+        <label class="sp-pillopt"><input type="radio" name="_flogo" value="<?= $e($k) ?>"><span><?= $e($t) ?></span></label>
+        <?php endforeach; ?>
+      </div>
       <p class="sp-cap">This is a preview. Click Download to save it.</p>
       <p class="sp-cap-btn"><button type="submit" form="spForm" class="sp-btn sp-btn-sm" id="spDownload2">Download PNG</button></p>
     </aside>
@@ -311,7 +317,11 @@ $step = 1;
   const LOGO_DEFAULT = s => s === 'story' ? 'bottom' : 'top';
   const BADGE_DEFAULT = s => s === 'story' ? 'right' : 'left';
   let prevSize = fmt();
-  let frames = [];          // the story set's photo ids, in order (property + story only)
+  let frames = [];          // the set's photo ids, in order (property only)
+  let frameLogos = {};      // photo id → auto | none | full | mark: the logo on that frame (2026-11-02)
+  const frameLogoBox = document.getElementById('spFrameLogo');
+  // What a frame will carry: the explicit choice, else Auto's every-other pattern in the cover's logo kind (i = its index in frames, 1 = the first after the cover).
+  const effLogo = (id, i) => { const c = frameLogos[id] || 'auto'; if (c !== 'auto') return c; return (f('logo').value !== 'none' && (i - 1) % 2 === 0) ? f('logo_kind').value : 'none'; };
   let allTiles = [];        // the photos the picker holds
 
   // ── The story set (property, story size) ──
@@ -319,11 +329,16 @@ $step = 1;
   function syncSet() {
     form.querySelectorAll('.sp-only-set').forEach(el => el.hidden = !setOn());
     const on = setOn();
-    framesBox.innerHTML = on ? frames.map(id => '<input type="hidden" name="frames[]" value="' + esc(id) + '">').join('') : '';
+    framesBox.innerHTML = on ? frames.map(id => '<input type="hidden" name="frames[]" value="' + esc(id) + '"><input type="hidden" name="frame_logo[]" value="' + esc(frameLogos[id] || 'auto') + '">').join('') : '';
     photos.querySelectorAll('.sp-photo').forEach(t => {
       const id = t.querySelector('input').value, i = frames.indexOf(id);
       let b = t.querySelector('.sp-ord');
-      if (on && i >= 0) { if (!b) { b = document.createElement('b'); b.className = 'sp-ord'; t.appendChild(b); } b.textContent = i + 1; }
+      if (on && i >= 0) {
+        if (!b) { b = document.createElement('b'); b.className = 'sp-ord'; t.appendChild(b); }
+        const l = i > 0 ? effLogo(id, i) : 'none';   // the badge shows the frame's logo: L for the stack, M for the mark
+        b.textContent = (i + 1) + (l === 'full' ? ' L' : (l === 'mark' ? ' M' : ''));
+        b.classList.toggle('wide', l !== 'none');
+      }
       else if (b) b.remove();
     });
     const end = f('endcard') && f('endcard').checked;
@@ -337,12 +352,21 @@ $step = 1;
         html += '<label class="sp-pillopt"><input type="radio" name="_pill" value="' + i + '"' + (i === cur ? ' checked' : '') + '><span>' + label + '</span></label>';
       }
       pills.innerHTML = html;
-    } else f('frame').value = 0;
+      // The per-frame logo row: for an internal frame (not the cover, not the end card), showing its choice.
+      const internal = cur > 0 && cur < frames.length;
+      frameLogoBox.hidden = !internal;
+      if (internal) { const c = frameLogos[frames[cur]] || 'auto'; const r = frameLogoBox.querySelector('input[value="' + c + '"]'); if (r) r.checked = true; }
+    } else { f('frame').value = 0; frameLogoBox.hidden = true; }
     dl.textContent = dl2.textContent = on ? 'Download the set (ZIP)' : 'Download PNG';
     help.textContent = on ? 'The download is a ZIP of ' + n + ' PNGs at 1080 × ' + fmtH() + ', numbered in play order: post them as one ' + (fmt() === 'story' ? 'story' : 'carousel') + '.'
                           : 'The download is a 1080 × 1440 PNG for a post, 1080 × 1080 for a square, or 1080 × 1920 for a story.';
   }
-  pills.addEventListener('input', e => { if (e.target.name === '_pill') { f('frame').value = e.target.value; update(); } });
+  pills.addEventListener('input', e => { if (e.target.name === '_pill') { f('frame').value = e.target.value; syncSet(); update(); } });
+  frameLogoBox.addEventListener('input', e => {
+    if (e.target.name !== '_flogo') return;
+    const cur = +f('frame').value; if (!(cur > 0 && cur < frames.length)) return;
+    frameLogos[frames[cur]] = e.target.value; syncSet(); update();
+  });
 
   // ── Layout rules: which logo places and how many lines each layout shows ──
   function syncLayout() {
@@ -585,7 +609,7 @@ $step = 1;
     if (n === 'angle') { if (e.target.value === 'team') f('layout').value = 'split'; fillTeam(true); fill(); syncLayout(); }
     if (n === 'size') { syncLayout(); scale(); syncSet(); }
     if (n === 'layout') syncLayout();
-    if (n === 'set' || n === 'endcard') syncSet();
+    if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
     if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } framerSet(e.target.dataset.large, e.target.value); }
     if (n === 'theme') syncShadowDefault();

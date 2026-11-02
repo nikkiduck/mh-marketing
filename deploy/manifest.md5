@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-02 from git HEAD (Social Media Plan templates: the set at every size, blank photo frames).
+# Generated 2026-11-02 from git HEAD (Social Media Plan templates: per-frame logo choice).
 8f5ea7f88a7f2ceb39a271c513495907  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -10,7 +10,7 @@ ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
 2aac235ecae32ece776eca6fa74889d1  assets/css/market.css
 cf3d2f3789e2418f00c72099bd902e57  assets/css/mh-theme.css
 d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
-2147831b81184c0b2a02adb04f53ac8f  assets/css/social.css
+a54d97b7baa71be98f7287bbcc1921fd  assets/css/social.css
 fc21c7628d6d4e564b6502274aeb56fc  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 2d85cea4712b33eb75b1bb384e92e261  billing.php
@@ -62,8 +62,8 @@ ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-7e20273b77bf99e621487272137aa9c2  inc/plan.php
-9d733a6652b5c22db7784c84e591e943  inc/plan_body.php
+8130969bb87cbb6ff873102ce2f9750d  inc/plan.php
+cc53e484c908b80d66c6de1e3c488028  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
 0ca7e986a6c7a6f080f48e4d3ffe9e3d  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php

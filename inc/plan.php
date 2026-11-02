@@ -673,14 +673,16 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     if ($kind === 'property' && !empty($in['set'])) {
         $frames = [];
         $seen = [];
-        foreach ((array)($in['frames'] ?? []) as $pid) {
+        $choices = (array)($in['frame_logo'] ?? []);   // per frame (2026-11-02, Nikki): auto | none | full | mark, aligned with frames[]
+        foreach (array_values((array)($in['frames'] ?? [])) as $idx => $pid) {
             $pid = (string)$pid;
             if ($pid === '' || isset($seen[$pid]) || count($frames) >= PLAN_MAX_FRAMES) continue;
             $seen[$pid] = true;
             [$u, $f] = plan_photo($ctx, $pid, $listing, null);
-            $frames[] = ['id' => $pid, 'url' => $u, 'file' => $f];
+            $choice = (string)($choices[$idx] ?? 'auto');
+            $frames[] = ['id' => $pid, 'url' => $u, 'file' => $f, 'choice' => in_array($choice, ['none', 'full', 'mark'], true) ? $choice : 'auto'];
         }
-        if (!$frames) $frames[] = ['id' => (string)($in['photo'] ?? ''), 'url' => $photo_url, 'file' => $photo_file];
+        if (!$frames) $frames[] = ['id' => (string)($in['photo'] ?? ''), 'url' => $photo_url, 'file' => $photo_file, 'choice' => 'auto'];
         $cover = $main;
         $cover['post']['photo'] = $frames[0]['id']; $cover['post']['photo_url'] = $frames[0]['url']; $cover['post']['photo_file'] = $frames[0]['file'];
         $cover['name'] = '01-cover';
@@ -688,10 +690,13 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         $addrLine = $headline !== '' ? $headline : (string)$listing['headline'];
         $n = 2;
         foreach (array_slice($frames, 1) as $i => $fr) {
-            // The photo alone; the logo lower right on the first after the cover, the third, the fifth ... (none at all when the cover has none).
+            // The photo alone. The logo lower right as the admin chose for the frame (none, the stack or the M mark), or on
+            // Auto the every-other pattern: the first after the cover, the third, the fifth ... in the cover's logo kind
+            // (none at all when the cover has none).
+            $eff = $fr['choice'] === 'auto' ? (($logo !== 'none' && $i % 2 === 0) ? $logoKind : 'none') : $fr['choice'];
             $set[] = ['renderer' => 'frame', 'name' => sprintf('%02d', $n++),
-                      'post' => $common + ['photo' => $fr['id'], 'photo_url' => $fr['url'], 'photo_file' => $fr['file'], 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 50,
-                                           'show_logo' => $logo !== 'none' && $i % 2 === 0]];
+                      'post' => ['logo_kind' => $eff === 'mark' ? 'mark' : 'full', 'show_logo' => $eff !== 'none'] + $common
+                              + ['photo' => $fr['id'], 'photo_url' => $fr['url'], 'photo_file' => $fr['file'], 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 50]];
         }
         if (!empty($in['endcard'])) {
             $agentName = (string)$listing['agent'];
