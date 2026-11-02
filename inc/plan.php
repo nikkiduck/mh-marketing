@@ -133,12 +133,13 @@ function plan_sample_week(): array {
  */
 function plan_hooks(): array {
     return [
-        'Thinking of buying or selling in {market}? Call {name} with Mont Haus.',
-        'Know {market} like a local? {name} does. Mont Haus, {market}.',
-        'Your {market} real estate expert: {name}, Mont Haus.',
-        'Looking for the right home in {market}? Start with {name} at Mont Haus.',
-        'Curious what your {market} home is worth? Ask {name} with Mont Haus.',
-        'Local knowledge. Global reach. Meet {name}, Mont Haus {market}.',
+        // Without "with Mont Haus" since 2026-11-02 (Nikki): the logo carries the brand on every design.
+        'Thinking of buying or selling in {market}? Call {name}.',
+        'Know {market} like a local? {name} does.',
+        'Your {market} real estate expert: {name}.',
+        'Looking for the right home in {market}? Start with {name}.',
+        'Curious what your {market} home is worth? Ask {name}.',
+        'Local knowledge. Global reach. Meet {name}.',
     ];
 }
 
@@ -147,9 +148,9 @@ function plan_milestones(): array {
     return [
         'Congratulations, {first}.',
         'Just closed: another one for {name}.',
-        'Top producer: {name}, Mont Haus {market}.',
-        'Award winning: {name}, Mont Haus {market}.',
-        'Newly designated: {name}, Mont Haus {market}.',
+        'Top producer: {name}, {market}.',
+        'Award winning: {name}, {market}.',
+        'Newly designated: {name}, {market}.',
     ];
 }
 

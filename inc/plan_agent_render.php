@@ -66,12 +66,12 @@ function plan_agent_geometry(string $style, string $format): array {
     switch ($style) {
         case 'cutout':
             $bandY = $top + ($sq ? 48 : 56);
-            $hookTop = $bandY + ($sq ? 60 : 70) + ($sq ? 36 : 44);
+            $hookTop = $bandY + ($sq ? 60 : 70) + ($story ? 110 : ($sq ? 48 : 80));   // scooted down (Nikki, 2026-11-02)
             // The figure: its height, where its left edge sits, and the slate band behind the shoulders.
             $figH = $story ? 1180 : ($sq ? 640 : 900);
             $figLeft = $story ? -140 : ($sq ? -60 : -80);
             $bandTop = $story ? 1080 : ($sq ? 620 : 800);
-            $bandH = $story ? 180 : ($sq ? 120 : 160);
+            $bandH = $story ? 190 : ($sq ? 130 : 170);
             $bandLeft = $story ? 300 : ($sq ? 200 : 260);
             return ['bandY' => $bandY, 'hookTop' => $hookTop, 'figH' => $figH, 'figLeft' => $figLeft, 'figTop' => $H - $figH,
                     'sbTop' => $bandTop, 'sbH' => $bandH, 'sbLeft' => $bandLeft, 'logo' => $logo,
@@ -204,25 +204,26 @@ CSS;
             $figH2 = (int)round($g['figH'] * $scale);
             $figLeft2 = $g['figLeft'] + (int)round(($fx - 50) / 100 * 700);
             $figTop2 = $H - $figH2 + (int)round($fy / 100 * 300);   // dragging down drops the figure off the foot
-            $tri = $theme === 'light' ? ['#4A5566', '#C9D0D9'] : ['#4A5566', '#55637A'];
             $hookW = $W - 128;
+            // The hook's sentences each on their own line with air between them (Nikki, 2026-11-02), unless the admin broke the lines.
+            $sentences = count($hlines) > 1 ? $hlines : array_values(array_filter(array_map('trim', preg_split('/(?<=[.?!])\s+/u', $headline)), fn($x) => $x !== ''));
+            $hHtml = '';
+            foreach ($sentences as $sn) $hHtml .= '<p class="hook">' . $e($sn) . '</p>';
             $css = ".band{position:absolute;left:64px;top:{$g['bandY']}px;z-index:4}"
                  . ".logo{right:64px;top:{$g['bandY']}px;z-index:5}"
                  . ".words{left:64px;width:{$hookW}px;top:{$g['hookTop']}px;z-index:4}"
-                 . ".words .hook{margin:0}"
-                 // Two triangles after the mark, lower right, one on the other.
-                 . ".tri{position:absolute;z-index:1;clip-path:polygon(50% 0,100% 100%,0 100%)}"
-                 . ".tri.a{left:" . ($W - ($story ? 820 : ($sq ? 520 : 700))) . "px;bottom:0;width:" . ($story ? 980 : ($sq ? 620 : 840)) . "px;height:" . ($story ? 1120 : ($sq ? 700 : 950)) . "px;background:{$tri[0]}}"
-                 . ".tri.b{left:" . ($W - ($story ? 480 : ($sq ? 300 : 400))) . "px;bottom:0;width:" . ($story ? 720 : ($sq ? 450 : 620)) . "px;height:" . ($story ? 760 : ($sq ? 470 : 650)) . "px;background:{$tri[1]}}"
+                 . ".words .hook{margin:0 0 {$sz(26)}px}"
+                 // The real Mont Haus triangle, ghosted, large at the lower right (the watermark choice picks the mark; None leaves the ground bare).
+                 . ".ghost{right:" . ($story ? -300 : ($sq ? -200 : -260)) . "px;bottom:0;width:" . ($story ? 1320 : ($sq ? 800 : 1100)) . "px;opacity:" . ($theme === 'light' ? '.16' : '.24') . "}"
+                 . ".ghost.m{right:0;width:" . ($story ? 900 : ($sq ? 560 : 760)) . "px}"
                  // The slate band behind the shoulders, slanted at its left end, carrying the name and firm line right-aligned.
                  . ".sband{position:absolute;left:{$g['sbLeft']}px;right:0;top:{$g['sbTop']}px;height:{$g['sbH']}px;background:#55637A;z-index:2;clip-path:polygon(" . ($sq ? 60 : 90) . "px 0,100% 0,100% 100%,0 100%);"
                  . "display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:0 64px 0 140px;box-sizing:border-box;color:#FFFFFF;text-align:right}"
-                 . ".sband .ln{margin:0 0 6px;color:#FFFFFF}.sband .ln-town{color:#FFFFFF;font-size:{$sz(30)}px}.sband .ln-details{color:#E3E8EE;font-size:{$sz(22)}px}.sband .ln-plain{font-size:{$sz(22)}px;color:#E3E8EE}"
+                 . ".sband .ln{margin:0 0 8px;color:#FFFFFF}.sband .ln-town{color:#FFFFFF;font-size:{$sz(32)}px}.sband .ln-details{color:#EEF1F5;font-size:{$sz(30)}px;font-weight:400}.sband .ln-plain{font-size:{$sz(30)}px;color:#EEF1F5}"
                  . ".fig{position:absolute;left:{$figLeft2}px;top:{$figTop2}px;height:{$figH2}px;z-index:3}"
                  . ".fig img{display:block;height:100%;width:auto;filter:drop-shadow(0 24px 40px rgba(0,0,0,.35))}";
             $figHtml = $photo !== '' ? '<div class="fig"><img src="' . $e($photo) . '" alt=""></div>' : '';
-            $html .= '<div class="tri a"></div><div class="tri b"></div>'
-                   . '<div class="band">' . ($label !== '' ? $pillHtml : '') . '</div>'
+            $html .= '<div class="band">' . ($label !== '' ? $pillHtml : '') . '</div>'
                    . ($logoOn ? '<img class="logo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">' : '')
                    . '<div class="words">' . $hHtml . '</div>'
                    . '<div class="sband">' . $lHtml . '</div>'

@@ -2806,7 +2806,15 @@ admin Templates page's "Social Media Plan (admin only)" group.
   place of a picked headshot. The form picks Cutout for a broker who has
   one and Editorial otherwise, until a style is chosen. All 26 approved
   brokers' cutouts were made and deployed on 2026-11-02. A new broker (or a
-  new headshot) needs a new cutout made the same way.
+  new headshot) needs a new cutout made the same way. Nikki's notes on the
+  first Cutout render, same night: the hook sits lower, each sentence on
+  its own line with air between (the renderer splits the hook at sentence
+  ends unless the admin broke the lines), the hooks lost "with Mont Haus"
+  (the logo carries the brand), the band shows the name over "Broker
+  Associate · Aspen" with no company line (the broker form's default lines
+  changed to match, every style), and the geometry is the real triangle
+  mark ghosted large at the lower right (the Watermark choice picks it).
+
 - **The set, second pass (Nikki, same day):** offered at every size (a post
   or square set is a carousel), the cover plus up to 8 more photos
   (`PLAN_MAX_FRAMES` 9), the frames after the cover are the photo ALONE

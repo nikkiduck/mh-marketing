@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-02 from git HEAD (Social Media Plan templates: the Cutout style).
+# Generated 2026-11-02 from git HEAD (Social Media Plan templates: Cutout style, Nikki's notes).
 8f5ea7f88a7f2ceb39a271c513495907  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -62,9 +62,9 @@ ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-021b5fdb1fc716691daf36935af15512  inc/plan.php
-bf6bc414885db97c9e4809b8bc1a2ee4  inc/plan_agent_render.php
-4d174f4f547bcf5bc6395f307903fc7a  inc/plan_body.php
+9c01cdce67f4ebc263dc598974376747  inc/plan.php
+15833a19b3b47ea6fe8f21c5b07dc984  inc/plan_agent_render.php
+8297148e1349916fbd21d872d0e9a6c6  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
 0ca7e986a6c7a6f080f48e4d3ffe9e3d  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
