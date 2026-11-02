@@ -8,7 +8,9 @@
  * and Listing Flyer (template_flyer.php) work from that agent's listings;
  * General Social (template_general.php, 2026-10-28) and Market Snapshot
  * (market_snapshot.php) need no agent: General Social acts as the admin
- * themselves (social_context() with ?preview=admin). The tools are the
+ * themselves (social_context() with ?preview=admin); the Social Media Plan
+ * group (2026-11-02, inc/plan.php) is admin only and works from the whole
+ * roster and feed. The tools are the
  * portal's own bodies (inc/social_body.php, inc/flyer_body.php), drawn under
  * the admin header; the endpoints act on the chosen account through
  * ?preview=, as the roster's eye icon does. Admins only.
@@ -33,6 +35,14 @@ $groups = [
     'Print Templates' => [
         ['Listing Flyer', 'template_flyer.php' . $q, 'A printed Letter-size flyer of one of the agent\'s listings: up to six photos, the details, a banner, their contact lines and a QR code.', 'Make a flyer ›', true],
     ],
+    // The Social Media Plan's own templates (Nikki, 2026-11-02): admin only, not on the agent portal. See inc/plan.php.
+    'Social Media Plan (admin only)' => [
+        ['This Week\'s Plan', 'social_plan.php', 'The plan\'s week, Monday to Saturday: eight pieces, each day\'s suggestion from the rotations, a button to its template.', 'Open the week ›', false],
+        ['Property Post + Story Set', 'template_property.php', 'Any Mont Haus listing in the feed: New Listing, Featured, Just Sold or Rental. A post, or a story set: the photos in order as one slideshow, downloaded as a ZIP.', 'Make a post or set ›', false],
+        ['Broker Feature', 'template_broker.php', 'Spotlight a broker tied to their market with one of the plan\'s hooks, or a milestone; their headshot, a lifestyle shot or a stock photo.', 'Make a feature ›', false],
+        ['Location Feature', 'template_location.php', 'An office, an area or a town: the office or a view, the brokers based there with their faces in a row, or a local real estate angle.', 'Make a feature ›', false],
+        ['Branding Story', 'template_branding.php', 'The seasonal taglines on a mountain photo, centred, with the logo. Two a week in the plan.', 'Make a story ›', false],
+    ],
 ];
 
 admin_tool_header([
@@ -42,7 +52,7 @@ admin_tool_header([
 ]);
 admin_agent_picker($agents, $agent_id, 'templates.php');
 ?>
-    <?php if (!$agent_id): ?><div class="note">Choose an agent above to open the listing post and flyer tools. General Social and Market Snapshot work without one.</div><?php endif; ?>
+    <?php if (!$agent_id): ?><div class="note">Choose an agent above to open the listing post and flyer tools. General Social, Market Snapshot and the Social Media Plan tools work without one.</div><?php endif; ?>
     <?php foreach ($groups as $heading => $cards): ?>
     <div class="tl-group"><?= $e($heading) ?></div>
     <div class="tl-cards">

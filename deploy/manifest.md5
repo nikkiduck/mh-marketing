@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-10-28 from git HEAD (General Social, logo places, light rebalance).
+# Generated 2026-11-02 from git HEAD (Social Media Plan templates, admin only).
 8f5ea7f88a7f2ceb39a271c513495907  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -10,7 +10,7 @@ ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
 2aac235ecae32ece776eca6fa74889d1  assets/css/market.css
 cf3d2f3789e2418f00c72099bd902e57  assets/css/mh-theme.css
 d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
-541ea5c742a16c8f5a10dbff4d8f9ebe  assets/css/social.css
+2147831b81184c0b2a02adb04f53ac8f  assets/css/social.css
 fc21c7628d6d4e564b6502274aeb56fc  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 2d85cea4712b33eb75b1bb384e92e261  billing.php
@@ -62,6 +62,9 @@ ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
+2d394a985581dcd44887970a6bb7a0c5  inc/plan.php
+a28dc82a5f2e5736b3c71c871bfc7924  inc/plan_body.php
+97407152d28a4300ccd287f1c57935ca  inc/plan_render.php
 0ca7e986a6c7a6f080f48e4d3ffe9e3d  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
@@ -71,9 +74,9 @@ eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 b61906846907a3ab02607008800f38ad  inc/social.php
 7848a7ea81a9e1ffec65fdae2e65073f  inc/social_body.php
-765b1e474723116f75601b2dbd2f9e30  inc/social_render.php
+3f9f97f5ff352075d506801bc79e83ac  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-7d713b478be02c26a0f8d6104d0088e6  index.php
+34dd307ecabbdd8b5e48a7e1bb7f81da  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php
 0f76181f22712da050ea376c236e2301  leadership.php
 df2d52f3615178d71d9ee78291e954b8  login.php
@@ -85,9 +88,12 @@ f3327ec6854ed5362ede027a9b198064  oauth_start.php
 f8560bfe6f42693f0d165d7fc20a329d  order_split.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 b92d554425c9b2d084073d48776855f6  pipeline_review.php
+6ea1716bfef8da66474976acf972c3b2  plan_export.php
+893a0c39dd2f3e610bdcf33b80382246  plan_photos.php
+c62b17405d2e2388e5648ac84d061201  plan_render.php
 dce6b022a8146453bb2054adcd6a5144  portal/advertising.php
 f69e92a4cc1632404c42761619aee4b4  portal/asset.php
-d3c352cf3c36d1fa492e0fbc67caa960  portal/brand.php
+599716edc3a58f6759dc93e0e12fb5cb  portal/brand.php
 75944e2d3fcdebd213ccfd29d150b974  portal/brand_guidelines.php
 c30ccf40a1411cf123044bdef01339b0  portal/business_cards.php
 05a34c31faeb500804830730a14163ac  portal/contact.php
@@ -119,18 +125,23 @@ cf21690bfc2043680d8e3b0c6deb1bc0  portal/social_photos.php
 6639aad2bfc0f75d2efb6d2e6f80285d  portal/social_upload.php
 2f6f6b397081287ed0190cebbd0b1bca  portal/spend.php
 9f8e42a25f32ce5cc74d5d5db6334751  portal/templates.php
-7f5e553082c8b06564ff9b72874e7f4f  portal/yard_signs.php
+a4c0f0b3bbc4ef07b0d8382636a69652  portal/yard_signs.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 0c92cc6187a05fb5aec83e103b919b60  qr_codes.php
 e154338096723d27e76e2b7dc979fe70  receipt.php
 433c74fae7846a5d72927080970946b5  reset-password.php
 ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
+e313f700457026d51c8e40d137c27ab3  social_plan.php
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
+6cd3995bcb84b9ab315a6baca9c00f77  template_branding.php
+cccf7e061edb113ecbb23b5a00c97966  template_broker.php
 92c444733a2833398cef3e8df8898813  template_flyer.php
 55e4a582c433280e0a44ac4312371119  template_general.php
+cbce2f756e847eabf585df1442a10f62  template_location.php
+4976f2bf5aeb43f1ba0c300474656ea4  template_property.php
 7ed35fb57cfe66c721bc38d416516637  template_social.php
-75284eba3384f53ffcfd7a9f98b509ae  templates.php
+428f2ad8d05fa9a8411326bf7ea5d1cc  templates.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 df9c9acc1b520b4ccd5374a16a4a5b94  users.php
 36bd7478b390b9af57fcad085903aab5  website_order.php

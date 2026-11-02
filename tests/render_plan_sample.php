@@ -1,0 +1,75 @@
+<?php
+/**
+ * tests/render_plan_sample.php — renders the Social Media Plan templates with
+ * sample data to HTML files, for design work and a headless Chromium
+ * screenshot. No database, no sign-in: inc/plan_render.php (the split
+ * layout) and inc/social_render.php (everything full-photo or centred).
+ *
+ *   php tests/render_plan_sample.php [outdir] [asset base]
+ *
+ * The asset base defaults to this checkout as a file:// URL; pass
+ * https://marketing.monthaus.com (or a local server's origin) to render
+ * against served assets. The faces and headshots are the live portal's.
+ */
+require __DIR__ . '/../inc/plan_render.php';
+
+$out  = rtrim($argv[1] ?? sys_get_temp_dir(), '/');
+$base = $argv[2] ?? ('file://' . realpath(__DIR__ . '/..'));
+$live = 'https://marketing.monthaus.com';
+$head = $live . '/agent-photos/jackson-horn.jpg';
+$faces = [];
+foreach ([['Jackson Horn', 'jackson-horn'], ['Sierrah Smith', 'sierrah-smith'], ['Whit Ward', 'whit-ward'], ['Allison Byford', 'allison-byford'], ['Bryan Peterson', 'bryan-peterson'], ['Trent Jones', 'trent-jones']] as [$n, $s]) {
+    $faces[] = ['name' => $n, 'first' => explode(' ', $n)[0], 'url' => $live . '/agent-photos/' . $s . '-square.jpg', 'file' => null];
+}
+$stock = fn(string $n) => $live . '/assets/stock/' . $n . '.jpg';
+$listingPhoto = 'https://monthaus.com/img.php?u=' . rawurlencode('https://photos.anpcdn.com/base/57be43_e1f413326388da72af2e955330ca24d3.jpg') . '&w=1600';
+
+$broker = ['theme' => 'dark', 'mark' => 'triangle', 'logo_kind' => 'full', 'logo' => 'top', 'badge' => 'left', 'label' => 'Broker Spotlight',
+           'photo_url' => $head, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 30,
+           'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn with Mont Haus.',
+           'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Mont Haus International Realty · Montrose', 'style' => 'details'], ['text' => 'Broker Associate', 'style' => 'plain']],
+           'team' => []];
+$location = ['theme' => 'dark', 'mark' => 'triangle', 'logo_kind' => 'full', 'logo' => 'top', 'badge' => 'left', 'label' => 'Meet the Team',
+             'photo_url' => $stock('ridgway-mount-sneffels-fall-198784448'), 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 50,
+             'headline' => 'Our brokers in Southwest Colorado',
+             'lines' => [['text' => 'Mont Haus International Realty', 'style' => 'town'], ['text' => 'Telluride · Ridgway · Ouray · Montrose · Durango', 'style' => 'details']],
+             'team' => array_slice($faces, 0, 3)];
+$office = ['theme' => 'light', 'mark' => 'mmark', 'logo_kind' => 'mark', 'logo' => 'top', 'badge' => 'right', 'label' => 'Office Feature',
+           'photo_url' => $stock('aspen-aerial-fall-1110909378'), 'zoom' => 1.2, 'focus_x' => 50, 'focus_y' => 40,
+           'headline' => "Mont Haus Aspen", 'lines' => [['text' => 'Aspen, Colorado', 'style' => 'town'], ['text' => 'Mont Haus International Realty', 'style' => 'details'], ['text' => 'The valley from the office window, every day.', 'style' => 'note'], ['text' => '', 'style' => 'plain']],
+           'team' => []];
+
+$splits = [
+    'broker-post'       => $broker + ['format' => 'post'],
+    'broker-story'      => $broker + ['format' => 'story'],
+    'broker-square'     => $broker + ['format' => 'square'],
+    'broker-mark-none'  => ['logo' => 'none', 'mark' => 'none', 'label' => ''] + $broker + ['format' => 'post'],
+    'location-team'     => $location + ['format' => 'story'],
+    'location-team-6'   => ['team' => $faces] + $location + ['format' => 'post'],
+    'location-team-sq'  => ['team' => array_slice($faces, 0, 4)] + $location + ['format' => 'square'],
+    'location-office'   => $office + ['format' => 'post'],
+];
+foreach ($splits as $k => $p) {
+    foreach (['dark', 'light'] as $theme) {
+        file_put_contents("$out/plan-$k-$theme.html", plan_render_split(['theme' => $theme] + $p, $base));
+        echo "$out/plan-$k-$theme.html\n";
+    }
+}
+
+// The property story set and the branding story, through social_render() as inc/plan.php composes them.
+$common = ['theme' => 'dark', 'mark' => 'triangle', 'logo_kind' => 'full', 'badge' => 'left', 'format' => 'story', 'photo_url' => $listingPhoto, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 50,
+           'date_text' => '', 'time_text' => '', 'when_text' => '', 'type' => 'story_other'];
+$set = [
+    'set-01-cover' => $common + ['layout' => 'corner', 'logo' => 'bottom', 'label' => 'New Listing', 'headline' => '633 W Main St',
+                                 'lines' => [['text' => 'Aspen, Colorado', 'style' => 'town'], ['text' => '$9,500,000', 'style' => 'price']]],
+    'set-02'       => $common + ['layout' => 'corner', 'logo' => 'none', 'label' => '', 'headline' => '',
+                                 'lines' => [['text' => '633 W Main St', 'style' => 'town'], ['text' => 'Aspen  ·  $9,500,000', 'style' => 'details']]],
+    'set-03-end'   => $common + ['layout' => 'center', 'logo' => 'center', 'label' => 'New Listing', 'headline' => "633 W Main St\nAspen",
+                                 'lines' => [['text' => '$9,500,000', 'style' => 'price'], ['text' => 'Listed by Jonathan Boxer', 'style' => 'note']]],
+    'branding'     => $common + ['layout' => 'center', 'logo' => 'center', 'label' => '', 'photo_url' => $stock('vail-aspens-fall-1746156502'), 'headline' => "Gold season.",
+                                 'lines' => [['text' => 'Mont Haus International Realty', 'style' => 'town']]],
+];
+foreach ($set as $k => $p) {
+    file_put_contents("$out/plan-$k.html", social_render($p, $base));
+    echo "$out/plan-$k.html\n";
+}

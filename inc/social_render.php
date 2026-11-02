@@ -273,6 +273,51 @@ function social_fit_size(string $text, int $size, array $steps): int {
 }
 
 /**
+ * The three @font-face rules (Cormorant Garamond roman and italic, Jost), by
+ * URL for the preview; EMBEDDED as data URIs for the export. The export page
+ * is a local file and web fonts are the one resource a browser fetches under
+ * cross-origin rules, so from file:// they can silently fall back to
+ * Liberation (the download had Times-like type, 2026-10-12). Base64 of the
+ * three woff2 files is about 140 KB and needs no network at all. Shared with
+ * the plan templates (inc/plan_render.php) since 2026-11-02.
+ */
+function social_font_css(string $base, bool $export): string {
+    $fontUrl = function (string $file) use ($base, $export): string {
+        $disk = __DIR__ . '/../assets/fonts/mh/' . $file;
+        if ($export && is_file($disk)) return 'data:font/woff2;base64,' . base64_encode((string)file_get_contents($disk));
+        return $base . '/assets/fonts/mh/' . $file;
+    };
+    return "@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url(" . $fontUrl('CormorantGaramond-normal.woff2') . ") format('woff2')}\n"
+         . "@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:300 700;src:url(" . $fontUrl('CormorantGaramond-italic.woff2') . ") format('woff2')}\n"
+         . "@font-face{font-family:'Jost';font-style:normal;font-weight:100 900;src:url(" . $fontUrl('Jost-normal.woff2') . ") format('woff2')}";
+}
+
+/**
+ * The two looks: the colours every template draws with (the label pill is
+ * solid on both: it has to read in a fast scroll). $base prefixes the logo
+ * and M mark URLs. Shared with the plan templates since 2026-11-02; the
+ * Market Snapshot keeps its own copy of the same tones.
+ */
+function social_palette(string $theme, string $base = ''): array {
+    return $theme === 'light'
+        // Light (Slate, deeper buttons, the website's scheme since 2026-10-28; was espresso brown on
+        // warm paper from 2026-10-12): the scheme's page, type and accent, the black logo and M mark, and a fade that
+        // starts higher and lands almost solid cream, because the words were hard to read.
+        ? ['bg' => '#F6F7F9', 'text' => '#1F242C', 'accent' => '#55637A', 'muted' => '#434B57', 'soft' => '#3A414C', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',
+           // Rebalanced 2026-10-28 (Nikki): the bottom no longer lands on solid white, so more of the photo and the ghosted
+           // mark show through; the top fade is stronger so the logo reads on a dark sky; a centred layout gets a veil instead.
+           'fade' => 'rgba(246,247,249,.42)', 'shadow' => 'none', 'topfade' => 'rgba(246,247,249,.82) 0%, rgba(246,247,249,.38) 55%, rgba(246,247,249,0) 100%',
+           'fullfade' => 'rgba(246,247,249,0) 0%, rgba(246,247,249,.56) 40%, rgba(246,247,249,.78) 70%, rgba(246,247,249,.86) 100%', 'fullfrac' => 0.54,
+           'veil' => 'rgba(246,247,249,.50)', 'ghost' => '.13',
+           'logo' => $base . '/assets/images/MH_vert-stack_black.svg', 'mark' => $base . '/assets/images/M-mark_black.svg']
+        : ['bg' => '#1F242C', 'text' => '#ffffff', 'accent' => '#D6DEE8', 'muted' => '#E3E8EE', 'soft' => '#EEF1F5', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',   // Slate, deeper buttons (2026-10-28): the light slate on the photo, the button tone for the badge
+           'fade' => 'rgba(31,36,44,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(20,24,30,.5) 0%, rgba(20,24,30,0) 100%',
+           'fullfade' => 'rgba(0,0,0,0) 0%, rgba(20,24,30,.86) 100%', 'fullfrac' => 0.58,
+           'veil' => 'rgba(20,24,30,.42)', 'ghost' => '.20',   // .16 was all but lost, .26 too prominent (Nikki, 2026-10-28)
+           'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
+}
+
+/**
  * The complete HTML document for one post.
  * $export = true swaps an uploaded photo's URL for its file on disk, which
  * is how Chromium reads it (it has no portal session).
@@ -282,19 +327,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $e     = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     $W = SOCIAL_W;
 
-    // Fonts: by URL for the preview; EMBEDDED for the export. The export page is
-    // a local file and web fonts are the one resource a browser fetches under
-    // cross-origin rules, so from file:// they can silently fall back to
-    // Liberation (the download had Times-like type, 2026-10-12). Base64 of the
-    // three woff2 files is about 140 KB and needs no network at all.
-    $fontUrl = function (string $file) use ($base, $export): string {
-        $disk = __DIR__ . '/../assets/fonts/mh/' . $file;
-        if ($export && is_file($disk)) return 'data:font/woff2;base64,' . base64_encode((string)file_get_contents($disk));
-        return $base . '/assets/fonts/mh/' . $file;
-    };
-    $fCormorant = $fontUrl('CormorantGaramond-normal.woff2');
-    $fCormorantI = $fontUrl('CormorantGaramond-italic.woff2');
-    $fJost = $fontUrl('Jost-normal.woff2');
+    // Fonts: by URL for the preview; EMBEDDED for the export (social_font_css(), shared with the plan templates since 2026-11-02).
+    $fontCss = social_font_css($base, $export);
 
     $type   = isset(social_templates()[(string)($p['type'] ?? '')]) ? (string)$p['type'] : 'featured';
     $oh     = social_is_openhouse($type);
@@ -326,23 +360,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $zpct = round($zoom * 100, 2);
     $photo = ($export && !empty($p['photo_file'])) ? 'file://' . $p['photo_file'] : (string)($p['photo_url'] ?? '');
 
-    // The two looks. The label pill is solid gold with ink text on both (it has to read in a fast scroll).
-    $c = $theme === 'light'
-        // Light (Slate, deeper buttons, the website's scheme since 2026-10-28; was espresso brown on
-        // warm paper from 2026-10-12): the scheme's page, type and accent, the black logo and M mark, and a fade that
-        // starts higher and lands almost solid cream, because the words were hard to read.
-        ? ['bg' => '#F6F7F9', 'text' => '#1F242C', 'accent' => '#55637A', 'muted' => '#434B57', 'soft' => '#3A414C', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',
-           // Rebalanced 2026-10-28 (Nikki): the bottom no longer lands on solid white, so more of the photo and the ghosted
-           // mark show through; the top fade is stronger so the logo reads on a dark sky; a centred layout gets a veil instead.
-           'fade' => 'rgba(246,247,249,.42)', 'shadow' => 'none', 'topfade' => 'rgba(246,247,249,.82) 0%, rgba(246,247,249,.38) 55%, rgba(246,247,249,0) 100%',
-           'fullfade' => 'rgba(246,247,249,0) 0%, rgba(246,247,249,.56) 40%, rgba(246,247,249,.78) 70%, rgba(246,247,249,.86) 100%', 'fullfrac' => 0.54,
-           'veil' => 'rgba(246,247,249,.50)', 'ghost' => '.13',
-           'logo' => $base . '/assets/images/MH_vert-stack_black.svg', 'mark' => $base . '/assets/images/M-mark_black.svg']
-        : ['bg' => '#1F242C', 'text' => '#ffffff', 'accent' => '#D6DEE8', 'muted' => '#E3E8EE', 'soft' => '#EEF1F5', 'pill' => '#4A5566', 'pilltext' => '#FFFFFF',   // Slate, deeper buttons (2026-10-28): the light slate on the photo, the button tone for the badge
-           'fade' => 'rgba(31,36,44,.62)', 'shadow' => '0 2px 16px rgba(0,0,0,.35)', 'topfade' => 'rgba(20,24,30,.5) 0%, rgba(20,24,30,0) 100%',
-           'fullfade' => 'rgba(0,0,0,0) 0%, rgba(20,24,30,.86) 100%', 'fullfrac' => 0.58,
-           'veil' => 'rgba(20,24,30,.42)', 'ghost' => '.20',   // .16 was all but lost, .26 too prominent (Nikki, 2026-10-28)
-           'logo' => $base . '/assets/images/MH_vert-stack_white.svg', 'mark' => $base . '/assets/images/M-mark_white.svg'];
+    // The two looks (social_palette(), shared with the plan templates since 2026-11-02).
+    $c = social_palette($theme, $base);
 
     // Open House text under a date block runs a size smaller (the split layout only).
     $k  = ($oh && !$full) ? 0.86 : 1.0;
@@ -380,9 +399,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
         : ".body{position:absolute;left:0;top:{$photoH}px;width:{$W}px;height:{$bodyH}px;padding:50px 64px 0;box-sizing:border-box}";
 
     $css = <<<CSS
-@font-face{font-family:'Cormorant Garamond';font-style:normal;font-weight:300 700;src:url({$fCormorant}) format('woff2')}
-@font-face{font-family:'Cormorant Garamond';font-style:italic;font-weight:300 700;src:url({$fCormorantI}) format('woff2')}
-@font-face{font-family:'Jost';font-style:normal;font-weight:100 900;src:url({$fJost}) format('woff2')}
+{$fontCss}
 html,body{margin:0;padding:0}
 body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c['bg']};color:{$c['text']};
      font-family:'Jost','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased}

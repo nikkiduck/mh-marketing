@@ -2701,6 +2701,64 @@ and inc/flyer.php. Uploads made from the admin pages are the admin's own
 page under a simulated admin session on the server (Jonathan's 16 listings
 in both dropdowns, 26 agents in the picker).
 
+### The Social Media Plan templates (admin only, 2026-11-02)
+
+Nikki's "Mont Haus Social Media Plan" (a docx; its words are in
+`plan_definition()` and docs/HANDOFF-social-plan.md): eight pieces a week,
+3 property posts + stories, 1 market stats story, 1 location feature, 1
+broker feature, 2 branding stories. Built as a series of ADMIN-ONLY tools
+on the Instagram template foundation; nothing of it is on the agent
+portal. Reached from the roster header's **Social Plan** button and the
+admin Templates page's "Social Media Plan (admin only)" group.
+
+- `social_plan.php`: This Week's Plan, the sample week Monday to Saturday
+  with each day's suggestion and a button into its tool with the pick
+  preselected; `?week=YYYY-Www`. The suggestions rotate by ISO week index
+  (`plan_week()`, `plan_rotate()`: markets through `market_card_defs()`,
+  brokers through the approved roster with a headshot, locations through
+  offices then areas, hooks through the plan's six; the season by month,
+  Holidays from November 20); the listing picks are live (newest new,
+  highest-priced live, latest closing).
+- `template_property.php`: a post or story about ANY Mont Haus listing in
+  the feed (`plan_listings()`: hs_listing_state live, or closed within 30
+  days; `new` = a new_listing change or first_seen within 21 days), labelled
+  New Listing / Featured / Just Sold / Rental. On a story, the SET: the
+  photos ticked in order become a slideshow (the plan: "not a single
+  photo"): cover with the words, photo frames with a two-line caption and
+  no logo, an end card (centred logo, address, "Listed by"), up to 6 photos,
+  downloaded as a ZIP of PNGs (`plan_export_zip()`, Chromium frame by frame).
+- `template_broker.php`: a broker (`plan_agents()`: active + approved
+  agents; `market` is the first place in their service-area text, else the
+  first ticked town, else the office), a hook or a milestone with
+  {name}/{market} swapped in (`plan_hooks()`, `plan_milestones()`), their
+  headshot or face crop (`headshot:<id>` / `face:<id>`, read from
+  agent-photos for the export via mk_photo_file()), an upload or a stock
+  photo of their region.
+- `template_location.php`: an office, a Communities area or a town
+  (`plan_locations()`), angle Office / Team / Local; the team is the brokers
+  based there (`plan_location_team()`: roster office for an office, ticked
+  Service areas for an area or town), their faces in a row (six at most).
+- `template_branding.php`: a season and a tagline (`plan_seasons()`, DRAFTS
+  for Nikki to replace) on a stock photo suggested by the season's words in
+  the file name; centred words and logo, as General Social.
+- The pictures: `social_render()` for everything full-photo or centred
+  (the `*_other` templates), `plan_render_split()` (inc/plan_render.php) for
+  the one new layout, the photo on top and the words on the ground below,
+  with the optional team row. `social_palette()` and `social_font_css()`
+  were extracted from social_render() so both share one look (renders
+  byte-identical before and after). Sizes as the Instagram tools; the split
+  photo takes 900 / 640 / 1230 px of post / square / story.
+- One builder body, `inc/plan_body.php` (`$pk` = kind), the endpoints
+  `plan_render.php`, `plan_export.php`, `plan_photos.php`, all
+  `plan_gate()` (require_role admin + social_context() with
+  ?preview=admin, so uploads, the stock library and the export copies work
+  exactly as General Social's admin side). Every posted value is checked in
+  `plan_post_from_request()`; a photo is only ever an upload of the
+  person's, a stock photo, the chosen broker's headshot, or one the site
+  listed for the chosen listing.
+- Harness: `tests/render_plan_sample.php` (no database). The builder's
+  JavaScript was exercised against a stub router locally on 2026-11-02.
+
 ## Upcoming projects (not started)
 
 - **Retire the frozen Spark-era roster views.** `office_roster` / `mh_brokers`
