@@ -97,10 +97,12 @@ foreach (['frame-story-logo' => $frame + ['format' => 'story', 'show_logo' => tr
 $agent = ['mark' => 'triangle', 'logo' => 'top', 'logo_kind' => 'full', 'badge' => 'left', 'label' => 'Broker Spotlight', 'photo_url' => $head, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 0,
           'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn with Mont Haus.',
           'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Mont Haus International Realty · Montrose', 'style' => 'details'], ['text' => 'Broker Associate', 'style' => 'plain']]];
+$cutout = $argv[3] ?? ($live . '/agent-photos/jackson-horn-cutout.png');   // the cutout PNG's URL (pass a local one to design against)
 foreach (plan_agent_styles() as $style => $name) {
     foreach (['story', 'post', 'square'] as $format) {
         foreach (['dark', 'light'] as $theme) {
-            file_put_contents("$out/agent-$style-$format-$theme.html", plan_render_agent(['style' => $style, 'format' => $format, 'theme' => $theme] + $agent, $base));
+            $p = ['style' => $style, 'format' => $format, 'theme' => $theme] + ($style === 'cutout' ? ['photo_url' => $cutout] : []) + $agent;
+            file_put_contents("$out/agent-$style-$format-$theme.html", plan_render_agent($p, $base));
             echo "$out/agent-$style-$format-$theme.html\n";
         }
     }

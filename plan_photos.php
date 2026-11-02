@@ -28,7 +28,7 @@ if ($kind === 'property') {
     $a = plan_agents($conn)[(int)$subject] ?? null;
     if (!$a) { http_response_code(404); echo json_encode(['error' => 'not an approved agent']); exit; }
     $out = plan_agent_tiles($a);
-    $suggest = $out[0]['id'] ?? '';
+    $suggest = $out[0]['id'] ?? '';   // the cutout when there is one, else the headshot
     $out = array_merge($out, plan_upload_tiles($ctx), plan_stock_tiles($a['region']));
 } elseif ($kind === 'location') {
     $loc = plan_location($subject);

@@ -2792,6 +2792,20 @@ admin Templates page's "Social Media Plan (admin only)" group.
   gives the builder the window's aspect for the framing box. Both looks are
   offered again (no fades, so the light look holds). The hook keeps its line
   breaks; three lines under it (name, firm and market, title).
+  **Cutout (late that night, Nikki: "a cutout/background remove of the
+  headshot, something more creative", in colour):** a fifth style, the
+  broker cut out of the photo standing in front of Slate geometry (two
+  triangles after the mark lower right, a slanted slate band behind the
+  shoulders with the name, the hook above the figure, badge and logo in the
+  clear band at the top; the figure anchored to the foot, zoom scales it,
+  dragging moves it). The cutout is a FILE: `agent-photos/<slug>-cutout.png`
+  (transparent PNG, the headshot through Adobe's background removal in a
+  Claude session, uploaded with the deploy; nothing on the server makes
+  them), reported by `plan_agents()` as `cutout_url`, offered as the
+  `cutout:<id>` tile first in the Headshot group, and chosen by the style in
+  place of a picked headshot. The form picks Cutout for a broker who has
+  one and Editorial otherwise, until a style is chosen. A new broker (or a
+  new headshot) needs a new cutout made the same way.
 - **The set, second pass (Nikki, same day):** offered at every size (a post
   or square set is a carousel), the cover plus up to 8 more photos
   (`PLAN_MAX_FRAMES` 9), the frames after the cover are the photo ALONE

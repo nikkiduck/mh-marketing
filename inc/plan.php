@@ -259,6 +259,9 @@ function plan_agents(mysqli $conn): array {
             'headshot_url' => trim((string)$a['headshot_url']),
             'face_url'     => trim((string)$a['headshot_face_url']),
         ];
+        // The cutout (2026-11-02): agent-photos/<slug>-cutout.png, the headshot with its background removed (Adobe), when made.
+        $cut = $entry['slug'] !== '' ? mk_photo_dir() . '/' . $entry['slug'] . '-cutout.png' : '';
+        $entry['cutout_url'] = ($cut !== '' && is_file($cut)) ? mk_photo_base() . '/' . $entry['slug'] . '-cutout.png?v=' . filemtime($cut) : '';
         $entry['market'] = plan_agent_market($entry);
         // The stock library leads with the market's region (Jackson Horn: Montrose, so the San Juans, though
         // his ticked towns begin alphabetically with Aspen), else the first ticked town's, else the office's.
@@ -526,6 +529,7 @@ function plan_season_tiles(string $season): array {
 /** A broker's headshot and face crop as tiles (only the ones this portal hosts). */
 function plan_agent_tiles(array $a): array {
     $out = [];
+    if ($a['cutout_url'] !== '') $out[] = plan_tile('cutout:' . $a['id'], $a['cutout_url'], $a['cutout_url'], 'Headshot', $a['name'] . ', cut out (for the Cutout style)');
     if (mk_photo_file($a['headshot_url']) !== '') $out[] = plan_tile('headshot:' . $a['id'], $a['headshot_url'], $a['headshot_url'], 'Headshot', $a['name'] . ', the profile headshot');
     if (mk_photo_file($a['face_url']) !== '' && $a['face_url'] !== $a['headshot_url']) $out[] = plan_tile('face:' . $a['id'], $a['face_url'], $a['face_url'], 'Headshot', $a['name'] . ', the square crop');
     return $out;
@@ -552,8 +556,8 @@ function plan_photo(array $ctx, string $photo, ?array $listing = null, ?array $a
     if (str_starts_with($photo, 'stock:') && ($f = social_stock_file(substr($photo, 6)))) {
         return [social_stock_url(substr($photo, 6), 2048), $f];
     }
-    if ($agent && preg_match('/^(headshot|face):(\d+)$/', $photo, $m) && (int)$m[2] === (int)$agent['id']) {
-        $u = $m[1] === 'face' ? $agent['face_url'] : $agent['headshot_url'];
+    if ($agent && preg_match('/^(headshot|face|cutout):(\d+)$/', $photo, $m) && (int)$m[2] === (int)$agent['id']) {
+        $u = $m[1] === 'face' ? $agent['face_url'] : ($m[1] === 'cutout' ? $agent['cutout_url'] : $agent['headshot_url']);
         $f = mk_photo_file($u);
         if ($f !== '' && is_file($f)) return [$u, realpath($f) ?: $f];
     }
@@ -607,6 +611,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $layout = isset(plan_layouts()[(string)($in['layout'] ?? '')]) ? (string)$in['layout'] : ($kind === 'branding' ? 'center' : 'photo');
     // The Broker Feature has its own designs (inc/plan_agent_render.php) in place of the layouts: `style`.
     $style = $kind === 'broker' ? (isset(plan_agent_styles()[(string)($in['style'] ?? '')]) ? (string)$in['style'] : 'editorial') : '';
+    $agent = null;   // set below; the Cutout style reads it
     $logo   = (string)($in['logo'] ?? '');
     if (!isset(social_logo_places()[$logo])) $logo = $format === 'story' ? 'bottom' : 'top';
     if ($layout === 'split' && !in_array($logo, ['top', 'none'], true)) $logo = 'top';
@@ -618,7 +623,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
                  'text_shadow' => ($in['text_shadow'] ?? '') === '' ? null : (int)$in['text_shadow'], 'logo_shadow' => (int)($in['logo_shadow'] ?? 0)];
 
     // The subject.
-    $listing = null; $agent = null; $loc = null; $team = [];
+    $listing = null; $loc = null; $team = [];
     if ($kind === 'property') {
         $listing = plan_listing($conn, (string)($in['listing'] ?? ''));
         if (!$listing) return 'Choose a listing to see the post.';
@@ -651,7 +656,10 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $headline = mb_substr(trim(str_replace("\r", '', (string)($in['headline'] ?? ''))), 0, 140);
     if ($layout === 'photo') $headline = trim(preg_replace('/\s*\n\s*/', ' ', $headline));   // one line of words over the fade
 
-    [$photo_url, $photo_file] = plan_photo($ctx, (string)($in['photo'] ?? ''), $listing, $agent);
+    $photoIn = (string)($in['photo'] ?? '');
+    // The Cutout style wants the cutout: a headshot or face crop picked for it becomes the cutout when one exists.
+    if ($kind === 'broker' && $style === 'cutout' && $agent && $agent['cutout_url'] !== '' && preg_match('/^(headshot|face):/', $photoIn)) $photoIn = 'cutout:' . $agent['id'];
+    [$photo_url, $photo_file] = plan_photo($ctx, $photoIn, $listing, $agent);
     $frame = [
         'zoom' => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
         'focus_x' => max(0, min(100, (int)($in['focus_x'] ?? 50))),

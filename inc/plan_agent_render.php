@@ -20,6 +20,15 @@
  *              badge, the hook and the name; the logo on the ground below
  *   headline   the hook first, large, at the top; the photo under it; a
  *              solid strip at the foot with the firm line and the logo
+ *   cutout     (2026-11-02, late) the broker CUT OUT of the photo, in colour,
+ *              standing in front of Slate geometry: two triangles after the
+ *              brand mark at the lower right, a slanted slate band behind
+ *              the shoulders carrying the name, the hook above the figure;
+ *              the figure is anchored to the foot of the frame and never
+ *              covered. Needs a cutout PNG (agent-photos/<slug>-cutout.png,
+ *              made with Adobe's background removal; plan_agents() reports
+ *              it as cutout_url); with an ordinary photo the style still
+ *              draws, with the photo's own background.
  *
  * Shares social_palette(), social_font_css() and social_logo_options() with
  * the other renderers; the logo colour, size, nudge and shadow sliders
@@ -34,7 +43,7 @@ require_once __DIR__ . '/social_render.php';
 
 /** The styles, in menu order. */
 function plan_agent_styles(): array {
-    return ['editorial' => 'Editorial', 'arch' => 'Arch', 'card' => 'Card', 'headline' => 'Headline first'];
+    return ['cutout' => 'Cutout', 'editorial' => 'Editorial', 'arch' => 'Arch', 'card' => 'Card', 'headline' => 'Headline first'];
 }
 
 /**
@@ -55,6 +64,18 @@ function plan_agent_geometry(string $style, string $format): array {
     $m = 64;                                   // the side margin
     $logo = $sq ? 84 : 110;                    // the logo's height
     switch ($style) {
+        case 'cutout':
+            $bandY = $top + ($sq ? 48 : 56);
+            $hookTop = $bandY + ($sq ? 60 : 70) + ($sq ? 36 : 44);
+            // The figure: its height, where its left edge sits, and the slate band behind the shoulders.
+            $figH = $story ? 1180 : ($sq ? 640 : 900);
+            $figLeft = $story ? -140 : ($sq ? -60 : -80);
+            $bandTop = $story ? 1080 : ($sq ? 620 : 800);
+            $bandH = $story ? 180 : ($sq ? 120 : 160);
+            $bandLeft = $story ? 300 : ($sq ? 200 : 260);
+            return ['bandY' => $bandY, 'hookTop' => $hookTop, 'figH' => $figH, 'figLeft' => $figLeft, 'figTop' => $H - $figH,
+                    'sbTop' => $bandTop, 'sbH' => $bandH, 'sbLeft' => $bandLeft, 'logo' => $logo,
+                    'wl' => 0, 'wt' => 0, 'ww' => $W, 'wh' => $H];   // the framing box shows the whole canvas
         case 'arch':
             $eyebrowY = $top + ($sq ? 48 : 72);
             $ww = $story ? 760 : ($sq ? 560 : 700);
@@ -94,7 +115,7 @@ function plan_render_agent(array $p, ?string $base = null, bool $export = false)
     $theme  = ($p['theme'] ?? 'dark') === 'light' ? 'light' : 'dark';
     $H      = social_format_height($format);
     [$top, $bot] = social_format_insets($format);
-    $sq = $format === 'square';
+    $sq = $format === 'square'; $story = $format === 'story';
     $k  = $sq ? 0.84 : 1.0;
     $sz = fn(int $px) => (int)round($px * $k);
     $g  = plan_agent_geometry($style, $format);
@@ -177,6 +198,36 @@ CSS;
 
     $css = ''; $html = $ghostHtml;
     switch ($style) {
+        case 'cutout':
+            // Zoom scales the figure (1 to 1.6 is useful); dragging across moves it (focus_x: 50 = the style's own place).
+            $scale = max(0.6, min(2.0, $zoom));
+            $figH2 = (int)round($g['figH'] * $scale);
+            $figLeft2 = $g['figLeft'] + (int)round(($fx - 50) / 100 * 700);
+            $figTop2 = $H - $figH2 + (int)round($fy / 100 * 300);   // dragging down drops the figure off the foot
+            $tri = $theme === 'light' ? ['#4A5566', '#C9D0D9'] : ['#4A5566', '#55637A'];
+            $hookW = $W - 128;
+            $css = ".band{position:absolute;left:64px;top:{$g['bandY']}px;z-index:4}"
+                 . ".logo{right:64px;top:{$g['bandY']}px;z-index:5}"
+                 . ".words{left:64px;width:{$hookW}px;top:{$g['hookTop']}px;z-index:4}"
+                 . ".words .hook{margin:0}"
+                 // Two triangles after the mark, lower right, one on the other.
+                 . ".tri{position:absolute;z-index:1;clip-path:polygon(50% 0,100% 100%,0 100%)}"
+                 . ".tri.a{left:" . ($W - ($story ? 820 : ($sq ? 520 : 700))) . "px;bottom:0;width:" . ($story ? 980 : ($sq ? 620 : 840)) . "px;height:" . ($story ? 1120 : ($sq ? 700 : 950)) . "px;background:{$tri[0]}}"
+                 . ".tri.b{left:" . ($W - ($story ? 480 : ($sq ? 300 : 400))) . "px;bottom:0;width:" . ($story ? 720 : ($sq ? 450 : 620)) . "px;height:" . ($story ? 760 : ($sq ? 470 : 650)) . "px;background:{$tri[1]}}"
+                 // The slate band behind the shoulders, slanted at its left end, carrying the name and firm line right-aligned.
+                 . ".sband{position:absolute;left:{$g['sbLeft']}px;right:0;top:{$g['sbTop']}px;height:{$g['sbH']}px;background:#55637A;z-index:2;clip-path:polygon(" . ($sq ? 60 : 90) . "px 0,100% 0,100% 100%,0 100%);"
+                 . "display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:0 64px 0 140px;box-sizing:border-box;color:#FFFFFF;text-align:right}"
+                 . ".sband .ln{margin:0 0 6px;color:#FFFFFF}.sband .ln-town{color:#FFFFFF;font-size:{$sz(30)}px}.sband .ln-details{color:#E3E8EE;font-size:{$sz(22)}px}.sband .ln-plain{font-size:{$sz(22)}px;color:#E3E8EE}"
+                 . ".fig{position:absolute;left:{$figLeft2}px;top:{$figTop2}px;height:{$figH2}px;z-index:3}"
+                 . ".fig img{display:block;height:100%;width:auto;filter:drop-shadow(0 24px 40px rgba(0,0,0,.35))}";
+            $figHtml = $photo !== '' ? '<div class="fig"><img src="' . $e($photo) . '" alt=""></div>' : '';
+            $html .= '<div class="tri a"></div><div class="tri b"></div>'
+                   . '<div class="band">' . ($label !== '' ? $pillHtml : '') . '</div>'
+                   . ($logoOn ? '<img class="logo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">' : '')
+                   . '<div class="words">' . $hHtml . '</div>'
+                   . '<div class="sband">' . $lHtml . '</div>'
+                   . $figHtml;
+            break;
         case 'arch':
             $r = (int)($g['ww'] / 2);
             $textLeft = 96; $textWidth = $W - 192;

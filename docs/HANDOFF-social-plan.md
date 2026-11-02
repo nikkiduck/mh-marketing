@@ -157,6 +157,20 @@ badge, logo and words live around it, never on it:
 Both looks are offered again. The logo colour, size, nudge and shadow
 sliders apply; the watermark sits on the ground behind everything.
 
+Late that night Nikki asked for a cutout design ("something more creative",
+the headshot in colour). The fifth style, **Cutout**: the broker cut out of
+the photo in front of Slate geometry, two triangles after the mark lower
+right, a slanted slate band behind the shoulders with the name and firm
+line, the hook above the figure, badge and logo in the clear band at the
+top. The cutout itself is a transparent PNG at agent-photos/<slug>-cutout.png,
+made from the headshot with Adobe's background removal (the Adobe tools in a
+Claude session: upload the headshot as an asset, image_remove_background,
+download the PNG, deploy it); `plan_agents()` reports `cutout_url` when the
+file exists, the picker offers it first, the style uses it in place of a
+picked headshot, and the form defaults to Cutout for brokers who have one.
+Jackson Horn's was the first; the other approved brokers follow once the
+direction is confirmed.
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the
