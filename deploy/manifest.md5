@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-02 from git HEAD (Social Media Plan templates: Cutout backdrop).
+# Generated 2026-11-02 from git HEAD (Social Media Plan templates: Cutout backdrop, builder script fix).
 8f5ea7f88a7f2ceb39a271c513495907  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -64,7 +64,7 @@ d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
 3cc68d602af7fc4659586a1dbd025fee  inc/plan.php
 aedb969f7bacb8d8df1df4706cde485d  inc/plan_agent_render.php
-3c92534916bdb4a9bf5c9655b0495f06  inc/plan_body.php
+8b041b6eed8f4b71bc019026cc7fb950  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
 0ca7e986a6c7a6f080f48e4d3ffe9e3d  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php

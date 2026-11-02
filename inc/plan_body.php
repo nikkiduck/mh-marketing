@@ -440,8 +440,8 @@ $step = 1;
     form.querySelectorAll('.sp-only-3').forEach(el => el.hidden = !agent);
     form.querySelectorAll('.sp-only-multi').forEach(el => el.hidden = !agent && L === 'photo');
     if (agent) { const w = (AGENT_WINDOWS[f('style').value] || {})[fmt()] || [1080, 1440]; framer.style.aspectRatio = w[0] + ' / ' + w[1]; }
-    form.querySelectorAll('.sp-only-cutout').forEach(el => el.hidden = !(agent && f('style').value === 'cutout'));
     else framer.style.aspectRatio = '1080 / ' + (L === 'split' ? ({ post: 780, square: 520, story: 860 })[fmt()] : fmtH());
+    form.querySelectorAll('.sp-only-cutout').forEach(el => el.hidden = !(agent && f('style').value === 'cutout'));   // the Backdrop step: the Cutout style only
     customWrap.hidden = labelSel.value !== '__custom';
   }
 
