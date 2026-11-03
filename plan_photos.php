@@ -27,9 +27,11 @@ if ($kind === 'property') {
 } elseif ($kind === 'broker') {
     $a = plan_agents($conn)[(int)$subject] ?? null;
     if (!$a) { http_response_code(404); echo json_encode(['error' => 'not an approved agent']); exit; }
-    $out = plan_agent_tiles($a);
-    $suggest = $out[0]['id'] ?? '';   // the cutout when there is one, else the headshot
-    $out = array_merge($out, plan_upload_tiles($ctx), plan_stock_tiles($a['region']));
+    // The figure is always the broker's cutout; these tiles are the BACKDROP behind it (Nikki, 2026-11-02:
+    // "if I choose an alternate photo it should change the background, not the headshot"). None, their
+    // own photos, then the stock library with the broker's region first, which is the suggestion.
+    $out = array_merge([plan_tile('none', '', '', 'Backdrop', 'No backdrop, the plain ground') + ['none' => true]], plan_upload_tiles($ctx), plan_stock_tiles($a['region']));
+    foreach ($out as $t) if (str_starts_with($t['id'], 'stock:')) { $suggest = $t['id']; break; }
 } elseif ($kind === 'location') {
     $loc = plan_location($subject);
     if (!$loc) { http_response_code(404); echo json_encode(['error' => 'not a location']); exit; }

@@ -182,7 +182,21 @@ ever wanted back). The hook's second line, the call ("Call Allison
 Byford."), has a face of its own: **Second line** pills, Serif (as the
 first line), Italic (the Cormorant italic) or Sans (Jost, a size smaller);
 `hook2` in the post, `plan_hook_styles()`; the builder starts on Italic.
-The sentences after the first all take it.
+The sentences after the first all take it. Sans is caps, tracked .5em,
+about half the serif's size (Nikki: "all caps and .5 spacing").
+
+**The photo pick is the backdrop (Nikki, same night, after a stock photo
+replaced Bryan's cutout with a chairlift: "if I choose an alternate photo
+it should change the background, not the headshot"):** the Broker tool's
+photo step is now titled Backdrop and offers None, the person's uploads
+and the stock library (the broker's region first and suggested);
+plan_photos.php returns those for `kind=broker`, with a `none` tile
+(`plan_tile('none', …) + ['none' => true]`, drawn as the striped None
+square). plan_post_from_request() takes the posted `photo` as the backdrop
+and always draws the broker's cutout (the headshot when none exists) as
+the figure. The separate Backdrop step is gone; its Overlay slider sits
+under the framer, and the framer shows the figure (`data-figure` on the
+broker option), so dragging and zoom still move and scale the broker.
 
 ## The set, second pass (2026-11-02, evening)
 

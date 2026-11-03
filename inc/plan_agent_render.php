@@ -26,8 +26,7 @@
  *              ghost and everything else. The hook's sentences each take a
  *              line; the sentences after the first (the call: "Call Allison
  *              Byford.") are set by `hook2` (plan_hook_styles(): serif,
- *              italic or sans; Nikki asked to try italic and the sans-serif,
- *              2026-11-02).
+ *              italic, or sans in caps tracked .5em; Nikki, 2026-11-02).
  *
  * Shares social_palette(), social_font_css() and social_logo_options() with
  * the other renderers; the logo colour, size, nudge and shadow sliders
@@ -178,7 +177,7 @@ CSS;
     // The second and later sentences (the call) in the serif italic or in the sans (Nikki, 2026-11-02); the serif matches the first.
     $h2Css = match ($hook2) {
         'italic' => '.words .hook.h2{font-style:italic;font-weight:400}',
-        'sans'   => ".words .hook.h2{font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-weight:400;font-size:" . (int)round($hsize * 0.76) . "px;line-height:1.2;letter-spacing:.03em}",
+        'sans'   => ".words .hook.h2{font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:" . (int)round($hsize * 0.52) . "px;line-height:1.3;letter-spacing:.5em;text-transform:uppercase;margin-right:-.5em}",   // caps, tracked .5em (Nikki)
         default  => '',
     };
     $css = ".bd{position:absolute;inset:0;z-index:0}.bd img{display:block;width:100%;height:100%;object-fit:cover}.bd::after{content:'';position:absolute;inset:0;background:rgba({$veilRgb},{$veil})}"

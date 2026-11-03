@@ -33,8 +33,6 @@ $offered_layouts = match ($pk) {
 };
 $default_layout = $offered_layouts[0];
 $agent_styles = $pk === 'broker' ? plan_agent_styles() : [];
-$bd_stock = $pk === 'broker' ? social_stock_grouped() : [];       // the Cutout style's backdrop choices, by region
-$bd_uploads = $pk === 'broker' ? social_uploads($ctx) : [];
 $agent_windows = [];   // style => format => [w, h] of the photo window, for the framing box
 foreach ($agent_styles as $sk => $sn) foreach (['post', 'square', 'story'] as $fmt) { [, , $ww, $wh] = plan_agent_window($sk, $fmt); $agent_windows[$sk][$fmt] = [$ww, max(1, $wh)]; }
 $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (string)$pk_preset['size'] : ($pk === 'property' ? 'post' : 'story');
@@ -168,7 +166,7 @@ $step = 1;
         <label class="sp-field">Which broker
           <select name="agent" id="spSubject">
             <?php $want = (int)($pk_preset['agent'] ?? 0); $first = true; foreach ($pk_agents as $a): $sel = $want ? $a['id'] === $want : $first; $first = false; ?>
-            <option value="<?= (int)$a['id'] ?>" data-market="<?= $e($a['market']) ?>" data-cutout="<?= $a['cutout_url'] !== '' ? 1 : 0 ?>"<?= $sel ? ' selected' : '' ?>><?= $e($a['name']) ?><?= $a['market'] !== '' ? ' · ' . $e($a['market']) : '' ?></option>
+            <option value="<?= (int)$a['id'] ?>" data-market="<?= $e($a['market']) ?>" data-figure="<?= $e($a['cutout_url'] !== '' ? $a['cutout_url'] : $a['headshot_url']) ?>"<?= $sel ? ' selected' : '' ?>><?= $e($a['name']) ?><?= $a['market'] !== '' ? ' · ' . $e($a['market']) : '' ?></option>
             <?php endforeach; ?>
           </select>
         </label>
@@ -242,8 +240,8 @@ $step = 1;
       <?php endif; ?>
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span>Photo</h2>
-        <p class="sp-hint" id="spPhotoHint"><?= $pk === 'property' ? 'Choose a listing photo or upload your own below.' : ($pk === 'broker' ? 'The headshot, one of your photos (a lifestyle shot, the plan asks), or a stock photo of their market.' : 'Choose a stock photo or upload your own below.') ?></p>
+        <h2 class="sp-step-h"><span><?= $step++ ?></span><?= $pk === 'broker' ? 'Backdrop' : 'Photo' ?></h2>
+        <p class="sp-hint" id="spPhotoHint"><?= $pk === 'property' ? 'Choose a listing photo or upload your own below.' : ($pk === 'broker' ? 'The broker\'s cutout is the figure. Behind it, under a slate veil: one of your photos, a stock photo of their market (their region first), or None for the plain ground.' : 'Choose a stock photo or upload your own below.') ?></p>
         <div class="sp-photos" id="spPhotos"><div class="sp-wait">Loading photos…</div></div>
         <div class="sp-drop" id="spDrop">
           <span id="spDropMsg">Or use your own: drop a photo here, or <label class="sp-link" for="spFile">choose one</label>.</span>
@@ -253,31 +251,12 @@ $step = 1;
         <div class="sp-framing">
           <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / 1440"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
           <label class="sp-zoom">Zoom <input type="range" name="zoom" min="1" max="3" step="0.02" value="1"></label>
-          <small>Drag the photo to choose what shows; zoom in to crop closer.</small>
+          <small><?= $pk === 'broker' ? 'Drag the broker across or down; zoom to scale the figure.' : 'Drag the photo to choose what shows; zoom in to crop closer.' ?></small>
+          <?php if ($pk === 'broker'): ?>
+          <div class="sp-ranges"><label class="sp-range">Overlay <input type="range" name="backdrop_veil" min="40" max="96" step="2" value="82"><output>82</output></label></div>
+          <?php endif; ?>
         </div>
       </section>
-
-      <?php if ($pk === 'broker'): ?>
-      <section class="sp-step sp-only-cutout">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span>Backdrop</h2>
-        <p class="sp-hint">A location photo behind the figure, under a slate veil (the Cutout style). The broker's region comes first; None leaves the plain ground.</p>
-        <div class="sp-photos" id="spBackdrops">
-          <label class="sp-photo sp-none-tile" title="No backdrop"><input type="radio" name="backdrop" value="" checked><span class="sp-none">None</span></label>
-          <?php foreach ($bd_stock as $region => $list): ?>
-          <div class="sp-group" data-region="<?= $e($region) ?>"><?= $e($region) ?></div>
-          <?php foreach ($list as $name => $caption): ?>
-          <label class="sp-photo" title="<?= $e($caption) ?>" data-region="<?= $e($region) ?>"><input type="radio" name="backdrop" value="stock:<?= $e($name) ?>"><img src="<?= $e(social_stock_url($name, 400)) ?>" alt="<?= $e($caption) ?>" loading="lazy"></label>
-          <?php endforeach; endforeach; ?>
-          <?php if ($bd_uploads): ?><div class="sp-group">Your photos</div>
-          <?php foreach ($bd_uploads as $uid): ?>
-          <label class="sp-photo own"><input type="radio" name="backdrop" value="upload:<?= $e($uid) ?>"><img src="<?= $e(social_upload_url($ctx, $uid, 400)) ?>" alt="" loading="lazy"><i>Yours</i></label>
-          <?php endforeach; endif; ?>
-        </div>
-        <div class="sp-ranges">
-          <label class="sp-range">Overlay <input type="range" name="backdrop_veil" min="40" max="96" step="2" value="82"><output>82</output></label>
-        </div>
-      </section>
-      <?php endif; ?>
 
       <section class="sp-step">
         <h2 class="sp-step-h"><span><?= $step++ ?></span>Text</h2>
@@ -331,14 +310,8 @@ $step = 1;
 (function () {
   const KIND = <?= json_encode($pk) ?>;
   const AGENT_WINDOWS = <?= json_encode($agent_windows) ?>;   // the Broker Feature's photo window per style and size
-  let backdropTouched = false;
   // The backdrop follows the broker's region (its first stock photo) until the admin picks one.
-  function syncBackdrop() {
-    if (KIND !== 'broker' || backdropTouched) return;
-    const a = AGENTS.find(x => String(x.id) === f('agent').value); if (!a) return;
-    const tile = document.querySelector('#spBackdrops .sp-photo[data-region="' + CSS.escape(a.region || '') + '"] input');
-    if (tile) tile.checked = true;
-  }
+  const figureUrl = () => { const o = f('agent') && f('agent').selectedOptions[0]; return o ? (o.dataset.figure || '') : ''; };   // the broker's cutout (the headshot when none), the framer's image
   const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>;
   const SIZES = { post: 1440, square: 1080, story: 1920 };
   const MAX_FRAMES = <?= (int)PLAN_MAX_FRAMES ?>;
@@ -443,7 +416,6 @@ $step = 1;
     form.querySelectorAll('.sp-only-multi').forEach(el => el.hidden = !agent && L === 'photo');
     if (agent) { const w = (AGENT_WINDOWS[f('style').value] || {})[fmt()] || [1080, 1440]; framer.style.aspectRatio = w[0] + ' / ' + w[1]; }
     else framer.style.aspectRatio = '1080 / ' + (L === 'split' ? ({ post: 780, square: 520, story: 860 })[fmt()] : fmtH());
-    form.querySelectorAll('.sp-only-cutout').forEach(el => el.hidden = !(agent && f('style').value === 'cutout'));   // the Backdrop step: the Cutout style only
     customWrap.hidden = labelSel.value !== '__custom';
   }
 
@@ -543,8 +515,8 @@ $step = 1;
 
   // ── Photos ──
   function photoTile(p, checked) {
-    return '<label class="sp-photo' + (p.own ? ' own' : '') + '"' + (p.caption ? ' title="' + esc(p.caption) + '"' : '') + '><input type="radio" name="photo" value="' + esc(p.id) + '" data-large="' + esc(p.large) + '"' +
-           (checked ? ' checked' : '') + '><img src="' + esc(p.thumb) + '" alt="' + esc(p.caption || '') + '" loading="lazy">' + (p.own ? '<i>Yours</i><button type="button" class="sp-del" data-id="' + esc(p.id) + '" title="Remove this photo" aria-label="Remove this photo">×</button>' : '') + '</label>';
+    return '<label class="sp-photo' + (p.own ? ' own' : '') + (p.none ? ' sp-none-tile' : '') + '"' + (p.caption ? ' title="' + esc(p.caption) + '"' : '') + '><input type="radio" name="photo" value="' + esc(p.id) + '" data-large="' + esc(p.large) + '"' +
+           (checked ? ' checked' : '') + '>' + (p.none ? '<span class="sp-none">None</span>' : '<img src="' + esc(p.thumb) + '" alt="' + esc(p.caption || '') + '" loading="lazy">') + (p.own ? '<i>Yours</i><button type="button" class="sp-del" data-id="' + esc(p.id) + '" title="Remove this photo" aria-label="Remove this photo">×</button>' : '') + '</label>';
   }
   async function loadPhotos(selectId) {
     photos.innerHTML = '<div class="sp-wait">Loading photos…</div>';
@@ -572,7 +544,9 @@ $step = 1;
       const cover = form.querySelector('input[name="photo"][value="' + CSS.escape(frames[0]) + '"]'); if (cover && setOn()) cover.checked = true;
     }
     const sel = allTiles.find(p => p.id === (form.querySelector('input[name="photo"]:checked') || {}).value);
-    framerSet(sel ? sel.large : '', sel ? sel.id : ''); syncSet(); update();
+    if (KIND === 'broker') framerSet(figureUrl(), 'cutout:x');   // the framer moves and scales the broker; the tiles pick the backdrop
+    else framerSet(sel ? sel.large : '', sel ? sel.id : '');
+    syncSet(); update();
   }
   // In set mode a click on a tile adds it to (or removes it from) the play order; the cover is the first.
   photos.addEventListener('click', e => {
@@ -662,7 +636,7 @@ $step = 1;
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'listing' || n === 'agent' || n === 'loc') {
-      if (n === 'agent') { const o = e.target.selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncBackdrop(); syncLayout(); }
+      if (n === 'agent') { const o = e.target.selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncLayout(); }
       if (n === 'loc') fillTeam(true);
       fill(); loadPhotos(); return;
     }
@@ -673,10 +647,9 @@ $step = 1;
     if (n === 'layout' || n === 'style') { syncLayout(); framerApply(); }
     if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
-    if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } framerSet(e.target.dataset.large, e.target.value); }
+    if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } if (KIND !== 'broker') framerSet(e.target.dataset.large, e.target.value); }
     if (n === 'theme') syncShadowDefault();
     if (['logo_scale', 'logo_dx', 'logo_dy', 'text_shadow', 'logo_shadow', 'backdrop_veil'].includes(n)) { showRange(e.target); e.target.dataset.touched = '1'; }
-    if (n === 'backdrop') backdropTouched = true;
     if (n === 'zoom') framerApply();
     update();
   });
@@ -686,7 +659,7 @@ $step = 1;
   form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), setOn() ? 45000 : 10000); });
 
   new ResizeObserver(scale).observe(stage); scale();
-  if (KIND === 'broker') { const o = f('agent').selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncBackdrop(); }
+  if (KIND === 'broker') { const o = f('agent').selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; }
   fillTaglines();
   fillTeam(true);
   syncLayout();

@@ -659,8 +659,9 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     if ($layout === 'photo') $headline = trim(preg_replace('/\s*\n\s*/', ' ', $headline));   // one line of words over the fade
 
     $photoIn = (string)($in['photo'] ?? '');
-    // The Cutout style wants the cutout: a headshot or face crop picked for it becomes the cutout when one exists.
-    if ($kind === 'broker' && $style === 'cutout' && $agent && $agent['cutout_url'] !== '' && preg_match('/^(headshot|face):/', $photoIn)) $photoIn = 'cutout:' . $agent['id'];
+    // The Broker tool (2026-11-02, Nikki): the picked photo is the BACKDROP; the figure is always the broker's cutout (the headshot when none exists).
+    $bdIn = '';
+    if ($kind === 'broker' && $agent) { $bdIn = $photoIn; $photoIn = $agent['cutout_url'] !== '' ? 'cutout:' . $agent['id'] : 'headshot:' . $agent['id']; }
     [$photo_url, $photo_file] = plan_photo($ctx, $photoIn, $listing, $agent);
     $frame = [
         'zoom' => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
@@ -672,8 +673,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $slug = fn(string $s) => mb_substr(strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $s), '-')), 0, 60) ?: 'post';
 
     if ($kind === 'broker') $headline = mb_substr(trim(str_replace("\r", '', (string)($in['headline'] ?? ''))), 0, 140);   // the hook keeps its line breaks in every agent style
-    // The Cutout style's backdrop (2026-11-02): a stock location photo or one of the person's uploads, under a veil; '' = none.
-    $bdIn = (string)($in['backdrop'] ?? '');
+    // The Cutout style's backdrop (2026-11-02): a stock location photo or one of the person's uploads (the tool's photo pick), under a veil; none = the plain ground.
     $backdrop = ['backdrop_url' => '', 'backdrop_file' => null, 'backdrop_veil' => max(30, min(97, (int)($in['backdrop_veil'] ?? 82)))];
     if ($kind === 'broker' && (str_starts_with($bdIn, 'stock:') || str_starts_with($bdIn, 'upload:'))) {
         [$bu, $bf] = plan_photo($ctx, $bdIn, null, null);

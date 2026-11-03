@@ -2828,7 +2828,15 @@ admin Templates page's "Social Media Plan (admin only)" group.
   styles' code is gone from inc/plan_agent_render.php (git history before
   2026-11-03 has it). The call line (the hook's second and later sentences)
   takes a face of its own: Second line pills Serif | Italic | Sans
-  (`hook2`, `plan_hook_styles()`; the builder starts on Italic).
+  (`hook2`, `plan_hook_styles()`; the builder starts on Italic; Sans is
+  caps tracked .5em at about half the serif's size).
+  **The photo pick is the backdrop (Nikki, same night):** the Broker
+  tool's photo step is "Backdrop" (None, uploads, stock with the broker's
+  region first and suggested; plan_photos.php, a `none` tile), the posted
+  `photo` is the backdrop and the figure is ALWAYS the broker's cutout
+  (the headshot when none exists); the separate Backdrop step is gone,
+  its Overlay slider sits under the framer, and the framer holds the
+  figure (`data-figure` on the broker option) for drag and zoom.
 
 - **The set, second pass (Nikki, same day):** offered at every size (a post
   or square set is a carousel), the cover plus up to 8 more photos
