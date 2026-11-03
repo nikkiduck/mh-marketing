@@ -553,14 +553,14 @@ function portal_nav_group(string $active): string {
  * Page top: dark header with the logo, the menu, and the preview banner.
  * $active is the nav key of the current page (a leaf key).
  */
-/** MH Send (send.monthaus.com, the B2B emails) for Aspen and Vail members: first under My Tools (Nikki, 2026-10-25). */
+/** The B2B Portal (MH Send, send.monthaus.com) for Aspen and Vail members: first under My Tools (Nikki, 2026-10-25; labelled "B2B Portal" at go-live, 2026-11-02). */
 function portal_send_item(array $ctx): array {
     // Off until MH Send goes live (Nikki, 2026-10-27: it showed on agents' portals before the
     // cutover). To switch on: define('MH_SEND_LINK', true) in inc/config.php on the server.
     if (!defined('MH_SEND_LINK') || !MH_SEND_LINK) return [];
     $boards = defined('MH_SEND_BOARDS') ? MH_SEND_BOARDS : ['aspen', 'vail'];
     if (!array_intersect($boards, $ctx['markets'] ?? [])) return [];
-    return ['send' => ['MH Send', defined('MH_SEND_URL') ? MH_SEND_URL : 'https://send.monthaus.com/b2b/']];
+    return ['send' => ['B2B Portal', defined('MH_SEND_URL') ? MH_SEND_URL : 'https://send.monthaus.com/b2b/']];
 }
 
 function portal_header(array $ctx, string $title, string $active, array $jump = []): void {
