@@ -1183,8 +1183,12 @@ services   systemctl (apache2)
 Nikki deploys over SFTP from Nova; Claude Code deploys with `scp` over `ssh
 mh-marketing` the way the parent-folder CLAUDE.md says (md5 drift check
 against git HEAD, backup to ~/deploy-backups/<YYYYMMDD>/, `php -l` on the
-server) and ONLY after Nikki's OK for that deploy, since every server write
-here needs it. Full setup — SSH keys, Nova config, Apache, TLS, cron — is in
+server). **Since 2026-11-02 (Nikki: "if it is an admin-only task (ie., not
+agent-facing) you may deploy without my explicit ok"), an admin-only
+deploy (the Social Media Plan tools, admin reports, anything agents never
+load) goes up without asking; every agent-facing write (portal pages, the
+agents' templates, shared code such as inc/social_render.php, the roster
+feed, Apache, cron, SQL) still needs her OK for that deploy.** Full setup — SSH keys, Nova config, Apache, TLS, cron — is in
 `DEPLOY_LIGHTSAIL.md`.
 
 The web root is owned `admin:www-data` with setgid directories (2775), so
@@ -1415,8 +1419,9 @@ runner. So:
 VIEW on `dbmarketing_monthaus` only, TLS required, password only in the
 server's `/home/admin/.my.cnf` (0600). Use it to verify schema and data
 instead of asking Nikki to run read queries. It cannot write, so migrations
-are still hers, as the master user in TablePlus. Every server write (files,
-Apache, cron) needs her OK first.
+are still hers, as the master user in TablePlus. Every agent-facing server
+write (files, Apache, cron) needs her OK first; admin-only deploys do not
+(2026-11-02, see Deploying above).
 
 On 2026-09-30 it confirmed MySQL 8.4.11, `utf8mb4_0900_ai_ci`, and that
 agent_roster v1/v2, hot_sheets v1/v2/v3 and qr_codes_v1 had all been applied
