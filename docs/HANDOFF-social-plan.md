@@ -173,6 +173,17 @@ originals are untouched; Lynn Emmert's keeps her dog, Jean-Michel's is
 cropped at the top of the head as the original is). A new broker or a new
 headshot needs a new cutout the same way.
 
+**Cutout alone (Nikki, later that night: "get rid of the other options,
+cutout is the only one working right now"):** `plan_agent_styles()` lists
+Cutout only, the builder hides the Style switch while there is one style
+(a hidden `style` field carries it), and Editorial, Arch, Card and
+Headline first are gone from the renderer (in git before that commit, if
+ever wanted back). The hook's second line, the call ("Call Allison
+Byford."), has a face of its own: **Second line** pills, Serif (as the
+first line), Italic (the Cormorant italic) or Sans (Jost, a size smaller);
+`hook2` in the post, `plan_hook_styles()`; the builder starts on Italic.
+The sentences after the first all take it.
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the

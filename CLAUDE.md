@@ -2822,6 +2822,13 @@ admin Templates page's "Social Media Plan (admin only)" group.
   the photo fills the canvas under a veil of the ground colour, behind the
   ghost and everything else (`backdrop_url` / `backdrop_file`, resolved
   through plan_photo(); an id that is not theirs falls to none).
+  **Cutout alone (Nikki, later: "cutout is the only one working right
+  now"):** `plan_agent_styles()` is Cutout only, the Style switch is hidden
+  while one style is listed (hidden `style` field), and the four other
+  styles' code is gone from inc/plan_agent_render.php (git history before
+  2026-11-03 has it). The call line (the hook's second and later sentences)
+  takes a face of its own: Second line pills Serif | Italic | Sans
+  (`hook2`, `plan_hook_styles()`; the builder starts on Italic).
 
 - **The set, second pass (Nikki, same day):** offered at every size (a post
   or square set is a carousel), the cover plus up to 8 more photos

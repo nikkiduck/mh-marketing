@@ -611,7 +611,8 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $logoKind = isset(social_logo_kinds()[(string)($in['logo_kind'] ?? '')]) ? (string)$in['logo_kind'] : 'full';
     $layout = isset(plan_layouts()[(string)($in['layout'] ?? '')]) ? (string)$in['layout'] : ($kind === 'branding' ? 'center' : 'photo');
     // The Broker Feature has its own designs (inc/plan_agent_render.php) in place of the layouts: `style`.
-    $style = $kind === 'broker' ? (isset(plan_agent_styles()[(string)($in['style'] ?? '')]) ? (string)$in['style'] : 'editorial') : '';
+    $style = $kind === 'broker' ? (isset(plan_agent_styles()[(string)($in['style'] ?? '')]) ? (string)$in['style'] : 'cutout') : '';
+    $hook2 = $kind === 'broker' ? (isset(plan_hook_styles()[(string)($in['hook2'] ?? '')]) ? (string)$in['hook2'] : 'serif') : '';   // the call line's face (2026-11-02)
     $agent = null;   // set below; the Cutout style reads it
     $logo   = (string)($in['logo'] ?? '');
     if (!isset(social_logo_places()[$logo])) $logo = $format === 'story' ? 'bottom' : 'top';
@@ -679,7 +680,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         if (!str_ends_with($bu, '/social-placeholder.jpg')) { $backdrop['backdrop_url'] = $bu; $backdrop['backdrop_file'] = $bf; }   // the placeholder means an id that is not theirs
     }
     $main = $kind === 'broker'
-        ? ['renderer' => 'agent', 'post' => $common + $backdrop + ['style' => $style, 'headline' => $headline, 'lines' => $lines]]
+        ? ['renderer' => 'agent', 'post' => $common + $backdrop + ['style' => $style, 'hook2' => $hook2, 'headline' => $headline, 'lines' => $lines]]
         : ($layout === 'split'
         ? ['renderer' => 'split', 'post' => $common + ['headline' => $headline, 'lines' => $lines, 'team' => plan_team_for_render($team), 'kind' => $kind]]
         : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner',

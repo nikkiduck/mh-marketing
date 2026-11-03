@@ -28,7 +28,7 @@ $layouts = plan_layouts();
 $offered_layouts = match ($pk) {
     'property' => ['photo', 'center'],
     'branding' => ['center', 'photo'],
-    'broker'   => ['photo'],                 // the Broker Feature picks a Style instead (plan_agent_styles(), 2026-11-02 evening)
+    'broker'   => ['photo'],                 // the Broker Feature has its own style (plan_agent_styles(): Cutout alone since 2026-11-02)
     default    => ['split', 'photo', 'center'],
 };
 $default_layout = $offered_layouts[0];
@@ -65,10 +65,20 @@ $step = 1;
         </div>
         <?php if ($agent_styles): ?>
         <input type="hidden" name="layout" value="photo">
+        <?php if (count($agent_styles) > 1): ?>
         <div class="sp-look">
           <span class="sp-look-l">Style</span>
           <?php $ws = (string)($pk_preset['style'] ?? 'cutout'); foreach ($agent_styles as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="style" value="<?= $e($k) ?>"<?= $k === (isset($agent_styles[$ws]) ? $ws : 'cutout') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <?php else: ?>
+        <input type="hidden" name="style" value="<?= $e(array_key_first($agent_styles)) ?>">
+        <?php endif; ?>
+        <div class="sp-look">
+          <span class="sp-look-l">Second line</span>
+          <?php $wh = (string)($pk_preset['hook2'] ?? 'italic'); foreach (plan_hook_styles() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="hook2" value="<?= $e($k) ?>"<?= $k === (isset(plan_hook_styles()[$wh]) ? $wh : 'italic') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
         <?php else: ?>
@@ -158,7 +168,7 @@ $step = 1;
         <label class="sp-field">Which broker
           <select name="agent" id="spSubject">
             <?php $want = (int)($pk_preset['agent'] ?? 0); $first = true; foreach ($pk_agents as $a): $sel = $want ? $a['id'] === $want : $first; $first = false; ?>
-            <option value="<?= (int)$a['id'] ?>" data-market="<?= $e($a['market']) ?>" data-cutout="<?= $a['cutout_url'] !== '' ? 1 : 0 ?>"<?= $sel ? ' selected' : '' ?>><?= $e($a['name']) ?><?= $a['market'] !== '' ? ' · ' . $e($a['market']) : '' ?><?= $a['cutout_url'] !== '' ? ' · cutout' : '' ?></option>
+            <option value="<?= (int)$a['id'] ?>" data-market="<?= $e($a['market']) ?>" data-cutout="<?= $a['cutout_url'] !== '' ? 1 : 0 ?>"<?= $sel ? ' selected' : '' ?>><?= $e($a['name']) ?><?= $a['market'] !== '' ? ' · ' . $e($a['market']) : '' ?></option>
             <?php endforeach; ?>
           </select>
         </label>
@@ -321,8 +331,6 @@ $step = 1;
 (function () {
   const KIND = <?= json_encode($pk) ?>;
   const AGENT_WINDOWS = <?= json_encode($agent_windows) ?>;   // the Broker Feature's photo window per style and size
-  let styleTouched = false;
-  // The Cutout style only suits a broker with a cutout file: pick it for them, and step back to Editorial for the others, until the admin chooses a style.
   let backdropTouched = false;
   // The backdrop follows the broker's region (its first stock photo) until the admin picks one.
   function syncBackdrop() {
@@ -330,12 +338,6 @@ $step = 1;
     const a = AGENTS.find(x => String(x.id) === f('agent').value); if (!a) return;
     const tile = document.querySelector('#spBackdrops .sp-photo[data-region="' + CSS.escape(a.region || '') + '"] input');
     if (tile) tile.checked = true;
-  }
-  function syncStyle() {
-    if (KIND !== 'broker' || styleTouched) return;
-    const o = f('agent').selectedOptions[0], has = o && o.dataset.cutout === '1';
-    if (has && f('style').value !== 'cutout') f('style').value = 'cutout';
-    if (!has && f('style').value === 'cutout') f('style').value = 'editorial';
   }
   const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>;
   const SIZES = { post: 1440, square: 1080, story: 1920 };
@@ -660,7 +662,7 @@ $step = 1;
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'listing' || n === 'agent' || n === 'loc') {
-      if (n === 'agent') { const o = e.target.selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncStyle(); syncBackdrop(); syncLayout(); }
+      if (n === 'agent') { const o = e.target.selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncBackdrop(); syncLayout(); }
       if (n === 'loc') fillTeam(true);
       fill(); loadPhotos(); return;
     }
@@ -668,7 +670,7 @@ $step = 1;
     if (n === 'variant' || n === 'hook' || n === 'market' || n === 'tagline') fill();
     if (n === 'angle') { if (e.target.value === 'team') f('layout').value = 'split'; fillTeam(true); fill(); syncLayout(); }
     if (n === 'size') { syncLayout(); scale(); syncSet(); }
-    if (n === 'layout' || n === 'style') { if (n === 'style') styleTouched = true; syncLayout(); framerApply(); }
+    if (n === 'layout' || n === 'style') { syncLayout(); framerApply(); }
     if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
     if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } framerSet(e.target.dataset.large, e.target.value); }
@@ -684,7 +686,7 @@ $step = 1;
   form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), setOn() ? 45000 : 10000); });
 
   new ResizeObserver(scale).observe(stage); scale();
-  if (KIND === 'broker') { const o = f('agent').selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncStyle(); syncBackdrop(); }
+  if (KIND === 'broker') { const o = f('agent').selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncBackdrop(); }
   fillTaglines();
   fillTeam(true);
   syncLayout();

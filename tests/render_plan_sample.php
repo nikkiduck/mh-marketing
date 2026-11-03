@@ -93,7 +93,7 @@ foreach (['frame-story-logo' => $frame + ['format' => 'story', 'show_logo' => tr
     echo "$out/plan-$k.html\n";
 }
 
-// The Featured Agent designs (2026-11-02 evening): four styles, every size, both looks, Jackson's headshot kept whole.
+// The Featured Agent design (2026-11-02): the Cutout style, every size, both looks, and the call line in each of its faces.
 $agent = ['mark' => 'triangle', 'logo' => 'top', 'logo_kind' => 'full', 'badge' => 'left', 'label' => 'Broker Spotlight', 'photo_url' => $head, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 0,
           'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn.',
           'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Broker Associate · Montrose', 'style' => 'details']]];
@@ -102,9 +102,14 @@ $agentBd = ['backdrop_url' => $stock('ridgway-mount-sneffels-fall-198784448'), '
 foreach (plan_agent_styles() as $style => $name) {
     foreach (['story', 'post', 'square'] as $format) {
         foreach (['dark', 'light'] as $theme) {
-            $p = ['style' => $style, 'format' => $format, 'theme' => $theme] + ($style === 'cutout' ? ['photo_url' => $cutout] + $agentBd : []) + $agent;
+            $p = ['style' => $style, 'format' => $format, 'theme' => $theme, 'photo_url' => $cutout] + $agentBd + $agent;
             file_put_contents("$out/agent-$style-$format-$theme.html", plan_render_agent($p, $base));
             echo "$out/agent-$style-$format-$theme.html\n";
         }
     }
+}
+foreach (plan_hook_styles() as $h2 => $name) {   // the call line: serif, italic, sans (Nikki, 2026-11-02)
+    $p = ['style' => 'cutout', 'format' => 'story', 'theme' => 'dark', 'photo_url' => $cutout, 'hook2' => $h2] + $agentBd + $agent;
+    file_put_contents("$out/agent-hook2-$h2.html", plan_render_agent($p, $base));
+    echo "$out/agent-hook2-$h2.html\n";
 }
