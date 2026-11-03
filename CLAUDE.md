@@ -2038,7 +2038,14 @@ for the context's ids). Nikki, 2026-10-25: only Aspen and Vail members for
 now, everyone later (then drop the board test). `MH_SEND_URL` and
 `MH_SEND_BOARDS` in inc/config.php override the defaults if ever needed.
 Deployed with MH Send's go-live, not before: until send.monthaus.com's
-allow-list opens, the link would land agents on a 403.
+allow-list opens, the link would land agents on a 403. Live 2026-11-02 as
+**B2B Portal** (`MH_SEND_LINK` on the server). Since 2026-11-03 (Nikki: "I
+want to make it obvious") the same item is ALSO a top-level **B2B Portal ↗**
+in the dark menu right after My Tools (`portal_header()` appends
+`portal_send_item()` to the nav array; a top-level item whose path starts
+with `http` renders as a new-window link, never "on"), still only for the
+same Aspen and Vail members. On a phone it is the last entry of the stacked
+menu. The home page's My Tools cards do not carry it.
 
 Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 (creative uploads, 2026-10-06) and the Advertising / Print orders pages.

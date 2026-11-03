@@ -553,7 +553,13 @@ function portal_nav_group(string $active): string {
  * Page top: dark header with the logo, the menu, and the preview banner.
  * $active is the nav key of the current page (a leaf key).
  */
-/** The B2B Portal (MH Send, send.monthaus.com) for Aspen and Vail members: first under My Tools (Nikki, 2026-10-25; labelled "B2B Portal" at go-live, 2026-11-02). */
+/**
+ * The B2B Portal (MH Send, send.monthaus.com) for Aspen and Vail members: first
+ * under My Tools (Nikki, 2026-10-25; labelled "B2B Portal" at go-live,
+ * 2026-11-02) AND a top-level "B2B Portal ↗" in the dark menu next to My Tools
+ * (Nikki, 2026-11-03: "I want to make it obvious"). Both open in a new window;
+ * other boards see neither.
+ */
 function portal_send_item(array $ctx): array {
     // Off until MH Send goes live (Nikki, 2026-10-27: it showed on agents' portals before the
     // cutover). To switch on: define('MH_SEND_LINK', true) in inc/config.php on the server.
@@ -565,7 +571,7 @@ function portal_send_item(array $ctx): array {
 
 function portal_header(array $ctx, string $title, string $active, array $jump = []): void {
     $nav   = portal_nav();
-    if ($send = portal_send_item($ctx)) $nav['tools'][2] = $send + $nav['tools'][2];
+    if ($send = portal_send_item($ctx)) { $nav['tools'][2] = $send + $nav['tools'][2]; $nav += $send; }   // in My Tools and after it
     $group = portal_nav_group($active);
     ?>
 <!DOCTYPE html>
@@ -600,7 +606,9 @@ function portal_header(array $ctx, string $title, string $active, array $jump = 
   </div>
   <nav class="pt-nav" id="ptNav" aria-label="Portal">
     <?php foreach ($nav as $k => $item): [$label, $path] = $item; $subs = $item[2] ?? []; ?>
-      <?php if (!$subs): ?>
+      <?php if (!$subs && str_starts_with((string)$path, 'http')): // another site (the B2B Portal): a new window, never "on" ?>
+        <a href="<?= ph($path) ?>" class="pt-nav-a pt-nav-ext" target="_blank" rel="noopener"><?= ph($label) ?> <span aria-hidden="true">&#8599;</span></a>
+      <?php elseif (!$subs): ?>
         <a href="<?= ph(portal_url($ctx, $path)) ?>" class="pt-nav-a <?= $k === $group ? 'on' : '' ?>"><?= ph($label) ?></a>
       <?php else: ?>
         <div class="pt-group <?= $k === $group ? 'on' : '' ?>">
