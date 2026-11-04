@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-03 17:49 from git HEAD
+# Generated 2026-11-03 18:10 from git HEAD
 8f5ea7f88a7f2ceb39a271c513495907  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -62,10 +62,11 @@ ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-6ad00a85c7f3b1c448bfefd0ebc01438  inc/plan.php
+57c60e889b7ea36e429fe435875bcb49  inc/plan.php
 156ec8bfca767616e3a297d1f7993742  inc/plan_agent_render.php
-94a84070d79c8cfdedb892e0e016e4e7  inc/plan_body.php
+332ddc5dd095aaad227e6412d0975e87  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
+b95708f52ac7eb93a0a322cc7c712ec0  inc/plan_store.php
 2877bab17146cacfd47c35bfd3679ce3  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
@@ -89,9 +90,10 @@ f3327ec6854ed5362ede027a9b198064  oauth_start.php
 f8560bfe6f42693f0d165d7fc20a329d  order_split.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 b92d554425c9b2d084073d48776855f6  pipeline_review.php
-6ea1716bfef8da66474976acf972c3b2  plan_export.php
+1c618f71243faf161dfccb32bd21a948  plan_export.php
 1504cd2f1620186695f6c7646f1098cb  plan_photos.php
 c62b17405d2e2388e5648ac84d061201  plan_render.php
+67b9ca4cc605ace4d0e836e28c25d483  plan_save.php
 dce6b022a8146453bb2054adcd6a5144  portal/advertising.php
 f69e92a4cc1632404c42761619aee4b4  portal/asset.php
 599716edc3a58f6759dc93e0e12fb5cb  portal/brand.php
@@ -133,15 +135,15 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 433c74fae7846a5d72927080970946b5  reset-password.php
 ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
-748ac677a2dbf49673b50f1c2a6c3dc6  social_media.php
-806c9e09251b9c8ca04036cf7529683e  social_plan.php
+6bb66b4f65c95b33ea4ba685830fc867  social_media.php
+4059d75c45a2e640aa573d25e1ffc9f4  social_plan.php
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
-78e1036dc1d6ef6152c141591911aac9  template_branding.php
-e225ad15bbaa7f4af938cbe1f8bcca94  template_broker.php
+fb9ae30d6ee4855cec6fdf456b222c3e  template_branding.php
+730da2b94ec559bacd9b95b17eea4d0a  template_broker.php
 92c444733a2833398cef3e8df8898813  template_flyer.php
 55e4a582c433280e0a44ac4312371119  template_general.php
-a027d893f931fc3f4debcf23c495ff34  template_location.php
-6160f176729ff0ba90a7dcb8806215d4  template_property.php
+41bbb86f6bbe308e6bcbf86bbde85878  template_location.php
+0c8ce1e95b3b43f1b09d8a153af9d515  template_property.php
 7ed35fb57cfe66c721bc38d416516637  template_social.php
 32dae4f25eaf6d740098d8968d52ede4  templates.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
