@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-03 20:39 from git HEAD
+# Generated 2026-11-04 16:51 from git HEAD
 8f5ea7f88a7f2ceb39a271c513495907  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -36,8 +36,8 @@ fc6cfdd48ce10ba555f7975efbd009fe  hot_sheet_preview.php
 7ac52e40bb97473f02c05d730733a565  inc/admin_tool_shell.php
 0f39b0500c3b4e8344f29c11b8f623a0  inc/agent_lifecycle.php
 adee107afca49bf84fe4181ed0aff97b  inc/agent_roster.php
-e8ad01ee0fbf13fab7e441fd7dcc5a3d  inc/auth.php
-b8e198e7cc0617a6128cf965b5c1cdc0  inc/boards.php
+89543b651fd169fcb1a965ec9770f2d3  inc/auth.php
+dfbecd5baf8eb89a44ce4f33ea6cbbed  inc/boards.php
 5d342fa9a131350b281e46f52aa5480c  inc/brand_embed.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 c9ace318036eda1d6510c96f94ac643c  inc/config.php
@@ -67,7 +67,7 @@ c811596a02522d44868e6647973b42b2  inc/plan.php
 bf1d2d3d36e55192974d04d993f6342d  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
 b95708f52ac7eb93a0a322cc7c712ec0  inc/plan_store.php
-2877bab17146cacfd47c35bfd3679ce3  inc/portal.php
+e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
@@ -81,12 +81,12 @@ b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 1c80c79b095aec9ed525f08891edbb15  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php
 0f76181f22712da050ea376c236e2301  leadership.php
-df2d52f3615178d71d9ee78291e954b8  login.php
+1d44947a95310027842c984a8020ac42  login.php
 48345dd02111e4387cc3305d1c677d13  logout.php
 b2ad9c459b7d150893d83f1cd33332f2  market_report.php
 655ea727bc386c5379fef05c6504c170  market_snapshot.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
-f3327ec6854ed5362ede027a9b198064  oauth_start.php
+b6b13d82e0f8adb87cc9ba58ce1f748d  oauth_start.php
 f8560bfe6f42693f0d165d7fc20a329d  order_split.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 b92d554425c9b2d084073d48776855f6  pipeline_review.php
@@ -108,7 +108,7 @@ c631051215ccc3c7f229af2015586264  portal/elevation_save.php
 db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 03b2a77e2a597f13fc056728330747f0  portal/general.php
-6ddc6872d3f36100dc5a55e4c9c262d9  portal/hotsheets.php
+1a848496d229059a6f0a0990bd565175  portal/hotsheets.php
 6bd2ee585e004b943476efe24c910016  portal/index.php
 3cfd20db36fa046a3e9287837d53bc1c  portal/market.php
 6e25e50cfac2e6689da36e4ead4aee68  portal/market_export.php
@@ -116,7 +116,7 @@ d11b1b570b09764e3a760efe4c66ad9b  portal/market_post.php
 9a09ec5ad2d6fe7e47f548392f60550c  portal/market_render.php
 2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
 e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
-e570c8c9f5565a8ce67b86377185e7d0  portal/profile.php
+51263e76886ae7d1c1adf03a99fd3bb1  portal/profile.php
 35ca7afd527862a3e19ba56cc63b6f24  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
 c100b7be0bbc3fa29c94576a1acb1f72  portal/social.php
