@@ -350,6 +350,29 @@ function mk_area_name(string $key): string {
     return mk_area_names()[$key] ?? ucwords(str_replace('-', ' ', $key));
 }
 
+/** The town keys a stored JSON list (marketing_intakes.fub_areas) holds, in the list's order, dropping any the list no longer knows. */
+function mk_town_keys_decode(?string $json): array {
+    $v = json_decode((string)$json, true);
+    if (!is_array($v)) return [];
+    $have = array_map('strval', $v);
+    return array_values(array_filter(mk_area_keys(), fn($k) => in_array($k, $have, true)));
+}
+
+/**
+ * Town keys → [area name => [town labels]], in the list's order, for reading
+ * out loud: the profile-change email (2026-11-04, Nikki: the alert printed
+ * the raw JSON keys). An area none of the keys fall in is left out.
+ */
+function mk_towns_by_area(array $keys): array {
+    $out = [];
+    foreach (mk_areas() as $a) {
+        $labels = [];
+        foreach ($a['towns'] as $t) if (in_array($t['key'], $keys, true)) $labels[] = $t['label'];
+        if ($labels) $out[$a['area']] = $labels;
+    }
+    return $out;
+}
+
 /** The area keys a stored JSON list holds, in the list's order, dropping any the list no longer knows. */
 function mk_areas_decode(?string $json): array {
     $v = json_decode((string)$json, true);

@@ -60,6 +60,12 @@ function portal_send_mail(string $subject, string $html, string $reply_email, st
  * marketing@ with who, what, before, after and when, and left as a note on
  * their agent page (marketing_notes), so the admin side sees it too.
  * $changes: [[field label, before, after], ...]; nothing is sent for [].
+ * A before/after pair of strings is one row of a What / Before / After
+ * table. A pair of ARRAYS is a list (towns served, Hot Sheet areas) and
+ * reads as words instead (Nikki, 2026-11-04: the towns alert printed the
+ * raw JSON keys): what was added, what was removed, then the whole list as
+ * it stands now. A list is flat names, or [group => [names]] (towns by
+ * area), in which case "now" is printed one group per line.
  * Returns 'sent' | 'failed' | 'none'.
  */
 function portal_change_alert(mysqli $conn, array $ctx, string $what, array $changes): string {
@@ -70,8 +76,27 @@ function portal_change_alert(mysqli $conn, array $ctx, string $what, array $chan
     $when = (new DateTime('now', new DateTimeZone('America/Denver')))->format('D, M j, Y g:i A T');
     $cut  = fn($v) => mb_strlen((string)$v) > 600 ? mb_substr((string)$v, 0, 600) . '…' : (string)$v;
     $e    = fn($v) => nl2br(htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8'), false);
-    $lines = []; $rows = '';
+    $lines = []; $rows = ''; $blocks = '';
     foreach ($changes as [$label, $before, $after]) {
+        if (is_array($before) || is_array($after)) {
+            [$bflat, ]        = portal_list_items((array)$before);
+            [$aflat, $groups] = portal_list_items((array)$after);
+            $added   = array_values(array_diff($aflat, $bflat));
+            $removed = array_values(array_diff($bflat, $aflat));
+            $n   = count($aflat);
+            $now = $groups ? array_map(fn($g, $items) => $g . ': ' . implode(', ', $items), array_keys($groups), $groups) : [implode(', ', $aflat)];
+            $lines[] = "- {$label}: " . implode('; ', array_filter([
+                $added   ? 'added ' . implode(', ', $added)     : '',
+                $removed ? 'removed ' . implode(', ', $removed) : '',
+                $n ? "now {$n}: " . implode(' | ', $now) : 'now none',
+            ]));
+            $blocks .= '<p style="margin:18px 0 4px;"><strong>' . $e($label) . '</strong></p>'
+                     . ($added   ? '<p style="margin:0 0 4px;"><span style="color:#6b7280;">Added:</span> ' . $e(implode(', ', $added)) . '</p>' : '')
+                     . ($removed ? '<p style="margin:0 0 4px;"><span style="color:#6b7280;">Removed:</span> ' . $e(implode(', ', $removed)) . '</p>' : '')
+                     . '<p style="margin:10px 0 2px;color:#6b7280;">' . ($n ? "Now ({$n}):" : 'None now.') . '</p>';
+            foreach ($n ? $now : [] as $line) $blocks .= '<p style="margin:0 0 2px 12px;">' . $e($line) . '</p>';
+            continue;
+        }
         $b = trim(html_entity_decode(strip_tags((string)$before), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $a = trim(html_entity_decode(strip_tags((string)$after),  ENT_QUOTES | ENT_HTML5, 'UTF-8'));
         $lines[] = "- {$label}: " . ($b === '' ? '(blank)' : '"' . $cut($b) . '"') . ' → ' . ($a === '' ? '(blank)' : '"' . $cut($a) . '"');
@@ -88,14 +113,30 @@ function portal_change_alert(mysqli $conn, array $ctx, string $what, array $chan
     }
     $html = '<div style="font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#111;">'
           . '<p><strong>' . $e($who) . '</strong> (' . $e($acct) . ') changed their <strong>' . $e($what) . '</strong> on the agent portal, ' . $e($when) . '.</p>'
-          . '<table style="border-collapse:collapse;font-size:14px;"><tr><th style="text-align:left;padding:0 12px 6px 0;color:#6b7280;font-weight:normal;">What</th>'
+          . ($rows === '' ? '' : '<table style="border-collapse:collapse;font-size:14px;"><tr><th style="text-align:left;padding:0 12px 6px 0;color:#6b7280;font-weight:normal;">What</th>'
           . '<th style="text-align:left;padding:0 12px 6px 0;color:#6b7280;font-weight:normal;">Before</th><th style="text-align:left;padding:0 0 6px;color:#6b7280;font-weight:normal;">After</th></tr>'
-          . $rows . '</table>'
+          . $rows . '</table>')
+          . $blocks
           . '<p style="margin-top:18px;"><a href="' . htmlspecialchars(rtrim(SITE_URL, '/') . '/agent.php?id=' . (int)$ctx['acct']['id']) . '" '
           . 'style="background:#2b3038;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;">Open their agent page</a></p>'
           . '<p style="color:#6b7280;font-size:12px;">The website picks profile changes up within the hour. Reply to this email to reach ' . $e($who) . ' directly.</p></div>';
     [$status] = portal_send_mail("Profile change: {$acct} ({$what})", $html, (string)$u['email'], $who);
     return $status;
+}
+
+/** A change-alert list: flat names, or [group => [names]]. Returns [every name in order, the groups with their names ([] when flat)]. */
+function portal_list_items(array $v): array {
+    $flat = []; $groups = [];
+    foreach ($v as $k => $x) {
+        if (is_array($x)) {
+            $items = array_values(array_map('strval', $x));
+            if (!$items) continue;
+            $groups[(string)$k] = $items; array_push($flat, ...$items);
+        } else {
+            $flat[] = (string)$x;
+        }
+    }
+    return [$flat, $groups];
 }
 
 /**

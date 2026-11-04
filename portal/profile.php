@@ -65,13 +65,18 @@ function portal_handle(string $col, string $v): string {
     return ltrim(rawurldecode($v), '@');
 }
 
-/** Save changed fields, alert, flash. $fields: column => [label, new value]. */
+/**
+ * Save changed fields, alert, flash. $fields: column => [label, new value]
+ * or [label, new value, how it reads]: a callable turning the stored value
+ * into what the alert shows (the towns' JSON keys into names by area).
+ */
 function portal_profile_save(mysqli $conn, array $ctx, array $me, string $what, array $fields, string $flash_key): void {
     $changes = []; $sets = []; $vals = []; $types = '';
-    foreach ($fields as $col => [$label, $new]) {
+    foreach ($fields as $col => $field) {
+        [$label, $new] = $field; $show = $field[2] ?? null;
         $old = (string)($me[$col] ?? '');
         if ($old === $new) continue;
-        $changes[] = [$label, $old, $new];
+        $changes[] = [$label, $show ? $show($old) : $old, $show ? $show($new) : $new];
         $sets[] = "`{$col}` = ?"; $vals[] = $new === '' ? null : $new; $types .= 's';
     }
     if (!$sets) { $_SESSION[$flash_key] = ['ok', 'Nothing changed.']; return; }
@@ -114,7 +119,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // The towns ticked (2026-10-28): the website's community pages list the agent under "Agents Who Know"; lead routing reads them too when in the FUB rotation.
         $keys = array_values(array_intersect(mk_area_keys(), array_map('strval', (array)($_POST['fub_areas'] ?? []))));
         sort($keys);
-        portal_profile_save($conn, $ctx, $me, 'towns served', ['fub_areas' => ['Towns', json_encode($keys)]], $key);
+        $words = fn(string $json) => mk_towns_by_area(mk_town_keys_decode($json));   // the alert reads names by area, not keys
+        portal_profile_save($conn, $ctx, $me, 'towns served', ['fub_areas' => ['Towns', json_encode($keys), $words]], $key);
     }
     header('Location: ' . $back($anchor)); exit;
 }

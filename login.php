@@ -11,6 +11,12 @@
 
 require_once __DIR__ . '/inc/sso.php';   // pulls in auth.php, so the session is live
 
+// The page to land on after sign-in (2026-11-04). require_login() sends it as
+// ?return_to= (a link in an email, say); the Microsoft button and the password
+// form carry it through. mh_return_to() keeps a path on this site or nothing.
+$return_to   = mh_return_to((string)($_GET['return_to'] ?? $_POST['return_to'] ?? ''));
+$after_login = $return_to !== '' ? $return_to : '/index.php';
+
 // Already signed in.
 //
 // !empty(), NOT isset(). require_login() in inc/auth.php tests empty(), and
@@ -19,7 +25,7 @@ require_once __DIR__ . '/inc/sso.php';   // pulls in auth.php, so the session is
 // index.php says "not signed in, go to login", forever. Every check on
 // user_id in this app must use empty()/!empty() for that reason.
 if (!empty($_SESSION['user_id'])) {
-    header('Location: /index.php');
+    header('Location: ' . $after_login);
     exit();
 }
 
@@ -39,7 +45,7 @@ if (
     && !isset($_GET['signed_out'])   // just signed out: show the page, do not bounce back in (2026-10-25)
     && empty($_SESSION['sso_silent_tried'])
 ) {
-    header('Location: /oauth_start.php?silent=1');
+    header('Location: /oauth_start.php?silent=1' . ($return_to !== '' ? '&return_to=' . rawurlencode($return_to) : ''));
     exit();
 }
 
@@ -158,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             exit();
                         }
 
-                        header('Location: /index.php');
+                        header('Location: ' . $after_login);
                         exit();
                     }
 
@@ -265,7 +271,7 @@ $conn->close();
                     <?php endif; ?>
 
                     <?php if ($sso_on): ?>
-                        <a class="ms-signin-btn" href="/oauth_start.php">
+                        <a class="ms-signin-btn" href="/oauth_start.php<?= $return_to !== '' ? '?return_to=' . rawurlencode($return_to) : '' ?>">
                             <svg viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
                                 <rect x="1"  y="1"  width="9" height="9" fill="#F25022"/>
                                 <rect x="11" y="1"  width="9" height="9" fill="#7FBA00"/>
@@ -298,6 +304,7 @@ $conn->close();
 
                             <form method="POST" action="/login.php">
                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
+                                <input type="hidden" name="return_to" value="<?= htmlspecialchars($return_to) ?>">
                                 <div class="mb-3">
                                     <input type="email" class="form-control" placeholder="Email Address"
                                            id="email" name="email"

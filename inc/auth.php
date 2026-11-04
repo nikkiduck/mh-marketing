@@ -25,13 +25,33 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /**
+ * A path on this site that a sign-in may return to, or '' (2026-11-04).
+ * Root-relative only (never a host, never //host), no whitespace or
+ * backslashes, and never one of the sign-in pages themselves (a loop).
+ * login.php, oauth_start.php and require_login() all pass return_to through
+ * this; sso_authorize_url() keeps its own guard for the session copy.
+ */
+function mh_return_to(?string $v): string {
+    $v = trim((string)$v);
+    if ($v === '' || $v[0] !== '/' || str_starts_with($v, '//') || preg_match('/[\s\\\\]/', $v)) return '';
+    $path = (string)parse_url($v, PHP_URL_PATH);
+    if (preg_match('~^/(login|logout|oauth_start|oauth_callback|change_password|forgot-password|reset-password)\.php$~', $path)) return '';
+    return $v;
+}
+
+/**
  * Redirects to login if user is not authenticated.
  * If a forced password change is pending, redirects to change_password.php.
  * Call this at the top of every protected page.
  */
 function require_login(): void {
     if (empty($_SESSION['user_id'])) {
-        header('Location: /login.php');
+        // Remember the page that was asked for, so sign-in lands there and not
+        // on the home page (2026-11-04: the "Open their agent page" button in
+        // the profile-change email opened the portal home instead). A POST
+        // cannot be replayed, so only a GET is remembered.
+        $next = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' ? mh_return_to((string)($_SERVER['REQUEST_URI'] ?? '')) : '';
+        header('Location: /login.php' . ($next !== '' ? '?return_to=' . rawurlencode($next) : ''));
         exit();
     }
     // Enforce password change before allowing access to any other page

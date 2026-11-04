@@ -18,20 +18,21 @@ if (!sso_enabled()) {
     exit();
 }
 
-// Already signed in — nothing to do.
+$return_to = mh_return_to((string) ($_GET['return_to'] ?? ''));   // a path on this site, or ''
+if ($return_to === '') $return_to = '/index.php';
+
+// Already signed in — nothing to do but go where they were headed.
 if (!empty($_SESSION['user_id'])) {
-    header('Location: /index.php');
+    header('Location: ' . $return_to);
     exit();
 }
-
-$return_to = (string) ($_GET['return_to'] ?? '/index.php');
 $silent    = !empty($_GET['silent']);
 
 // One silent attempt per session. Without this guard a tenant that will not
 // authenticate silently sends the browser into a redirect loop.
 if ($silent) {
     if (!empty($_SESSION['sso_silent_tried'])) {
-        header('Location: /login.php');
+        header('Location: /login.php' . ($return_to !== '/index.php' ? '?return_to=' . rawurlencode($return_to) : ''));
         exit();
     }
     $_SESSION['sso_silent_tried'] = true;

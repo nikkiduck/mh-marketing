@@ -51,7 +51,7 @@ if (!portal_csrf_ok()) {
           . ' ' . ($freq === 'daily' ? 'every day' : 'on Mondays and Thursdays') . ', on days there is something to show.'
         : 'Saved, but no areas are selected, so nothing will be sent until you tick one.'];
     // What changed, for marketing@ and the agent page.
-    $names = fn(array $keys) => implode(', ', array_map('mk_area_name', $keys));
+    $names = fn(array $keys) => array_map('mk_area_name', $keys);   // a list: the alert reads added / removed / now
     $changes = [];
     if (!$before['on']) $changes[] = ['Hot Sheets', 'Off', 'On'];
     if (array_values($before['areas']) !== $chosen) $changes[] = ['Areas', $names($before['areas']), $names($chosen)];

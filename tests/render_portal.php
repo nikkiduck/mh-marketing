@@ -282,7 +282,7 @@ function scenario(array $over = []): array {
             ],
             'intakes' => [
                 ['id' => 6,  'agent_name' => 'Jackson Horn', 'slug' => 'jackson-horn', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent', 'mh_email' => 'jackson.horn@monthaus.com', 'cell_phone' => '(970) 555-0100', 'web_status' => 'approved',
-                 'email_forwarded' => 1, 'alt_email' => 'jackson.secret@gmail.com'],
+                 'email_forwarded' => 1, 'alt_email' => 'jackson.secret@gmail.com', 'fub_areas' => '["avon","vail"]'],
                 ['id' => 7,  'agent_name' => 'Kimberlee Coates', 'slug' => 'kim-coates', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
                 ['id' => 8,  'agent_name' => 'Weber Boxer Group', 'slug' => '', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'team', 'initials' => 'WB'],
                 ['id' => 40, 'agent_name' => 'Sierrah Smith', 'slug' => 'sierrah-smith', 'is_active' => 1, 'status' => 'active', 'headshot_url' => '', 'headshot_face_url' => '', 'entity_type' => 'agent'],
@@ -553,6 +553,12 @@ ok('an admin preview cannot change their details', writes() === [] && mails() ==
 req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'areas', 'service_area' => "Aspen\r\nVail Valley\n\n"]);
 $w = writes();
 ok('service areas: one per line in the box, stored the admin way with semicolons', ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['Aspen; Vail Valley', 6], json_encode($w));
+req('jackson', '/portal/profile.php', ['csrf_token' => 'tok', 'action' => 'towns', 'fub_areas' => ['vail', 'breckenridge', 'avon', 'bogus']]);
+$w = writes(); $m = mails(); $h = $m[0]['content'][1]['value'] ?? '';
+ok('towns served: real keys only, sorted, stored as JSON', ($w[0][0] ?? '') === 'intake_update' && ($w[0][1] ?? []) === ['["avon","breckenridge","vail"]', 6], json_encode($w));
+ok('…and the alert reads as town names by area with what was added, never the JSON keys (Nikki, 2026-11-04)', ($m[0]['subject'] ?? '') === 'Profile change: Jackson Horn (towns served)'
+   && has($h, 'Added:</span> Breckenridge') && !has($h, 'Removed:') && has($h, 'Now (3):') && has($h, 'Vail Valley: Vail, Avon') && has($h, 'Summit County: Breckenridge')
+   && !has($h, '"avon"') && !has($h, '<th') && ($note = array_values(array_filter($w, fn($x) => $x[0] === 'note'))[0] ?? null) && has($note[1][1], 'Towns: added Breckenridge; now 3: Vail Valley: Vail, Avon | Summit County: Breckenridge'), json_encode($m) . json_encode($w));
 [$c, $loc] = req('jackson', '/portal/contact.php', ['csrf_token' => 'tok', 'back' => '/portal/spend.php', 'subject' => 'New headshot', 'message' => 'Can we book one?']);
 $w = writes(); $m = mails();
 ok('the footer form saves a request, emails marketing@ with Reply-To him, and returns to the page it was sent from', $c === 302 && $loc === '/portal/spend.php#contact-marketing'

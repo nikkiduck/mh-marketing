@@ -2234,8 +2234,16 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   form redirected; qr_profile_url() here is the one place to follow it. **Every change an agent makes is emailed to
   marketing@ with who, what, before, after and when (Mountain time) and
   left as a note on their agent page** (`portal_change_alert()`,
-  marketing_notes). The website picks the fields up from the roster feed
-  within the hour. The Hot Sheets form lives on the profile
+  marketing_notes). A list field (towns served, Hot Sheet areas) is passed
+  as arrays and reads as words: Added, Removed, then "Now (N)" with the
+  towns grouped by area (`mk_towns_by_area()`), never the stored JSON keys
+  (Nikki, 2026-11-04). The email's "Open their agent page" button goes to
+  agent.php?id=; since the same day `require_login()` carries the page
+  asked for as `?return_to=` through login.php, the Microsoft button, the
+  silent bounce and the password form (`mh_return_to()` in inc/auth.php
+  keeps a path on this site or nothing), so a link opened while signed out
+  lands on that page and not on the home page. The website picks the
+  fields up from the roster feed within the hour. The Hot Sheets form lives on the profile
   (inc/portal_hotsheets.php renders it); portal/hotsheets.php only takes
   the POST and sends a GET to the profile. `portal/elevation.php` is the
   Elevation Planner (its own section below, 2026-10-17).
