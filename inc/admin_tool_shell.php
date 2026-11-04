@@ -77,7 +77,7 @@ function admin_tool_header(array $o): void {
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<?php $mh_active = (string)($o['active'] ?? 'marketing'); include __DIR__ . '/_nav.php'; ?>
+<?php $nav_active = (string)($o['active'] ?? 'marketing'); include __DIR__ . '/_nav.php'; ?>   <?php // _nav.php reads $nav_active ($mh_active is its own; set here until 2026-11-03, so no tool page marked its link) ?>
 
 <div class="pc-container">
   <div class="wrap">
