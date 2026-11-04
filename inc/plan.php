@@ -735,8 +735,9 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
             // (none at all when the cover has none).
             $eff = $fr['choice'] === 'auto' ? (($logo !== 'none' && $i % 2 === 0) ? $logoKind : 'none') : $fr['choice'];
             $set[] = ['renderer' => 'frame', 'name' => sprintf('%02d', $n++),
-                      'post' => ['logo_kind' => $eff === 'mark' ? 'mark' : 'full', 'show_logo' => $eff !== 'none'] + $common
-                              + ['photo' => $fr['id'], 'photo_url' => $fr['url'], 'photo_file' => $fr['file'], 'zoom' => $fr['zoom'], 'focus_x' => $fr['fx'], 'focus_y' => $fr['fy']]];
+                      // The frame's own photo and framing FIRST: + keeps the left side, and $common carries the cover's zoom and focus.
+                      'post' => ['logo_kind' => $eff === 'mark' ? 'mark' : 'full', 'show_logo' => $eff !== 'none',
+                                 'photo' => $fr['id'], 'photo_url' => $fr['url'], 'photo_file' => $fr['file'], 'zoom' => $fr['zoom'], 'focus_x' => $fr['fx'], 'focus_y' => $fr['fy']] + $common];
         }
         if (!empty($in['endcard'])) {
             $agentName = (string)$listing['agent'];
