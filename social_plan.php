@@ -65,8 +65,9 @@ $rows = [
 admin_tool_header([
     'title'   => 'This Week\'s Plan',
     'hint'    => 'The Social Media Plan: eight pieces a week (3 property, 1 market stats, 1 location, 1 broker, 2 branding). Each day\'s suggestion follows a rotation; open it, or pick something else inside the tool.',
-    'actions' => '<a class="btn btn-outline btn-sm" href="templates.php"><i class="ti ti-layout-grid"></i> Templates</a>'
+    'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
+    'active'  => 'social',
     'css'     => '
     .pl-week { display:flex; align-items:center; gap:14px; margin:0 0 18px; flex-wrap:wrap; }
     .pl-week h2 { font-family:"Cormorant Garamond",Georgia,serif; font-weight:500; font-size:26px; margin:0; color:#1f242c; }

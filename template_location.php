@@ -27,9 +27,10 @@ admin_tool_header([
     'title'   => 'Location Feature',
     'hint'    => 'One a week in the plan: an office or a view from it, the brokers based there, or a local real estate angle.',
     'actions' => '<a class="btn btn-outline btn-sm" href="social_plan.php"><i class="ti ti-calendar-week"></i> This Week\'s Plan</a>'
-               . '<a class="btn btn-outline btn-sm" href="templates.php"><i class="ti ti-layout-grid"></i> Templates</a>'
+               . '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],
+    'active'  => 'social',
     'css'     => plan_admin_css(),
 ]);
 include __DIR__ . '/inc/plan_body.php';

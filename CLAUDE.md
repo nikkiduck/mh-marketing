@@ -2713,15 +2713,21 @@ and inc/flyer.php. Uploads made from the admin pages are the admin's own
 page under a simulated admin session on the server (Jonathan's 16 listings
 in both dropdowns, 26 agents in the picker).
 
-### The Social Media Plan templates (admin only, 2026-11-02)
+### The Social Media Plan templates (super admin only, 2026-11-02)
 
 Nikki's "Mont Haus Social Media Plan" (a docx; its words are in
 `plan_definition()` and docs/HANDOFF-social-plan.md): eight pieces a week,
 3 property posts + stories, 1 market stats story, 1 location feature, 1
-broker feature, 2 branding stories. Built as a series of ADMIN-ONLY tools
+broker feature, 2 branding stories. Built as a series of admin-only tools
 on the Instagram template foundation; nothing of it is on the agent
-portal. Reached from the roster header's **Social Plan** button and the
-admin Templates page's "Social Media Plan (admin only)" group.
+portal. **Since 2026-11-03 (Nikki: "move the Social Media template section
+into its own area ... just for me the super admin") it is its own area:
+`social_media.php` (the five cards), reached from a **Social Media** link
+in the header (inc/_nav.php, shown to super_admin only; her header
+collapses to the menu at 960px instead of 820px for the extra link), and
+`plan_gate()` requires super_admin. The roster's Social Plan button and
+the Templates page's group are gone; the plan pages' Templates button is
+now Social Media, and they mark that link current (`'active' => 'social'`).**
 
 - `social_plan.php`: This Week's Plan, the sample week Monday to Saturday
   with each day's suggestion and a button into its tool with the pick

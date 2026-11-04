@@ -29,6 +29,11 @@ foreach (preg_split('/\s+/', $mh_name) as $mh_part) {
 $mh_initials = substr($mh_initials, 0, 2) ?: '?';
 
 $mh_active = $nav_active ?? 'marketing';
+// Social Media (Nikki, 2026-11-03): the Social Media Plan's own area, super_admin only, so it is
+// one person's header that carries a fifth labelled link. The bar collapses to the menu earlier
+// for her (960px, not 820px) because the 820px breakpoint was measured without it.
+$mh_social = function_exists('is_super_admin') && is_super_admin();
+$mh_bp = $mh_social ? 960 : 820;
 ?>
 <!-- One look across the portal and the website's admin (Nikki, 2026-09-23).
      Loaded here, in the body, so it lands after each page's own <style> block
@@ -107,10 +112,11 @@ $mh_active = $nav_active ?? 'marketing';
 
      820px, not 720px: "Marketing | Billing | NB Nikki Boxer | Sign out" plus a
      trailing crumb runs out of room well above phone width — a small tablet in
-     portrait was already clipping "Sign out". */
+     portrait was already clipping "Sign out". The super admin's header also
+     carries "Social Media", so hers collapses at 960px ($mh_bp above). */
   .mh-nav-toggle { display:none; }
 
-  @media (max-width: 820px) {
+  @media (max-width: <?= $mh_bp ?>px) {
     /* The panel is positioned against this, so it must be the containing block. */
     .mh-header-inner { position:relative; }
 
@@ -177,6 +183,9 @@ $mh_portal = function_exists('is_elevated_admin') && is_elevated_admin()
     <nav class="mh-nav" id="mhNav">
       <a class="mh-nav-link<?= $mh_active === 'marketing' ? ' active' : '' ?>" href="/"><i class="ti ti-speakerphone"></i> Marketing</a>
       <a class="mh-nav-link<?= $mh_active === 'billing' ? ' active' : '' ?>" href="/billing.php"><i class="ti ti-receipt-2"></i> Billing</a>
+      <?php if ($mh_social): ?>
+        <a class="mh-nav-link<?= $mh_active === 'social' ? ' active' : '' ?>" href="/social_media.php" title="The Social Media Plan and its tools"><i class="ti ti-brand-instagram"></i> Social Media</a>
+      <?php endif; ?>
       <?php if ($mh_portal): ?>
         <a class="mh-nav-link" href="/portal/" title="Your own agent portal"><i class="ti ti-user-circle"></i> My Portal</a>
       <?php endif; ?>

@@ -1,5 +1,11 @@
 # The Social Media Plan templates (admin side, 2026-11-02)
 
+**Where it lives since 2026-11-03:** its own area, social_media.php, from
+the header's Social Media link (inc/_nav.php, super_admin only; Nikki:
+"just for me the super admin"), and every plan page and endpoint requires
+super_admin (`plan_gate()`). The roster's Social Plan button and the
+Templates page's "Social Media Plan (admin only)" group are gone.
+
 Nikki, 2026-11-02: "Using this plan as a starting point and the design
 foundation in the current marketing templates, create on my Admin marketing
 portal a series of dedicated admin-only social templates." The plan is her

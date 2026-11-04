@@ -22,9 +22,10 @@ admin_tool_header([
     'title'   => 'Branding Story',
     'hint'    => 'Two a week in the plan, following the seasonal branding strategy: a tagline on a mountain photo, centred, with the logo.',
     'actions' => '<a class="btn btn-outline btn-sm" href="social_plan.php"><i class="ti ti-calendar-week"></i> This Week\'s Plan</a>'
-               . '<a class="btn btn-outline btn-sm" href="templates.php"><i class="ti ti-layout-grid"></i> Templates</a>'
+               . '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],
+    'active'  => 'social',
     'css'     => plan_admin_css(),
 ]);
 include __DIR__ . '/inc/plan_body.php';

@@ -25,7 +25,7 @@
  *   plan_export.php          POST → the PNG, or the story set as a ZIP
  *   plan_photos.php          GET  → the photos to pick from, by subject
  *
- * Every page and endpoint is admins only (require_role('admin')) and acts in
+ * Every page and endpoint is the super admin's only (require_role('super_admin'), 2026-11-03; admin before) and acts in
  * the admin's OWN social context (social_context() with ?preview=admin, as
  * General Social does): the uploads are the person's (users.id), the stock
  * library is shared, the export copies go to CREATIVES_DIR/social/admin-<uid>/.
@@ -76,7 +76,7 @@ function plan_admin_css(): string {
 /** Admins only; the admin's own social context (uploads, stock, export copies), a CSRF token made. */
 function plan_gate(mysqli $conn): array {
     require_login();
-    require_role('admin');
+    require_role('super_admin');   // the Social Media area is Nikki's alone (2026-11-03; was admin)
     if (empty($_SESSION['csrf_token'])) $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
     $_GET['preview'] = 'admin';
     $ctx = social_context($conn);

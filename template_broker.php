@@ -24,9 +24,10 @@ admin_tool_header([
     'title'   => 'Broker Feature',
     'hint'    => 'One a week in the plan: spotlight a broker and tie them to their market, or celebrate a milestone. The hooks rotate week to week.',
     'actions' => '<a class="btn btn-outline btn-sm" href="social_plan.php"><i class="ti ti-calendar-week"></i> This Week\'s Plan</a>'
-               . '<a class="btn btn-outline btn-sm" href="templates.php"><i class="ti ti-layout-grid"></i> Templates</a>'
+               . '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],
+    'active'  => 'social',
     'css'     => plan_admin_css(),
 ]);
 if (!$pk_agents) {
