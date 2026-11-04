@@ -204,6 +204,53 @@ the figure. The separate Backdrop step is gone; its Overlay slider sits
 under the framer, and the framer shows the figure (`data-figure` on the
 broker option), so dragging and zoom still move and scale the broker.
 
+## Weekly Plans: saved weeks (2026-11-03)
+
+Nikki: "go into each day/item and create the post or set, change the
+suggestion if desired, save and return to the weekly plan with the updated
+day/item in place; once a week has been fully created/updated, save this
+week and plan next week; go back into a created post or set I've saved and
+have my saved options load; four weeks in advance."
+
+- **Store:** inc/plan_store.php, one JSON per ISO week at
+  CREATIVES_DIR/social/plans/<YYYY-Www>.json: status (open | planned) and
+  items by slot (0 to 7, plan_slots(): Monday property, Tuesday market +
+  branding, Wednesday property, Thursday location, Friday property +
+  branding, Saturday broker). A builder item keeps the builder's whole POST
+  as `form` (plan_form_from_post()), a `caption` (for when the post goes
+  up; not drawn), a `summary` line and `saved_at`; the market slot keeps a
+  `done` tick only (the Market Snapshot is its own tool). No table: one
+  person, eight pieces a week, a few weeks ahead; the functions are the one
+  path in and out, so moving to MySQL later is small.
+- **The week page** (social_plan.php, "Weekly Plans"): a strip of this
+  week and the next four with "n of 8 ready" or "Planned ✓"; the table's
+  rows show the suggestion, or what is saved (with the suggestion under it)
+  and Saved + time; buttons: Post / Story set (into the builder with
+  ?week=&slot= and the suggestion preselected), or for a saved row Edit,
+  Download (plan_export.php with plan_week + plan_slot: the saved form is
+  the request; a property's listing photos are primed into the session
+  first so the saved photo ids pass plan_photo()) and Reset (back to the
+  suggestion); the market row has its Story link and a Done tick. The
+  footer: n of 8 ready, Mark this week planned (a confirm when pieces are
+  missing), then Planned ✓ · Reopen · Plan next week.
+- **The builder** opened for a slot (plan_item_context()): the hint names
+  the week, day and piece and whether a saved piece loaded; Back to the
+  week and Weekly Plans buttons; hidden plan_week / plan_slot /
+  plan_action; a Caption textarea in the Text step; Save to the week
+  (formaction plan_save.php) beside Download. A saved piece presets the
+  subject dropdowns server-side (plan_preset_from_form()) and the script's
+  restoreSaved() sets every other control from SAVED, then loads the photos
+  with the saved pick, frames and per-frame logos, then zoom and focus. The
+  sliders count as touched (the look does not reset the text shadow) and
+  prevSize is set so the size does not swap the saved logo place.
+- **plan_save.php:** item (the form must render, the same check the
+  download makes), done, clear, status; redirects to the week with
+  ?saved= or ?cleared= for the flash line.
+- The slot's KIND is fixed; the subject, size and everything else are
+  free. A saved piece re-renders from the live feed when downloaded later:
+  the saved words stay, but a listing's photos are the feed's today, and a
+  photo that left the feed drops out of the set.
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the

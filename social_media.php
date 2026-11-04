@@ -13,7 +13,7 @@ plan_gate($conn);
 
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $cards = [
-    ['This Week\'s Plan', 'social_plan.php', 'The plan\'s week, Monday to Saturday: eight pieces, each day\'s suggestion from the rotations, a button to its template.', 'Open the week ›'],
+    ['Weekly Plans', 'social_plan.php', 'This week and the four ahead, Monday to Saturday: eight pieces a week, each day\'s suggestion from the rotations. Make or change each piece, save it to the week, mark the week planned and go on to the next.', 'Open the weeks ›'],
     ['Property Post + Set', 'template_property.php', 'Any Mont Haus listing in the feed: New Listing, Featured, Just Sold or Rental. One picture, or a set: the photos in order as one story or carousel, downloaded as a ZIP.', 'Make a post or set ›'],
     ['Broker Feature', 'template_broker.php', 'Spotlight a broker tied to their market with one of the plan\'s hooks, or a milestone: their cutout in front of a location photo under the slate veil.', 'Make a feature ›'],
     ['Location Feature', 'template_location.php', 'An office, an area or a town: the office or a view, the brokers based there with their faces in a row, or a local real estate angle.', 'Make a feature ›'],

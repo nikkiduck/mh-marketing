@@ -2729,9 +2729,34 @@ collapses to the menu at 960px instead of 820px for the extra link), and
 the Templates page's group are gone; the plan pages' Templates button is
 now Social Media, and they mark that link current (`'active' => 'social'`).**
 
-- `social_plan.php`: This Week's Plan, the sample week Monday to Saturday
-  with each day's suggestion and a button into its tool with the pick
-  preselected; `?week=YYYY-Www`. The suggestions rotate by ISO week index
+- `social_plan.php`: Weekly Plans (This Week's Plan until 2026-11-03), the
+  sample week Monday to Saturday with each day's suggestion and a button
+  into its tool with the pick preselected; `?week=YYYY-Www`. **Saved weeks
+  (Nikki, 2026-11-03: "go into each day/item, create the post or set,
+  change the suggestion, save and return to the weekly plan with the
+  updated day/item in place; save this week and plan next week; go back
+  into a saved post and have my saved options load; four weeks in
+  advance"):** `inc/plan_store.php`, one JSON per ISO week under
+  CREATIVES_DIR/social/plans/ (no table: one super admin, eight pieces a
+  week; every read and write goes through the store's functions, so a
+  table later is a small change). A builder opened from the week page
+  carries `?week=&slot=` (`plan_item_context()`); its Save to the week
+  button posts the whole form to `plan_save.php` (`plan_form_from_post()`
+  keeps every field but the token, the plan fields and the preview-only
+  ones; the form must render first), with a Caption textarea saved
+  alongside (not drawn) and a one-line summary for the table
+  (`plan_item_summary()`). Reopening the slot presets the subject dropdowns
+  from the saved form (`plan_preset_from_form()`) and the script restores
+  the rest from `SAVED` (`restoreSaved()` in inc/plan_body.php: every
+  control, the lines, the set's frames and per-frame logos, the photo, then
+  zoom and focus once the tiles have loaded). The week page shows a strip
+  of this week and the four ahead (`PLAN_WEEKS_AHEAD`, "n of 8 ready" or
+  "Planned ✓"), each saved row with Edit, Download (plan_export.php by
+  `plan_week` + `plan_slot`, the listing's photos primed into the session
+  first) and Reset, the market slot (the Market Snapshot's own tool) with a
+  Done tick, and a footer with Mark this week planned / Reopen and Plan next
+  week. A slot's kind is fixed (the plan's rhythm); what goes in it is not.
+  `PLAN_STORE_DIR`, when defined, replaces the folder (the local harness). The suggestions rotate by ISO week index
   (`plan_week()`, `plan_rotate()`: markets through `market_card_defs()`,
   brokers through the approved roster with a headshot, locations through
   offices then areas, hooks through the plan's six; the season by month,

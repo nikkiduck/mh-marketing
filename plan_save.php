@@ -1,0 +1,62 @@
+<?php
+/**
+ * plan_save.php — writes to the Weekly Plans store (inc/plan_store.php,
+ * 2026-11-03) and returns to the week page. POST with the CSRF token,
+ * plan_week (YYYY-Www), plan_slot (0 to 7) and plan_action:
+ *   item    the builder's form (its Save to the week button): kept as the
+ *           slot's piece, with the caption and a one-line summary
+ *   done    tick or untick the market slot (the Market Snapshot is made in
+ *           its own tool): done=1|0
+ *   clear   drop the slot's piece (back to the suggestion)
+ *   status  the week: status=planned|open
+ * Super admin only (plan_gate()).
+ */
+require_once __DIR__ . '/inc/plan.php';
+
+$ctx = plan_gate($conn);
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
+    portal_stop('Please try again', 'That page had been open too long. Go back, reload it, and save again.');
+}
+$week = (string)($_POST['plan_week'] ?? '');
+$slot = (int)($_POST['plan_slot'] ?? -1);
+$slots = plan_slots();
+if (!plan_store_key_ok($week)) portal_stop('Which week?', 'The week was missing from the request. Go back to Weekly Plans and try again.');
+$action = (string)($_POST['plan_action'] ?? 'item');
+$back = 'social_plan.php?week=' . rawurlencode($week);
+
+if ($action === 'status') {
+    plan_week_set_status($week, (string)($_POST['status'] ?? 'open'));
+    header('Location: ' . $back); exit;
+}
+if (!isset($slots[$slot])) portal_stop('Which piece?', 'That day and piece are not in the plan\'s week. Go back to Weekly Plans and try again.');
+$def = $slots[$slot];
+
+if ($action === 'clear') {
+    plan_item_clear($week, $slot);
+    header('Location: ' . $back . '&cleared=' . $slot); exit;
+}
+if ($action === 'done') {
+    if (!empty($_POST['done'])) plan_item_save($week, $slot, ['kind' => $def['type'], 'done' => true, 'saved_at' => date('c')]);
+    else plan_item_clear($week, $slot);
+    header('Location: ' . $back); exit;
+}
+
+// A builder's piece: the form must render (the same check the download makes) before it is kept.
+$kind = (string)($_POST['kind'] ?? '');
+if ($kind !== $def['type']) portal_stop('Wrong tool for the day', 'This slot is a ' . ph($def['words']) . '; the form came from the ' . ph(plan_kinds()[$kind] ?? $kind) . ' tool.');
+$form = plan_form_from_post($_POST);
+$r = plan_post_from_request($conn, $ctx, $form);
+if (is_string($r)) portal_stop('Nothing to save yet', ph($r));
+$item = [
+    'kind'     => $kind,
+    'form'     => $form,
+    'caption'  => mb_substr(trim(str_replace("\r", '', (string)($_POST['caption'] ?? ''))), 0, 2200),
+    'summary'  => plan_item_summary($conn, $kind, $form),
+    'frames'   => count($r['frames']),
+    'saved_at' => date('c'),
+];
+if (!plan_item_save($week, $slot, $item)) {
+    portal_stop('The week could not be saved', 'The plans folder on the server would not take the file. Email ' . PORTAL_MARKETING_EMAIL . ' and we will sort it out.');
+}
+header('Location: ' . $back . '&saved=' . $slot);
+exit;

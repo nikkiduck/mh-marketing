@@ -42,6 +42,7 @@ require_once __DIR__ . '/plan_render.php';
 require_once __DIR__ . '/plan_agent_render.php';   // the Featured Agent designs (2026-11-02 evening)
 require_once __DIR__ . '/boards.php';          // mk_areas(): the website's Communities, the locations and the brokers' markets
 require_once __DIR__ . '/market_data.php';     // market_card_defs(): the Market Snapshot's places, for the stats rotation
+require_once __DIR__ . '/plan_store.php';      // the Weekly Plans store: saved pieces per week (2026-11-03)
 
 const PLAN_NEW_DAYS    = 21;   // a listing is "new" this long after the feed first saw it (or its new_listing change)
 const PLAN_CLOSED_DAYS = 30;   // a closing stays in the Just Sold list this long (the agents' tools keep 7)
@@ -70,6 +71,9 @@ function plan_admin_css(): string {
     .sp-range input[type=range] { flex:1; min-width:0; accent-color:#4a5569; }
     .sp-range output { min-width:40px; text-align:right; color:#1f242c; font-variant-numeric:tabular-nums; }
     .sp-reset { background:none; border:0; padding:4px 0 0; font:inherit; font-size:12.5px; text-align:left; }
+    .sp-btn-soft { background:#fff; color:#4a5569; border:1.5px solid #dfe3e8; }
+    .sp-btn-soft:hover { border-color:#4a5566; background:#fff; }
+    .sp-actions .sp-btn + .sp-btn { margin-left:8px; }
     ';
 }
 

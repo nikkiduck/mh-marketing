@@ -19,14 +19,19 @@ $pk_locations = plan_locations();
 $pk_team = [];
 foreach ($pk_locations as $k => $l) $pk_team[$k] = array_values(array_map(fn($a) => $a['id'], plan_location_team($l, $pk_agents)));
 $pk_preset = ['loc' => (string)($_GET['loc'] ?? 'office:aspen'), 'angle' => (string)($_GET['angle'] ?? 'office'), 'size' => (string)($_GET['size'] ?? 'story')];
+// Opened for a week's slot (Weekly Plans, 2026-11-03): the saved piece's form presets the controls and loads into the script.
+$pk_plan = plan_item_context($_GET, $pk);
+$pk_saved = $pk_plan && $pk_plan['item'] ? $pk_plan['item'] : null;
+if ($pk_saved) $pk_preset = plan_preset_from_form($pk, $pk_saved['form']) + $pk_preset;
+$pk_hdr = plan_builder_header($pk_plan);
 $csrf = (string)$_SESSION['csrf_token'];
 $render_url = 'plan_render.php'; $export_url = 'plan_export.php'; $photos_url = 'plan_photos.php';
 $upload_url = social_url($ctx, '/portal/social_upload.php'); $delete_url = social_url($ctx, '/portal/social_delete.php');
 
 admin_tool_header([
     'title'   => 'Location Feature',
-    'hint'    => 'One a week in the plan: an office or a view from it, the brokers based there, or a local real estate angle.',
-    'actions' => '<a class="btn btn-outline btn-sm" href="social_plan.php"><i class="ti ti-calendar-week"></i> This Week\'s Plan</a>'
+    'hint'    => $pk_hdr['hint'] . 'One a week in the plan: an office or a view from it, the brokers based there, or a local real estate angle.',
+    'actions' => $pk_hdr['back'] . '<a class="btn btn-outline btn-sm" href="social_plan.php"><i class="ti ti-calendar-week"></i> Weekly Plans</a>'
                . '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],

@@ -19,11 +19,15 @@
  * kind's data: $pk_listings (plan_listings()), $pk_agents (plan_agents()),
  * $pk_locations (plan_locations()) + $pk_team ([loc key => [agent ids]]),
  * $pk_seasons (plan_seasons()); $pk_preset from the query string (agent,
- * loc, listing, variant, hook, season, size). Nothing is drawn here but the
- * controls: the picture is plan_render.php's HTML in the iframe.
+ * loc, listing, variant, hook, season, size); $pk_plan (plan_item_context(),
+ * the week and slot the page was opened for, or null) and $pk_saved (the
+ * saved piece: its form restores into the controls, its caption into the
+ * Text step; Save to the week posts to plan_save.php). Nothing is drawn here
+ * but the controls: the picture is plan_render.php's HTML in the iframe.
  */
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $pk_preset = (array)($pk_preset ?? []);
+$pk_plan = $pk_plan ?? null; $pk_saved = $pk_saved ?? null;
 $layouts = plan_layouts();
 $offered_layouts = match ($pk) {
     'property' => ['photo', 'center'],
@@ -51,6 +55,11 @@ $step = 1;
       <input type="hidden" name="focus_x" value="50">
       <input type="hidden" name="focus_y" value="50">
       <input type="hidden" name="frame" value="0">
+      <?php if ($pk_plan): ?>
+      <input type="hidden" name="plan_week" value="<?= $e($pk_plan['week']['key']) ?>">
+      <input type="hidden" name="plan_slot" value="<?= (int)$pk_plan['slot'] ?>">
+      <input type="hidden" name="plan_action" value="item">
+      <?php endif; ?>
       <div id="spFrames"></div>
 
       <section class="sp-step">
@@ -179,15 +188,15 @@ $step = 1;
           </label>
           <label class="sp-field">Hook
             <select name="hook" id="spHook">
-              <?php $wh = (int)($pk_preset['hook'] ?? 0); foreach (plan_hooks() as $i => $h): ?>
-              <option value="<?= $i ?>"<?= $i === $wh ? ' selected' : '' ?> data-tpl="<?= $e($h) ?>"><?= $e(plan_fill($h, ['name' => 'Jackson Horn', 'first' => 'Jackson', 'market' => 'Montrose'])) ?></option>
+              <?php $wh = (string)($pk_preset['hook'] ?? '0'); foreach (plan_hooks() as $i => $h): ?>
+              <option value="<?= $i ?>"<?= (string)$i === $wh ? ' selected' : '' ?> data-tpl="<?= $e($h) ?>"><?= $e(plan_fill($h, ['name' => 'Jackson Horn', 'first' => 'Jackson', 'market' => 'Montrose'])) ?></option>
               <?php endforeach; ?>
               <optgroup label="Milestones">
                 <?php foreach (plan_milestones() as $i => $h): ?>
-                <option value="m<?= $i ?>" data-tpl="<?= $e($h) ?>"><?= $e(plan_fill($h, ['name' => 'Jackson Horn', 'first' => 'Jackson', 'market' => 'Montrose'])) ?></option>
+                <option value="m<?= $i ?>"<?= 'm' . $i === $wh ? ' selected' : '' ?> data-tpl="<?= $e($h) ?>"><?= $e(plan_fill($h, ['name' => 'Jackson Horn', 'first' => 'Jackson', 'market' => 'Montrose'])) ?></option>
                 <?php endforeach; ?>
               </optgroup>
-              <option value="custom" data-tpl="">Custom: I will type the headline</option>
+              <option value="custom"<?= $wh === 'custom' ? ' selected' : '' ?> data-tpl="">Custom: I will type the headline</option>
             </select>
           </label>
         </div>
@@ -280,11 +289,15 @@ $step = 1;
             </label>
           </div>
           <?php endforeach; ?>
+          <?php if ($pk_plan): ?>
+          <label class="sp-field">Caption for the post (saved with the week for when you post; not drawn) <textarea name="caption" maxlength="2200" rows="3"><?= $e($pk_saved['caption'] ?? '') ?></textarea></label>
+          <?php endif; ?>
         </div>
       </section>
 
       <div class="sp-actions">
-        <button type="submit" class="sp-btn" id="spDownload">Download PNG</button>
+        <?php if ($pk_plan): ?><button type="submit" class="sp-btn" formaction="plan_save.php" id="spSave">Save to the week</button><?php endif; ?>
+        <button type="submit" class="sp-btn<?= $pk_plan ? ' sp-btn-soft' : '' ?>" id="spDownload">Download PNG</button>
         <p class="sp-help" id="spHelp">The download is a 1080 × 1440 PNG for a post, 1080 × 1080 for a square, or 1080 × 1920 for a story.</p>
       </div>
     </form>
@@ -302,7 +315,7 @@ $step = 1;
         <?php endforeach; ?>
       </div>
       <p class="sp-cap">This is a preview. Click Download to save it.</p>
-      <p class="sp-cap-btn"><button type="submit" form="spForm" class="sp-btn sp-btn-sm" id="spDownload2">Download PNG</button></p>
+      <p class="sp-cap-btn"><?php if ($pk_plan): ?><button type="submit" form="spForm" formaction="plan_save.php" class="sp-btn sp-btn-sm">Save to the week</button> <?php endif; ?><button type="submit" form="spForm" class="sp-btn sp-btn-sm<?= $pk_plan ? ' sp-btn-soft' : '' ?>" id="spDownload2">Download PNG</button></p>
     </aside>
   </div>
 
@@ -315,6 +328,7 @@ $step = 1;
   const RENDER = <?= json_encode($render_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>;
   const SIZES = { post: 1440, square: 1080, story: 1920 };
   const MAX_FRAMES = <?= (int)PLAN_MAX_FRAMES ?>;
+  const SAVED = <?= json_encode($pk_saved['form'] ?? null, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;   // a week's saved piece: restored into the controls at the start (2026-11-03)
   const JSON_FLAGS = <?= json_encode(JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
   <?php if ($pk === 'property'): ?>
   const LISTINGS = <?= json_encode(array_values(array_map(fn($l) => ['id' => $l['id'], 'headline' => $l['headline'], 'town' => $l['town'], 'price_text' => $l['price_text'], 'specs_text' => $l['specs_text'],
@@ -656,14 +670,43 @@ $step = 1;
   form.addEventListener('keydown', e => {
     if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') e.preventDefault();
   });
-  form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), setOn() ? 45000 : 10000); });
+  form.addEventListener('submit', e => { if (e.submitter && /plan_save/.test(e.submitter.getAttribute('formaction') || '')) return; busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), setOn() ? 45000 : 10000); });
+
+  // ── A saved piece (Weekly Plans): every control from the saved form, then the photos with the saved pick and frames ──
+  function restoreSaved() {
+    if (!SAVED) return false;
+    const skip = new Set(['photo', 'frames', 'frame_logo', 'team', 'kind', 'line_text', 'line_style', 'zoom', 'focus_x', 'focus_y', 'tagline']);
+    const setField = (name, val) => {
+      const els = form.elements[name]; if (!els) return;
+      const list = (typeof RadioNodeList !== 'undefined' && els instanceof RadioNodeList) ? [...els] : [els];
+      if (!list[0] || !list[0].type) return;
+      if (list[0].type === 'radio') { const r = list.find(x => x.value === String(val)); if (r) r.checked = true; }
+      else if (list[0].type === 'checkbox') list[0].checked = !!val;
+      else list[0].value = val;
+    };
+    for (const [k, v] of Object.entries(SAVED)) { if (skip.has(k) || Array.isArray(v)) continue; setField(k, v); }
+    ['set', 'endcard'].forEach(n => { if (f(n)) f(n).checked = !!SAVED[n]; });   // unticked boxes are absent from a post
+    (SAVED.line_text || []).forEach((t, i) => { if (lineText(i)) lineText(i).value = t; });
+    (SAVED.line_style || []).forEach((t, i) => { if (lineStyle(i)) lineStyle(i).value = t; });
+    form.querySelectorAll('.sp-range input').forEach(r => { r.dataset.touched = '1'; showRange(r); });
+    if (KIND === 'branding') { fillTaglines(); if (SAVED.tagline) setField('tagline', SAVED.tagline); }
+    if (KIND === 'location') { fillTeam(true); form.querySelectorAll('input[name="team[]"]').forEach(c => c.checked = (SAVED.team || []).includes(c.value)); }
+    prevSize = fmt();   // syncLayout keeps the saved logo place: the size is not a change
+    frames = (SAVED.frames || []).slice(); frameLogos = {};
+    frames.forEach((id, i) => { const c = (SAVED.frame_logo || [])[i]; if (c && c !== 'auto') frameLogos[id] = c; });
+    return true;
+  }
 
   new ResizeObserver(scale).observe(stage); scale();
   if (KIND === 'broker') { const o = f('agent').selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; }
-  fillTaglines();
-  fillTeam(true);
+  const restored = restoreSaved();
+  if (!restored) { fillTaglines(); fillTeam(true); }
   syncLayout();
-  fill();
-  loadPhotos();
+  if (!restored) fill();
+  loadPhotos(restored ? SAVED.photo : undefined).then(() => {
+    if (!restored) return;
+    f('zoom').value = SAVED.zoom || 1; f('focus_x').value = SAVED.focus_x ?? 50; f('focus_y').value = SAVED.focus_y ?? (KIND === 'broker' ? 0 : 50);
+    framerApply(); update();
+  });
 })();
 </script>
