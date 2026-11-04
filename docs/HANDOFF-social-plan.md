@@ -246,6 +246,15 @@ have my saved options load; four weeks in advance."
 - **plan_save.php:** item (the form must render, the same check the
   download makes), done, clear, status; redirects to the week with
   ?saved= or ?cleared= for the flash line.
+- **Each frame of a set is a tab (2026-11-03):** the pills under the
+  preview are tabs. On a tab, clicking a photo tile puts that photo on the
+  frame (a photo already on another frame swaps places), drag and zoom are
+  the frame's own (`frame_zoom[]`, `frame_fx[]`, `frame_fy[]` beside
+  `frames[]` and `frame_logo[]`; the cover's own framing is posted as
+  `cover_zoom` / `cover_fx` / `cover_fy` since the visible zoom and focus
+  controls hold whichever tab is open), and "Logo on this frame" is its
+  logo. + Add photo appends the next unused photo; Remove this frame drops
+  the open one. The request reads them into plan_render_photo_frame().
 - The slot's KIND is fixed; the subject, size and everything else are
   free. A saved piece re-renders from the live feed when downloaded later:
   the saved words stay, but a listing's photos are the feed's today, and a

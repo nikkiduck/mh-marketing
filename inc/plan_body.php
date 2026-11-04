@@ -166,7 +166,7 @@ $step = 1;
         <div class="sp-set">
           <label class="sp-check"><input type="checkbox" name="set" value="1"<?= $default_size === 'story' ? ' checked' : '' ?>> Make a <b>set</b>: a multi-image slideshow (a story, or a carousel at the post and square sizes)</label>
           <label class="sp-check sp-only-set"><input type="checkbox" name="endcard" value="1"> Add a closing card at the end: the logo, the address and who listed it (optional)</label>
-          <p class="sp-hint sp-only-set">Tick the photos below in the order they should play: the first is the cover with the words, the rest are the photo alone, every other one with the logo lower right. The cover plus up to <?= PLAN_MAX_FRAMES - 1 ?> more.</p>
+          <p class="sp-hint sp-only-set">Each frame is a tab under the preview: the cover with the words, then the photo alone. Pick a tab, then click a photo below to put it on that frame, drag and zoom it, and choose its logo. + Add photo makes a new frame; the cover plus up to <?= PLAN_MAX_FRAMES - 1 ?> more.</p>
         </div>
       </section>
       <?php elseif ($pk === 'broker'): ?>
@@ -363,6 +363,33 @@ $step = 1;
   let prevSize = fmt();
   let frames = [];          // the set's photo ids, in order (property only)
   let frameLogos = {};      // photo id → auto | none | full | mark: the logo on that frame (2026-11-02)
+  let frameFx = {};         // photo id → {z, x, y}: the frame's own zoom and focus (2026-11-03: each frame a tab)
+  let coverFx = null;       // the cover's zoom and focus while another frame's tab holds the controls
+  const cur = () => +f('frame').value;   // the open tab: 0 the cover, 1… the frames, frames.length the end card
+  const framingRead = () => ({ z: parseFloat(f('zoom').value) || 1, x: +f('focus_x').value, y: +f('focus_y').value });
+  const framingWrite = v => { f('zoom').value = v.z; f('focus_x').value = v.x; f('focus_y').value = v.y; showRange(f('zoom')); framerApply(); };
+  // What the controls hold belongs to the open tab: the cover's, or the frame's by its photo.
+  function framingStore() {
+    if (!setOn()) return;
+    const i = cur(); if (i >= frames.length) return;
+    if (i === 0) coverFx = framingRead(); else frameFx[frames[i]] = framingRead();
+    syncFrameInputs();
+  }
+  const tileOf = id => allTiles.find(p => p.id === id);
+  // Open a tab: the framer shows that frame's photo with its framing (the end card shows the cover).
+  function tabShow(i) {
+    f('frame').value = i;
+    const id = frames[Math.min(i, frames.length - 1)], t = id ? tileOf(id) : null;
+    framer.classList.toggle('empty', !t); fimg.src = t ? t.large : '';
+    framingWrite(i === 0 || i >= frames.length ? (coverFx || { z: 1, x: 50, y: 50 }) : (frameFx[id] || { z: 1, x: 50, y: 50 }));
+  }
+  function syncFrameInputs() {
+    const on = setOn();
+    framesBox.innerHTML = on ? frames.map(id => { const v = frameFx[id] || { z: 1, x: 50, y: 50 };
+      return '<input type="hidden" name="frames[]" value="' + esc(id) + '"><input type="hidden" name="frame_logo[]" value="' + esc(frameLogos[id] || 'auto') + '">'
+           + '<input type="hidden" name="frame_zoom[]" value="' + v.z + '"><input type="hidden" name="frame_fx[]" value="' + v.x + '"><input type="hidden" name="frame_fy[]" value="' + v.y + '">'; }).join('')
+      + (coverFx ? '<input type="hidden" name="cover_zoom" value="' + coverFx.z + '"><input type="hidden" name="cover_fx" value="' + coverFx.x + '"><input type="hidden" name="cover_fy" value="' + coverFx.y + '">' : '') : '';
+  }
   const frameLogoBox = document.getElementById('spFrameLogo');
   // What a frame will carry: the explicit choice, else Auto's every-other pattern in the cover's logo kind (i = its index in frames, 1 = the first after the cover).
   const effLogo = (id, i) => { const c = frameLogos[id] || 'auto'; if (c !== 'auto') return c; return (f('logo').value !== 'none' && (i - 1) % 2 === 0) ? f('logo_kind').value : 'none'; };
@@ -373,7 +400,8 @@ $step = 1;
   function syncSet() {
     form.querySelectorAll('.sp-only-set').forEach(el => el.hidden = !setOn());
     const on = setOn();
-    framesBox.innerHTML = on ? frames.map(id => '<input type="hidden" name="frames[]" value="' + esc(id) + '"><input type="hidden" name="frame_logo[]" value="' + esc(frameLogos[id] || 'auto') + '">').join('') : '';
+    if (on && !coverFx) coverFx = framingRead();   // the set just switched on: the controls hold the cover's framing
+    syncFrameInputs();
     photos.querySelectorAll('.sp-photo').forEach(t => {
       const id = t.querySelector('input').value, i = frames.indexOf(id);
       let b = t.querySelector('.sp-ord');
@@ -395,17 +423,32 @@ $step = 1;
         const label = i === 0 ? 'Cover' : (end && i === n - 1 ? 'End' : String(i + 1));
         html += '<label class="sp-pillopt"><input type="radio" name="_pill" value="' + i + '"' + (i === cur ? ' checked' : '') + '><span>' + label + '</span></label>';
       }
+      if (frames.length < MAX_FRAMES) html += '<button type="button" class="sp-tabbtn" data-add="1">+ Add photo</button>';
+      if (cur > 0 && cur < frames.length && frames.length > 1) html += '<button type="button" class="sp-tabbtn" data-remove="1">Remove this frame</button>';
+      html += '<p class="sp-tabhint">' + (cur === 0 ? 'The cover: the words on this photo. Click a photo below to change it; drag and zoom it above.'
+                                        : (cur < frames.length ? 'Frame ' + (cur + 1) + ': the photo alone. Click a photo below to put it here; drag and zoom it; choose its logo.' : 'The closing card: the logo, the address and who listed it.')) + '</p>';
       pills.innerHTML = html;
       // The per-frame logo row: for an internal frame (not the cover, not the end card), showing its choice.
       const internal = cur > 0 && cur < frames.length;
       frameLogoBox.hidden = !internal;
       if (internal) { const c = frameLogos[frames[cur]] || 'auto'; const r = frameLogoBox.querySelector('input[value="' + c + '"]'); if (r) r.checked = true; }
-    } else { f('frame').value = 0; frameLogoBox.hidden = true; }
+    } else { f('frame').value = 0; frameLogoBox.hidden = true; pills.innerHTML = ''; }
     dl.textContent = dl2.textContent = on ? 'Download the set (ZIP)' : 'Download PNG';
     help.textContent = on ? 'The download is a ZIP of ' + n + ' PNGs at 1080 × ' + fmtH() + ', numbered in play order: post them as one ' + (fmt() === 'story' ? 'story' : 'carousel') + '.'
                           : 'The download is a 1080 × 1440 PNG for a post, 1080 × 1080 for a square, or 1080 × 1920 for a story.';
   }
-  pills.addEventListener('input', e => { if (e.target.name === '_pill') { f('frame').value = e.target.value; syncSet(); update(); } });
+  pills.addEventListener('input', e => { if (e.target.name === '_pill') { tabShow(+e.target.value); syncSet(); update(); } });
+  pills.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    if (b.dataset.add) {
+      const next = allTiles.find(p => !frames.includes(p.id)); if (!next || frames.length >= MAX_FRAMES) return;
+      frames.push(next.id); tabShow(frames.length - 1);
+    } else if (b.dataset.remove) {
+      const i = cur(); if (!(i > 0 && i < frames.length)) return;
+      frames.splice(i, 1); tabShow(Math.min(i, frames.length - 1));
+    }
+    syncSet(); update();
+  });
   frameLogoBox.addEventListener('input', e => {
     if (e.target.name !== '_flogo') return;
     const cur = +f('frame').value; if (!(cur > 0 && cur < frames.length)) return;
@@ -533,6 +576,7 @@ $step = 1;
            (checked ? ' checked' : '') + '>' + (p.none ? '<span class="sp-none">None</span>' : '<img src="' + esc(p.thumb) + '" alt="' + esc(p.caption || '') + '" loading="lazy">') + (p.own ? '<i>Yours</i><button type="button" class="sp-del" data-id="' + esc(p.id) + '" title="Remove this photo" aria-label="Remove this photo">×</button>' : '') + '</label>';
   }
   async function loadPhotos(selectId) {
+    if (!selectId) { coverFx = null; frameFx = {}; }   // a new subject: its own framing
     photos.innerHTML = '<div class="sp-wait">Loading photos…</div>';
     const u = new URL(PHOTOS, location.origin); u.searchParams.set('kind', KIND); u.searchParams.set('subject', subject());
     let j = { photos: [] };
@@ -559,6 +603,7 @@ $step = 1;
     }
     const sel = allTiles.find(p => p.id === (form.querySelector('input[name="photo"]:checked') || {}).value);
     if (KIND === 'broker') framerSet(figureUrl(), 'cutout:x');   // the framer moves and scales the broker; the tiles pick the backdrop
+    else if (setOn()) { if (!coverFx) { framerSet(sel ? sel.large : '', sel ? sel.id : ''); coverFx = framingRead(); } tabShow(Math.min(cur(), frames.length)); }
     else framerSet(sel ? sel.large : '', sel ? sel.id : '');
     syncSet(); update();
   }
@@ -567,13 +612,16 @@ $step = 1;
     if (!setOn() || e.target.closest('.sp-del')) return;
     const tile = e.target.closest('.sp-photo'); if (!tile) return;
     e.preventDefault();
-    const id = tile.querySelector('input').value, i = frames.indexOf(id);
-    if (i >= 0) { if (frames.length > 1) frames.splice(i, 1); }
-    else if (frames.length < MAX_FRAMES) frames.push(id);
-    else { alert('Up to ' + MAX_FRAMES + ' photos in a set. Untick one first.'); return; }
+    const id = tile.querySelector('input').value;
+    if (id === 'none') return;
+    let i = cur(); if (i >= frames.length) i = 0;   // from the end card's tab, the cover takes it
+    const j = frames.indexOf(id);
+    if (j === i) return;
+    if (j >= 0) frames[j] = frames[i];   // the photo was on another frame: the two swap
+    frames[i] = id;
     const cover = form.querySelector('input[name="photo"][value="' + CSS.escape(frames[0]) + '"]');
-    if (cover) { cover.checked = true; framerSet(cover.dataset.large); }
-    syncSet(); update();
+    if (cover) cover.checked = true;
+    tabShow(i); syncSet(); update();
   });
   async function upload(file) {
     if (!file) return;
@@ -634,7 +682,7 @@ $step = 1;
     const ox = Math.max(1, coverW * Z - bw), oy = Math.max(1, coverH * Z - bh);
     f('focus_x').value = Math.round(Math.max(0, Math.min(100, drag.fx - (e.clientX - drag.x) / ox * 100)));
     f('focus_y').value = Math.round(Math.max(0, Math.min(100, drag.fy - (e.clientY - drag.y) / oy * 100)));
-    framerApply(); update();
+    framerApply(); framingStore(); update();
   });
   ['pointerup', 'pointercancel'].forEach(ev => framer.addEventListener(ev, () => { drag = null; framer.classList.remove('dragging'); }));
   framer.addEventListener('wheel', e => {
@@ -664,7 +712,7 @@ $step = 1;
     if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } if (KIND !== 'broker') framerSet(e.target.dataset.large, e.target.value); }
     if (n === 'theme') syncShadowDefault();
     if (['logo_scale', 'logo_dx', 'logo_dy', 'text_shadow', 'logo_shadow', 'backdrop_veil'].includes(n)) { showRange(e.target); e.target.dataset.touched = '1'; }
-    if (n === 'zoom') framerApply();
+    if (n === 'zoom') { framerApply(); framingStore(); }
     update();
   });
   form.addEventListener('keydown', e => {
@@ -692,8 +740,12 @@ $step = 1;
     if (KIND === 'branding') { fillTaglines(); if (SAVED.tagline) setField('tagline', SAVED.tagline); }
     if (KIND === 'location') { fillTeam(true); form.querySelectorAll('input[name="team[]"]').forEach(c => c.checked = (SAVED.team || []).includes(c.value)); }
     prevSize = fmt();   // syncLayout keeps the saved logo place: the size is not a change
-    frames = (SAVED.frames || []).slice(); frameLogos = {};
-    frames.forEach((id, i) => { const c = (SAVED.frame_logo || [])[i]; if (c && c !== 'auto') frameLogos[id] = c; });
+    frames = (SAVED.frames || []).slice(); frameLogos = {}; frameFx = {};
+    frames.forEach((id, i) => {
+      const c = (SAVED.frame_logo || [])[i]; if (c && c !== 'auto') frameLogos[id] = c;
+      if (SAVED.frame_zoom) frameFx[id] = { z: parseFloat((SAVED.frame_zoom || [])[i]) || 1, x: +((SAVED.frame_fx || [])[i] ?? 50), y: +((SAVED.frame_fy || [])[i] ?? 50) };
+    });
+    if (SAVED.set) coverFx = { z: parseFloat(SAVED.cover_zoom ?? SAVED.zoom) || 1, x: +(SAVED.cover_fx ?? SAVED.focus_x ?? 50), y: +(SAVED.cover_fy ?? SAVED.focus_y ?? 50) };
     return true;
   }
 
@@ -704,7 +756,7 @@ $step = 1;
   syncLayout();
   if (!restored) fill();
   loadPhotos(restored ? SAVED.photo : undefined).then(() => {
-    if (!restored) return;
+    if (!restored || setOn()) return;   // a set's tabs were framed by loadPhotos
     f('zoom').value = SAVED.zoom || 1; f('focus_x').value = SAVED.focus_x ?? 50; f('focus_y').value = SAVED.focus_y ?? (KIND === 'broker' ? 0 : 50);
     framerApply(); update();
   });

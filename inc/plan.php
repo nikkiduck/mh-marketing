@@ -73,7 +73,12 @@ function plan_admin_css(): string {
     .sp-reset { background:none; border:0; padding:4px 0 0; font:inherit; font-size:12.5px; text-align:left; }
     .sp-btn-soft { background:#fff; color:#4a5569; border:1.5px solid #dfe3e8; }
     .sp-btn-soft:hover { border-color:#4a5566; background:#fff; }
-    .sp-actions .sp-btn + .sp-btn { margin-left:8px; }
+    .sp-actions { gap:8px 10px; }
+    .sp-actions .sp-btn, .sp-cap-btn .sp-btn { font-size:14px; padding:9px 18px; border:1.5px solid transparent; }
+    .sp-cap-btn { display:flex; flex-wrap:wrap; justify-content:center; gap:8px; }
+    .sp-tabbtn { font:inherit; font-size:12.5px; padding:4px 11px; border:1.5px dashed #c9d0da; border-radius:999px; background:#fff; color:#4a5569; cursor:pointer; }
+    .sp-tabbtn:hover { border-color:#4a5566; }
+    .sp-tabhint { flex-basis:100%; text-align:center; font-size:12.5px; color:#6b7a8f; margin:2px 0 0; }
     ';
 }
 
@@ -701,13 +706,21 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         $frames = [];
         $seen = [];
         $choices = (array)($in['frame_logo'] ?? []);   // per frame (2026-11-02, Nikki): auto | none | full | mark, aligned with frames[]
+        $fz = (array)($in['frame_zoom'] ?? []); $fxs = (array)($in['frame_fx'] ?? []); $fys = (array)($in['frame_fy'] ?? []);   // per frame framing (2026-11-03), aligned too
         foreach (array_values((array)($in['frames'] ?? [])) as $idx => $pid) {
             $pid = (string)$pid;
             if ($pid === '' || isset($seen[$pid]) || count($frames) >= PLAN_MAX_FRAMES) continue;
             $seen[$pid] = true;
             [$u, $f] = plan_photo($ctx, $pid, $listing, null);
             $choice = (string)($choices[$idx] ?? 'auto');
-            $frames[] = ['id' => $pid, 'url' => $u, 'file' => $f, 'choice' => in_array($choice, ['none', 'full', 'mark'], true) ? $choice : 'auto'];
+            $frames[] = ['id' => $pid, 'url' => $u, 'file' => $f, 'choice' => in_array($choice, ['none', 'full', 'mark'], true) ? $choice : 'auto',
+                         'zoom' => max(1.0, min(3.0, round((float)($fz[$idx] ?? 1), 2))), 'fx' => max(0, min(100, (int)($fxs[$idx] ?? 50))), 'fy' => max(0, min(100, (int)($fys[$idx] ?? 50)))];
+        }
+        // The cover's framing is its own (cover_*): the form's zoom and focus fields hold whichever frame's tab was open.
+        if (isset($in['cover_zoom'])) {
+            $main['post']['zoom'] = max(1.0, min(3.0, round((float)$in['cover_zoom'], 2)));
+            $main['post']['focus_x'] = max(0, min(100, (int)($in['cover_fx'] ?? 50)));
+            $main['post']['focus_y'] = max(0, min(100, (int)($in['cover_fy'] ?? 50)));
         }
         if (!$frames) $frames[] = ['id' => (string)($in['photo'] ?? ''), 'url' => $photo_url, 'file' => $photo_file, 'choice' => 'auto'];
         $cover = $main;
@@ -723,7 +736,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
             $eff = $fr['choice'] === 'auto' ? (($logo !== 'none' && $i % 2 === 0) ? $logoKind : 'none') : $fr['choice'];
             $set[] = ['renderer' => 'frame', 'name' => sprintf('%02d', $n++),
                       'post' => ['logo_kind' => $eff === 'mark' ? 'mark' : 'full', 'show_logo' => $eff !== 'none'] + $common
-                              + ['photo' => $fr['id'], 'photo_url' => $fr['url'], 'photo_file' => $fr['file'], 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 50]];
+                              + ['photo' => $fr['id'], 'photo_url' => $fr['url'], 'photo_file' => $fr['file'], 'zoom' => $fr['zoom'], 'focus_x' => $fr['fx'], 'focus_y' => $fr['fy']]];
         }
         if (!empty($in['endcard'])) {
             $agentName = (string)$listing['agent'];

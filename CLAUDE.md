@@ -2756,7 +2756,21 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   first) and Reset, the market slot (the Market Snapshot's own tool) with a
   Done tick, and a footer with Mark this week planned / Reopen and Plan next
   week. A slot's kind is fixed (the plan's rhythm); what goes in it is not.
-  `PLAN_STORE_DIR`, when defined, replaces the folder (the local harness). The suggestions rotate by ISO week index
+  `PLAN_STORE_DIR`, when defined, replaces the folder (the local harness).
+  **Each frame of a set is a tab (Nikki, 2026-11-03: "more control over
+  each photo in a set ... each of the photo options has its own tab"):**
+  the pills under the preview (Cover, 2, 3 …, End) are tabs; on a tab, a
+  click on a photo tile puts that photo on the frame (a photo already on
+  another frame swaps with it), the framer's drag and zoom are that frame's
+  own (`frameFx` by photo id, posted as `frame_zoom[]` / `frame_fx[]` /
+  `frame_fy[]` beside `frames[]`; the cover's own as `cover_zoom` /
+  `cover_fx` / `cover_fy`, because the form's zoom and focus fields hold
+  whichever tab is open), and the Logo on this frame row is its logo. "+
+  Add photo" appends the next unused photo as a new frame, "Remove this
+  frame" drops the open one (never the cover). plan_post_from_request()
+  reads the per-frame framing into plan_render_photo_frame() and the
+  cover's own framing when posted. The Save and Download buttons are
+  smaller (14px) and wrap with a gap when stacked. The suggestions rotate by ISO week index
   (`plan_week()`, `plan_rotate()`: markets through `market_card_defs()`,
   brokers through the approved roster with a headshot, locations through
   offices then areas, hooks through the plan's six; the season by month,
