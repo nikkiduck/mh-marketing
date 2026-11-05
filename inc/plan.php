@@ -631,7 +631,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     if ($logo === 'center' && $layout !== 'center') $logo = 'top';
     $badge  = isset(plan_badge_places()[(string)($in['badge'] ?? '')]) ? (string)$in['badge'] : ($format === 'story' && $logo !== 'top' ? 'right' : 'left');
     // The logo's colour, size, nudge and the shadows (2026-11-02): checked by social_logo_options() in the renderers; carried as posted.
-    $logoOpts = ['logo_color' => (string)($in['logo_color'] ?? 'auto'), 'logo_scale' => round((int)($in['logo_scale'] ?? 100) / 100, 2),
+    $logoOpts = ['logo_color' => (string)($in['logo_color'] ?? 'auto'), 'logo_scale' => round((int)($in['logo_scale'] ?? 130) / 100, 2),   // 130 since 2026-11-05 (Nikki: the starting size was too small)
                  'logo_dx' => (int)($in['logo_dx'] ?? 0), 'logo_dy' => (int)($in['logo_dy'] ?? 0),
                  'text_shadow' => ($in['text_shadow'] ?? '') === '' ? null : (int)$in['text_shadow'], 'logo_shadow' => (int)($in['logo_shadow'] ?? 0)];
 
@@ -685,13 +685,16 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
 
     if ($kind === 'broker') $headline = mb_substr(trim(str_replace("\r", '', (string)($in['headline'] ?? ''))), 0, 140);   // the hook keeps its line breaks in every agent style
     // The Cutout style's backdrop (2026-11-02): a stock location photo or one of the person's uploads (the tool's photo pick), under a veil; none = the plain ground.
-    $backdrop = ['backdrop_url' => '', 'backdrop_file' => null, 'backdrop_veil' => max(30, min(97, (int)($in['backdrop_veil'] ?? 82)))];
+    $backdrop = ['backdrop_url' => '', 'backdrop_file' => null, 'backdrop_veil' => max(30, min(97, (int)($in['backdrop_veil'] ?? 70)))];   // 70 since 2026-11-05 (was 82)
+    // The name and the service area on the Broker Feature (2026-11-05): lower right or under the hook, and their sizes in px.
+    $who = ['who_place' => ($in['who_place'] ?? 'corner') === 'under' ? 'under' : 'corner',
+            'who_name' => max(20, min(100, (int)($in['who_name'] ?? 44))), 'who_area' => max(24, min(140, (int)($in['who_area'] ?? 64)))];
     if ($kind === 'broker' && (str_starts_with($bdIn, 'stock:') || str_starts_with($bdIn, 'upload:'))) {
         [$bu, $bf] = plan_photo($ctx, $bdIn, null, null);
         if (!str_ends_with($bu, '/social-placeholder.jpg')) { $backdrop['backdrop_url'] = $bu; $backdrop['backdrop_file'] = $bf; }   // the placeholder means an id that is not theirs
     }
     $main = $kind === 'broker'
-        ? ['renderer' => 'agent', 'post' => $common + $backdrop + ['style' => $style, 'hook2' => $hook2, 'headline' => $headline, 'lines' => $lines]]
+        ? ['renderer' => 'agent', 'post' => $common + $backdrop + $who + ['style' => $style, 'hook2' => $hook2, 'headline' => $headline, 'lines' => $lines]]
         : ($layout === 'split'
         ? ['renderer' => 'split', 'post' => $common + ['headline' => $headline, 'lines' => $lines, 'team' => plan_team_for_render($team), 'kind' => $kind]]
         : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner',

@@ -2927,6 +2927,21 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   gone). The backdrop photo is half desaturated (`filter:saturate(.5)`):
   the overlay was already #1F242C, the blue Nikki saw was the sky through
   it and the band.
+  **Same day, later (Nikki, with the first lower-right render in hand):**
+  the name and the service area sit at the LOWER RIGHT after all,
+  **Name and area** pills Lower right | Under the hook (`who_place`,
+  corner | under; corner is the default and is drawn as its own `.who`
+  block above the figure, z-index 4, inside the story's safe zone, with
+  the text shadow, so a shoulder never hides it), and their sizes are
+  sliders, **Name size** 24 to 80 (`who_name`, default 44) and **Area
+  size** 32 to 120 (`who_area`, default 64), px at the story and post
+  sizes (a square draws them at 0.84). The Overlay default is 70 (was 82:
+  "bring out the background image a little more"). The Size pills on the
+  Broker tool read Story first (a feature is a story; the default was
+  already Story). And on EVERY plan builder the **Logo size slider starts
+  at 130 %** and runs to 200 (`social_logo_options()` clamps at 2.0, was
+  1.6; the Reset button goes back to 130): the starting size was too
+  small. A saved piece keeps its own value.
   **Cutouts are made on upload (Nikki, 2026-11-05: "when I upload a new
   headshot for a broker, a cutout version is automatically created and
   assigned to that broker, whether new or existing"):** `inc/cutout.php`.

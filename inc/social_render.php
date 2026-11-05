@@ -328,7 +328,7 @@ function social_logo_options(array $p): array {
     $color = (string)($p['logo_color'] ?? 'auto');
     return [
         'color'       => in_array($color, ['white', 'black'], true) ? $color : 'auto',
-        'scale'       => max(0.5, min(1.6, round((float)($p['logo_scale'] ?? 1), 2))),
+        'scale'       => max(0.5, min(2.0, round((float)($p['logo_scale'] ?? 1), 2))),   // the plan builders' slider runs to 200 % (2026-11-05)
         'dx'          => max(-300, min(300, (int)($p['logo_dx'] ?? 0))),
         'dy'          => max(-300, min(300, (int)($p['logo_dy'] ?? 0))),
         'text_shadow' => isset($p['text_shadow']) && $p['text_shadow'] !== '' ? max(0, min(100, (int)$p['text_shadow'])) : null,

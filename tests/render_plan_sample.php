@@ -98,7 +98,7 @@ $agent = ['mark' => 'triangle', 'logo' => 'top', 'logo_kind' => 'full', 'badge' 
           'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn.',
           'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Montrose', 'style' => 'details']]];
 $cutout = $argv[3] ?? ($live . '/agent-photos/jackson-horn-cutout.png');   // the cutout PNG's URL (pass a local one to design against)
-$agentBd = ['backdrop_url' => $stock('ridgway-mount-sneffels-fall-198784448'), 'backdrop_veil' => 82];
+$agentBd = ['backdrop_url' => $stock('ridgway-mount-sneffels-fall-198784448'), 'backdrop_veil' => 70];
 foreach (plan_agent_styles() as $style => $name) {
     foreach (['story', 'post', 'square'] as $format) {
         foreach (['dark', 'light'] as $theme) {
@@ -107,6 +107,11 @@ foreach (plan_agent_styles() as $style => $name) {
             echo "$out/agent-$style-$format-$theme.html\n";
         }
     }
+}
+foreach (['under' => ['who_place' => 'under'], 'corner-big' => ['who_place' => 'corner', 'who_name' => 60, 'who_area' => 90, 'logo_scale' => 1.3]] as $k => $extra) {   // the name and area under the hook, or lower right and larger (2026-11-05)
+    $p = $extra + ['style' => 'cutout', 'format' => 'story', 'theme' => 'dark', 'photo_url' => $cutout, 'hook2' => 'italic'] + $agentBd + $agent;
+    file_put_contents("$out/agent-who-$k.html", plan_render_agent($p, $base));
+    echo "$out/agent-who-$k.html\n";
 }
 foreach (plan_hook_styles() as $h2 => $name) {   // the call line: serif, italic, sans (Nikki, 2026-11-02)
     $p = ['style' => 'cutout', 'format' => 'story', 'theme' => 'dark', 'photo_url' => $cutout, 'hook2' => $h2] + $agentBd + $agent;

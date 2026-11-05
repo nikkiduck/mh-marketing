@@ -207,6 +207,17 @@ right-aligned under the hook (name small caps 34px, area 46px serif), the
 title is off the default lines, and the backdrop photo is half desaturated
 so the sky does not tint the dark ground (the overlay was already #1F242C).
 
+**Later that day (Nikki: "name and service area lower right ... bigger
+... maybe a slider"):** the name and the service area sit at the lower
+right by default (**Name and area** pills, Lower right | Under the hook;
+`who_place`), drawn above the figure with the text shadow so a shoulder
+never hides them, and their sizes are the **Name size** and **Area size**
+sliders (`who_name` 24 to 80, default 44; `who_area` 32 to 120, default
+64; px at the story and post sizes). The Overlay default is 70 (was 82).
+The Broker tool's Size pills put Story first. On every plan builder the
+Logo size slider now starts at 130 % and runs to 200 (the renderers'
+clamp is 2.0); Reset returns to 130.
+
 **The photo pick is the backdrop (Nikki, same night, after a stock photo
 replaced Bryan's cutout with a chairlift: "if I choose an alternate photo
 it should change the background, not the headshot"):** the Broker tool's

@@ -66,7 +66,8 @@ $step = 1;
         <h2 class="sp-step-h"><span><?= $step++ ?></span>Pick Template</h2>
         <div class="sp-look">
           <span class="sp-look-l">Size</span>
-          <?php foreach (social_formats() as $k => $t): ?>
+          <?php $size_opts = social_formats(); if ($pk === 'broker') $size_opts = ['story' => $size_opts['story']] + $size_opts;   // a Broker Feature is a story (Nikki, 2026-11-05): Story first, and the default
+          foreach ($size_opts as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="size" value="<?= $e($k) ?>"<?= $k === $default_size ? ' checked' : '' ?>><span><?= $e($t) ?> · <?= $k === 'post' ? '4:5' : ($k === 'square' ? '1:1' : '9:16') ?></span></label>
           <?php endforeach; ?>
         </div>
@@ -127,7 +128,7 @@ $step = 1;
           <?php endforeach; ?>
         </div>
         <div class="sp-ranges">
-          <label class="sp-range">Logo size <input type="range" name="logo_scale" min="50" max="160" step="2" value="100"><output>100%</output></label>
+          <label class="sp-range">Logo size <input type="range" name="logo_scale" min="50" max="200" step="2" value="130"><output>130%</output></label>
           <label class="sp-range">Nudge across <input type="range" name="logo_dx" min="-200" max="200" step="2" value="0"><output>0</output></label>
           <label class="sp-range">Nudge down <input type="range" name="logo_dy" min="-200" max="200" step="2" value="0"><output>0</output></label>
           <label class="sp-range">Text shadow <input type="range" name="text_shadow" min="0" max="100" step="5" value="35"><output>35</output></label>
@@ -201,6 +202,17 @@ $step = 1;
           </label>
         </div>
         <p class="sp-hint">The hook becomes the headline with the broker's name and market swapped in; edit it below. The plan rotates through the hooks week to week.</p>
+        <div class="sp-look">
+          <span class="sp-look-l">Name and area</span>
+          <?php $wp = (string)($pk_preset['who_place'] ?? 'corner'); foreach (['corner' => 'Lower right', 'under' => 'Under the hook'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="who_place" value="<?= $e($k) ?>"<?= $k === ($wp === 'under' ? 'under' : 'corner') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-ranges">
+          <label class="sp-range">Name size <input type="range" name="who_name" min="24" max="80" step="2" value="44"><output>44px</output></label>
+          <label class="sp-range">Area size <input type="range" name="who_area" min="32" max="120" step="2" value="64"><output>64px</output></label>
+        </div>
+        <p class="sp-hint">The name (Text 1) and the service area (Text 2) sit together, right-aligned; the sizes are at the story and post sizes, a square is drawn a little smaller.</p>
       </section>
       <?php elseif ($pk === 'location'): ?>
       <section class="sp-step">
@@ -262,7 +274,7 @@ $step = 1;
           <label class="sp-zoom">Zoom <input type="range" name="zoom" min="1" max="3" step="0.02" value="1"></label>
           <small><?= $pk === 'broker' ? 'Drag the broker across or down; zoom to scale the figure.' : 'Drag the photo to choose what shows; zoom in to crop closer.' ?></small>
           <?php if ($pk === 'broker'): ?>
-          <div class="sp-ranges"><label class="sp-range">Overlay <input type="range" name="backdrop_veil" min="40" max="96" step="2" value="82"><output>82</output></label></div>
+          <div class="sp-ranges"><label class="sp-range">Overlay <input type="range" name="backdrop_veil" min="40" max="96" step="2" value="70"><output>70</output></label></div>
           <?php endif; ?>
         </div>
       </section>
@@ -541,11 +553,11 @@ $step = 1;
   });
 
   // ── The logo sliders: show each value; the text shadow follows the look (35 on dark, 0 on light) until it is moved. ──
-  function showRange(r) { const o = r.parentElement.querySelector('output'); if (o) o.textContent = r.name === 'logo_scale' ? r.value + '%' : r.value; }
+  function showRange(r) { const o = r.parentElement.querySelector('output'); if (o) o.textContent = r.name === 'logo_scale' ? r.value + '%' : ((r.name === 'who_name' || r.name === 'who_area') ? r.value + 'px' : r.value); }
   function syncShadowDefault() { const r = f('text_shadow'); if (!r.dataset.touched) { r.value = f('theme').value === 'light' ? 0 : 35; showRange(r); } }
   form.querySelectorAll('.sp-range input').forEach(showRange);
   document.getElementById('spResetLogo').addEventListener('click', () => {
-    for (const [n, v] of [['logo_scale', 100], ['logo_dx', 0], ['logo_dy', 0], ['logo_shadow', 0]]) { f(n).value = v; delete f(n).dataset.touched; showRange(f(n)); }
+    for (const [n, v] of [['logo_scale', 130], ['logo_dx', 0], ['logo_dy', 0], ['logo_shadow', 0]]) { f(n).value = v; delete f(n).dataset.touched; showRange(f(n)); }   // 130: the logo's starting size since 2026-11-05
     delete f('text_shadow').dataset.touched; syncShadowDefault();
     f('logo_color').value = 'auto';
     update();
@@ -711,7 +723,7 @@ $step = 1;
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
     if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } if (KIND !== 'broker') framerSet(e.target.dataset.large, e.target.value); }
     if (n === 'theme') syncShadowDefault();
-    if (['logo_scale', 'logo_dx', 'logo_dy', 'text_shadow', 'logo_shadow', 'backdrop_veil'].includes(n)) { showRange(e.target); e.target.dataset.touched = '1'; }
+    if (['logo_scale', 'logo_dx', 'logo_dy', 'text_shadow', 'logo_shadow', 'backdrop_veil', 'who_name', 'who_area'].includes(n)) { showRange(e.target); e.target.dataset.touched = '1'; }
     if (n === 'zoom') { framerApply(); framingStore(); }
     update();
   });
