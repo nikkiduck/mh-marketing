@@ -2580,6 +2580,24 @@ retired the same day and 301s here.
 
 ### Market Report and Market Snapshot posts (2026-10-18)
 
+**The month refreshes itself (2026-11-05, Nikki: "we need to make this
+automatic each month").** `cron/refresh_market_data.php` runs every morning
+from the 5th to the 25th (15:10 UTC): CAR's sortable tables and 12 county
+PDFs (pdftotext; poppler-utils installed 2026-11-05), the 8 Aspen Glenwood
+town PDFs, REcolorado's post (found through its WordPress search API, read
+clause by clause; a figure it does not state stays null) and PPAR's
+headline. Nothing is published until every county's sold, new listings,
+median and inventory, and their changes, match CAR's tables; the month
+then lands in `/var/log/mh-marketing/market_data/<YYYY-MM>/`, which
+`inc/market_data.php` reads before `inc/market_data/` (the repo keeps the
+hand-made 2026-09 as the seed), and `MARKET_REPORT_EMAILS` (JB and Nikki)
+hear what moved and what is still to come. CAR not posted = wait quietly
+(one email from the 15th); a late town PDF or post is filled in on a later
+day. Proven by rebuilding September from the live sources: identical to the
+hand-made files. The by-hand procedure stays in
+docs/HANDOFF-market-report.md for the record; `--month`, `--from`,
+`--dry-run`, `--out` are there for a hand run.
+
 The Monthly Market Report of the Colorado markets Mont Haus serves (JB
 owns it) and the Market Snapshot social cards, built into the portal from
 Nikki's Claude artifacts (`/Users/nikkiduck/Mont Haus Master/mont-haus-market-report`,

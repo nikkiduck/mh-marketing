@@ -24,12 +24,15 @@
  *     Instagram tool's Chromium call, social_export_png()). ONE render path:
  *     market_card_render() in inc/market_card_render.php.
  *
- * The data: inc/market_data/<YYYY-MM>/ holds one month's five JSON files
- * (boards, county, county_trend, towns, front_range) plus meta.json. The
- * newest folder is the report; ?m=YYYY-MM opens an older one. A monthly
- * refresh is a new folder, committed and deployed; no database table and no
- * SQL. Field names are the artifact's and the JavaScript reads them by name:
- * keep them as they are (docs/HANDOFF-market-report.md).
+ * The data: one folder per month holding five JSON files (boards, county,
+ * county_trend, towns, front_range) plus meta.json, under
+ * MARKET_DATA_RUNTIME_DIR (/var/log/mh-marketing/market_data, written by
+ * cron/refresh_market_data.php every month since 2026-11-05) or
+ * inc/market_data/ (the repo's seed, 2026-09, and any month put there by
+ * hand). The newest folder is the report; ?m=YYYY-MM opens an older one. No
+ * database table and no SQL. Field names are the artifact's and the
+ * JavaScript reads them by name: keep them as they are
+ * (docs/HANDOFF-market-report.md).
  *
  * Rules that every output follows (the artifact's CLAUDE.md, section 3): no
  * em dashes; every figure credits its board; a thin market (fewer than 10
@@ -42,16 +45,39 @@
 require_once __DIR__ . '/market_feed.php';   // town figures from our own feed (standalone too)
 
 const MARKET_DATA_DIR = __DIR__ . '/market_data';
+/**
+ * Where cron/refresh_market_data.php publishes a month (2026-11-05): outside
+ * the repo, like the boards cache, so a refresh is not a deploy. A month here
+ * wins over the same month under inc/market_data/. The environment variable
+ * is for the test harness only.
+ */
+define('MARKET_DATA_RUNTIME_DIR', getenv('MARKET_DATA_RUNTIME_DIR') ?: '/var/log/mh-marketing/market_data');
 
 // ── Months and loading ───────────────────────────────────────────────────────
 
-/** The months on file, newest first: ['2026-09', ...]. A folder counts when it has meta.json and county.json. */
+/** The folders months live in, the cron's first. */
+function market_data_dirs(): array { return [MARKET_DATA_RUNTIME_DIR, MARKET_DATA_DIR]; }
+
+/** A month's folder (the cron's copy first), or null when it is on file nowhere. A folder counts when it has meta.json and county.json. */
+function market_month_dir(string $month): ?string {
+    if (!preg_match('/^\d{4}-\d{2}$/', $month)) return null;
+    foreach (market_data_dirs() as $base) {
+        $dir = "$base/$month";
+        if (is_file("$dir/meta.json") && is_file("$dir/county.json")) return $dir;
+    }
+    return null;
+}
+
+/** The months on file, newest first: ['2026-09', ...], from both folders. */
 function market_months(): array {
     $out = [];
-    foreach (glob(MARKET_DATA_DIR . '/[0-9][0-9][0-9][0-9]-[0-9][0-9]') ?: [] as $dir) {
-        $m = basename($dir);
-        if (is_file("$dir/meta.json") && is_file("$dir/county.json")) $out[] = $m;
+    foreach (market_data_dirs() as $base) {
+        foreach (glob($base . '/[0-9][0-9][0-9][0-9]-[0-9][0-9]') ?: [] as $dir) {
+            $m = basename($dir);
+            if (is_file("$dir/meta.json") && is_file("$dir/county.json")) $out[$m] = true;
+        }
     }
+    $out = array_keys($out);
     rsort($out);
     return $out;
 }
@@ -70,9 +96,8 @@ function market_pick_month(?string $want): string {
  * folder is missing or a file does not parse.
  */
 function market_load(string $month): ?array {
-    if (!preg_match('/^\d{4}-\d{2}$/', $month)) return null;
-    $dir = MARKET_DATA_DIR . '/' . $month;
-    if (!is_dir($dir)) return null;
+    $dir = market_month_dir($month);
+    if ($dir === null) return null;
     $out = ['month' => $month, 'months' => market_months()];
     foreach (['meta', 'boards', 'county', 'county_trend', 'towns', 'front_range'] as $set) {
         $f = "$dir/$set.json";

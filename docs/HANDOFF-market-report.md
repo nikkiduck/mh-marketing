@@ -52,10 +52,57 @@ names exactly as they are:** market-report.js and the card model read them
 by name. The artifact's files were `county_sep.json`, `towns_sep.json` and
 `front_range_sep.json`; here the `_sep` is dropped, nothing else changed.
 
-## Monthly refresh (month M = the last full month, around the 12th)
+## Monthly refresh: automatic since 2026-11-05 (cron/refresh_market_data.php)
 
-The procedure is the artifact's CLAUDE.md, section 7, step by step. For
-the portal the result is:
+Nikki, 2026-11-05: "we need to make this automatic each month." The by-hand
+procedure below is now `cron/refresh_market_data.php`, run by cron on the
+marketing server every morning from the 5th to the 25th (15:10 UTC). For
+month M (the last full month) it:
+
+1. asks CAR's sortable tables for M (`.../sst/YYYYMM/0SF.htm` and `0TC.htm`).
+   Not posted yet = log "waiting for CAR" and stop; from the 15th, one
+   "still waiting" email. It never fills in numbers it does not have.
+2. reads the 12 county PDFs with `pdftotext -layout` (poppler-utils,
+   installed 2026-11-05) → county.json, and the "Current as of" date;
+3. reads the 8 Aspen Glenwood MLS town PDFs found on
+   aspenglenwoodmls.com/statistics/ (`<Town>-M-YY.pdf`) → towns.json. A
+   town type with no listings at all is left out (Missouri Heights condos),
+   and a period with no sales has no median, average, % of list or days
+   (the PDF prints $0 there): the same rules the hand-made months followed;
+4. finds REcolorado's "<Month> Housing Market Reports" post through the
+   site's WordPress search API (the slugs vary) and reads the Year-Over-Year
+   paragraph clause by clause; a figure the post does not state is null and
+   named in the email. When the post states no change for the median, it is
+   computed from last year's post. PPAR's headline line gives the Pikes Peak
+   row; the page shows only the current month;
+5. appends M to county_trend.json from the tables (24 months kept; the
+   medians are the tables' exact figures, the hand-made months had rounded
+   them to thousands), rewrites the month, the dates and the
+   `/sst/YYYYMM/` path in boards.json, writes meta.json (with `late` and
+   `notes` lists);
+6. CHECKS every county row against the tables: sold, new listings, median,
+   inventory exactly, and the printed changes within 0.05 points of the
+   change recomputed from the PDF's two years. Any disagreement = nothing is
+   published and the email says what differed;
+7. publishes to `/var/log/mh-marketing/market_data/<YYYY-MM>/` (outside the
+   repo, like the boards cache; `inc/market_data.php` reads that folder
+   first, then `inc/market_data/`). The report, the cards and the Month
+   picker follow by themselves;
+8. emails `MARKET_REPORT_EMAILS` (JB and Nikki): the month, the five biggest
+   single-family median moves, Denver and Pikes Peak headlines, anything
+   still to come.
+
+A month on file and complete is left alone. A month with something late
+(a town PDF, REcolorado's post, PPAR) is rebuilt each morning until it is
+complete; the email repeats only when the late list changes. Flags for a
+hand run: `--month=YYYY-MM`, `--from=YYYY-MM` (the month to carry
+boards.json and the trend forward from), `--dry-run`, `--out=DIR`,
+`--force`, `--no-email`. Log: `/var/log/mh-marketing/market_refresh.log`;
+check_health.php emails a ✗ from it. Proven on 2026-11-05 by rebuilding
+September from the live sources: county, towns, boards and the REcolorado
+row came out identical to the hand-made files.
+
+The old procedure, for the record (the artifact's CLAUDE.md, section 7):
 
 1. Make `inc/market_data/<YYYY-MM>/` with the six files (copy the previous
    month's folder and replace the figures; or copy the artifact's `data/`

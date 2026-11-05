@@ -104,6 +104,15 @@ if ($r) while ($x = $r->fetch_assoc()) {
 }
 if ($bw) $issues['boards'] = "The board registry check found:\n  " . implode("\n  ", array_unique($bw));
 
+// The Market Report's monthly refresh (cron/refresh_market_data.php, daily
+// from the 5th to the 25th): no stall check, since most days it has nothing
+// to do, but a ✗ (a parse failure, a failed check against CAR's tables) is
+// worth an email. Its own "NOT published" email goes to JB and Nikki too.
+$s = log_state(LOG_DIR . '/market_refresh.log', '/✓ Done/u');
+if ($b = bad_lines($s['text'])) {
+    $issues['market'] = "The Market Report refresh reported:\n  " . implode("\n  ", $b);
+}
+
 $s = log_state(LOG_DIR . '/hot_sheet_sync.log', '/✓ Done:/u');
 if (!$s['done_at'] || $now - $s['done_at'] > 150 * 60) {
     $issues['listings'] = 'The listing sync (Hot Sheets and agent pages) has not completed since ' . $ago($s['done_at']) . '.';

@@ -133,6 +133,10 @@ define('PIPELINE_NOTIFY_EMAILS',            'nikki.boxer@monthaus.com');
 // Roster changes from the MLS syncs (new agents, agents no longer with MH in
 // the MLS, agents back again). Comma separated. inc/roster_alerts.php.
 define('ROSTER_ALERT_EMAILS',               'nikki.boxer@monthaus.com');
+// The Monthly Market Report's automatic refresh (cron/refresh_market_data.php,
+// 2026-11-05): who hears that a month is live, part late, blocked by the
+// check, or still waiting on CAR. JB owns the report. Comma separated.
+define('MARKET_REPORT_EMAILS',              'jonathan.boxer@monthaus.com,nikki.boxer@monthaus.com');
 
 /**
  * Dynamic QR codes (qr_codes.php, qr.php, inc/qr.php).
@@ -148,3 +152,6 @@ define('QR_BASE_URL',       'https://qr.monthaus.com');
 define('QR_FALLBACK_URL',   'https://monthaus.com');
 define('QR_ALLOWED_DOMAIN', 'monthaus.com');
 define('QR_ADD_UTM',        true);
+
+// MH Send live (2026-11-02): My Tools shows the B2B Portal link to Aspen and Vail members (inc/portal.php portal_send_item).
+define('MH_SEND_LINK', true);
