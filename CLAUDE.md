@@ -1299,6 +1299,7 @@ www-data have no crontab; `/etc/cron.d/` holds only the Debian defaults
 40 * * * *  cron/sync_hot_sheet_listings.php  >> hot_sheet_sync.log      hourly (agent pages' listings)
 0 13 * * *  cron/send_hot_sheet.php           >> hot_sheet_send.log      07:00 MDT
 20 * * * *  cron/sync_anyprop_roster.php      >> anyprop_roster.log      hourly
+10 15 5-25 * * cron/refresh_market_data.php     >> market_refresh.log     daily 5th-25th: the Market Report's month (added 2026-11-05, Nikki's yes)
 */15 * * * * cron/parse_pipeline_events.php   >> pipeline_parse.log      every 15 min
 5,35 * * * * cron/check_health.php            >> check_health.log        alerts
 ```
