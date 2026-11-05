@@ -73,6 +73,20 @@ if ($has_credits) {
     if ($rc) foreach ($rc->fetch_all(MYSQLI_ASSOC) as $c)
         $credits_by[(int)$c['intake_id']][] = ['market' => $c['market'], 'mls_number' => $c['mls_number'], 'side' => $c['side'], 'note' => $c['note']];
 }
+// Listing photos (sql/listing_photos.sql, 2026-11-05): one uploaded photo per
+// listing the board sends none for, keyed by board + MLS number (not by agent:
+// the photo belongs to the listing). Key present = the site replaces its set;
+// absent = older marketing, the site keeps what it has. Read HERE: the
+// connection is closed before the output is assembled.
+$listing_photos_out = null;
+if (mk_table_exists($conn, 'listing_photos')) {
+    $listing_photos_out = [];
+    $rp = $conn->query("SELECT market, mls_number, url FROM listing_photos ORDER BY market, mls_number");
+    if ($rp) foreach ($rp->fetch_all(MYSQLI_ASSOC) as $p) {
+        $u = feed_photo($p['url']);
+        if ($u !== '') $listing_photos_out[] = ['market' => $p['market'], 'mls_number' => $p['mls_number'], 'url' => $u];
+    }
+}
 
 // ── Agents ───────────────────────────────────────────────────────────────────
 $res = $conn->query("
@@ -184,18 +198,7 @@ foreach ($rows as $a) {
 
 $out = ['generated_at' => gmdate('Y-m-d\TH:i:s\Z'), 'count' => count($agents), 'agents' => $agents];
 
-// Listing photos (sql/listing_photos.sql, 2026-11-05): one uploaded photo per
-// listing the board sends none for, keyed by board + MLS number (not by agent:
-// the photo belongs to the listing). Key present = the site replaces its set;
-// absent = older marketing, the site keeps what it has.
-if (mk_table_exists($conn, 'listing_photos')) {
-    $out['listing_photos'] = [];
-    $rp = $conn->query("SELECT market, mls_number, url FROM listing_photos ORDER BY market, mls_number");
-    if ($rp) foreach ($rp->fetch_all(MYSQLI_ASSOC) as $p) {
-        $u = feed_photo($p['url']);
-        if ($u !== '') $out['listing_photos'][] = ['market' => $p['market'], 'mls_number' => $p['mls_number'], 'url' => $u];
-    }
-}
+if ($listing_photos_out !== null) $out['listing_photos'] = $listing_photos_out;   // read above, before the connection closed (2026-11-05)
 if ($leaders !== null) {
     $out['leadership'] = [];
     foreach ($leaders as $l) {
