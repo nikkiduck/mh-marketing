@@ -87,6 +87,12 @@ function plan_admin_css(): string {
     .sp-grp b { font-weight:400; opacity:.65; letter-spacing:0; text-transform:none; }
     .sp-grp:hover { color:#1f242c; }
     .sp-photo[hidden] { display:none; }
+    /* The builder sections without step numbers or hints (2026-11-05); the page header rides inside the form column; the preview sticks right under the fixed 70px header. */
+    .sp-field + .sp-two, .sp-field + .sp-look, .sp-two + .sp-framing, .sp-look + .sp-framing { margin-top:16px; }
+    .sp-step-h { font-size:23px; margin-bottom:12px; }
+    .mk-page-header.sp-head-in { margin:0 0 22px; }
+    .mk-page-header.sp-head-in .hint { display:none; }
+    @media (min-width:900px) { .sp-preview { top:82px; } }
     ';
 }
 
@@ -685,7 +691,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     if ($kind === 'broker' && $agent) { $bdIn = $photoIn; $photoIn = $agent['cutout_url'] !== '' ? 'cutout:' . $agent['id'] : 'headshot:' . $agent['id']; }
     [$photo_url, $photo_file] = plan_photo($ctx, $photoIn, $listing, $agent);
     $frame = [
-        'zoom' => max(1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),
+        'zoom' => max($kind === 'broker' ? 0.6 : 1.0, min(3.0, round((float)($in['zoom'] ?? 1), 2))),   // the broker's figure can shrink (2026-11-05: zooming out did nothing, the clamp at 1 ate it)
         'focus_x' => max(0, min(100, (int)($in['focus_x'] ?? 50))),
         'focus_y' => max(0, min(100, (int)($in['focus_y'] ?? ($kind === 'broker' ? 0 : 50)))),   // a headshot starts from the top: the head is never cut
     ];

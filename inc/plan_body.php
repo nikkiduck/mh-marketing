@@ -45,8 +45,7 @@ $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (s
 $default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' && $pk !== 'broker') ? 'bottom' : 'top'));   // the Broker Feature: with the words at every size (2026-11-05, the stack)
 $default_badge = ($default_size === 'story' && $default_logo !== 'top') ? 'right' : 'left';
 $themes = plan_themes($pk); $labels = plan_labels(); $styles = social_line_styles(); $defaults = social_line_defaults();
-$line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
-$step = 1;
+$line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
 ?>
   <div class="sp-grid">
     <form id="spForm" class="sp-form" method="post" action="<?= $e($export_url) ?>" autocomplete="off">
@@ -63,104 +62,11 @@ $step = 1;
       <?php endif; ?>
       <div id="spFrames"></div>
 
-      <section class="sp-step">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span>Pick Template</h2>
-        <div class="sp-look">
-          <span class="sp-look-l">Size</span>
-          <?php $size_opts = social_formats(); if ($pk === 'broker') $size_opts = ['story' => $size_opts['story']] + $size_opts;   // a Broker Feature is a story (Nikki, 2026-11-05): Story first, and the default
-          foreach ($size_opts as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="size" value="<?= $e($k) ?>"<?= $k === $default_size ? ' checked' : '' ?>><span><?= $e($t) ?> · <?= $k === 'post' ? '4:5' : ($k === 'square' ? '1:1' : '9:16') ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <?php if ($agent_styles): ?>
-        <input type="hidden" name="layout" value="photo">
-        <?php if (count($agent_styles) > 1): ?>
-        <div class="sp-look">
-          <span class="sp-look-l">Style</span>
-          <?php $ws = (string)($pk_preset['style'] ?? 'cutout'); foreach ($agent_styles as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="style" value="<?= $e($k) ?>"<?= $k === (isset($agent_styles[$ws]) ? $ws : 'cutout') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <?php else: ?>
-        <input type="hidden" name="style" value="<?= $e(array_key_first($agent_styles)) ?>">
-        <?php endif; ?>
-        <div class="sp-look">
-          <span class="sp-look-l">First line</span>
-          <?php $w1 = ($pk_preset['hook1'] ?? 'italic') === 'serif' ? 'serif' : 'italic'; foreach (['serif' => 'Serif', 'italic' => 'Italic'] as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="hook1" value="<?= $e($k) ?>"<?= $k === $w1 ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Second line</span>
-          <?php $wh = (string)($pk_preset['hook2'] ?? 'sans'); foreach (plan_hook_styles() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="hook2" value="<?= $e($k) ?>"<?= $k === (isset(plan_hook_styles()[$wh]) ? $wh : 'sans') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <?php else: ?>
-        <div class="sp-look">
-          <span class="sp-look-l">Layout</span>
-          <?php foreach ($offered_layouts as $k): ?>
-          <label class="sp-pillopt"><input type="radio" name="layout" value="<?= $e($k) ?>"<?= $k === $default_layout ? ' checked' : '' ?>><span><?= $e($t = $layouts[$k]) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
-        <div class="sp-look">
-          <span class="sp-look-l">Look</span>
-          <?php foreach ($themes as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="theme" value="<?= $e($k) ?>"<?= $k === 'dark' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Watermark</span>
-          <?php foreach (social_marks() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="mark" value="<?= $e($k) ?>"<?= $k === 'triangle' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Logo</span>
-          <?php foreach (social_logo_kinds() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="logo_kind" value="<?= $e($k) ?>"<?= $k === 'full' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Logo place</span>
-          <?php foreach (social_logo_places() as $k => $t): ?>
-          <label class="sp-pillopt" data-logo="<?= $e($k) ?>"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === $default_logo ? ' checked' : '' ?>><span><?= $e($pk === 'broker' ? ['top' => 'With the words', 'bottom' => 'Lower right'][$k] ?? $t : $t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Logo colour</span>
-          <?php foreach (plan_logo_colors() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="logo_color" value="<?= $e($k) ?>"<?= $k === 'auto' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-ranges">
-          <label class="sp-range">Logo size <input type="range" name="logo_scale" min="50" max="200" step="2" value="130"><output>130%</output></label>
-          <label class="sp-range">Nudge across <input type="range" name="logo_dx" min="-200" max="200" step="2" value="0"><output>0</output></label>
-          <label class="sp-range">Nudge down <input type="range" name="logo_dy" min="-200" max="200" step="2" value="0"><output>0</output></label>
-          <label class="sp-range">Text shadow <input type="range" name="text_shadow" min="0" max="100" step="5" value="35"><output>35</output></label>
-          <label class="sp-range">Logo shadow <input type="range" name="logo_shadow" min="0" max="100" step="5" value="0"><output>0</output></label>
-          <button type="button" class="sp-link sp-reset" id="spResetLogo">Reset logo and shadows</button>
-        </div>
-        <?php if ($pk === 'broker'): ?>
-        <div class="sp-look">
-          <span class="sp-look-l">Badge</span>
-          <?php $wt = in_array($pk_preset['badge_tone'] ?? '', ['slate', 'glass'], true) ? $pk_preset['badge_tone'] : 'white'; foreach (['white' => 'White', 'slate' => 'Slate', 'glass' => 'Glass'] as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="badge_tone" value="<?= $e($k) ?>"<?= $k === $wt ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
-        <div class="sp-look" id="spBadgePlace">
-          <span class="sp-look-l"><?= $pk === 'broker' ? 'Badge place' : 'Badge' ?></span>
-          <?php foreach (plan_badge_places() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="badge" value="<?= $e($k) ?>"<?= $k === $default_badge ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-      </section>
-
+      <?php // The sections (Nikki, 2026-11-05: "forget the 1, 2, 3 steps ... remove all the explanatory text"): the subject with
+            // its own framer (the broker's figure), the size, the text, the elements (logo, watermark, badge), the photo or backdrop. ?>
       <?php if ($pk === 'property'): ?>
       <section class="sp-step">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span>Listing</h2>
+        <h2 class="sp-step-h">Listing</h2>
         <label class="sp-field">Which listing (every Mont Haus listing in the feed)
           <select name="listing" id="spSubject">
             <?php $want = (string)($pk_preset['listing'] ?? ''); $first = true;
@@ -180,14 +86,13 @@ $step = 1;
           <?php endforeach; ?>
         </div>
         <div class="sp-set">
-          <label class="sp-check"><input type="checkbox" name="set" value="1"<?= $default_size === 'story' ? ' checked' : '' ?>> Make a <b>set</b>: a multi-image slideshow (a story, or a carousel at the post and square sizes)</label>
-          <label class="sp-check sp-only-set"><input type="checkbox" name="endcard" value="1"> Add a closing card at the end: the logo, the address and who listed it (optional)</label>
-          <p class="sp-hint sp-only-set">Each frame is a tab under the preview: the cover with the words, then the photo alone. Pick a tab, then click a photo below to put it on that frame, drag and zoom it, and choose its logo. + Add photo makes a new frame; the cover plus up to <?= PLAN_MAX_FRAMES - 1 ?> more.</p>
+          <label class="sp-check"><input type="checkbox" name="set" value="1"<?= $default_size === 'story' ? ' checked' : '' ?>> Make a set (several photos as one story or carousel)</label>
+          <label class="sp-check sp-only-set"><input type="checkbox" name="endcard" value="1"> Add a closing card (the logo, the address, who listed it)</label>
         </div>
       </section>
       <?php elseif ($pk === 'broker'): ?>
       <section class="sp-step">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span>Broker</h2>
+        <h2 class="sp-step-h">Broker</h2>
         <label class="sp-field">Which broker
           <select name="agent" id="spSubject">
             <?php $want = (int)($pk_preset['agent'] ?? 0); $first = true; foreach ($pk_agents as $a): $sel = $want ? $a['id'] === $want : $first; $first = false; ?>
@@ -216,30 +121,14 @@ $step = 1;
             </select>
           </label>
         </div>
-        <p class="sp-hint">The hook becomes the headline with the broker's name and market swapped in; edit it below. The plan rotates through the hooks week to week.</p>
-        <div class="sp-look">
-          <span class="sp-look-l">Arrange</span>
-          <?php $wa = ($pk_preset['arrange'] ?? 'stack') === 'left' ? 'left' : 'stack'; foreach (['stack' => 'Right stack', 'left' => 'Left'] as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="arrange" value="<?= $e($k) ?>"<?= $k === $wa ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
+        <div class="sp-framing">
+          <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / 1920"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
+          <label class="sp-zoom">Zoom <input type="range" name="zoom" min="0.6" max="2" step="0.02" value="1"></label>
         </div>
-        <p class="sp-hint">Right stack: the badge, the hook, the call line and the logo as one right-aligned column beside the broker. Left: the badge and the hook at the upper left, the logo with them or lower right.</p>
-        <div class="sp-look">
-          <span class="sp-look-l">Name and area</span>
-          <?php $wp = (string)($pk_preset['who_place'] ?? 'none'); if (!in_array($wp, ['corner', 'under'], true)) $wp = 'none';
-          foreach (['none' => 'Off', 'corner' => 'Lower right', 'under' => 'Under the hook'] as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="who_place" value="<?= $e($k) ?>"<?= $k === $wp ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-ranges">
-          <label class="sp-range">Name size <input type="range" name="who_name" min="24" max="80" step="2" value="44"><output>44px</output></label>
-          <label class="sp-range">Area size <input type="range" name="who_area" min="32" max="120" step="2" value="64"><output>64px</output></label>
-        </div>
-        <p class="sp-hint">Off leaves the hook to say who it is. On, the name (Text 1) and the service area (Text 2) sit together, right-aligned; the sizes are at the story and post sizes, a square is drawn a little smaller.</p>
       </section>
       <?php elseif ($pk === 'location'): ?>
       <section class="sp-step">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span>Location</h2>
+        <h2 class="sp-step-h">Location</h2>
         <label class="sp-field">Which location
           <select name="loc" id="spSubject">
             <?php $want = (string)($pk_preset['loc'] ?? 'office:aspen'); $groups = [];
@@ -260,13 +149,12 @@ $step = 1;
           <?php endforeach; ?>
         </div>
         <div class="sp-team" id="spTeam">
-          <p class="sp-hint">Brokers based here (their roster office, or the Service areas ticked on their profile). Tick up to six to show their faces; the photo + text block layout draws them.</p>
           <div class="sp-team-list" id="spTeamList"></div>
         </div>
       </section>
       <?php elseif ($pk === 'branding'): ?>
       <section class="sp-step">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span>Season</h2>
+        <h2 class="sp-step-h">Season</h2>
         <div class="sp-two">
           <label class="sp-field">Season
             <select name="season" id="spSubject">
@@ -279,42 +167,122 @@ $step = 1;
             <select name="tagline" id="spTagline"></select>
           </label>
         </div>
-        <p class="sp-hint">Drafts to start from; the words are yours to edit below. The seasonal branding strategy itself lives outside this tool.</p>
       </section>
       <?php endif; ?>
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span><?= $pk === 'broker' ? 'Backdrop' : 'Photo' ?></h2>
-        <p class="sp-hint" id="spPhotoHint"><?= $pk === 'property' ? 'Choose a listing photo or upload your own below.' : ($pk === 'broker' ? 'The broker\'s cutout is the figure. Behind it, under a slate veil: one of your photos, a stock photo of their market (their region first), or None for the plain ground.' : 'Choose a stock photo or upload your own below.') ?></p>
-        <div class="sp-photos" id="spPhotos"><div class="sp-wait">Loading photos…</div></div>
-        <div class="sp-drop" id="spDrop">
-          <span id="spDropMsg">Or use your own: drop a photo here, or <label class="sp-link" for="spFile">choose one</label>.</span>
-          <small>JPG, PNG or WEBP, up to 20 MB.</small>
-          <input type="file" id="spFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
+        <h2 class="sp-step-h">Size</h2>
+        <div class="sp-look">
+          <span class="sp-look-l">Size</span>
+          <?php $size_opts = social_formats(); if ($pk === 'broker') $size_opts = ['story' => $size_opts['story']] + $size_opts;   // a Broker Feature is a story (Nikki, 2026-11-05): Story first, and the default
+          foreach ($size_opts as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="size" value="<?= $e($k) ?>"<?= $k === $default_size ? ' checked' : '' ?>><span><?= $e($t) ?> · <?= $k === 'post' ? '4:5' : ($k === 'square' ? '1:1' : '9:16') ?></span></label>
+          <?php endforeach; ?>
         </div>
-        <?php if ($pk === 'broker'): ?>
-        <div class="sp-framing">
-          <p class="sp-hint">The backdrop: drag to choose what shows, zoom to crop closer. The veil sits over it.</p>
-          <div class="sp-framer empty" id="spBdFramer" style="aspect-ratio:1080 / 1920"><img id="spBdImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
-          <label class="sp-zoom">Zoom <input type="range" name="bd_zoom" min="1" max="3" step="0.02" value="1"></label>
-          <div class="sp-ranges"><label class="sp-range">Overlay <input type="range" name="backdrop_veil" min="40" max="96" step="2" value="70"><output>70</output></label></div>
-        </div>
-        <div class="sp-framing">
-          <p class="sp-hint">The broker: the box is the whole picture. Drag the figure where you want it (across, or down off the foot), zoom to scale it; the figure sits in front of the words' left part, so a long hook may need it lower.</p>
-          <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / 1920"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
-          <label class="sp-zoom">Zoom <input type="range" name="zoom" min="0.6" max="2" step="0.02" value="1"></label>
+        <?php if ($agent_styles): ?>
+        <input type="hidden" name="layout" value="photo">
+        <input type="hidden" name="style" value="<?= $e(array_key_first($agent_styles)) ?>">
+        <div class="sp-look">
+          <span class="sp-look-l">Arrange</span>
+          <?php $wa = ($pk_preset['arrange'] ?? 'stack') === 'left' ? 'left' : 'stack'; foreach (['stack' => 'Right stack', 'left' => 'Left'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="arrange" value="<?= $e($k) ?>"<?= $k === $wa ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
         </div>
         <?php else: ?>
-        <div class="sp-framing">
-          <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / 1440"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
-          <label class="sp-zoom">Zoom <input type="range" name="zoom" min="1" max="3" step="0.02" value="1"></label>
-          <small>Drag the photo to choose what shows; zoom in to crop closer.</small>
+        <div class="sp-look">
+          <span class="sp-look-l">Layout</span>
+          <?php foreach ($offered_layouts as $k): ?>
+          <label class="sp-pillopt"><input type="radio" name="layout" value="<?= $e($k) ?>"<?= $k === $default_layout ? ' checked' : '' ?>><span><?= $e($t = $layouts[$k]) ?></span></label>
+          <?php endforeach; ?>
         </div>
         <?php endif; ?>
+        <div class="sp-look">
+          <span class="sp-look-l">Look</span>
+          <?php foreach ($themes as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="theme" value="<?= $e($k) ?>"<?= $k === 'dark' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
       </section>
 
       <section class="sp-step">
-        <h2 class="sp-step-h"><span><?= $step++ ?></span>Text</h2>
+        <h2 class="sp-step-h">Text</h2>
+        <div class="sp-fields">
+          <label class="sp-field">Headline <span class="sp-only-multi">(Enter for a new line)</span> <textarea name="headline" maxlength="140" rows="2"></textarea></label>
+          <?php foreach ($line_names as $i => $nm): ?>
+          <div class="sp-line<?= $i === 2 ? ' sp-only-long sp-only-3' : ($i === 3 ? ' sp-only-long' : '') ?>">
+            <label class="sp-field"><?= $e($nm) ?> <input name="line_text[]" maxlength="90"></label>
+            <label class="sp-field sp-style"><?= $e($nm) ?> style
+              <select name="line_style[]"><?php foreach ($styles as $k => $w): ?><option value="<?= $e($k) ?>"<?= $k === $defaults[$i] ? ' selected' : '' ?>><?= $e($w) ?></option><?php endforeach; ?></select>
+            </label>
+          </div>
+          <?php endforeach; ?>
+          <?php if ($pk_plan): ?>
+          <label class="sp-field">Caption (saved with the week, not drawn) <textarea name="caption" maxlength="2200" rows="3"><?= $e($pk_saved['caption'] ?? '') ?></textarea></label>
+          <?php endif; ?>
+        </div>
+        <?php if ($pk === 'broker'): ?>
+        <div class="sp-look">
+          <span class="sp-look-l">First line</span>
+          <?php $w1 = ($pk_preset['hook1'] ?? 'italic') === 'serif' ? 'serif' : 'italic'; foreach (['serif' => 'Serif', 'italic' => 'Italic'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="hook1" value="<?= $e($k) ?>"<?= $k === $w1 ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Second line</span>
+          <?php $wh = (string)($pk_preset['hook2'] ?? 'sans'); foreach (plan_hook_styles() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="hook2" value="<?= $e($k) ?>"<?= $k === (isset(plan_hook_styles()[$wh]) ? $wh : 'sans') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Name and area</span>
+          <?php $wp = (string)($pk_preset['who_place'] ?? 'none'); if (!in_array($wp, ['corner', 'under'], true)) $wp = 'none';
+          foreach (['none' => 'Off', 'corner' => 'Lower right', 'under' => 'Under the hook'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="who_place" value="<?= $e($k) ?>"<?= $k === $wp ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-ranges">
+          <label class="sp-range">Name size <input type="range" name="who_name" min="24" max="80" step="2" value="44"><output>44px</output></label>
+          <label class="sp-range">Area size <input type="range" name="who_area" min="32" max="120" step="2" value="64"><output>64px</output></label>
+        </div>
+        <?php endif; ?>
+        <div class="sp-ranges">
+          <label class="sp-range">Text shadow <input type="range" name="text_shadow" min="0" max="100" step="5" value="35"><output>35</output></label>
+        </div>
+      </section>
+
+      <section class="sp-step">
+        <h2 class="sp-step-h">Elements</h2>
+        <div class="sp-look">
+          <span class="sp-look-l">Logo</span>
+          <?php foreach (social_logo_kinds() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="logo_kind" value="<?= $e($k) ?>"<?= $k === 'full' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Logo place</span>
+          <?php foreach (social_logo_places() as $k => $t): ?>
+          <label class="sp-pillopt" data-logo="<?= $e($k) ?>"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === $default_logo ? ' checked' : '' ?>><span><?= $e($pk === 'broker' ? ['top' => 'With the words', 'bottom' => 'Lower right'][$k] ?? $t : $t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Logo colour</span>
+          <?php foreach (plan_logo_colors() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="logo_color" value="<?= $e($k) ?>"<?= $k === 'auto' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-ranges">
+          <label class="sp-range">Logo size <input type="range" name="logo_scale" min="50" max="200" step="2" value="130"><output>130%</output></label>
+          <label class="sp-range">Nudge across <input type="range" name="logo_dx" min="-200" max="200" step="2" value="0"><output>0</output></label>
+          <label class="sp-range">Nudge down <input type="range" name="logo_dy" min="-200" max="200" step="2" value="0"><output>0</output></label>
+          <label class="sp-range">Logo shadow <input type="range" name="logo_shadow" min="0" max="100" step="5" value="0"><output>0</output></label>
+          <button type="button" class="sp-link sp-reset" id="spResetLogo">Reset logo and shadows</button>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Watermark</span>
+          <?php foreach (social_marks() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="mark" value="<?= $e($k) ?>"<?= $k === 'triangle' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
         <div class="sp-fields">
           <div class="sp-two">
             <label class="sp-field">Label on the photo
@@ -326,19 +294,42 @@ $step = 1;
             </label>
             <label class="sp-field" id="spCustomWrap" hidden>Your label <input name="label_custom" maxlength="28" placeholder="Now Open"></label>
           </div>
-          <label class="sp-field">Headline <span class="sp-only-multi">(press Enter for a new line)</span> <textarea name="headline" maxlength="140" rows="2"></textarea></label>
-          <?php foreach ($line_names as $i => $nm): ?>
-          <div class="sp-line<?= $i === 2 ? ' sp-only-long sp-only-3' : ($i === 3 ? ' sp-only-long' : '') ?>">
-            <label class="sp-field"><?= $e($nm) ?> <input name="line_text[]" maxlength="90"></label>
-            <label class="sp-field sp-style"><?= $e($nm) ?> style
-              <select name="line_style[]"><?php foreach ($styles as $k => $w): ?><option value="<?= $e($k) ?>"<?= $k === $defaults[$i] ? ' selected' : '' ?>><?= $e($w) ?></option><?php endforeach; ?></select>
-            </label>
-          </div>
-          <?php endforeach; ?>
-          <?php if ($pk_plan): ?>
-          <label class="sp-field">Caption for the post (saved with the week for when you post; not drawn) <textarea name="caption" maxlength="2200" rows="3"><?= $e($pk_saved['caption'] ?? '') ?></textarea></label>
-          <?php endif; ?>
         </div>
+        <?php if ($pk === 'broker'): ?>
+        <div class="sp-look">
+          <span class="sp-look-l">Badge</span>
+          <?php $wt = in_array($pk_preset['badge_tone'] ?? '', ['slate', 'glass'], true) ? $pk_preset['badge_tone'] : 'white'; foreach (['white' => 'White', 'slate' => 'Slate', 'glass' => 'Glass'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="badge_tone" value="<?= $e($k) ?>"<?= $k === $wt ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        <div class="sp-look" id="spBadgePlace">
+          <span class="sp-look-l"><?= $pk === 'broker' ? 'Badge place' : 'Badge' ?></span>
+          <?php foreach (plan_badge_places() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="badge" value="<?= $e($k) ?>"<?= $k === $default_badge ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+      </section>
+
+      <section class="sp-step">
+        <h2 class="sp-step-h"><?= $pk === 'broker' ? 'Backdrop' : 'Photo' ?></h2>
+        <div class="sp-photos" id="spPhotos"><div class="sp-wait">Loading photos…</div></div>
+        <div class="sp-drop" id="spDrop">
+          <span id="spDropMsg">Drop a photo here, or <label class="sp-link" for="spFile">choose one</label>.</span>
+          <input type="file" id="spFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
+        </div>
+        <?php if ($pk === 'broker'): ?>
+        <div class="sp-framing">
+          <div class="sp-framer empty" id="spBdFramer" style="aspect-ratio:1080 / 1920"><img id="spBdImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
+          <label class="sp-zoom">Zoom <input type="range" name="bd_zoom" min="1" max="3" step="0.02" value="1"></label>
+          <div class="sp-ranges"><label class="sp-range">Overlay <input type="range" name="backdrop_veil" min="40" max="96" step="2" value="70"><output>70</output></label></div>
+        </div>
+        <?php else: ?>
+        <div class="sp-framing">
+          <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / 1440"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
+          <label class="sp-zoom">Zoom <input type="range" name="zoom" min="1" max="3" step="0.02" value="1"></label>
+        </div>
+        <?php endif; ?>
       </section>
 
       <div class="sp-actions">
@@ -859,6 +850,9 @@ $step = 1;
     return true;
   }
 
+  // The page header (title, hint, buttons) rides at the top of the form column, so the preview column starts at the very
+  // top of the page and is sticky from the first scroll (Nikki, 2026-11-05: "have the stick start immediately").
+  { const hd = document.querySelector('.mk-page-header'); if (hd && form.parentElement) { hd.classList.add('sp-head-in'); form.prepend(hd); } }
   new ResizeObserver(scale).observe(stage); scale();
   if (KIND === 'broker') { const o = f('agent').selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; }
   const restored = restoreSaved();

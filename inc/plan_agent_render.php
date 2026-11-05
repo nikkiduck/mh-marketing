@@ -169,7 +169,7 @@ function plan_render_agent(array $p, ?string $base = null, bool $export = false)
     $pillHtml = $label !== '' ? '<div class="pill' . ($badgeTone !== 'slate' ? ' ' . $badgeTone : '') . '">' . $e($label) . '</div>' : '';
 
     // The figure: zoom scales it, focus_x moves it across, focus_y drops it (see below).
-    $zoom = max(1.0, min(3.0, (float)($p['zoom'] ?? 1)));
+    $zoom = max(0.6, min(3.0, (float)($p['zoom'] ?? 1)));   // down to 0.6 since 2026-11-05 (the figure can shrink)
     $fx   = max(0, min(100, (int)($p['focus_x'] ?? 50)));
     $fy   = max(0, min(100, (int)($p['focus_y'] ?? 0)));
     $photo = ($export && !empty($p['photo_file'])) ? 'file://' . $p['photo_file'] : (string)($p['photo_url'] ?? '');
