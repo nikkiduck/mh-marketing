@@ -62,6 +62,18 @@ if (!$chk || !$chk->fetch_row()) feed_fail(503, 'roster migration not applied');
 $chk_fa = $conn->query("SHOW COLUMNS FROM marketing_intakes LIKE 'fub_areas'");
 $has_fub_areas = $chk_fa && $chk_fa->fetch_row();
 
+// Listing credits (sql/agent_listing_credits.sql, 2026-11-05): sold deals the
+// board credits to someone else, entered per MLS number on the profile. Key
+// present = the site replaces its copy (empty = none); absent = older marketing,
+// the site keeps what it has.
+require_once __DIR__ . '/../inc/schema.php';   // mk_table_exists()
+$credits_by = []; $has_credits = mk_table_exists($conn, 'agent_listing_credits');
+if ($has_credits) {
+    $rc = $conn->query("SELECT intake_id, market, mls_number, side, note FROM agent_listing_credits ORDER BY market, mls_number");
+    if ($rc) foreach ($rc->fetch_all(MYSQLI_ASSOC) as $c)
+        $credits_by[(int)$c['intake_id']][] = ['market' => $c['market'], 'mls_number' => $c['mls_number'], 'side' => $c['side'], 'note' => $c['note']];
+}
+
 // ── Agents ───────────────────────────────────────────────────────────────────
 $res = $conn->query("
     SELECT id, slug, web_status, is_active, agent_name, mls_full_name, agent_title, bio_text,
@@ -166,6 +178,7 @@ foreach ($rows as $a) {
         $fa = json_decode((string)$a['fub_areas'], true);
         $entry['fub_areas'] = is_array($fa) ? array_values(array_map('strval', $fa)) : [];
     }
+    if ($has_credits) $entry['listing_credits'] = $credits_by[(int)$a['id']] ?? [];   // 2026-11-05
     $agents[] = $entry;
 }
 

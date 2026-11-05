@@ -1316,6 +1316,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
     }
 
+    // Listing credits (2026-11-05, Nikki): a sold deal the board credits to
+    // someone else, such as a team sale at a previous brokerage, that still
+    // belongs on the agent's website page. One row per MLS number; the roster
+    // feed carries it, the site pulls the listing and shows it as theirs.
+    // sql/agent_listing_credits.sql. Whit Ward's two RE/MAX sales were the first.
+    if ($action === 'add_credit' && mk_table_exists($conn, 'agent_listing_credits')) {
+        $market = strtolower(trim((string)($_POST['market'] ?? '')));
+        $mls    = preg_replace('/\s+/', '', (string)($_POST['mls_number'] ?? ''));
+        if ($market === 'recolorado') $mls = preg_replace('/^REC/i', '', $mls);   // stored as the site stores it
+        $side   = (($_POST['side'] ?? 'listing') === 'buyer') ? 'buyer' : 'listing';
+        $note   = mb_substr(trim((string)($_POST['note'] ?? '')), 0, 120);
+        if (isset(mk_board_registry()[$market]) && preg_match('/^[A-Za-z0-9-]{1,32}$/', $mls)) {
+            $st = $conn->prepare("INSERT INTO agent_listing_credits (intake_id, market, mls_number, side, note) VALUES (?, ?, ?, ?, ?)
+                                  ON DUPLICATE KEY UPDATE side = VALUES(side), note = VALUES(note)");
+            $st->bind_param('issss', $id, $market, $mls, $side, $note); $st->execute(); $st->close();
+        }
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+    }
+
+    if ($action === 'remove_credit' && mk_table_exists($conn, 'agent_listing_credits')) {
+        $cid = (int)($_POST['credit_id'] ?? 0);
+        if ($cid) $conn->query("DELETE FROM agent_listing_credits WHERE id = {$cid} AND intake_id = {$id}");
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+    }
+
     // Hot Sheets: the same switch as the checklist item, kept in step with it.
     if ($action === 'hs_toggle') {
         $on = ($_POST['to'] ?? '') === 'on';
@@ -1641,6 +1666,12 @@ $identities = [];
 if (mk_table_exists($conn, 'agent_mls_ids')) {
     $r_id = $conn->query("SELECT * FROM agent_mls_ids WHERE intake_id = {$id} ORDER BY is_alias, market");
     if ($r_id) $identities = $r_id->fetch_all(MYSQLI_ASSOC);
+}
+// Listing credits (2026-11-05): sold deals credited to someone else on the board.
+$credits = []; $has_credits_table = mk_table_exists($conn, 'agent_listing_credits');
+if ($has_credits_table) {
+    $r_c = $conn->query("SELECT * FROM agent_listing_credits WHERE intake_id = {$id} ORDER BY market, mls_number");
+    if ($r_c) $credits = $r_c->fetch_all(MYSQLI_ASSOC);
 }
 $hs_on = mk_hs_subscribed($conn, $id);
 $hs_email = mk_agent_email($agent);
@@ -3192,6 +3223,56 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             </label>
             <div class="btn-row"><button type="submit" class="btn btn-outline btn-sm">Add MLS ID</button></div>
           </form>
+        </div>
+
+        <!-- ── Listing credits (2026-11-05, Nikki: team sales at a previous brokerage) ── -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-home-check" style="margin-right:6px;"></i> Listing credits</div>
+          <p class="hint" style="margin:0 0 10px;">A sold listing the board credits to someone else, such as a team deal at a previous brokerage. Add its MLS number and the website shows it on the agent's page as theirs, within a day. Their own listings never need this: the MLS IDs above find those.</p>
+          <?php if (!$has_credits_table): ?>
+            <p class="hint" style="margin:0;">Listing credits appear here once sql/agent_listing_credits.sql has been run.</p>
+          <?php else: ?>
+            <?php if ($credits): ?>
+              <table class="mini-table" style="width:100%;">
+                <?php foreach ($credits as $c): ?>
+                  <tr>
+                    <td style="text-transform:uppercase;font-size:11px;letter-spacing:.06em;color:#6b7280;"><?= htmlspecialchars(mk_board_label($c['market'])) ?></td>
+                    <td style="font-weight:600;">MLS# <?= htmlspecialchars($c['mls_number']) ?>
+                      <?php if ($c['side'] === 'buyer'): ?><span class="tag-team" style="margin-left:6px;">Buyer side</span><?php endif; ?>
+                      <?php if ($c['note'] !== ''): ?><span class="hint" style="display:block;font-weight:400;"><?= htmlspecialchars($c['note']) ?></span><?php endif; ?>
+                    </td>
+                    <td style="text-align:right;color:#9ca3af;font-size:12px;">added <?= htmlspecialchars(date('M j', strtotime($c['created_at']))) ?></td>
+                    <td style="text-align:right;width:28px;">
+                      <form method="POST" style="margin:0;" onsubmit="return confirm('Remove MLS# <?= e_attr($c['mls_number']) ?> from <?= e_attr(addslashes($agent['agent_name'] ?? '')) ?>?');">
+                        <input type="hidden" name="_action" value="remove_credit">
+                        <input type="hidden" name="credit_id" value="<?= (int)$c['id'] ?>">
+                        <button type="submit" class="btn-ghost" title="Remove"><i class="ti ti-x"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </table>
+            <?php endif; ?>
+            <form method="POST" style="margin-top:10px;">
+              <input type="hidden" name="_action" value="add_credit">
+              <div class="form-row">
+                <label style="width:150px;">Board
+                  <select name="market" class="form-input">
+                    <?php foreach (mk_board_labels() as $slug => $label): ?><option value="<?= $slug ?>"><?= htmlspecialchars($label) ?></option><?php endforeach; ?>
+                  </select>
+                </label>
+                <label class="grow">MLS number <input type="text" name="mls_number" class="form-input" placeholder="831368" required></label>
+                <label style="width:150px;">Their side
+                  <select name="side" class="form-input">
+                    <option value="listing">Listing side</option>
+                    <option value="buyer">Buyer side</option>
+                  </select>
+                </label>
+              </div>
+              <label style="display:block;margin:4px 0 10px;">Note <input type="text" name="note" class="form-input" maxlength="120" placeholder="RE/MAX team deal with James Brunswick"></label>
+              <div class="btn-row"><button type="submit" class="btn btn-outline btn-sm">Add credit</button></div>
+            </form>
+          <?php endif; ?>
         </div>
 
         <!-- ── Subscriptions ────────────────────────────────────────────── -->

@@ -1697,6 +1697,20 @@ they are for the servers.
   mls_agent_id, intake_id)`: a team ID is an `is_alias` row on each member.
   `marketing_agent_mls_ids` (one per board) is superseded but still read by
   `agent.php` until the Website card lands.
+- **Listing credits (2026-11-05, Nikki):** `agent_listing_credits`
+  (sql/agent_listing_credits.sql; intake_id, market, mls_number, side
+  listing | buyer, note) is a sold deal the board credits to someone else
+  that the agent still shows on their website page: Whit Ward's two RE/MAX
+  team sales (CREN 831368 and 834978) carry James Brunswick's id on every
+  side and nothing of Whit's, so no feed rule finds them, and adding
+  Brunswick's id to Whit would credit him with every Brunswick deal. Admins
+  add one per MLS number on the profile (agent.php > Listing credits, under
+  Board identities; `side` is for the website's "Represented Buyer" label,
+  since the record names someone else). api/roster.php sends them as
+  `listing_credits` once the table exists (absent key = the site keeps its
+  copy); the site stores them, its nightly --solds run pulls the listings by
+  ListingId, and the agent page shows them. Never for the agent's own
+  listings: their MLS IDs find those.
 - `mls_*` columns are written only by `cron/sync_anyprop_roster.php`; it never
   writes a curated field. The feed falls back to `mls_*` where curated is blank.
 - **Boards come from the site's registry (2026-10-02): `inc/boards.php`.**
