@@ -1,9 +1,9 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-05 11:41 from git HEAD
-84c5a2be0d82884e80653711171dcfe4  agent.php
+# Generated 2026-11-05 11:52 from git HEAD
+2281e529ee858f45e58a07e97d05c6fd  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
-bb380fed2d2d77ccf205914b8151b5eb  api/roster.php
+7d3bdf5f971f66d94748a3e09bfabb02  api/roster.php
 86ee5a6b02d236dd967c94bc346d1cad  assets/css/elevation-print.css
 364a3315163a63150f8ab3663935fa29  assets/css/elevation.css
 ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
@@ -65,11 +65,11 @@ ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-8ec929595cfc39976559f05bff9fdfe7  inc/plan.php
-442270f61275f6d8d2a036f12e21d517  inc/plan_agent_render.php
-adf2f882b888d256dba9875720d8ad4c  inc/plan_body.php
+8d515c0c99789bca10cb2b3919d9c7eb  inc/plan.php
+8564308977fa797804242c1c717c3879  inc/plan_agent_render.php
+66ff2242b66d0c605bd90895ec7b3a30  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
-b96dffc35038eef3e773e49fc6464734  inc/plan_store.php
+c6848b636f9af10274f689a0944e6457  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
