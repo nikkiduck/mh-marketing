@@ -40,20 +40,27 @@ function mk_agents_only_sql(mysqli $conn, string $alias = ''): string {
 /** Old name of mk_agents_only_sql(); kept so nothing breaks. */
 function mk_team_sql(mysqli $conn, string $alias = ''): string { return mk_agents_only_sql($conn, $alias); }
 
-/** DNS-safe base slug from a name. */
+/**
+ * DNS-safe base slug from a name; '' when nothing is left of the name.
+ * It used to fall back to 'agent' (2026-11-04): a blank Web address saved on
+ * the agent page then became the real key `agent`, the site filed the
+ * agent's headshot as agent.jpg, and the next nameless agent to get the key
+ * (Noah Sathre) had his photo written over the first one's (Sierrah Smith).
+ * A blank is now a blank: the caller decides, and never with a shared name.
+ */
 function mk_slug_base(string $name): string {
     $ascii = @iconv('UTF-8', 'ASCII//TRANSLIT', $name);
     if ($ascii === false) $ascii = $name;
     $base = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $ascii), '-'));
     $base = substr($base, 0, 50);
-    if ($base === '') $base = 'agent';
+    if ($base === '') return '';
     if (in_array($base, MK_RESERVED_SLUGS, true)) $base .= '-mh';
     return $base;
 }
 
-/** A slug no other marketing_intakes row holds. */
+/** A slug no other marketing_intakes row holds (a nameless row gets agent-{id}). */
 function mk_make_slug(mysqli $conn, string $name, int $exclude_id = 0): string {
-    $base = mk_slug_base($name);
+    $base = mk_slug_base($name) ?: ('agent-' . ($exclude_id ?: substr(md5((string)microtime(true)), 0, 6)));
     $slug = $base; $n = 2;
     $s = $conn->prepare("SELECT id FROM marketing_intakes WHERE slug = ? AND id <> ? LIMIT 1");
     if (!$s) throw new RuntimeException('slug lookup prepare failed: ' . $conn->error);
