@@ -53,7 +53,8 @@ define('PIPELINE_WEBHOOK_SECRET', 'PASTE_64_HEX_CHARS');
 
 // ── Other services ───────────────────────────────────────────────────────────
 define('SENDGRID_API_KEY', 'PASTE_SENDGRID_KEY');   // mailer.php — password resets
-define('LOFTY_API_KEY',    'PASTE_LOFTY_KEY');
+define('LEONARDO_API_KEY', 'PASTE_LEONARDO_KEY');   // inc/cutout.php — the Broker Feature's cutouts (Leonardo.Ai, pay as you go)
+// LOFTY_API_KEY is gone (2026-11-05): Lofty is shut down and nothing reads it.
 
 // ── Database ─────────────────────────────────────────────────────────────────
 // The endpoint from the Lightsail console, Connect tab. Something like
