@@ -80,6 +80,13 @@ function plan_admin_css(): string {
     .sp-tabbtn { font:inherit; font-size:12.5px; padding:4px 11px; border:1.5px dashed #c9d0da; border-radius:999px; background:#fff; color:#4a5569; cursor:pointer; }
     .sp-tabbtn:hover { border-color:#4a5566; }
     .sp-tabhint { flex-basis:100%; text-align:center; font-size:12.5px; color:#6b7a8f; margin:2px 0 0; }
+    /* The photo groups fold (Nikki, 2026-11-05: "way too much to keep scrolling through"): the header is a button with an arrow; the group of the chosen photo starts open. */
+    .sp-grp { display:flex; align-items:center; gap:9px; width:100%; background:none; border:0; padding:8px 0 6px; cursor:pointer; text-align:left; font:inherit; color:inherit; }
+    .sp-grp::before { content:""; flex:0 0 auto; width:7px; height:7px; margin-left:3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(-45deg); transition:transform .15s; }
+    .sp-grp[aria-expanded="true"]::before { transform:rotate(45deg); }
+    .sp-grp b { font-weight:400; opacity:.65; letter-spacing:0; text-transform:none; }
+    .sp-grp:hover { color:#1f242c; }
+    .sp-photo[hidden] { display:none; }
     ';
 }
 
@@ -688,7 +695,8 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
 
     if ($kind === 'broker') $headline = mb_substr(trim(str_replace("\r", '', (string)($in['headline'] ?? ''))), 0, 140);   // the hook keeps its line breaks in every agent style
     // The Cutout style's backdrop (2026-11-02): a stock location photo or one of the person's uploads (the tool's photo pick), under a veil; none = the plain ground.
-    $backdrop = ['backdrop_url' => '', 'backdrop_file' => null, 'backdrop_veil' => max(30, min(97, (int)($in['backdrop_veil'] ?? 70)))];   // 70 since 2026-11-05 (was 82)
+    $backdrop = ['backdrop_url' => '', 'backdrop_file' => null, 'backdrop_veil' => max(30, min(97, (int)($in['backdrop_veil'] ?? 70))),   // 70 since 2026-11-05 (was 82)
+                 'bd_zoom' => max(1.0, min(3.0, round((float)($in['bd_zoom'] ?? 1), 2))), 'bd_fx' => max(0, min(100, (int)($in['bd_fx'] ?? 50))), 'bd_fy' => max(0, min(100, (int)($in['bd_fy'] ?? 50)))];   // the backdrop's own framing (2026-11-05)
     // The name and the service area on the Broker Feature (2026-11-05): lower right or under the hook, and their sizes in px.
     $who = ['who_place' => in_array($in['who_place'] ?? '', ['corner', 'under'], true) ? (string)$in['who_place'] : 'none',   // none (off) since 2026-11-05 afternoon
             'who_name' => max(20, min(100, (int)($in['who_name'] ?? 44))), 'who_area' => max(24, min(140, (int)($in['who_area'] ?? 64)))];

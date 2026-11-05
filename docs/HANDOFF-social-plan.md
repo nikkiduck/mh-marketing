@@ -237,6 +237,15 @@ now mixed case at 0.9 of the hook, with the caps-and-tracking version as
 Sans caps. Badge tone pills White | Slate | Glass (`badge_tone`, White
 default); the Badge place row only shows for Left.
 
+**Same afternoon:** the photo groups fold on every plan builder (a header
+button with an arrow; the chosen photo's group starts open, the count
+beside the name). The Broker tool has a second framer for the backdrop
+(`bd_zoom`, `bd_fx`, `bd_fy`; the renderer frames `.bd img` as
+social_render() frames a photo), and the broker's own framer is now
+WYSIWYG: the whole picture as the box, the figure drawn where the renderer
+puts it, so dragging moves it the way the hand goes (it went the other way
+before, and dropped the figure). Figure zoom 0.6 to 2.
+
 **The photo pick is the backdrop (Nikki, same night, after a stock photo
 replaced Bryan's cutout with a chairlift: "if I choose an alternate photo
 it should change the background, not the headshot"):** the Broker tool's

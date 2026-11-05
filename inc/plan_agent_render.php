@@ -47,7 +47,10 @@
  *   the words), label, photo_url / photo_file, zoom, focus_x, focus_y,
  *   headline (the hook; Enter = a new line), lines (text + style),
  *   who_place corner|under|none, who_name, who_area (px),
- *   arrange stack|left, hook1 serif|italic, badge_tone slate|white|glass.
+ *   arrange stack|left, hook1 serif|italic, badge_tone slate|white|glass,
+ *   bd_zoom, bd_fx, bd_fy (the backdrop's own framing, as a photo's zoom
+ *   and focus in social_render(); 2026-11-05, Nikki: "I need the zoom/move
+ *   controls for the background image as well").
  *
  * TWO ARRANGEMENTS since 2026-11-05 afternoon (Nikki's mock-up, "still
  * feeling a little disconnected ... let's do something like this"):
@@ -206,6 +209,8 @@ CSS;
     // The backdrop: a location photo under a veil of the ground colour, behind everything (2026-11-02).
     $bd = ($export && !empty($p['backdrop_file'])) ? 'file://' . $p['backdrop_file'] : (string)($p['backdrop_url'] ?? '');
     $veil = max(0.3, min(0.97, ((int)($p['backdrop_veil'] ?? 70)) / 100));
+    $bdZ = max(1.0, min(3.0, (float)($p['bd_zoom'] ?? 1))); $bdFx = max(0, min(100, (int)($p['bd_fx'] ?? 50))); $bdFy = max(0, min(100, (int)($p['bd_fy'] ?? 50)));
+    $bdPct = round($bdZ * 100, 2); $bdTx = -round(($bdZ - 1) * $bdFx / 100 * $W, 1); $bdTy = -round(($bdZ - 1) * $bdFy / 100 * $H, 1);
     $veilRgb = $theme === 'light' ? '246,247,249' : '31,36,44';
     // The hook's sentences each on their own line with air between them (Nikki, 2026-11-02), unless the admin broke the lines.
     $sentences = count($hlines) > 1 ? $hlines : array_values(array_filter(array_map('trim', preg_split('/(?<=[.?!])\s+/u', $headline)), fn($x) => $x !== ''));
@@ -219,7 +224,7 @@ CSS;
         default    => '',
     } . ($hook1 === 'italic' ? '.hook.h1{font-style:italic;font-weight:400}' : '');
     // The backdrop photo is half desaturated (Nikki, 2026-11-05: the blue was dominant; the veil was already #1F242C, the sky showing through it was the blue), like the website's photo bands.
-    $css = ".bd{position:absolute;inset:0;z-index:0}.bd img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.5)}.bd::after{content:'';position:absolute;inset:0;background:rgba({$veilRgb},{$veil})}"
+    $css = ".bd{position:absolute;inset:0;z-index:0;overflow:hidden}.bd img{display:block;width:{$bdPct}%;height:{$bdPct}%;object-fit:cover;object-position:{$bdFx}% {$bdFy}%;transform:translate({$bdTx}px,{$bdTy}px);filter:saturate(.5)}.bd::after{content:'';position:absolute;inset:0;background:rgba({$veilRgb},{$veil})}"
          . ".ghost{z-index:1}"
          . ($arrange === 'stack'
              // The stack: one right-aligned column, badge over the hook, the call line, then the logo (unless lower right or none).

@@ -2986,6 +2986,24 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   to be white with blue text"; Glass is the ground colour at .62 with a
   hairline, the mock-up's); the Badge place row is hidden under the stack
   (the stack places it) and applies to Left.
+  **Same afternoon, three more (Nikki):** 1) the photo groups on every
+  plan builder FOLD: each group header is a button with an arrow
+  (`.sp-grp`, CSS in plan_admin_css(), not in social.css, so the agent
+  tools are untouched), the group holding the chosen photo starts open,
+  the rest closed, with the count beside the name ("way too much to keep
+  scrolling through and I will be adding more"). 2) The Broker tool has
+  TWO framers: the backdrop's (`#spBdFramer`, the photo semantics on
+  `bd_zoom` / `bd_fx` / `bd_fy`, which the renderer applies to `.bd img`
+  exactly as social_render() frames a photo; reset when a tile is picked,
+  restored with a saved piece) above the broker's. 3) The broker's framer
+  is now WYSIWYG: the box is the whole picture and the figure is drawn in
+  it as the renderer draws it (`FIG` in plan_body.php mirrors
+  plan_agent_geometry()'s heights and left edges per size and
+  arrangement: keep the two in step), so dragging moves the figure the
+  way the hand goes. Before, the framer used the photo semantics (drag
+  left = show more of the right), which moved the figure the OTHER way
+  and dropped it ("scooted her smaller and bottom right"). The figure's
+  Zoom runs 0.6 to 2.
   **Cutouts are made on upload (Nikki, 2026-11-05: "when I upload a new
   headshot for a broker, a cutout version is automatically created and
   assigned to that broker, whether new or existing"):** `inc/cutout.php`.

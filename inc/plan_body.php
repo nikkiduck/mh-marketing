@@ -54,6 +54,7 @@ $step = 1;
       <input type="hidden" name="kind" value="<?= $e($pk) ?>">
       <input type="hidden" name="focus_x" value="50">
       <input type="hidden" name="focus_y" value="50">
+      <?php if ($pk === 'broker'): ?><input type="hidden" name="bd_fx" value="50"><input type="hidden" name="bd_fy" value="50"><?php endif; ?>
       <input type="hidden" name="frame" value="0">
       <?php if ($pk_plan): ?>
       <input type="hidden" name="plan_week" value="<?= $e($pk_plan['week']['key']) ?>">
@@ -291,14 +292,25 @@ $step = 1;
           <small>JPG, PNG or WEBP, up to 20 MB.</small>
           <input type="file" id="spFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
         </div>
+        <?php if ($pk === 'broker'): ?>
+        <div class="sp-framing">
+          <p class="sp-hint">The backdrop: drag to choose what shows, zoom to crop closer. The veil sits over it.</p>
+          <div class="sp-framer empty" id="spBdFramer" style="aspect-ratio:1080 / 1920"><img id="spBdImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
+          <label class="sp-zoom">Zoom <input type="range" name="bd_zoom" min="1" max="3" step="0.02" value="1"></label>
+          <div class="sp-ranges"><label class="sp-range">Overlay <input type="range" name="backdrop_veil" min="40" max="96" step="2" value="70"><output>70</output></label></div>
+        </div>
+        <div class="sp-framing">
+          <p class="sp-hint">The broker: the box is the whole picture. Drag the figure where you want it (across, or down off the foot), zoom to scale it; the figure sits in front of the words' left part, so a long hook may need it lower.</p>
+          <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / 1920"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
+          <label class="sp-zoom">Zoom <input type="range" name="zoom" min="0.6" max="2" step="0.02" value="1"></label>
+        </div>
+        <?php else: ?>
         <div class="sp-framing">
           <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / 1440"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
           <label class="sp-zoom">Zoom <input type="range" name="zoom" min="1" max="3" step="0.02" value="1"></label>
-          <small><?= $pk === 'broker' ? 'Drag the broker across or down; zoom to scale the figure.' : 'Drag the photo to choose what shows; zoom in to crop closer.' ?></small>
-          <?php if ($pk === 'broker'): ?>
-          <div class="sp-ranges"><label class="sp-range">Overlay <input type="range" name="backdrop_veil" min="40" max="96" step="2" value="70"><output>70</output></label></div>
-          <?php endif; ?>
+          <small>Drag the photo to choose what shows; zoom in to crop closer.</small>
         </div>
+        <?php endif; ?>
       </section>
 
       <section class="sp-step">
@@ -508,6 +520,7 @@ $step = 1;
     form.querySelectorAll('.sp-only-multi').forEach(el => el.hidden = !agent && L === 'photo');
     if (agent) { const w = (AGENT_WINDOWS[f('style').value] || {})[fmt()] || [1080, 1440]; framer.style.aspectRatio = w[0] + ' / ' + w[1]; }
     if (agent) document.getElementById('spBadgePlace').hidden = f('arrange').value !== 'left';   // the stack places the badge itself
+    if (agent && bdFramer) bdFramer.style.aspectRatio = framer.style.aspectRatio;
     else framer.style.aspectRatio = '1080 / ' + (L === 'split' ? ({ post: 780, square: 520, story: 860 })[fmt()] : fmtH());
     customWrap.hidden = labelSel.value !== '__custom';
   }
@@ -625,8 +638,13 @@ $step = 1;
     const first = (selectId && allTiles.find(p => p.id === selectId)) ? selectId : (j.suggest && allTiles.find(p => p.id === j.suggest) ? j.suggest : allTiles[0].id);
     const groups = [];
     for (const p of allTiles) { const g = groups.find(x => x[0] === p.group); if (g) g[1].push(p); else groups.push([p.group || 'Photos', [p]]); }
+    // Each group folds under its header (Nikki, 2026-11-05); the chosen photo's group starts open, the rest closed.
     let html = '';
-    for (const [name, list] of groups) html += '<div class="sp-group">' + esc(name) + '</div>' + list.map(p => photoTile(p, p.id === first)).join('');
+    groups.forEach(([name, list], gi) => {
+      const open = list.some(p => p.id === first);
+      html += '<button type="button" class="sp-group sp-grp" data-grp="' + gi + '" aria-expanded="' + open + '">' + esc(name) + ' <b>' + list.length + '</b></button>'
+            + list.map(p => photoTile(p, p.id === first).replace('<label class="sp-photo', '<label data-grp="' + gi + '"' + (open ? '' : ' hidden') + ' class="sp-photo')).join('');
+    });
     photos.innerHTML = html;
     // A fresh listing: the set starts with its first photos in feed order (the cover first), up to the limit.
     if (KIND === 'property') {
@@ -638,11 +656,18 @@ $step = 1;
       const cover = form.querySelector('input[name="photo"][value="' + CSS.escape(frames[0]) + '"]'); if (cover && setOn()) cover.checked = true;
     }
     const sel = allTiles.find(p => p.id === (form.querySelector('input[name="photo"]:checked') || {}).value);
-    if (KIND === 'broker') framerSet(figureUrl(), 'cutout:x');   // the framer moves and scales the broker; the tiles pick the backdrop
+    if (KIND === 'broker') { framerSet(figureUrl(), 'cutout:x'); bdSet(sel && sel.id !== 'none' ? sel.large : ''); }   // the framer moves and scales the broker; the tiles pick the backdrop, which the second framer frames
     else if (setOn()) { if (!coverFx) { framerSet(sel ? sel.large : '', sel ? sel.id : ''); coverFx = framingRead(); } tabShow(Math.min(cur(), frames.length)); }
     else framerSet(sel ? sel.large : '', sel ? sel.id : '');
     syncSet(); update();
   }
+  // A group header folds or unfolds its tiles.
+  photos.addEventListener('click', e => {
+    const h = e.target.closest('.sp-grp'); if (!h) return;
+    const open = h.getAttribute('aria-expanded') !== 'true';
+    h.setAttribute('aria-expanded', String(open));
+    photos.querySelectorAll('.sp-photo[data-grp="' + h.dataset.grp + '"]').forEach(t => t.hidden = !open);
+  });
   // In set mode a click on a tile adds it to (or removes it from) the play order; the cover is the first.
   photos.addEventListener('click', e => {
     if (!setOn() || e.target.closest('.sp-del')) return;
@@ -696,12 +721,54 @@ $step = 1;
     fimg.src = src || '';
     framerApply();
   }
+  // The broker's figure as the renderer draws it (inc/plan_agent_render.php's numbers): the box is the whole picture, the
+  // figure's height per size and arrangement, its left edge, anchored to the foot; focus_x moves it across (700px over
+  // the range), focus_y drops it (300px). So dragging moves the figure the way the hand goes (2026-11-05: it went the other way).
+  const FIG = { stack: { story: [1400, -140], post: [1050, -80], square: [740, -60] }, left: { story: [1300, -140], post: [980, -80], square: [690, -60] } };
+  const figGeom = () => (FIG[(f('arrange') && f('arrange').value) === 'left' ? 'left' : 'stack'] || FIG.stack)[fmt()] || [1050, -80];
   function framerApply() {
     const Z = parseFloat(f('zoom').value), fx = +f('focus_x').value, fy = +f('focus_y').value;
     const bw = framer.clientWidth, bh = framer.clientHeight;
+    if (KIND === 'broker') {
+      const [figH, figLeft] = figGeom(), H = fmtH(), s = bw / 1080;
+      const h = figH * Math.max(0.6, Math.min(2, Z)) * s;
+      fimg.style.cssText = 'position:absolute;width:auto;height:' + h + 'px;object-fit:fill;transform:none;left:' + ((figLeft + (fx - 50) / 100 * 700) * s) + 'px;top:' + (bh - h + fy / 100 * 300 * s) + 'px';
+      return;
+    }
     fimg.style.width = (Z * 100) + '%'; fimg.style.height = (Z * 100) + '%';
     fimg.style.objectPosition = fx + '% ' + fy + '%';
     fimg.style.transform = 'translate(' + (-(Z - 1) * fx / 100 * bw) + 'px,' + (-(Z - 1) * fy / 100 * bh) + 'px)';
+  }
+  // The backdrop's framer (broker only): the photo semantics, on bd_zoom / bd_fx / bd_fy.
+  const bdFramer = document.getElementById('spBdFramer'), bdImg = document.getElementById('spBdImg');
+  function bdSet(src) {
+    if (!bdFramer) return;
+    f('bd_fx').value = 50; f('bd_fy').value = 50; f('bd_zoom').value = 1;
+    bdFramer.classList.toggle('empty', !src); bdImg.src = src || ''; bdApply();
+  }
+  function bdApply() {
+    if (!bdFramer) return;
+    const Z = parseFloat(f('bd_zoom').value), fx = +f('bd_fx').value, fy = +f('bd_fy').value, bw = bdFramer.clientWidth, bh = bdFramer.clientHeight;
+    bdImg.style.width = (Z * 100) + '%'; bdImg.style.height = (Z * 100) + '%';
+    bdImg.style.objectPosition = fx + '% ' + fy + '%';
+    bdImg.style.transform = 'translate(' + (-(Z - 1) * fx / 100 * bw) + 'px,' + (-(Z - 1) * fy / 100 * bh) + 'px)';
+  }
+  if (bdFramer) {
+    let bdrag = null;
+    bdFramer.addEventListener('pointerdown', e => { if (!bdImg.getAttribute('src')) return; bdFramer.setPointerCapture(e.pointerId); bdrag = { x: e.clientX, y: e.clientY, fx: +f('bd_fx').value, fy: +f('bd_fy').value }; bdFramer.classList.add('dragging'); });
+    bdFramer.addEventListener('pointermove', e => {
+      if (!bdrag) return;
+      const Z = parseFloat(f('bd_zoom').value), bw = bdFramer.clientWidth, bh = bdFramer.clientHeight;
+      const nat = (bdImg.naturalWidth && bdImg.naturalHeight) ? bdImg.naturalWidth / bdImg.naturalHeight : bw / bh;
+      const ox = Math.max(1, Math.max(bw, bh * nat) * Z - bw), oy = Math.max(1, Math.max(bh, bw / nat) * Z - bh);
+      f('bd_fx').value = Math.round(Math.max(0, Math.min(100, bdrag.fx - (e.clientX - bdrag.x) / ox * 100)));
+      f('bd_fy').value = Math.round(Math.max(0, Math.min(100, bdrag.fy - (e.clientY - bdrag.y) / oy * 100)));
+      bdApply(); update();
+    });
+    ['pointerup', 'pointercancel'].forEach(ev => bdFramer.addEventListener(ev, () => { bdrag = null; bdFramer.classList.remove('dragging'); }));
+    bdFramer.addEventListener('wheel', e => { if (!bdImg.getAttribute('src')) return; e.preventDefault(); const z = f('bd_zoom'); z.value = Math.max(1, Math.min(3, parseFloat(z.value) - e.deltaY * 0.0025)).toFixed(2); bdApply(); update(); }, { passive: false });
+    bdImg.addEventListener('load', bdApply);
+    new ResizeObserver(bdApply).observe(bdFramer);
   }
   let drag = null;
   framer.addEventListener('pointerdown', e => {
@@ -713,6 +780,12 @@ $step = 1;
   framer.addEventListener('pointermove', e => {
     if (!drag) return;
     const Z = parseFloat(f('zoom').value), bw = framer.clientWidth, bh = framer.clientHeight;
+    if (KIND === 'broker') {   // the hand moves the figure: across over 700px of the picture, down over 300px
+      const s = bw / 1080;
+      f('focus_x').value = Math.round(Math.max(0, Math.min(100, drag.fx + (e.clientX - drag.x) / s / 700 * 100)));
+      f('focus_y').value = Math.round(Math.max(0, Math.min(100, drag.fy + (e.clientY - drag.y) / s / 300 * 100)));
+      framerApply(); framingStore(); update(); return;
+    }
     const nat = (fimg.naturalWidth && fimg.naturalHeight) ? fimg.naturalWidth / fimg.naturalHeight : bw / bh;
     const coverW = Math.max(bw, bh * nat), coverH = Math.max(bh, bw / nat);
     const ox = Math.max(1, coverW * Z - bw), oy = Math.max(1, coverH * Z - bh);
@@ -724,7 +797,7 @@ $step = 1;
   framer.addEventListener('wheel', e => {
     if (!fimg.getAttribute('src')) return;
     e.preventDefault();
-    const z = f('zoom'); z.value = Math.max(1, Math.min(3, parseFloat(z.value) - e.deltaY * 0.0025)).toFixed(2);
+    const z = f('zoom'); z.value = Math.max(+z.min || 1, Math.min(+z.max || 3, parseFloat(z.value) - e.deltaY * 0.0025)).toFixed(2);
     framerApply(); update();
   }, { passive: false });
   fimg.addEventListener('load', framerApply);
@@ -745,10 +818,11 @@ $step = 1;
     if (n === 'layout' || n === 'style' || n === 'arrange') { syncLayout(); framerApply(); }
     if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
-    if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } if (KIND !== 'broker') framerSet(e.target.dataset.large, e.target.value); }
+    if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } if (KIND !== 'broker') framerSet(e.target.dataset.large, e.target.value); else bdSet(e.target.value === 'none' ? '' : e.target.dataset.large); }
     if (n === 'theme') syncShadowDefault();
     if (['logo_scale', 'logo_dx', 'logo_dy', 'text_shadow', 'logo_shadow', 'backdrop_veil', 'who_name', 'who_area'].includes(n)) { showRange(e.target); e.target.dataset.touched = '1'; }
     if (n === 'zoom') { framerApply(); framingStore(); }
+    if (n === 'bd_zoom') bdApply();
     update();
   });
   form.addEventListener('keydown', e => {
@@ -794,6 +868,7 @@ $step = 1;
   loadPhotos(restored ? SAVED.photo : undefined).then(() => {
     if (!restored || setOn()) return;   // a set's tabs were framed by loadPhotos
     f('zoom').value = SAVED.zoom || 1; f('focus_x').value = SAVED.focus_x ?? 50; f('focus_y').value = SAVED.focus_y ?? (KIND === 'broker' ? 0 : 50);
+    if (bdFramer) { f('bd_zoom').value = SAVED.bd_zoom || 1; f('bd_fx').value = SAVED.bd_fx ?? 50; f('bd_fy').value = SAVED.bd_fy ?? 50; bdApply(); }
     framerApply(); update();
   });
 })();
