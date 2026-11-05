@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-05 12:14 from git HEAD
+# Generated 2026-11-05 12:27 from git HEAD
 2281e529ee858f45e58a07e97d05c6fd  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -65,9 +65,9 @@ ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-7a3ffd4c8c4981171ebdb82d779cd1d5  inc/plan.php
-4fac3889885db10c5ecbbe9190d7a7f3  inc/plan_agent_render.php
-4ee85910f1e76bf354fc64d09b41bf8a  inc/plan_body.php
+ca9324f6e9f7ef836d244190742fef6c  inc/plan.php
+a669b405193f4a1036576bd0dd96b6f6  inc/plan_agent_render.php
+021d7b03cd785cf33b950c99d7211022  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
 99f1eb835867b79e10469540875a5b7c  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
