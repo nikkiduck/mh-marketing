@@ -4,7 +4,9 @@
  * identifier. Files become {slug}-{id}.jpg and {slug}-{id}-square.jpg (the
  * names agent.php has written since the same day) and marketing_intakes is
  * pointed at them; the ?v= is kept, so the website's hourly sync sees the
- * same version and nothing is re-downloaded for nothing.
+ * same version and nothing is re-downloaded for nothing. The old file is
+ * COPIED, not moved: Hot Sheets and newsletters already sent embed the old
+ * URL, and a moved file would blank the photo in every inbox.
  *
  *   php cron/photos_add_ids.php            dry run: prints the plan, writes nothing
  *   php cron/photos_add_ids.php --apply    renames the files and updates the rows
@@ -46,12 +48,12 @@ foreach ($res->fetch_all(MYSQLI_ASSOC) as $r) {
         if (is_file($to))    { echo "  ✗ #{$id} {$col}: {$want} already exists, left alone\n"; continue; }
         echo "  #{$id} {$col}: {$file} → {$want}\n";
         if (!$apply) continue;
-        if (!rename($from, $to)) { echo "    ✗ rename failed (permissions?)\n"; continue; }
+        if (!copy($from, $to)) { echo "    ✗ copy failed (permissions?)\n"; continue; }
         mk_photo_written($to);
         $st = $conn->prepare("UPDATE marketing_intakes SET `{$col}` = ? WHERE id = ?");
         $st->bind_param('si', $new_url, $id); $st->execute(); $st->close();
         $done++;
     }
 }
-echo $apply ? "✓ {$done} of {$planned} renamed and re-pointed.\n"
-            : "DRY RUN: {$planned} file(s) to rename. Run with --apply to do it.\n";
+echo $apply ? "✓ {$done} of {$planned} copied and re-pointed (old files left for emails already sent).\n"
+            : "DRY RUN: {$planned} file(s) to copy. Run with --apply to do it.\n";
