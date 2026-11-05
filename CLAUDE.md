@@ -3003,7 +3003,26 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   way the hand goes. Before, the framer used the photo semantics (drag
   left = show more of the right), which moved the figure the OTHER way
   and dropped it ("scooted her smaller and bottom right"). The figure's
-  Zoom runs 0.6 to 2.
+  Zoom runs 0.6 to 2 (the normaliser and the renderer clamp at 0.6 for the
+  broker since the evening; until then both clamped at 1, so zooming out
+  did nothing).
+  **The builder's sections (Nikki, same evening, "for my own sanity"):**
+  no step numbers, no hint paragraphs anywhere in the form (every
+  `.sp-hint` is gone; the drop zone says only "Drop a photo here, or
+  choose one"), five sections in this order on every builder: the subject
+  (Listing / Broker / Location / Season; the Broker one holds the
+  figure's framer and zoom), Size (size, Arrange or Layout, Look), Text
+  (headline, the lines, named Name / Service area on the broker tool, the
+  caption, the broker's First line / Second line / Name and area pills and
+  sizes, the Text shadow slider), Elements (logo kind, place, colour, the
+  size, nudge and shadow sliders with Reset, the watermark, the label, the
+  badge tone and place) and Photo / Backdrop (the tiles, the drop zone,
+  the photo's framer; the backdrop's framer and Overlay on the broker
+  tool). The page header (title, buttons) is moved INTO the form column by
+  the script at load (`.mk-page-header.sp-head-in`, its hint hidden), so
+  the preview column starts at the top of the page and is sticky at once;
+  `.sp-preview` sticks at 82px, under the fixed 70px portal header
+  (social.css's 16px put it under the bar).
   **Cutouts are made on upload (Nikki, 2026-11-05: "when I upload a new
   headshot for a broker, a cutout version is automatically created and
   assigned to that broker, whether new or existing"):** `inc/cutout.php`.

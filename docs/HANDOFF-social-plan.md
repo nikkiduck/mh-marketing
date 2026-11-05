@@ -244,7 +244,15 @@ beside the name). The Broker tool has a second framer for the backdrop
 social_render() frames a photo), and the broker's own framer is now
 WYSIWYG: the whole picture as the box, the figure drawn where the renderer
 puts it, so dragging moves it the way the hand goes (it went the other way
-before, and dropped the figure). Figure zoom 0.6 to 2.
+before, and dropped the figure). Figure zoom 0.6 to 2 (the server clamp
+followed that evening; until then zooming out did nothing).
+
+**The builder's sections (same evening):** no step numbers and no hint
+text; five sections on every builder: the subject (with the broker's
+framer), Size, Text, Elements (logo, watermark, label, badge), Photo or
+Backdrop (tiles, upload, framer, and the Overlay on the broker tool). The
+page header moves into the form column at load so the preview is sticky
+from the top (82px, under the fixed portal header).
 
 **The photo pick is the backdrop (Nikki, same night, after a stock photo
 replaced Bryan's cutout with a chairlift: "if I choose an alternate photo
