@@ -109,7 +109,7 @@ function plan_render_agent(array $p, ?string $base = null, bool $export = false)
     $textShadow = $opt['text_shadow'] !== null ? social_shadow_css($opt['text_shadow']) : 'none';
     $mark  = isset(social_marks()[(string)($p['mark'] ?? '')]) ? (string)$p['mark'] : 'triangle';
     $label = trim((string)($p['label'] ?? ''));
-    $badge = in_array((string)($p['badge'] ?? 'left'), ['left', 'right', 'body'], true) ? (string)$p['badge'] : 'left';
+    $badge = (string)($p['badge'] ?? 'left'); if (!in_array($badge, ['left', 'right', 'body'], true)) $badge = 'left';
 
     // The words.
     $styles = social_line_styles();

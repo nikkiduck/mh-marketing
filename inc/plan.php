@@ -43,6 +43,7 @@ require_once __DIR__ . '/plan_agent_render.php';   // the Featured Agent designs
 require_once __DIR__ . '/boards.php';          // mk_areas(): the website's Communities, the locations and the brokers' markets
 require_once __DIR__ . '/market_data.php';     // market_card_defs(): the Market Snapshot's places, for the stats rotation
 require_once __DIR__ . '/plan_store.php';      // the Weekly Plans store: saved pieces per week (2026-11-03)
+require_once __DIR__ . '/cutout.php';          // the broker cutouts: found by the headshot's name, made by remove.bg on upload (2026-11-05)
 
 const PLAN_NEW_DAYS    = 21;   // a listing is "new" this long after the feed first saw it (or its new_listing change)
 const PLAN_CLOSED_DAYS = 30;   // a closing stays in the Just Sold list this long (the agents' tools keep 7)
@@ -269,9 +270,10 @@ function plan_agents(mysqli $conn): array {
             'headshot_url' => trim((string)$a['headshot_url']),
             'face_url'     => trim((string)$a['headshot_face_url']),
         ];
-        // The cutout (2026-11-02): agent-photos/<slug>-cutout.png, the headshot with its background removed (Adobe), when made.
-        $cut = $entry['slug'] !== '' ? mk_photo_dir() . '/' . $entry['slug'] . '-cutout.png' : '';
-        $entry['cutout_url'] = ($cut !== '' && is_file($cut)) ? mk_photo_base() . '/' . $entry['slug'] . '-cutout.png?v=' . filemtime($cut) : '';
+        // The cutout: the headshot with its background removed, agent-photos/<headshot name>-cutout.png (made on upload since
+        // 2026-11-05, inc/cutout.php), else the <slug>-cutout.png made by hand on 2026-11-02, when either exists.
+        $cut = mk_cutout_find($entry['headshot_url'], $entry['slug']);
+        $entry['cutout_url'] = $cut !== '' ? mk_cutout_url($cut) : '';
         $entry['market'] = plan_agent_market($entry);
         // The stock library leads with the market's region (Jackson Horn: Montrose, so the San Juans, though
         // his ticked towns begin alphabetically with Aspen), else the first ticked town's, else the office's.

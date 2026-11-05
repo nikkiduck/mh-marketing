@@ -1184,7 +1184,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // website accepts (a Dropbox link is a page, not an image).
     if ($action === 'upload_photos') {
         require_once __DIR__ . '/inc/photos.php';
+        require_once __DIR__ . '/inc/cutout.php';   // the Broker Feature's cutout follows the headshot (2026-11-05)
         $photo_note = '';   // e.g. a photo tagged Adobe RGB rather than sRGB
+        $photo_changed = false; $cutout_msg = '';
         $row  = $conn->query("SELECT slug, headshot_url FROM marketing_intakes WHERE id = {$id}")->fetch_assoc();
         // File name = slug + the row id (Nikki, 2026-11-04: every photo carries
         // a unique identifier). Two agents can never share a name, and a slug
@@ -1230,6 +1232,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st = $conn->prepare("UPDATE marketing_intakes SET headshot_url = ? WHERE id = ?");
             $st->bind_param('si', $res['url'], $id); $st->execute(); $st->close();
             $photo_note = $photo_note ?: (string)($res['note'] ?? '');
+            $photo_changed = true;
         }
 
         foreach ([['headshot', '', false, 'headshot_url'], ['headshot_face', '-square', true, 'headshot_face_url']] as [$field, $suffix, $face, $col]) {
@@ -1240,6 +1243,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $st = $conn->prepare("UPDATE marketing_intakes SET `{$col}` = ? WHERE id = ?");
             $st->bind_param('si', $res['url'], $id); $st->execute(); $st->close();
             $photo_note = $photo_note ?: (string)($res['note'] ?? '');
+            if (!$face) $photo_changed = true;
             // A profile photo on its own also gives us the square one, so a new
             // agent is never left without the picture the cards and lists use.
             if (!$face && empty($_FILES['headshot_face']['name']) && empty($_POST['headshot_face_data'])
@@ -1251,8 +1255,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         foreach ([['remove_headshot', 'headshot_url'], ['remove_headshot_face', 'headshot_face_url']] as [$flag, $col]) {
             if (!empty($_POST[$flag])) $conn->query("UPDATE marketing_intakes SET `{$col}` = NULL WHERE id = {$id}");
         }
+        // The cutout follows the profile photo (Nikki, 2026-11-05): a new photo gets a new one (the old one goes first,
+        // so the Broker Feature never shows a stale cutout), a removed photo loses it. Best effort: the save stands either way.
+        $slug0 = trim((string)($row['slug'] ?? ''));
+        if (!empty($_POST['remove_headshot'])) {
+            mk_cutout_drop($agent_photo_url, $slug0);
+        } elseif ($photo_changed) {
+            $now = (string)($conn->query("SELECT headshot_url FROM marketing_intakes WHERE id = {$id}")->fetch_assoc()['headshot_url'] ?? '');
+            $cutout_msg = mk_cutout_words(mk_cutout_refresh($now, $slug0));
+        }
         header("Location: agent.php?id={$id}&tab=profile&saved=1"
-             . ($photo_note !== '' ? '&note=' . urlencode($photo_note) : '')); exit;
+             . ($photo_note !== '' ? '&note=' . urlencode($photo_note) : '')
+             . ($cutout_msg !== '' ? '&cutout=' . urlencode($cutout_msg) : '')); exit;
+    }
+
+    // The Make cutout button on the Headshots card (2026-11-05): remake the Broker Feature's cutout from the profile photo.
+    if ($action === 'make_cutout') {
+        require_once __DIR__ . '/inc/photos.php';
+        require_once __DIR__ . '/inc/cutout.php';
+        $row = $conn->query("SELECT slug, headshot_url FROM marketing_intakes WHERE id = {$id}")->fetch_assoc();
+        $msg = (string)($row['headshot_url'] ?? '') === '' ? 'Cutout not made: there is no profile photo yet.'
+             : mk_cutout_words(mk_cutout_refresh((string)$row['headshot_url'], trim((string)($row['slug'] ?? ''))));
+        header("Location: agent.php?id={$id}&tab=profile&cutout=" . urlencode($msg)); exit;
     }
 
     // Leadership page settings (leadership_v1.sql): agents and staff alike.
@@ -2693,6 +2717,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           <i class="ti ti-color-swatch"></i> <?= htmlspecialchars($_GET['note']) ?>
         </span>
       <?php endif; ?>
+      <?php if (!empty($_GET['cutout'])): $cut_ok = str_starts_with((string)$_GET['cutout'], 'Cutout made'); ?>
+        <span class="saved-flash" style="background:<?= $cut_ok ? '#e9f3ec' : '#fff4e5' ?>;color:<?= $cut_ok ? '#1f5a35' : '#7a4a00' ?>;max-width:640px;white-space:normal;text-align:left;">
+          <i class="ti ti-scissors"></i> <?= htmlspecialchars($_GET['cutout']) ?>
+        </span>
+      <?php endif; ?>
       <?php if (!empty($_GET['err'])): ?>
         <span class="saved-flash" style="background:#fee2e2;color:#991b1b;">
           <i class="ti ti-alert-triangle"></i> <?= htmlspecialchars($_GET['err']) ?>
@@ -3076,6 +3105,14 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <?php if (!empty($agent['headshot_url'])): ?>
                   <button type="button" class="btn btn-outline btn-xs" id="reCropPhotoBtn" style="margin-top:8px;"
                           data-src="<?= e_attr($agent['headshot_url']) ?>">Re-crop this photo</button>
+                  <?php // The Broker Feature's cutout (2026-11-05): made from this photo on upload; here its state and a retry.
+                        require_once __DIR__ . '/inc/photos.php'; require_once __DIR__ . '/inc/cutout.php';
+                        $cut_file = mk_cutout_find((string)$agent['headshot_url'], trim((string)($agent['slug'] ?? ''))); ?>
+                  <p class="hint" style="margin:10px 0 0;">Cutout for the Broker Feature (social):
+                    <?php if ($cut_file !== ''): ?><b>made <?= date('M j, Y', (int)filemtime($cut_file)) ?></b> · <a href="<?= e_attr(mk_cutout_url($cut_file)) ?>" target="_blank" rel="noopener">view</a>
+                    <?php else: ?><b>none yet</b><?php endif; ?>
+                    · <button type="submit" name="_action" value="make_cutout" class="btn btn-outline btn-xs" formnovalidate><?= $cut_file !== '' ? 'Remake' : 'Make cutout' ?></button>
+                  </p>
                 <?php endif; ?>
                 <div id="photoCropWrap" hidden>
                   <div class="face-crop-stage"><img id="photoCropImg" src="" alt=""></div>

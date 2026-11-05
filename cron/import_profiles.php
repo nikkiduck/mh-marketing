@@ -52,6 +52,8 @@ require_once __DIR__ . '/../inc/db.php';
 require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/agent_roster.php';
 require_once __DIR__ . '/../inc/agent_lifecycle.php';   // mk_onboard() for --create
+require_once __DIR__ . '/../inc/photos.php';            // mk_photo_file() for the cutout
+require_once __DIR__ . '/../inc/cutout.php';            // the Broker Feature's cutout, made from each imported headshot (2026-11-05)
 
 $dry = in_array('--dry-run', $argv, true);
 $over = in_array('--overwrite', $argv, true);
@@ -171,6 +173,9 @@ foreach ($shots as $file) {
         // Group-writable, so the web server can replace them from the crop tool.
         @chmod("{$photo_dir}/{$name}.jpg", 0664);
         @chmod("{$photo_dir}/{$name}-square.jpg", 0664);
+        // The cutout for the Broker Feature (best effort; cron/make_cutouts.php retries the ones that fail).
+        $cr = mk_cutout_refresh("{$photo_url}/{$name}.jpg", (string)($p['slug'] ?? ''));
+        echo "     cutout: " . (!empty($cr['ok']) ? 'made (' . number_format($cr['bytes'] / 1024) . ' KB)' : $cr['error']) . "\n";
     }
     $v = time();
     $updates[$id]['headshot_url']      = "{$photo_url}/{$name}.jpg?v={$v}";

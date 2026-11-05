@@ -191,6 +191,14 @@ first line), Italic (the Cormorant italic) or Sans (Jost, a size smaller);
 The sentences after the first all take it. Sans is caps, tracked .5em,
 about half the serif's size (Nikki: "all caps and .5 spacing").
 
+**Cutouts on upload (2026-11-05):** inc/cutout.php makes the cutout through
+remove.bg whenever a profile photo is uploaded or re-cropped in the admin
+(agent.php), on import (cron/import_profiles.php), or from the Make cutout
+button on the Headshots card; cron/make_cutouts.php backfills by hand. Named
+after the headshot file (<name>-cutout.png); the slug-named ones from
+2026-11-02 keep working until a new photo replaces them. Needs
+REMOVEBG_API_KEY in inc/db.php; without it the feature uses the headshot.
+
 **2026-11-05:** the slate band is gone; the name and the service area sit
 right-aligned under the hook (name small caps 34px, area 46px serif), the
 title is off the default lines, and the backdrop photo is half desaturated

@@ -2913,6 +2913,26 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   gone). The backdrop photo is half desaturated (`filter:saturate(.5)`):
   the overlay was already #1F242C, the blue Nikki saw was the sky through
   it and the band.
+  **Cutouts are made on upload (Nikki, 2026-11-05: "when I upload a new
+  headshot for a broker, a cutout version is automatically created and
+  assigned to that broker, whether new or existing"):** `inc/cutout.php`.
+  The cutout is named after the headshot's own file
+  (agent-photos/<headshot name>-cutout.png; headshots are <slug>-<id>.jpg
+  since 2026-11-04) and made by remove.bg's API (`mk_cutout_make()`: POST
+  the file, size auto, type person, a PNG back; one credit a picture; the
+  key is `REMOVEBG_API_KEY` in inc/db.php beside the other keys; without
+  it nothing is made and the Broker Feature uses the plain headshot).
+  agent.php's photo save calls `mk_cutout_refresh()` when the profile
+  photo changed (the old cutouts, by the new name and the 2026-11-02 slug
+  name, are dropped first so a stale one is never used; a removed photo
+  loses its cutout), reports the result as a `cutout=` flash, and the
+  Headshots card shows the cutout's state with a Make cutout / Remake
+  button (`_action=make_cutout`). cron/import_profiles.php makes one for
+  each imported headshot; cron/make_cutouts.php (by hand, not scheduled)
+  backfills or retries (`--dry-run`, `--force`, `--id=N`). `plan_agents()`
+  finds the cutout by the headshot's name, else the slug one
+  (`mk_cutout_find()`). `MK_CUTOUT_ENDPOINT`, when defined, replaces the
+  provider's URL (the test stub).
   **The photo pick is the backdrop (Nikki, same night):** the Broker
   tool's photo step is "Backdrop" (None, uploads, stock with the broker's
   region first and suggested; plan_photos.php, a `none` tile), the posted
