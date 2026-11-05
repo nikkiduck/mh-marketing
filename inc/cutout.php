@@ -77,7 +77,7 @@ function mk_cutout_make(string $headshotFile): array {
     if ($bytes === '') return ['error' => 'the headshot file is empty'];
     // Leonardo's sync call: the image as base64 in, the PNG as base64 out, nothing kept in their library (ephemeral).
     $body = json_encode([
-        'model' => 'remove-bg', 'ephemeral' => true, 'base64' => true,
+        'model' => 'remove-bg', 'ephemeral' => true, 'public' => false, 'base64' => true,   // public is required in practice ("public must be boolean", 2026-11-05), whatever the guide says
         'parameters' => ['size' => 'auto', 'format' => 'png', 'type' => 'person',   // auto: the full resolution the plan allows; person: a portrait
                          'guidances' => ['image_reference' => [['image' => ['type' => 'BASE64', 'data' => base64_encode($bytes)]]]]],
     ]);
@@ -92,9 +92,11 @@ function mk_cutout_make(string $headshotFile): array {
     $err = curl_error($ch);
     if ($reply === false) { error_log("cutout: request failed for " . basename($headshotFile) . ": {$err}"); return ['error' => 'the request to Leonardo.Ai failed: ' . $err]; }
     $j = json_decode((string)$reply, true);
-    // Errors come back as HTTP 200 with errors[] as often as with a 4xx: read the body first.
-    if (!is_array($j) || !empty($j['errors']) || $code !== 200) {
-        $why = (string)($j['errors'][0]['message'] ?? $j['error'] ?? $j['message'] ?? ('HTTP ' . $code));
+    // Errors come back as HTTP 200 as often as a 4xx, and as a bare list of error objects ([{message, extensions}],
+    // seen 2026-11-05) or an errors[] key: read the body first, either shape.
+    $errs = is_array($j) ? (isset($j[0]['message']) ? $j : (array)($j['errors'] ?? [])) : [];
+    if (!is_array($j) || $errs || $code !== 200 || empty($j['results'])) {
+        $why = (string)($errs[0]['message'] ?? $j['error'] ?? $j['message'] ?? ('HTTP ' . $code . ', no results'));
         error_log("cutout: Leonardo.Ai said {$why} for " . basename($headshotFile));
         return ['error' => 'Leonardo.Ai: ' . $why];
     }
