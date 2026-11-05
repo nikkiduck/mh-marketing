@@ -191,6 +191,11 @@ first line), Italic (the Cormorant italic) or Sans (Jost, a size smaller);
 The sentences after the first all take it. Sans is caps, tracked .5em,
 about half the serif's size (Nikki: "all caps and .5 spacing").
 
+**2026-11-05:** the slate band is gone; the name and the service area sit
+right-aligned under the hook (name small caps 34px, area 46px serif), the
+title is off the default lines, and the backdrop photo is half desaturated
+so the sky does not tint the dark ground (the overlay was already #1F242C).
+
 **The photo pick is the backdrop (Nikki, same night, after a stock photo
 replaced Bryan's cutout with a chairlift: "if I choose an alternate photo
 it should change the background, not the headshot"):** the Broker tool's

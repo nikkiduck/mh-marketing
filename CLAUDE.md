@@ -2904,6 +2904,15 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   takes a face of its own: Second line pills Serif | Italic | Sans
   (`hook2`, `plan_hook_styles()`; the builder starts on Italic; Sans is
   caps tracked .5em at about half the serif's size).
+  **2026-11-05 (Nikki):** the slate band behind the shoulders is gone ("not
+  loving that element"); the name and the service area sit right-aligned
+  under the hook inside `.words` (`.who`: name 34px small caps, the area
+  46px Cormorant), where the figure never reaches at any size (lower right
+  was tried first and the hair covered it at the story size). The default
+  second line is the service area alone, no title ("Broker Associate"
+  gone). The backdrop photo is half desaturated (`filter:saturate(.5)`):
+  the overlay was already #1F242C, the blue Nikki saw was the sky through
+  it and the band.
   **The photo pick is the backdrop (Nikki, same night):** the Broker
   tool's photo step is "Backdrop" (None, uploads, stock with the broker's
   region first and suggested; plan_photos.php, a `none` tile), the posted

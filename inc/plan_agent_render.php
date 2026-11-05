@@ -12,8 +12,9 @@
  *
  *   cutout     the broker CUT OUT of the photo, in colour, standing in front
  *              of Slate geometry: the real triangle mark ghosted large at the
- *              lower right, a slanted slate band behind the shoulders
- *              carrying the name, the hook above the figure, badge and logo
+ *              lower right, the hook above the figure with the name and the
+ *              service area right-aligned under it (the slate band behind
+ *              the shoulders went on 2026-11-05), badge and logo
  *              in the clear band at the top; the figure is anchored to the
  *              foot of the frame and never covered. Needs a cutout PNG
  *              (agent-photos/<slug>-cutout.png, made with Adobe's background
@@ -180,7 +181,8 @@ CSS;
         'sans'   => ".words .hook.h2{font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:" . (int)round($hsize * 0.52) . "px;line-height:1.3;letter-spacing:.5em;text-transform:uppercase;margin-right:-.5em}",   // caps, tracked .5em (Nikki)
         default  => '',
     };
-    $css = ".bd{position:absolute;inset:0;z-index:0}.bd img{display:block;width:100%;height:100%;object-fit:cover}.bd::after{content:'';position:absolute;inset:0;background:rgba({$veilRgb},{$veil})}"
+    // The backdrop photo is half desaturated (Nikki, 2026-11-05: the blue was dominant; the veil was already #1F242C, the sky showing through it was the blue), like the website's photo bands.
+    $css = ".bd{position:absolute;inset:0;z-index:0}.bd img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.5)}.bd::after{content:'';position:absolute;inset:0;background:rgba({$veilRgb},{$veil})}"
          . ".ghost{z-index:1}"
          . ".band{position:absolute;left:64px;top:{$g['bandY']}px;z-index:4}"
          . ".logo{right:64px;top:{$g['bandY']}px;z-index:5}"
@@ -189,18 +191,20 @@ CSS;
          // The real Mont Haus triangle, ghosted, large at the lower right (the watermark choice picks the mark; None leaves the ground bare).
          . ".ghost{right:" . ($story ? -300 : ($sq ? -200 : -260)) . "px;bottom:0;width:" . ($story ? 1320 : ($sq ? 800 : 1100)) . "px;opacity:" . ($theme === 'light' ? '.16' : '.24') . "}"
          . ".ghost.m{right:0;width:" . ($story ? 900 : ($sq ? 560 : 760)) . "px}"
-         // The slate band behind the shoulders, slanted at its left end, carrying the name and firm line right-aligned.
-         . ".sband{position:absolute;left:{$g['sbLeft']}px;right:0;top:{$g['sbTop']}px;height:{$g['sbH']}px;background:#55637A;z-index:2;clip-path:polygon(" . ($sq ? 60 : 90) . "px 0,100% 0,100% 100%,0 100%);"
-         . "display:flex;flex-direction:column;justify-content:center;align-items:flex-end;padding:0 64px 0 140px;box-sizing:border-box;color:#FFFFFF;text-align:right}"
-         . ".sband .ln{margin:0 0 8px;color:#FFFFFF}.sband .ln-town{color:#FFFFFF;font-size:{$sz(32)}px}.sband .ln-details{color:#EEF1F5;font-size:{$sz(30)}px;font-weight:400}.sband .ln-plain{font-size:{$sz(30)}px;color:#EEF1F5}"
+         // The name and the service area, right-aligned under the hook, on the ground itself (the slate band behind the
+         // shoulders went on 2026-11-05, Nikki: "not loving that element"); the figure never reaches up there, at any size.
+         . ".who{margin-top:{$sz(44)}px;text-align:right;color:#FFFFFF}"
+         . ".who .ln{margin:0 0 {$sz(10)}px;color:#FFFFFF;white-space:nowrap;overflow:visible}"
+         . ".who .ln-town{color:#FFFFFF;font-size:{$sz(34)}px;letter-spacing:.16em}"
+         . ".who .ln-details{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$sz(46)}px;line-height:1.15;letter-spacing:0;color:#EEF1F5}"
+         . ".who .ln-plain{font-size:{$sz(30)}px;color:#EEF1F5}.who .ln-note{color:#EEF1F5}"
          . ".fig{position:absolute;left:{$figLeft2}px;top:{$figTop2}px;height:{$figH2}px;z-index:3}"
          . ".fig img{display:block;height:100%;width:auto;filter:drop-shadow(0 24px 40px rgba(0,0,0,.35))}";
     $figHtml = $photo !== '' ? '<div class="fig"><img src="' . $e($photo) . '" alt=""></div>' : '';
     $html = ($bd !== '' ? '<div class="bd"><img src="' . $e($bd) . '" alt=""></div>' : '') . $html
            . '<div class="band">' . ($label !== '' ? $pillHtml : '') . '</div>'
            . ($logoOn ? '<img class="logo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">' : '')
-           . '<div class="words">' . $hHtml . '</div>'
-           . '<div class="sband">' . $lHtml . '</div>'
+           . '<div class="words">' . $hHtml . '<div class="who">' . $lHtml . '</div></div>'
            . $figHtml;
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'

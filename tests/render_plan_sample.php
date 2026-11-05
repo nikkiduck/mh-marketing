@@ -96,7 +96,7 @@ foreach (['frame-story-logo' => $frame + ['format' => 'story', 'show_logo' => tr
 // The Featured Agent design (2026-11-02): the Cutout style, every size, both looks, and the call line in each of its faces.
 $agent = ['mark' => 'triangle', 'logo' => 'top', 'logo_kind' => 'full', 'badge' => 'left', 'label' => 'Broker Spotlight', 'photo_url' => $head, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 0,
           'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn.',
-          'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Broker Associate · Montrose', 'style' => 'details']]];
+          'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Montrose', 'style' => 'details']]];
 $cutout = $argv[3] ?? ($live . '/agent-photos/jackson-horn-cutout.png');   // the cutout PNG's URL (pass a local one to design against)
 $agentBd = ['backdrop_url' => $stock('ridgway-mount-sneffels-fall-198784448'), 'backdrop_veil' => 82];
 foreach (plan_agent_styles() as $style => $name) {

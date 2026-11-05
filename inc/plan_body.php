@@ -491,8 +491,8 @@ $step = 1;
       const mk = f('market'), market = mk.value.trim() || a.market;
       const opt = f('hook').selectedOptions[0], tpl = opt ? opt.dataset.tpl : '';
       if (tpl) f('headline').value = tpl.replace(/\{name\}/g, a.name).replace(/\{first\}/g, a.first).replace(/\{market\}/g, market);
-      // The name, then the title with the market beside it (Nikki, 2026-11-02: no company name, the logo carries it).
-      setLines([[a.name, 'town'], [(a.title ? a.title + ' · ' : '') + market, 'details'], ['', 'plain'], ['', 'note']]);
+      // The name, then the service area alone (Nikki, 2026-11-05: no title; 2026-11-02: no company name, the logo carries it).
+      setLines([[a.name, 'town'], [market, 'details'], ['', 'plain'], ['', 'note']]);
       setLabel(String(f('hook').value).startsWith('m') ? 'Milestone' : 'Broker Spotlight');
     } else if (KIND === 'location') {
       const opt = f('loc').selectedOptions[0]; if (!opt) return;
