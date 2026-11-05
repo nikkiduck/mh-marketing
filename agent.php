@@ -1186,7 +1186,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         require_once __DIR__ . '/inc/photos.php';
         $photo_note = '';   // e.g. a photo tagged Adobe RGB rather than sRGB
         $row  = $conn->query("SELECT slug, headshot_url FROM marketing_intakes WHERE id = {$id}")->fetch_assoc();
-        $slug = trim((string)($row['slug'] ?? '')) ?: ('agent-' . $id);
+        // File name = slug + the row id (Nikki, 2026-11-04: every photo carries
+        // a unique identifier). Two agents can never share a name, and a slug
+        // change or re-use (the `agent` key mix-up of 2026-11-04) cannot land a
+        // photo on another agent's file. A nameless row is agent-{id}.
+        $slug = (trim((string)($row['slug'] ?? '')) ?: 'agent') . '-' . $id;
         $agent_photo_url = (string)($row['headshot_url'] ?? '');
         // The crop tool sends the box it framed, in the picture's own pixels,
         // and the cropping happens here. (It also sends the square it made,
