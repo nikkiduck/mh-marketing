@@ -138,6 +138,17 @@ input[type="number"], input[type="date"], input[type="search"], select, textarea
     box-shadow: none;
 }
 .search-wrap input { border-radius: 0; }
+/* Dropdowns: the browser's own arrow sat hard against the right edge of every
+   select (Nikki, 2026-11-04). Draw the chevron the templates already use
+   (social.css, admin_tool_shell.php) with room for it, on every single-choice
+   select the portal renders. List boxes keep the native look. */
+select:not([multiple]):not([size]) {
+    appearance: none; -webkit-appearance: none;
+    padding-right: 36px;
+    cursor: pointer;
+    background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'><path d='M2.5 5l4.5 4.5L11.5 5' fill='none' stroke='%236f6857' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/></svg>") no-repeat right 12px center;
+}
+select:not([multiple]):not([size])::-ms-expand { display: none; }
 
 /* ── Tables ───────────────────────────────────────────────────────────── */
 .roster-table, .mini-table, table.admin-table { background: var(--mh-panel); }

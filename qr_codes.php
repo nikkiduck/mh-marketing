@@ -324,7 +324,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     .card { background:#fff; border-radius:6px; padding:22px 26px; margin-bottom:18px; }
     .card-title { font-size:14px; font-weight:700; margin:0 0 16px; display:flex; align-items:center; gap:8px; }
     .card-title a { text-decoration:none; }
-    .form-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; margin-bottom:12px; }
+    .form-row { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-start; margin-bottom:12px; }   /* top-aligned: the Code field's hint hangs below without lifting the field (2026-11-04) */
     .form-row > div { min-width:0; }
     .form-input, select.form-input { padding:8px 10px; border:1px solid #d1d5db; border-radius:4px; font-size:14px; width:100%; }
     .fld-label { display:block; font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.3px; margin-bottom:4px; }
@@ -656,7 +656,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
 <script src="assets/js/mh-qr.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mh-qr.js') ?>"></script>
 <script>
 (function () {
-  var PROFILE_BASE = <?= json_encode(rtrim(defined('PUBLIC_SITE_URL') ? PUBLIC_SITE_URL : QR_FALLBACK_URL, '/') . '/broker.php?s=') ?>;
+  var PROFILE_BASE = <?= json_encode(rtrim(defined('PUBLIC_SITE_URL') ? PUBLIC_SITE_URL : QR_FALLBACK_URL, '/') . '/') ?>;   // /{slug}, as qr_profile_url() stores it (the preview showed the old broker.php?s= form until 2026-11-04)
   var TAKEN = <?= json_encode(array_values($taken)) ?>;
 
   // ── QR drawing: assets/js/mh-qr.js, checked by tests/qr_marks.html ──────
