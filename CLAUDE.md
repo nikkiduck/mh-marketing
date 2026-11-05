@@ -1711,6 +1711,18 @@ they are for the servers.
   copy); the site stores them, its nightly --solds run pulls the listings by
   ListingId, and the agent page shows them. Never for the agent's own
   listings: their MLS IDs find those.
+- **Listing photos (2026-11-05, Nikki):** `listing_photos`
+  (sql/listing_photos.sql; intake_id, market, mls_number, url, UNIQUE on
+  market + mls_number) is one uploaded photo for a listing the board sends
+  none for. CREN removes media from closed listings about a year after they
+  close (Sierrah Smith's 2025 sales), and the website then shows a grey
+  placeholder. Admins upload it on the profile (agent.php > Listing photos,
+  under Listing credits); mk_store_photo() files it as
+  agent-photos/listing-{market}-{mls}.jpg (the -square copy it also makes is
+  deleted). api/roster.php sends a top-level `listing_photos` list once the
+  table exists; the site downloads the file and uses it only while the
+  board's own photo list is empty. Removing it on the profile deletes the
+  file here and, at the next sync, on the site.
 - `mls_*` columns are written only by `cron/sync_anyprop_roster.php`; it never
   writes a curated field. The feed falls back to `mls_*` where curated is blank.
 - **Boards come from the site's registry (2026-10-02): `inc/boards.php`.**

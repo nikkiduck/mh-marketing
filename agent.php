@@ -1341,6 +1341,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
     }
 
+    // Listing photos (2026-11-05, Nikki): one photo for a listing the feed has
+    // no photos for (CREN drops media from closed listings about a year after
+    // they close: Sierrah Smith's 2025 sales). Filed as
+    // agent-photos/listing-{market}-{mls}.jpg; the website shows it only when
+    // the board sends none. sql/listing_photos.sql.
+    if ($action === 'add_listing_photo' && mk_table_exists($conn, 'listing_photos')) {
+        $market = strtolower(trim((string)($_POST['market'] ?? '')));
+        $mls    = preg_replace('/\s+/', '', (string)($_POST['mls_number'] ?? ''));
+        if ($market === 'recolorado') $mls = preg_replace('/^REC/i', '', $mls);
+        if (isset(mk_board_registry()[$market]) && preg_match('/^[A-Za-z0-9-]{1,32}$/', $mls)) {
+            $res = mk_store_photo('listing_photo', 'listing-' . $market . '-' . strtolower($mls), false);
+            if ($res === null) {
+                header("Location: agent.php?id={$id}&tab=profile&err=" . rawurlencode('Choose a photo file first.')); exit;
+            } elseif (!empty($res['error'])) {
+                header("Location: agent.php?id={$id}&tab=profile&err=" . rawurlencode($res['error'])); exit;
+            }
+            @unlink(mk_photo_file(preg_replace('/\.jpg\?.*$/', '-square.jpg', $res['url'])));   // mk_store_photo also writes a square copy; not needed here
+            $st = $conn->prepare("INSERT INTO listing_photos (intake_id, market, mls_number, url) VALUES (?, ?, ?, ?)
+                                  ON DUPLICATE KEY UPDATE intake_id = VALUES(intake_id), url = VALUES(url)");
+            $st->bind_param('isss', $id, $market, $mls, $res['url']); $st->execute(); $st->close();
+        } else {
+            header("Location: agent.php?id={$id}&tab=profile&err=" . rawurlencode('Pick a board and type the MLS number.')); exit;
+        }
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+    }
+
+    if ($action === 'remove_listing_photo' && mk_table_exists($conn, 'listing_photos')) {
+        $pid = (int)($_POST['photo_id'] ?? 0);
+        if ($pid) {
+            $st = $conn->prepare("SELECT url FROM listing_photos WHERE id = ? AND intake_id = ?");
+            $st->bind_param('ii', $pid, $id); $st->execute(); $row = $st->get_result()->fetch_assoc(); $st->close();
+            if ($row) {
+                $f = mk_photo_file($row['url']);
+                if ($f !== '' && is_file($f)) @unlink($f);
+                $conn->query("DELETE FROM listing_photos WHERE id = {$pid} AND intake_id = {$id}");
+            }
+        }
+        header("Location: agent.php?id={$id}&tab=profile&saved=1"); exit;
+    }
+
     // Hot Sheets: the same switch as the checklist item, kept in step with it.
     if ($action === 'hs_toggle') {
         $on = ($_POST['to'] ?? '') === 'on';
@@ -1672,6 +1712,12 @@ $credits = []; $has_credits_table = mk_table_exists($conn, 'agent_listing_credit
 if ($has_credits_table) {
     $r_c = $conn->query("SELECT * FROM agent_listing_credits WHERE intake_id = {$id} ORDER BY market, mls_number");
     if ($r_c) $credits = $r_c->fetch_all(MYSQLI_ASSOC);
+}
+// Listing photos (2026-11-05): photos uploaded from this profile for listings the feed has none for.
+$lphotos = []; $has_lphotos_table = mk_table_exists($conn, 'listing_photos');
+if ($has_lphotos_table) {
+    $r_p = $conn->query("SELECT * FROM listing_photos WHERE intake_id = {$id} ORDER BY market, mls_number");
+    if ($r_p) $lphotos = $r_p->fetch_all(MYSQLI_ASSOC);
 }
 $hs_on = mk_hs_subscribed($conn, $id);
 $hs_email = mk_agent_email($agent);
@@ -3271,6 +3317,50 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
               </div>
               <label style="display:block;margin:4px 0 10px;">Note <input type="text" name="note" class="form-input" maxlength="120" placeholder="RE/MAX team deal with James Brunswick"></label>
               <div class="btn-row"><button type="submit" class="btn btn-outline btn-sm">Add credit</button></div>
+            </form>
+          <?php endif; ?>
+        </div>
+
+        <!-- ── Listing photos (2026-11-05, Nikki: CREN drops photos from closed listings after a year) ── -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-photo" style="margin-right:6px;"></i> Listing photos</div>
+          <p class="hint" style="margin:0 0 10px;">For a listing the board no longer sends photos for (CREN removes them from sold listings about a year after closing). Upload one photo per listing and the website shows it on the agent's page and the listing page, within the hour. It is used only while the board sends no photos of its own.</p>
+          <?php if (!$has_lphotos_table): ?>
+            <p class="hint" style="margin:0;">Listing photos appear here once sql/listing_photos.sql has been run.</p>
+          <?php else: ?>
+            <?php if ($lphotos): ?>
+              <table class="mini-table" style="width:100%;">
+                <?php foreach ($lphotos as $p): ?>
+                  <tr>
+                    <td style="width:72px;"><img src="<?= e_attr($p['url']) ?>" alt="" style="width:64px;height:48px;object-fit:cover;display:block;border:1px solid var(--mh-line,#e5e7eb);"></td>
+                    <td style="text-transform:uppercase;font-size:11px;letter-spacing:.06em;color:#6b7280;"><?= htmlspecialchars(mk_board_label($p['market'])) ?></td>
+                    <td style="font-weight:600;">MLS# <?= htmlspecialchars($p['mls_number']) ?></td>
+                    <td style="text-align:right;color:#9ca3af;font-size:12px;">added <?= htmlspecialchars(date('M j', strtotime($p['created_at']))) ?></td>
+                    <td style="text-align:right;width:28px;">
+                      <form method="POST" style="margin:0;" onsubmit="return confirm('Remove the photo for MLS# <?= e_attr($p['mls_number']) ?>?');">
+                        <input type="hidden" name="_action" value="remove_listing_photo">
+                        <input type="hidden" name="photo_id" value="<?= (int)$p['id'] ?>">
+                        <button type="submit" class="btn-ghost" title="Remove"><i class="ti ti-x"></i></button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </table>
+            <?php endif; ?>
+            <form method="POST" enctype="multipart/form-data" style="margin-top:10px;">
+              <input type="hidden" name="_action" value="add_listing_photo">
+              <div class="form-row">
+                <label style="width:150px;">Board
+                  <select name="market" class="form-input">
+                    <?php foreach (mk_board_labels() as $slug => $label): ?><option value="<?= $slug ?>"><?= htmlspecialchars($label) ?></option><?php endforeach; ?>
+                  </select>
+                </label>
+                <label class="grow">MLS number <input type="text" name="mls_number" class="form-input" placeholder="825778" required></label>
+              </div>
+              <label style="display:block;margin:4px 0 10px;">Photo (JPG, PNG or WEBP, landscape works best)
+                <input type="file" name="listing_photo" accept="image/jpeg,image/png,image/webp" class="form-input" style="padding:6px;" required>
+              </label>
+              <div class="btn-row"><button type="submit" class="btn btn-outline btn-sm">Upload photo</button></div>
             </form>
           <?php endif; ?>
         </div>

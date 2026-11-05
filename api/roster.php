@@ -183,6 +183,19 @@ foreach ($rows as $a) {
 }
 
 $out = ['generated_at' => gmdate('Y-m-d\TH:i:s\Z'), 'count' => count($agents), 'agents' => $agents];
+
+// Listing photos (sql/listing_photos.sql, 2026-11-05): one uploaded photo per
+// listing the board sends none for, keyed by board + MLS number (not by agent:
+// the photo belongs to the listing). Key present = the site replaces its set;
+// absent = older marketing, the site keeps what it has.
+if (mk_table_exists($conn, 'listing_photos')) {
+    $out['listing_photos'] = [];
+    $rp = $conn->query("SELECT market, mls_number, url FROM listing_photos ORDER BY market, mls_number");
+    if ($rp) foreach ($rp->fetch_all(MYSQLI_ASSOC) as $p) {
+        $u = feed_photo($p['url']);
+        if ($u !== '') $out['listing_photos'][] = ['market' => $p['market'], 'mls_number' => $p['mls_number'], 'url' => $u];
+    }
+}
 if ($leaders !== null) {
     $out['leadership'] = [];
     foreach ($leaders as $l) {
