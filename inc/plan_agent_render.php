@@ -13,13 +13,16 @@
  *   cutout     the broker CUT OUT of the photo, in colour, standing in front
  *              of Slate geometry: the real triangle mark ghosted large at the
  *              lower right, the hook above the figure, the name and the
- *              service area right-aligned at the LOWER RIGHT (`who_place`
- *              corner, the default since 2026-11-05; `under` puts them
- *              under the hook, where they sat that morning; the slate band
- *              behind the shoulders went the same day) at the sizes
- *              `who_name` and `who_area` (px at the story and post sizes;
- *              defaults 44 and 64), badge and logo
- *              in the clear band at the top; the figure is anchored to the
+ *              service area right-aligned at the lower right (`who_place`
+ *              corner), under the hook (`under`), or OFF (`none`, the
+ *              default since 2026-11-05 afternoon, Nikki: "try removing
+ *              the name and location from lower right, put the logo lower
+ *              right instead"; the slate band behind the shoulders went
+ *              that morning) at the sizes `who_name` and `who_area` (px at
+ *              the story and post sizes; defaults 44 and 64), the badge in
+ *              the clear band at the top and the logo there too (`logo`
+ *              top) or at the lower right (`logo` bottom, the broker
+ *              tool's default); the figure is anchored to the
  *              foot of the frame and never covered. Needs a cutout PNG
  *              (agent-photos/<slug>-cutout.png, made with Adobe's background
  *              removal; plan_agents() reports it as cutout_url); with an
@@ -43,7 +46,7 @@
  *   logo_* options, badge (left | right | body: body = the label as part of
  *   the words), label, photo_url / photo_file, zoom, focus_x, focus_y,
  *   headline (the hook; Enter = a new line), lines (text + style),
- *   who_place corner|under, who_name, who_area (px).
+ *   who_place corner|under|none, who_name, who_area (px).
  */
 require_once __DIR__ . '/social_render.php';
 
@@ -76,9 +79,9 @@ function plan_agent_geometry(string $style, string $format): array {
     $logo = $sq ? 84 : 110;                    // the logo's height
     // The one style, cutout (2026-11-02).
     $bandY = $top + ($sq ? 48 : 56);
-    $hookTop = $bandY + ($sq ? 60 : 70) + ($story ? 110 : ($sq ? 48 : 80));   // scooted down (Nikki, 2026-11-02)
+    $hookTop = $bandY + ($sq ? 60 : 70) + ($story ? 44 : ($sq ? 24 : 36));   // scooted down 2026-11-02, back up on 2026-11-05 ("condense spacing between badge, hook and tagline")
     // The figure: its height, where its left edge sits, and the slate band behind the shoulders.
-    $figH = $story ? 1180 : ($sq ? 640 : 900);
+    $figH = $story ? 1300 : ($sq ? 690 : 980);   // up a tenth on 2026-11-05 ("make headshot larger"); was 1180 / 640 / 900
     $figLeft = $story ? -140 : ($sq ? -60 : -80);
     $bandTop = $story ? 1080 : ($sq ? 620 : 800);
     $bandH = $story ? 190 : ($sq ? 130 : 170);
@@ -118,7 +121,8 @@ function plan_render_agent(array $p, ?string $base = null, bool $export = false)
     $label = trim((string)($p['label'] ?? ''));
     $badge = (string)($p['badge'] ?? 'left'); if (!in_array($badge, ['left', 'right', 'body'], true)) $badge = 'left';
     // The name and the service area: where (lower right, or under the hook) and how big (Nikki, 2026-11-05: "lower right ... bigger ... a slider").
-    $whoPlace = ($p['who_place'] ?? 'corner') === 'under' ? 'under' : 'corner';
+    $whoPlace = in_array($p['who_place'] ?? '', ['corner', 'under'], true) ? (string)$p['who_place'] : 'none';
+    $logoLow  = ($p['logo'] ?? 'top') === 'bottom';   // the logo at the lower right instead of the band (2026-11-05)
     $whoName  = max(20, min(100, (int)($p['who_name'] ?? 44)));
     $whoArea  = max(24, min(140, (int)($p['who_area'] ?? 64)));
 
@@ -159,7 +163,7 @@ html,body{margin:0;padding:0}
 body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c['bg']};color:{$c['text']};font-family:'Jost','Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased}
 .ghost{position:absolute;right:-220px;bottom:0;width:970px;z-index:0;opacity:{$c['ghost']}}
 .ghost.m{right:0;width:745px}
-.pill{display:inline-block;padding:{$sz(19)}px {$sz(30)}px {$sz(17)}px;background:{$c['pill']};color:{$c['pilltext']};font-size:{$sz(26)}px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;line-height:1;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.22)}
+.pill{display:inline-block;padding:{$sz(19)}px {$sz(30)}px {$sz(17)}px;background:{$c['pill']};color:{$c['pilltext']};font-size:{$sz(26)}px;font-weight:600;letter-spacing:.26em;text-transform:uppercase;line-height:1;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.10)}
 .logo{position:absolute;height:{$logoH}px;z-index:3;{$logoFx}}
 .words{position:absolute;z-index:2;box-sizing:border-box;text-shadow:{$textShadow}}
 .hook{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$hsize}px;line-height:1.08;margin:0 0 {$sz(22)}px;text-wrap:balance;overflow-wrap:anywhere}
@@ -196,15 +200,15 @@ CSS;
     $css = ".bd{position:absolute;inset:0;z-index:0}.bd img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(.5)}.bd::after{content:'';position:absolute;inset:0;background:rgba({$veilRgb},{$veil})}"
          . ".ghost{z-index:1}"
          . ".band{position:absolute;left:64px;top:{$g['bandY']}px;z-index:4}"
-         . ".logo{right:64px;top:{$g['bandY']}px;z-index:5}"
+         . ($logoLow ? ".logo{right:64px;bottom:" . ($bot + ($story ? 56 : 64)) . "px;z-index:5}" : ".logo{right:64px;top:{$g['bandY']}px;z-index:5}")
          . ".words{left:64px;width:{$hookW}px;top:{$g['hookTop']}px;z-index:4}"
-         . ".words .hook{margin:0 0 {$sz(26)}px}" . $h2Css
+         . ".words .hook{margin:0 0 {$sz(10)}px}" . $h2Css   // the call line close under the hook (2026-11-05; was 26)
          // The real Mont Haus triangle, ghosted, large at the lower right (the watermark choice picks the mark; None leaves the ground bare).
          . ".ghost{right:" . ($story ? -300 : ($sq ? -200 : -260)) . "px;bottom:0;width:" . ($story ? 1320 : ($sq ? 800 : 1100)) . "px;opacity:" . ($theme === 'light' ? '.16' : '.24') . "}"
          . ".ghost.m{right:0;width:" . ($story ? 900 : ($sq ? 560 : 760)) . "px}"
          // The name and the service area, right-aligned: at the lower right of the frame (inside the story's safe zone),
          // drawn above the figure so a shoulder never hides them; or under the hook, on the ground (the slate band behind
-         // the shoulders went on 2026-11-05, Nikki: "not loving that element"). Sizes from the builder's sliders.
+         // the shoulders went on 2026-11-05, Nikki: "not loving that element"); or not drawn at all. Sizes from the builder's sliders.
          . ($whoPlace === 'corner'
              ? ".who{position:absolute;right:64px;bottom:" . ($bot + ($story ? 56 : 64)) . "px;z-index:4;text-align:right;color:#FFFFFF;text-shadow:{$textShadow}}"
              : ".who{margin-top:{$sz(44)}px;text-align:right;color:#FFFFFF}")
@@ -220,7 +224,7 @@ CSS;
            . ($logoOn ? '<img class="logo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">' : '')
            . '<div class="words">' . $hHtml . ($whoPlace === 'under' ? '<div class="who">' . $lHtml . '</div>' : '') . '</div>'
            . $figHtml
-           . ($whoPlace === 'corner' ? '<div class="who">' . $lHtml . '</div>' : '');
+           . ($whoPlace === 'corner' && $lHtml !== '' ? '<div class="who">' . $lHtml . '</div>' : '');
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
          . '<title>' . $e($hlines[0] ?? 'Featured Agent') . '</title><style>' . $common . $css . '</style></head><body>' . $html . '</body></html>';

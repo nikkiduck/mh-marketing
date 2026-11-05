@@ -134,7 +134,7 @@ function plan_preset_from_form(string $kind, array $form): array {
     $p = ['size' => (string)($form['size'] ?? '')];
     switch ($kind) {
         case 'property': $p += ['listing' => (string)($form['listing'] ?? ''), 'variant' => (string)($form['variant'] ?? 'featured')]; break;
-        case 'broker':   $p += ['agent' => (int)($form['agent'] ?? 0), 'hook' => (string)($form['hook'] ?? '0'), 'hook2' => (string)($form['hook2'] ?? 'italic'), 'who_place' => (string)($form['who_place'] ?? 'corner')]; break;
+        case 'broker':   $p += ['agent' => (int)($form['agent'] ?? 0), 'hook' => (string)($form['hook'] ?? '0'), 'hook2' => (string)($form['hook2'] ?? 'italic'), 'who_place' => (string)($form['who_place'] ?? 'none')]; break;
         case 'location': $p += ['loc' => (string)($form['loc'] ?? 'office:aspen'), 'angle' => (string)($form['angle'] ?? 'office')]; break;
         case 'branding': $p += ['season' => (string)($form['season'] ?? 'always')]; break;
     }

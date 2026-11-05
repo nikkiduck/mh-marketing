@@ -94,7 +94,7 @@ foreach (['frame-story-logo' => $frame + ['format' => 'story', 'show_logo' => tr
 }
 
 // The Featured Agent design (2026-11-02): the Cutout style, every size, both looks, and the call line in each of its faces.
-$agent = ['mark' => 'triangle', 'logo' => 'top', 'logo_kind' => 'full', 'badge' => 'left', 'label' => 'Broker Spotlight', 'photo_url' => $head, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 0,
+$agent = ['mark' => 'triangle', 'logo' => 'bottom', 'logo_kind' => 'full', 'logo_scale' => 1.3, 'badge' => 'left', 'label' => 'Broker Spotlight', 'photo_url' => $head, 'zoom' => 1.0, 'focus_x' => 50, 'focus_y' => 0,   // the tool's defaults of 2026-11-05: the logo lower right at 130 %, the name off
           'headline' => 'Thinking of buying or selling in Montrose? Call Jackson Horn.',
           'lines' => [['text' => 'Jackson Horn', 'style' => 'town'], ['text' => 'Montrose', 'style' => 'details']]];
 $cutout = $argv[3] ?? ($live . '/agent-photos/jackson-horn-cutout.png');   // the cutout PNG's URL (pass a local one to design against)
@@ -108,7 +108,7 @@ foreach (plan_agent_styles() as $style => $name) {
         }
     }
 }
-foreach (['under' => ['who_place' => 'under'], 'corner-big' => ['who_place' => 'corner', 'who_name' => 60, 'who_area' => 90, 'logo_scale' => 1.3]] as $k => $extra) {   // the name and area under the hook, or lower right and larger (2026-11-05)
+foreach (['under' => ['who_place' => 'under', 'logo' => 'top'], 'corner-big' => ['who_place' => 'corner', 'who_name' => 60, 'who_area' => 90, 'logo' => 'top']] as $k => $extra) {   // the name and area under the hook, or lower right and larger (2026-11-05)
     $p = $extra + ['style' => 'cutout', 'format' => 'story', 'theme' => 'dark', 'photo_url' => $cutout, 'hook2' => 'italic'] + $agentBd + $agent;
     file_put_contents("$out/agent-who-$k.html", plan_render_agent($p, $base));
     echo "$out/agent-who-$k.html\n";

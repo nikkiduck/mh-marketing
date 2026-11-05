@@ -42,7 +42,7 @@ foreach ($agent_styles as $sk => $sn) foreach (['post', 'square', 'story'] as $f
 $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (string)$pk_preset['size'] : ($pk === 'property' ? 'post' : 'story');
 // Where the logo starts: upper right over the photo on the split layout (its only place besides none), centred above
 // centred words, else the Instagram tool's defaults (upper right on a post, lower left on a story); the badge likewise.
-$default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : ($default_size === 'story' ? 'bottom' : 'top'));
+$default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' || $pk === 'broker') ? 'bottom' : 'top'));   // the Broker Feature: lower right at every size (2026-11-05)
 $default_badge = ($default_size === 'story' && $default_logo !== 'top') ? 'right' : 'left';
 $themes = plan_themes($pk); $labels = plan_labels(); $styles = social_line_styles(); $defaults = social_line_defaults();
 $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
@@ -118,7 +118,7 @@ $step = 1;
         <div class="sp-look">
           <span class="sp-look-l">Logo place</span>
           <?php foreach (social_logo_places() as $k => $t): ?>
-          <label class="sp-pillopt" data-logo="<?= $e($k) ?>"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === $default_logo ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <label class="sp-pillopt" data-logo="<?= $e($k) ?>"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === $default_logo ? ' checked' : '' ?>><span><?= $e($pk === 'broker' && $k === 'bottom' ? 'Lower right' : $t) ?></span></label>
           <?php endforeach; ?>
         </div>
         <div class="sp-look">
@@ -204,15 +204,16 @@ $step = 1;
         <p class="sp-hint">The hook becomes the headline with the broker's name and market swapped in; edit it below. The plan rotates through the hooks week to week.</p>
         <div class="sp-look">
           <span class="sp-look-l">Name and area</span>
-          <?php $wp = (string)($pk_preset['who_place'] ?? 'corner'); foreach (['corner' => 'Lower right', 'under' => 'Under the hook'] as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="who_place" value="<?= $e($k) ?>"<?= $k === ($wp === 'under' ? 'under' : 'corner') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php $wp = (string)($pk_preset['who_place'] ?? 'none'); if (!in_array($wp, ['corner', 'under'], true)) $wp = 'none';
+          foreach (['none' => 'Off', 'corner' => 'Lower right', 'under' => 'Under the hook'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="who_place" value="<?= $e($k) ?>"<?= $k === $wp ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
         <div class="sp-ranges">
           <label class="sp-range">Name size <input type="range" name="who_name" min="24" max="80" step="2" value="44"><output>44px</output></label>
           <label class="sp-range">Area size <input type="range" name="who_area" min="32" max="120" step="2" value="64"><output>64px</output></label>
         </div>
-        <p class="sp-hint">The name (Text 1) and the service area (Text 2) sit together, right-aligned; the sizes are at the story and post sizes, a square is drawn a little smaller.</p>
+        <p class="sp-hint">Off leaves the hook to say who it is. On, the name (Text 1) and the service area (Text 2) sit together, right-aligned; the sizes are at the story and post sizes, a square is drawn a little smaller.</p>
       </section>
       <?php elseif ($pk === 'location'): ?>
       <section class="sp-step">
@@ -370,7 +371,7 @@ $step = 1;
   const lineText = i => form.querySelectorAll('input[name="line_text[]"]')[i];
   const lineStyle = i => form.querySelectorAll('select[name="line_style[]"]')[i];
   const subject = () => document.getElementById('spSubject') ? document.getElementById('spSubject').value : '';
-  const LOGO_DEFAULT = s => s === 'story' ? 'bottom' : 'top';
+  const LOGO_DEFAULT = s => (s === 'story' || KIND === 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits lower right at every size (2026-11-05)
   const BADGE_DEFAULT = s => s === 'story' ? 'right' : 'left';
   let prevSize = fmt();
   let frames = [];          // the set's photo ids, in order (property only)
@@ -473,12 +474,13 @@ $step = 1;
     if (logo.value === LOGO_DEFAULT(prevSize) && prevSize !== fmt()) logo.value = LOGO_DEFAULT(fmt());
     if (f('badge').value === BADGE_DEFAULT(prevSize) && prevSize !== fmt()) f('badge').value = BADGE_DEFAULT(fmt());
     prevSize = fmt();
-    const agent = KIND === 'broker';   // the agent styles place the logo themselves: Upper right means "on", None off
+    const agent = KIND === 'broker';   // the Broker Feature places the logo in the band (Upper right) or at the lower right (its Lower right pill is the bottom value), or None
     form.querySelectorAll('[data-logo]').forEach(el => {
       const k = el.dataset.logo;
-      el.hidden = agent ? (k === 'bottom' || k === 'center') : ((L === 'split' && (k === 'bottom' || k === 'center')) || (L !== 'center' && k === 'center'));
+      el.hidden = agent ? k === 'center' : ((L === 'split' && (k === 'bottom' || k === 'center')) || (L !== 'center' && k === 'center'));
     });
-    if ((agent || L === 'split') && (logo.value === 'bottom' || logo.value === 'center')) logo.value = 'top';
+    if (agent && logo.value === 'center') logo.value = 'bottom';
+    if (L === 'split' && (logo.value === 'bottom' || logo.value === 'center')) logo.value = 'top';
     if (L !== 'center' && logo.value === 'center') logo.value = 'top';
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = agent ? true : L !== 'split');
     form.querySelectorAll('.sp-only-3').forEach(el => el.hidden = !agent);

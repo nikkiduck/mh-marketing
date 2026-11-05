@@ -2954,6 +2954,19 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   at 130 %** and runs to 200 (`social_logo_options()` clamps at 2.0, was
   1.6; the Reset button goes back to 130): the starting size was too
   small. A saved piece keeps its own value.
+  **Same afternoon (Nikki, "not sure all this will work but let's try"):**
+  the name and the service area are OFF by default (`who_place` none; the
+  pills are Off | Lower right | Under the hook, the hook names the
+  broker), the logo sits at the LOWER RIGHT by default at every size
+  (`logo` bottom, the pill reads Lower right on this tool; Upper right
+  puts it back in the band; syncLayout no longer hides bottom for the
+  broker), the badge's shadow is light (0 2px 6px at .10, was 0 4px 18px
+  at .22), the hook sits closer under the badge (story gap 44 under the
+  band, was 110; post 36, square 24) with the call line 10px under it
+  (was 26), and the figure is a tenth larger (story 1300, post 980,
+  square 690; was 1180 / 900 / 640). The head now reaches to about 40px
+  under a two-line hook at the story size; drag the figure down or zoom
+  out when a three-line hook meets it.
   **Cutouts are made on upload (Nikki, 2026-11-05: "when I upload a new
   headshot for a broker, a cutout version is automatically created and
   assigned to that broker, whether new or existing"):** `inc/cutout.php`.

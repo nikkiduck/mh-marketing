@@ -626,7 +626,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $hook2 = $kind === 'broker' ? (isset(plan_hook_styles()[(string)($in['hook2'] ?? '')]) ? (string)$in['hook2'] : 'serif') : '';   // the call line's face (2026-11-02)
     $agent = null;   // set below; the Cutout style reads it
     $logo   = (string)($in['logo'] ?? '');
-    if (!isset(social_logo_places()[$logo])) $logo = $format === 'story' ? 'bottom' : 'top';
+    if (!isset(social_logo_places()[$logo])) $logo = ($format === 'story' || $kind === 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits lower right by default (2026-11-05)
     if ($layout === 'split' && !in_array($logo, ['top', 'none'], true)) $logo = 'top';
     if ($logo === 'center' && $layout !== 'center') $logo = 'top';
     $badge  = isset(plan_badge_places()[(string)($in['badge'] ?? '')]) ? (string)$in['badge'] : ($format === 'story' && $logo !== 'top' ? 'right' : 'left');
@@ -687,7 +687,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     // The Cutout style's backdrop (2026-11-02): a stock location photo or one of the person's uploads (the tool's photo pick), under a veil; none = the plain ground.
     $backdrop = ['backdrop_url' => '', 'backdrop_file' => null, 'backdrop_veil' => max(30, min(97, (int)($in['backdrop_veil'] ?? 70)))];   // 70 since 2026-11-05 (was 82)
     // The name and the service area on the Broker Feature (2026-11-05): lower right or under the hook, and their sizes in px.
-    $who = ['who_place' => ($in['who_place'] ?? 'corner') === 'under' ? 'under' : 'corner',
+    $who = ['who_place' => in_array($in['who_place'] ?? '', ['corner', 'under'], true) ? (string)$in['who_place'] : 'none',   // none (off) since 2026-11-05 afternoon
             'who_name' => max(20, min(100, (int)($in['who_name'] ?? 44))), 'who_area' => max(24, min(140, (int)($in['who_area'] ?? 64)))];
     if ($kind === 'broker' && (str_starts_with($bdIn, 'stock:') || str_starts_with($bdIn, 'upload:'))) {
         [$bu, $bf] = plan_photo($ctx, $bdIn, null, null);

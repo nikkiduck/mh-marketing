@@ -218,6 +218,15 @@ The Broker tool's Size pills put Story first. On every plan builder the
 Logo size slider now starts at 130 % and runs to 200 (the renderers'
 clamp is 2.0); Reset returns to 130.
 
+**Same afternoon (Nikki: "removing the name and location from lower
+right, put logo lower right instead; less shadow on the badge; condense
+spacing between badge, hook and tagline; make headshot larger"):** the
+Name and area pills gained Off, the default; the Logo place pill Lower
+right (the `bottom` value) is the Broker tool's default at every size and
+draws the logo at the lower right inside the safe zone; the badge shadow
+is light; the hook sits 44px under the band on a story (36 post, 24
+square) with the call line 10px under it; the figure is a tenth larger.
+
 **The photo pick is the backdrop (Nikki, same night, after a stock photo
 replaced Bryan's cutout with a chairlift: "if I choose an alternate photo
 it should change the background, not the headshot"):** the Broker tool's
