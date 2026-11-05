@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-05 07:53 from git HEAD
+# Generated 2026-11-05 08:03 from git HEAD
 1dccec94348215cbc88e5308ba9d93d2  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -44,7 +44,7 @@ dfbecd5baf8eb89a44ce4f33ea6cbbed  inc/boards.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 c9ace318036eda1d6510c96f94ac643c  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
-55226a698806a0ae2e4bbfc3a210bfde  inc/cutout.php
+1a86bca93fca24ffc49c75c27df7c7ad  inc/cutout.php
 5f5893a7287969d02e3f8217ace72853  inc/elevation.php
 13958d7c888d48b801e84186ed7ec2f2  inc/financials.php
 0d0c638898e992198f731363280d5106  inc/flyer.php
