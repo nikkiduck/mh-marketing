@@ -609,8 +609,17 @@ send's outbound email templates). Change those only if Nikki asks.
   `marketing_intakes.office` column and the roster sync's default-office
   write remain, unused.
 - agent.php has a Profile tab: website status/slug/sort/service area/FUB,
-  headshot upload (inc/photos.php writes agent-photos/<slug>.jpg and
-  -square.jpg, the URLs api/roster.php counts as hosted), the bio (moved from
+  headshot upload (inc/photos.php writes agent-photos/<slug>-<id>.jpg and
+  <slug>-<id>-square.jpg since 2026-11-04, Nikki: every photo carries a
+  unique identifier, the intake id; a nameless row is agent-<id>; before,
+  <slug>.jpg, and a blank Web address became the key `agent`, so Sierrah
+  Smith's and then Noah Sathre's photos shared agent.jpg and the site wrote
+  his over hers. mk_slug_base() now returns '' for a blank. The files
+  uploaded before carry the old names until cron/photos_add_ids.php --apply
+  renames them, Nikki's yes; the site names its own copies with ITS agent
+  id, so the numbers differ between servers. The <slug>-cutout.png files
+  of the Social Media Plan are keyed by slug alone, unchanged), the URLs
+  api/roster.php counts as hosted), the bio (moved from
   Assets), board identities (add/remove) and the Hot Sheet switch, which is the
   same thing as the MK_HS_TASK checklist item and keeps it in step.
 - Colour: GD cannot read ICC profiles, so an Adobe RGB or Display P3 photo
