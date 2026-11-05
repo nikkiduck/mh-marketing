@@ -93,8 +93,10 @@ function mk_cutout_make(string $headshotFile): array {
     if ($reply === false) { error_log("cutout: request failed for " . basename($headshotFile) . ": {$err}"); return ['error' => 'the request to Leonardo.Ai failed: ' . $err]; }
     $j = json_decode((string)$reply, true);
     // Errors come back as HTTP 200 as often as a 4xx, and as a bare list of error objects ([{message, extensions}],
-    // seen 2026-11-05) or an errors[] key: read the body first, either shape.
+    // seen 2026-11-05) or an errors[] key: read the body first, either shape. A success sits under generateSync
+    // ({"generateSync": {id, cost, results}}; the guide shows it unwrapped).
     $errs = is_array($j) ? (isset($j[0]['message']) ? $j : (array)($j['errors'] ?? [])) : [];
+    if (is_array($j) && isset($j['generateSync']) && is_array($j['generateSync'])) $j = $j['generateSync'];
     if (!is_array($j) || $errs || $code !== 200 || empty($j['results'])) {
         $why = (string)($errs[0]['message'] ?? $j['error'] ?? $j['message'] ?? ('HTTP ' . $code . ', no results'));
         error_log("cutout: Leonardo.Ai said {$why} for " . basename($headshotFile));
