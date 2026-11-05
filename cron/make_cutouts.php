@@ -2,8 +2,8 @@
 /**
  * cron/make_cutouts.php — the broker cutouts for the Broker Feature, by
  * hand (not scheduled): every approved agent with a headshot hosted here
- * and no cutout gets one through remove.bg (inc/cutout.php). Run it after
- * REMOVEBG_API_KEY lands, after a run of cron/import_profiles.php, or to
+ * and no cutout gets one through Leonardo.Ai (inc/cutout.php). Run it after
+ * LEONARDO_API_KEY lands, after a run of cron/import_profiles.php, or to
  * retry the ones a bad connection skipped.
  *
  *   php cron/make_cutouts.php [--dry-run] [--force] [--id=N]
@@ -25,7 +25,7 @@ foreach ($argv as $a) if (preg_match('/^--id=(\d+)$/', $a, $m)) $only = (int)$m[
 $agents = plan_agents($conn);
 if ($only) $agents = array_filter($agents, fn($a) => (int)$a['id'] === $only);
 echo "Cutouts for " . count($agents) . " agent(s)" . ($dry ? ' (DRY RUN)' : '') . ($force ? ' (--force: remaking the ones that exist)' : '') . "\n";
-if (!defined('REMOVEBG_API_KEY') || REMOVEBG_API_KEY === '') echo "   ! REMOVEBG_API_KEY is not set in inc/db.php: nothing can be made\n";
+if (!defined('LEONARDO_API_KEY') || LEONARDO_API_KEY === '') echo "   ! LEONARDO_API_KEY is not set in inc/db.php: nothing can be made\n";
 $made = $kept = $skipped = $failed = 0;
 foreach ($agents as $a) {
     $file = mk_photo_file($a['headshot_url']);

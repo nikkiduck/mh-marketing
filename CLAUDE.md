@@ -2918,10 +2918,15 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   assigned to that broker, whether new or existing"):** `inc/cutout.php`.
   The cutout is named after the headshot's own file
   (agent-photos/<headshot name>-cutout.png; headshots are <slug>-<id>.jpg
-  since 2026-11-04) and made by remove.bg's API (`mk_cutout_make()`: POST
-  the file, size auto, type person, a PNG back; one credit a picture; the
-  key is `REMOVEBG_API_KEY` in inc/db.php beside the other keys; without
-  it nothing is made and the Broker Feature uses the plain headshot).
+  since 2026-11-04) and made by Leonardo.Ai's API (`mk_cutout_make()`:
+  one sync POST to /api/rest/v2/generationssync, model remove-bg, the
+  headshot as base64, size auto, type person, ephemeral, a PNG back as
+  base64; USD 0.1047 a picture, pay as you go; the key is
+  `LEONARDO_API_KEY` in inc/db.php beside the other keys; without it
+  nothing is made and the Broker Feature uses the plain headshot). It was
+  written for remove.bg first, the same day; remove.bg's standalone API
+  closes on 2026-12-01 and its migration guide points to Leonardo, so the
+  call was switched before any key was bought.
   agent.php's photo save calls `mk_cutout_refresh()` when the profile
   photo changed (the old cutouts, by the new name and the 2026-11-02 slug
   name, are dropped first so a stale one is never used; a removed photo
