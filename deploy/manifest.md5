@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-05 07:41 from git HEAD
+# Generated 2026-11-05 07:53 from git HEAD
 1dccec94348215cbc88e5308ba9d93d2  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -22,7 +22,7 @@ f76d4556e5309670d33806d0b4c71885  change_password.php
 efc4b5fd1029c3045894dc0c265855f0  cron/import_hot_sheets.php
 20594824bf509387c4d249a85cdcf293  cron/import_profiles.php
 e0d27d34f0d680969bd96950b29d1473  cron/import_site_agents.php
-12c08d2b1e8ea04d0d4ca6c9c8e49f2f  cron/make_cutouts.php
+625b217070f9009192b225b73e9c2caa  cron/make_cutouts.php
 f0cb50b5d5895138a6ef1db662c6aa67  cron/merge_agents.php
 d86ae4ad5815939257c1bc445e77079b  cron/parse_pipeline_events.php
 9ef7251e9aa4996404acb700e5406866  cron/photos_add_ids.php
@@ -44,7 +44,7 @@ dfbecd5baf8eb89a44ce4f33ea6cbbed  inc/boards.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 c9ace318036eda1d6510c96f94ac643c  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
-456525d034c7c09e3465089ed1162b5b  inc/cutout.php
+55226a698806a0ae2e4bbfc3a210bfde  inc/cutout.php
 5f5893a7287969d02e3f8217ace72853  inc/elevation.php
 13958d7c888d48b801e84186ed7ec2f2  inc/financials.php
 0d0c638898e992198f731363280d5106  inc/flyer.php
