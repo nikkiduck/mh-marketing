@@ -198,7 +198,9 @@ button on the Headshots card; cron/make_cutouts.php backfills by hand. Named
 after the headshot file (<name>-cutout.png); the slug-named ones from
 2026-11-02 keep working until a new photo replaces them. Needs
 LEONARDO_API_KEY in inc/db.php (about 10 cents a picture, pay as you go);
-without it the feature uses the headshot.
+without it the feature uses the headshot. Live since 2026-11-05: the API
+wants `public` as a boolean and wraps a success in `generateSync`, which the
+guide does not say; all 27 brokers have a cutout.
 
 **2026-11-05:** the slate band is gone; the name and the service area sit
 right-aligned under the hook (name small caps 34px, area 46px serif), the

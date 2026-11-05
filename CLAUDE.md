@@ -2926,7 +2926,13 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   nothing is made and the Broker Feature uses the plain headshot). It was
   written for remove.bg first, the same day; remove.bg's standalone API
   closes on 2026-12-01 and its migration guide points to Leonardo, so the
-  call was switched before any key was bought.
+  call was switched before any key was bought. **Live since 2026-11-05
+  evening** (Nikki's key and API credit): two things the guide gets wrong,
+  `public` must be sent as a boolean, and a success comes wrapped as
+  `{"generateSync": {id, cost, results}}`; errors come as a bare list of
+  error objects or an `errors[]` key, as often with HTTP 200 as 4xx. The
+  27th broker (Noah Sathre) was made through it; Allison's Leonardo cutout
+  matched the Adobe one edge for edge. 10.5 cents a picture.
   agent.php's photo save calls `mk_cutout_refresh()` when the profile
   photo changed (the old cutouts, by the new name and the 2026-11-02 slug
   name, are dropped first so a stale one is never used; a removed photo
