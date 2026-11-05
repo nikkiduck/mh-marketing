@@ -2967,6 +2967,25 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   square 690; was 1180 / 900 / 640). The head now reaches to about 40px
   under a two-line hook at the story size; drag the figure down or zoom
   out when a three-line hook meets it.
+  **The right stack (Nikki's mock-up, same afternoon: "still feeling a
+  little disconnected ... let's do something like this"):** two
+  arrangements, **Arrange** pills Right stack | Left (`arrange`, stack is
+  the default). The stack is ONE right-aligned column at the right
+  (`.stack`, top 400 / 260 / 190 by size, width 680 / 660 / 560): the
+  badge (smaller), the hook at 0.92 of its size, the call line, then the
+  logo under the words (`logo` top, the pill reads "With the words";
+  Lower right and None still apply); the figure is larger again (1400 /
+  1050 / 740) and stands in front of the column's left part, so a long
+  hook meets the head: drag or zoom. Left is the page before. The first
+  sentence has a face too, **First line** Serif | Italic (`hook1`, Italic
+  the default, the mock-up's), and **Second line** now starts on Sans,
+  which is mixed case at 0.9 of the hook (the mock-up's "Whit Ward
+  does."); the caps-and-tracking Sans of 2026-11-02 is **Sans caps**
+  (`sanscaps`). **Badge** tone pills White | Slate | Glass (`badge_tone`;
+  White is the default, slate words on white, Nikki: "the badge may have
+  to be white with blue text"; Glass is the ground colour at .62 with a
+  hairline, the mock-up's); the Badge place row is hidden under the stack
+  (the stack places it) and applies to Left.
   **Cutouts are made on upload (Nikki, 2026-11-05: "when I upload a new
   headshot for a broker, a cutout version is automatically created and
   assigned to that broker, whether new or existing"):** `inc/cutout.php`.

@@ -623,10 +623,13 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $layout = isset(plan_layouts()[(string)($in['layout'] ?? '')]) ? (string)$in['layout'] : ($kind === 'branding' ? 'center' : 'photo');
     // The Broker Feature has its own designs (inc/plan_agent_render.php) in place of the layouts: `style`.
     $style = $kind === 'broker' ? (isset(plan_agent_styles()[(string)($in['style'] ?? '')]) ? (string)$in['style'] : 'cutout') : '';
-    $hook2 = $kind === 'broker' ? (isset(plan_hook_styles()[(string)($in['hook2'] ?? '')]) ? (string)$in['hook2'] : 'serif') : '';   // the call line's face (2026-11-02)
+    $hook2 = $kind === 'broker' ? (isset(plan_hook_styles()[(string)($in['hook2'] ?? '')]) ? (string)$in['hook2'] : 'sans') : '';   // the call line's face (2026-11-02; sans since the mock-up of 2026-11-05)
+    // The Broker Feature's arrangement, the first sentence's face and the badge's tone (2026-11-05, Nikki's mock-up).
+    $agentLook = $kind === 'broker' ? ['arrange' => ($in['arrange'] ?? 'stack') === 'left' ? 'left' : 'stack', 'hook1' => ($in['hook1'] ?? 'italic') === 'serif' ? 'serif' : 'italic',
+                                       'badge_tone' => in_array($in['badge_tone'] ?? '', ['slate', 'glass'], true) ? (string)$in['badge_tone'] : 'white'] : [];
     $agent = null;   // set below; the Cutout style reads it
     $logo   = (string)($in['logo'] ?? '');
-    if (!isset(social_logo_places()[$logo])) $logo = ($format === 'story' || $kind === 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits lower right by default (2026-11-05)
+    if (!isset(social_logo_places()[$logo])) $logo = ($format === 'story' && $kind !== 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits with the words by default (2026-11-05)
     if ($layout === 'split' && !in_array($logo, ['top', 'none'], true)) $logo = 'top';
     if ($logo === 'center' && $layout !== 'center') $logo = 'top';
     $badge  = isset(plan_badge_places()[(string)($in['badge'] ?? '')]) ? (string)$in['badge'] : ($format === 'story' && $logo !== 'top' ? 'right' : 'left');
@@ -694,7 +697,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         if (!str_ends_with($bu, '/social-placeholder.jpg')) { $backdrop['backdrop_url'] = $bu; $backdrop['backdrop_file'] = $bf; }   // the placeholder means an id that is not theirs
     }
     $main = $kind === 'broker'
-        ? ['renderer' => 'agent', 'post' => $common + $backdrop + $who + ['style' => $style, 'hook2' => $hook2, 'headline' => $headline, 'lines' => $lines]]
+        ? ['renderer' => 'agent', 'post' => $common + $backdrop + $who + $agentLook + ['style' => $style, 'hook2' => $hook2, 'headline' => $headline, 'lines' => $lines]]
         : ($layout === 'split'
         ? ['renderer' => 'split', 'post' => $common + ['headline' => $headline, 'lines' => $lines, 'team' => plan_team_for_render($team), 'kind' => $kind]]
         : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner',

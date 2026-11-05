@@ -42,7 +42,7 @@ foreach ($agent_styles as $sk => $sn) foreach (['post', 'square', 'story'] as $f
 $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (string)$pk_preset['size'] : ($pk === 'property' ? 'post' : 'story');
 // Where the logo starts: upper right over the photo on the split layout (its only place besides none), centred above
 // centred words, else the Instagram tool's defaults (upper right on a post, lower left on a story); the badge likewise.
-$default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' || $pk === 'broker') ? 'bottom' : 'top'));   // the Broker Feature: lower right at every size (2026-11-05)
+$default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' && $pk !== 'broker') ? 'bottom' : 'top'));   // the Broker Feature: with the words at every size (2026-11-05, the stack)
 $default_badge = ($default_size === 'story' && $default_logo !== 'top') ? 'right' : 'left';
 $themes = plan_themes($pk); $labels = plan_labels(); $styles = social_line_styles(); $defaults = social_line_defaults();
 $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
@@ -84,9 +84,15 @@ $step = 1;
         <input type="hidden" name="style" value="<?= $e(array_key_first($agent_styles)) ?>">
         <?php endif; ?>
         <div class="sp-look">
+          <span class="sp-look-l">First line</span>
+          <?php $w1 = ($pk_preset['hook1'] ?? 'italic') === 'serif' ? 'serif' : 'italic'; foreach (['serif' => 'Serif', 'italic' => 'Italic'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="hook1" value="<?= $e($k) ?>"<?= $k === $w1 ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
           <span class="sp-look-l">Second line</span>
-          <?php $wh = (string)($pk_preset['hook2'] ?? 'italic'); foreach (plan_hook_styles() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="hook2" value="<?= $e($k) ?>"<?= $k === (isset(plan_hook_styles()[$wh]) ? $wh : 'italic') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php $wh = (string)($pk_preset['hook2'] ?? 'sans'); foreach (plan_hook_styles() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="hook2" value="<?= $e($k) ?>"<?= $k === (isset(plan_hook_styles()[$wh]) ? $wh : 'sans') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
         <?php else: ?>
@@ -118,7 +124,7 @@ $step = 1;
         <div class="sp-look">
           <span class="sp-look-l">Logo place</span>
           <?php foreach (social_logo_places() as $k => $t): ?>
-          <label class="sp-pillopt" data-logo="<?= $e($k) ?>"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === $default_logo ? ' checked' : '' ?>><span><?= $e($pk === 'broker' && $k === 'bottom' ? 'Lower right' : $t) ?></span></label>
+          <label class="sp-pillopt" data-logo="<?= $e($k) ?>"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === $default_logo ? ' checked' : '' ?>><span><?= $e($pk === 'broker' ? ['top' => 'With the words', 'bottom' => 'Lower right'][$k] ?? $t : $t) ?></span></label>
           <?php endforeach; ?>
         </div>
         <div class="sp-look">
@@ -135,8 +141,16 @@ $step = 1;
           <label class="sp-range">Logo shadow <input type="range" name="logo_shadow" min="0" max="100" step="5" value="0"><output>0</output></label>
           <button type="button" class="sp-link sp-reset" id="spResetLogo">Reset logo and shadows</button>
         </div>
+        <?php if ($pk === 'broker'): ?>
         <div class="sp-look">
           <span class="sp-look-l">Badge</span>
+          <?php $wt = in_array($pk_preset['badge_tone'] ?? '', ['slate', 'glass'], true) ? $pk_preset['badge_tone'] : 'white'; foreach (['white' => 'White', 'slate' => 'Slate', 'glass' => 'Glass'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="badge_tone" value="<?= $e($k) ?>"<?= $k === $wt ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        <div class="sp-look" id="spBadgePlace">
+          <span class="sp-look-l"><?= $pk === 'broker' ? 'Badge place' : 'Badge' ?></span>
           <?php foreach (plan_badge_places() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="badge" value="<?= $e($k) ?>"<?= $k === $default_badge ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
@@ -202,6 +216,13 @@ $step = 1;
           </label>
         </div>
         <p class="sp-hint">The hook becomes the headline with the broker's name and market swapped in; edit it below. The plan rotates through the hooks week to week.</p>
+        <div class="sp-look">
+          <span class="sp-look-l">Arrange</span>
+          <?php $wa = ($pk_preset['arrange'] ?? 'stack') === 'left' ? 'left' : 'stack'; foreach (['stack' => 'Right stack', 'left' => 'Left'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="arrange" value="<?= $e($k) ?>"<?= $k === $wa ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <p class="sp-hint">Right stack: the badge, the hook, the call line and the logo as one right-aligned column beside the broker. Left: the badge and the hook at the upper left, the logo with them or lower right.</p>
         <div class="sp-look">
           <span class="sp-look-l">Name and area</span>
           <?php $wp = (string)($pk_preset['who_place'] ?? 'none'); if (!in_array($wp, ['corner', 'under'], true)) $wp = 'none';
@@ -371,7 +392,7 @@ $step = 1;
   const lineText = i => form.querySelectorAll('input[name="line_text[]"]')[i];
   const lineStyle = i => form.querySelectorAll('select[name="line_style[]"]')[i];
   const subject = () => document.getElementById('spSubject') ? document.getElementById('spSubject').value : '';
-  const LOGO_DEFAULT = s => (s === 'story' || KIND === 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits lower right at every size (2026-11-05)
+  const LOGO_DEFAULT = s => (s === 'story' && KIND !== 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits with the words at every size (2026-11-05)
   const BADGE_DEFAULT = s => s === 'story' ? 'right' : 'left';
   let prevSize = fmt();
   let frames = [];          // the set's photo ids, in order (property only)
@@ -486,6 +507,7 @@ $step = 1;
     form.querySelectorAll('.sp-only-3').forEach(el => el.hidden = !agent);
     form.querySelectorAll('.sp-only-multi').forEach(el => el.hidden = !agent && L === 'photo');
     if (agent) { const w = (AGENT_WINDOWS[f('style').value] || {})[fmt()] || [1080, 1440]; framer.style.aspectRatio = w[0] + ' / ' + w[1]; }
+    if (agent) document.getElementById('spBadgePlace').hidden = f('arrange').value !== 'left';   // the stack places the badge itself
     else framer.style.aspectRatio = '1080 / ' + (L === 'split' ? ({ post: 780, square: 520, story: 860 })[fmt()] : fmtH());
     customWrap.hidden = labelSel.value !== '__custom';
   }
@@ -720,7 +742,7 @@ $step = 1;
     if (n === 'variant' || n === 'hook' || n === 'market' || n === 'tagline') fill();
     if (n === 'angle') { if (e.target.value === 'team') f('layout').value = 'split'; fillTeam(true); fill(); syncLayout(); }
     if (n === 'size') { syncLayout(); scale(); syncSet(); }
-    if (n === 'layout' || n === 'style') { syncLayout(); framerApply(); }
+    if (n === 'layout' || n === 'style' || n === 'arrange') { syncLayout(); framerApply(); }
     if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
     if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } if (KIND !== 'broker') framerSet(e.target.dataset.large, e.target.value); }

@@ -227,6 +227,16 @@ draws the logo at the lower right inside the safe zone; the badge shadow
 is light; the hook sits 44px under the band on a story (36 post, 24
 square) with the call line 10px under it; the figure is a tenth larger.
 
+**The right stack (Nikki's mock-up, same afternoon):** Arrange pills Right
+stack | Left (`arrange`, stack default). The stack is one right-aligned
+column on the right: badge, hook (0.92 of its size), call line, logo under
+the words ("With the words"; Lower right and None still apply); the figure
+is larger (story 1400) on the left. Left is the page before. First line
+pills Serif | Italic (`hook1`, Italic default); Second line starts on Sans,
+now mixed case at 0.9 of the hook, with the caps-and-tracking version as
+Sans caps. Badge tone pills White | Slate | Glass (`badge_tone`, White
+default); the Badge place row only shows for Left.
+
 **The photo pick is the backdrop (Nikki, same night, after a stock photo
 replaced Bryan's cutout with a chairlift: "if I choose an alternate photo
 it should change the background, not the headshot"):** the Broker tool's
