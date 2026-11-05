@@ -108,7 +108,7 @@ foreach (plan_agent_styles() as $style => $name) {
         }
     }
 }
-foreach (['under' => ['who_place' => 'under', 'arrange' => 'left'], 'corner-big' => ['who_place' => 'corner', 'who_name' => 60, 'who_area' => 90, 'arrange' => 'left', 'logo' => 'bottom'],
+foreach (['left' => ['arrange' => 'left'], 'left-logo-low' => ['arrange' => 'left', 'logo' => 'bottom'], 'sizes-big' => ['hook_size' => 90, 'call_size' => 70, 'badge_size' => 30], 'sizes-small' => ['hook_size' => 50, 'call_size' => 40, 'badge_size' => 16],
           'stack-glass' => ['badge_tone' => 'glass'], 'stack-slate-serif' => ['badge_tone' => 'slate', 'hook1' => 'serif', 'hook2' => 'italic'], 'stack-logo-low' => ['logo' => 'bottom'], 'stack-bd-zoom' => ['bd_zoom' => 1.8, 'bd_fx' => 20, 'bd_fy' => 70]] as $k => $extra) {   // 2026-11-05: the left page and the stack's variants   // the name and area under the hook, or lower right and larger (2026-11-05)
     $p = $extra + ['style' => 'cutout', 'format' => 'story', 'theme' => 'dark', 'photo_url' => $cutout, 'hook2' => 'italic'] + $agentBd + $agent;
     file_put_contents("$out/agent-who-$k.html", plan_render_agent($p, $base));

@@ -3023,6 +3023,22 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   the preview column starts at the top of the page and is sticky at once;
   `.sp-preview` sticks at 82px, under the fixed 70px portal header
   (social.css's 16px put it under the bar).
+  **Name and area gone; text sizes (Nikki, same evening: "remove the Name
+  and Service area option entirely along with their controls; give me
+  control over sizes of the other text"):** `who_place`, `who_name` and
+  `who_area` are gone from the renderer, the normaliser, the store preset
+  and the builder, the Broker tool has no Text lines at all (`$nlines` 0,
+  the renderer takes `lines` as []), and the Text section carries three
+  sliders instead: **Hook size** (`hook_size`, 30 to 120 px; the default
+  follows the size, 70 story / 62 post / 50 square, until the slider is
+  moved, `syncTextSizes()`), **Call line size** (`call_size`, 24 to 100;
+  0.9 of the hook until moved, and it follows the hook slider until
+  touched itself) and **Badge size** (`badge_size`, 14 to 40, default 22;
+  the pill's type in both arrangements). The hook's length-based sizing
+  (three sizes per format) and the stack's 0.92 factor are gone: the
+  slider is the size. Every call-line face (Serif, Italic, Sans, Sans
+  caps) takes `call_size`; Sans caps no longer halves itself, so lower
+  the slider for it.
   **Cutouts are made on upload (Nikki, 2026-11-05: "when I upload a new
   headshot for a broker, a cutout version is automatically created and
   assigned to that broker, whether new or existing"):** `inc/cutout.php`.

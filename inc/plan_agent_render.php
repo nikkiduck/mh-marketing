@@ -12,17 +12,12 @@
  *
  *   cutout     the broker CUT OUT of the photo, in colour, standing in front
  *              of Slate geometry: the real triangle mark ghosted large at the
- *              lower right, the hook above the figure, the name and the
- *              service area right-aligned at the lower right (`who_place`
- *              corner), under the hook (`under`), or OFF (`none`, the
- *              default since 2026-11-05 afternoon, Nikki: "try removing
- *              the name and location from lower right, put the logo lower
- *              right instead"; the slate band behind the shoulders went
- *              that morning) at the sizes `who_name` and `who_area` (px at
- *              the story and post sizes; defaults 44 and 64), the badge in
- *              the clear band at the top and the logo there too (`logo`
- *              top) or at the lower right (`logo` bottom, the broker
- *              tool's default); the figure is anchored to the
+ *              lower right, the hook above the figure (the name and the
+ *              service area lines were drawn under it or lower right until
+ *              2026-11-05 evening, when Nikki had them removed for good:
+ *              the hook names the broker), the badge in the clear band at
+ *              the top and the logo there too (`logo` top) or at the lower
+ *              right (`logo` bottom); the figure is anchored to the
  *              foot of the frame and never covered. Needs a cutout PNG
  *              (agent-photos/<slug>-cutout.png, made with Adobe's background
  *              removal; plan_agents() reports it as cutout_url); with an
@@ -45,9 +40,11 @@
  *   style, format post|square|story, theme, mark, logo top|none, logo_kind,
  *   logo_* options, badge (left | right | body: body = the label as part of
  *   the words), label, photo_url / photo_file, zoom, focus_x, focus_y,
- *   headline (the hook; Enter = a new line), lines (text + style),
- *   who_place corner|under|none, who_name, who_area (px),
- *   arrange stack|left, hook1 serif|italic, badge_tone slate|white|glass,
+ *   headline (the hook; Enter = a new line), hook_size, call_size,
+ *   badge_size (px at the story and post sizes; the sliders of 2026-11-05
+ *   evening, Nikki: "give me control over sizes of the other text"; the
+ *   defaults follow the size: hook 70 / 62 / 50, call 0.9 of the hook,
+ *   badge 22), arrange stack|left, hook1 serif|italic, badge_tone slate|white|glass,
  *   bd_zoom, bd_fx, bd_fy (the backdrop's own framing, as a photo's zoom
  *   and focus in social_render(); 2026-11-05, Nikki: "I need the zoom/move
  *   controls for the background image as well").
@@ -142,11 +139,7 @@ function plan_render_agent(array $p, ?string $base = null, bool $export = false)
     $mark  = isset(social_marks()[(string)($p['mark'] ?? '')]) ? (string)$p['mark'] : 'triangle';
     $label = trim((string)($p['label'] ?? ''));
     $badge = (string)($p['badge'] ?? 'left'); if (!in_array($badge, ['left', 'right', 'body'], true)) $badge = 'left';
-    // The name and the service area: where (lower right, or under the hook) and how big (Nikki, 2026-11-05: "lower right ... bigger ... a slider").
-    $whoPlace = in_array($p['who_place'] ?? '', ['corner', 'under'], true) ? (string)$p['who_place'] : 'none';
     $logoLow  = ($p['logo'] ?? 'top') === 'bottom';   // the logo at the lower right instead of the band (2026-11-05)
-    $whoName  = max(20, min(100, (int)($p['who_name'] ?? 44)));
-    $whoArea  = max(24, min(140, (int)($p['who_area'] ?? 64)));
 
     // The words.
     $styles = social_line_styles();
@@ -158,14 +151,11 @@ function plan_render_agent(array $p, ?string $base = null, bool $export = false)
     $headline = trim(str_replace("\r", '', (string)($p['headline'] ?? '')));
     $hlines = array_values(array_filter(array_map('trim', preg_split('/\n/', $headline)), fn($x) => $x !== ''));
     $hchars = mb_strlen($headline);
-    // The hook wraps on its own (text-wrap balance); its size comes from its length, three sizes per format.
-    $hsize = match ($format) {
-        'story'  => $hchars > 70 ? 56 : ($hchars > 44 ? 64 : 74),
-        'square' => $hchars > 70 ? 40 : ($hchars > 44 ? 46 : 54),
-        default  => $hchars > 70 ? 50 : ($hchars > 44 ? 58 : 66),
-    };
-    $lHtml = '';
-    foreach (array_slice($lines, 0, 3) as $ln) $lHtml .= '<p class="ln ln-' . $ln['style'] . '">' . $e($ln['text']) . '</p>';
+    // The hook wraps on its own (text-wrap balance). Its size, the call line's and the badge's are the builder's
+    // sliders (2026-11-05 evening); the defaults per size stand in when a post carries none.
+    $hsize = max(30, min(120, (int)($p['hook_size'] ?? ($story ? 70 : ($sq ? 50 : 62)))));
+    $csize = max(24, min(100, (int)($p['call_size'] ?? round($hsize * 0.9))));
+    $bsize = max(14, min(40, (int)($p['badge_size'] ?? 22)));
     $pillHtml = $label !== '' ? '<div class="pill' . ($badgeTone !== 'slate' ? ' ' . $badgeTone : '') . '">' . $e($label) . '</div>' : '';
 
     // The figure: zoom scales it, focus_x moves it across, focus_y drops it (see below).
@@ -218,10 +208,10 @@ CSS;
     foreach ($sentences as $i => $sn) $hHtml .= '<p class="hook' . ($i > 0 ? ' h2' : ' h1') . '">' . $e($sn) . '</p>';
     // The second and later sentences (the call) in the serif italic or in the sans (Nikki, 2026-11-02); the serif matches the first.
     $h2Css = match ($hook2) {
-        'italic'   => '.hook.h2{font-style:italic;font-weight:400}',
-        'sans'     => ".hook.h2{font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-weight:400;font-size:" . (int)round($hsize * 0.9) . "px;line-height:1.2;letter-spacing:.01em}",   // mixed case, a touch under the serif (the mock-up, 2026-11-05)
-        'sanscaps' => ".hook.h2{font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:" . (int)round($hsize * 0.52) . "px;line-height:1.3;letter-spacing:.5em;text-transform:uppercase;margin-right:-.5em}",   // caps, tracked .5em (Nikki, 2026-11-02)
-        default    => '',
+        'italic'   => ".hook.h2{font-style:italic;font-weight:400;font-size:{$csize}px}",
+        'sans'     => ".hook.h2{font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-weight:400;font-size:{$csize}px;line-height:1.2;letter-spacing:.01em}",   // mixed case (the mock-up, 2026-11-05)
+        'sanscaps' => ".hook.h2{font-family:'Jost','Helvetica Neue',Arial,sans-serif;font-weight:500;font-size:{$csize}px;line-height:1.3;letter-spacing:.5em;text-transform:uppercase;margin-right:-.5em}",   // caps, tracked .5em (Nikki, 2026-11-02)
+        default    => ".hook.h2{font-size:{$csize}px}",
     } . ($hook1 === 'italic' ? '.hook.h1{font-style:italic;font-weight:400}' : '');
     // The backdrop photo is half desaturated (Nikki, 2026-11-05: the blue was dominant; the veil was already #1F242C, the sky showing through it was the blue), like the website's photo bands.
     $css = ".bd{position:absolute;inset:0;z-index:0;overflow:hidden}.bd img{display:block;width:{$bdPct}%;height:{$bdPct}%;object-fit:cover;object-position:{$bdFx}% {$bdFy}%;transform:translate({$bdTx}px,{$bdTy}px);filter:saturate(.5)}.bd::after{content:'';position:absolute;inset:0;background:rgba({$veilRgb},{$veil})}"
@@ -229,39 +219,28 @@ CSS;
          . ($arrange === 'stack'
              // The stack: one right-aligned column, badge over the hook, the call line, then the logo (unless lower right or none).
              ? ".stack{position:absolute;right:64px;top:{$g['stackTop']}px;width:{$g['stackW']}px;z-index:4;text-align:right;text-shadow:{$textShadow}}"
-             . ".stack .band{margin:0 0 {$sz(34)}px}.stack .pill{padding:{$sz(15)}px {$sz(24)}px {$sz(13)}px;font-size:{$sz(22)}px;letter-spacing:.24em}"
-             . ".stack .words{position:static;width:auto;text-shadow:none}.stack .hook{margin:0 0 {$sz(10)}px;font-size:" . (int)round($hsize * 0.92) . "px}"
+             . ".stack .band{margin:0 0 {$sz(34)}px}.stack .pill{padding:{$sz(15)}px {$sz(24)}px {$sz(13)}px;font-size:{$sz($bsize)}px;letter-spacing:.24em}"
+             . ".stack .words{position:static;width:auto;text-shadow:none}.stack .hook{margin:0 0 {$sz(10)}px}"
              . ".stack .logo{position:static;display:inline-block;margin-top:{$sz(36)}px}"
              . ($logoLow ? ".logo{position:absolute;right:64px;bottom:" . ($bot + ($story ? 56 : 64)) . "px;z-index:5}" : '')
              : ".band{position:absolute;left:64px;top:{$g['bandY']}px;z-index:4}"
              . ($logoLow ? ".logo{right:64px;bottom:" . ($bot + ($story ? 56 : 64)) . "px;z-index:5}" : ".logo{right:64px;top:{$g['bandY']}px;z-index:5}")
              . ".words{left:64px;width:{$hookW}px;top:{$g['hookTop']}px;z-index:4}"
-             . ".words .hook{margin:0 0 {$sz(10)}px}")   // the call line close under the hook (2026-11-05; was 26)
+             . ".words .hook{margin:0 0 {$sz(10)}px}.pill{font-size:{$sz($bsize)}px}")   // the call line close under the hook (2026-11-05; was 26)
          . $h2Css
          // The real Mont Haus triangle, ghosted, large at the lower right (the watermark choice picks the mark; None leaves the ground bare).
          . ".ghost{right:" . ($story ? -300 : ($sq ? -200 : -260)) . "px;bottom:0;width:" . ($story ? 1320 : ($sq ? 800 : 1100)) . "px;opacity:" . ($theme === 'light' ? '.16' : '.24') . "}"
          . ".ghost.m{right:0;width:" . ($story ? 900 : ($sq ? 560 : 760)) . "px}"
-         // The name and the service area, right-aligned: at the lower right of the frame (inside the story's safe zone),
-         // drawn above the figure so a shoulder never hides them; or under the hook, on the ground (the slate band behind
-         // the shoulders went on 2026-11-05, Nikki: "not loving that element"); or not drawn at all. Sizes from the builder's sliders.
-         . ($whoPlace === 'corner'
-             ? ".who{position:absolute;right:64px;bottom:" . ($bot + ($story ? 56 : 64)) . "px;z-index:4;text-align:right;color:#FFFFFF;text-shadow:{$textShadow}}"
-             : ".who{margin-top:{$sz(44)}px;text-align:right;color:#FFFFFF}")
-         . ".who .ln{margin:0 0 {$sz(10)}px;color:#FFFFFF;white-space:nowrap;overflow:visible}"
-         . ".who .ln-town{color:#FFFFFF;font-size:{$sz($whoName)}px;letter-spacing:.16em}"
-         . ".who .ln-details{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:{$sz($whoArea)}px;line-height:1.15;letter-spacing:0;color:#EEF1F5}"
-         . ".who .ln-plain{font-size:{$sz(30)}px;color:#EEF1F5}.who .ln-note{color:#EEF1F5}"
          . ".fig{position:absolute;left:{$figLeft2}px;top:{$figTop2}px;height:{$figH2}px;z-index:3}"
          . ".fig img{display:block;height:100%;width:auto;filter:drop-shadow(0 24px 40px rgba(0,0,0,.35))}";
     $figHtml = $photo !== '' ? '<div class="fig"><img src="' . $e($photo) . '" alt=""></div>' : '';
     $logoHtml = $logoOn ? '<img class="logo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">' : '';
-    $wordsHtml = '<div class="words">' . $hHtml . ($whoPlace === 'under' ? '<div class="who">' . $lHtml . '</div>' : '') . '</div>';
+    $wordsHtml = '<div class="words">' . $hHtml . '</div>';
     $html = ($bd !== '' ? '<div class="bd"><img src="' . $e($bd) . '" alt=""></div>' : '') . $html
            . ($arrange === 'stack'
                ? '<div class="stack">' . ($label !== '' ? '<div class="band">' . $pillHtml . '</div>' : '') . $wordsHtml . (!$logoLow ? $logoHtml : '') . '</div>' . ($logoLow ? $logoHtml : '')
                : '<div class="band">' . ($label !== '' ? $pillHtml : '') . '</div>' . $logoHtml . $wordsHtml)
-           . $figHtml
-           . ($whoPlace === 'corner' && $lHtml !== '' ? '<div class="who">' . $lHtml . '</div>' : '');
+           . $figHtml;
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
          . '<title>' . $e($hlines[0] ?? 'Featured Agent') . '</title><style>' . $common . $css . '</style></head><body>' . $html . '</body></html>';

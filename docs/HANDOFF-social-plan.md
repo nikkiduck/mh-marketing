@@ -254,6 +254,12 @@ Backdrop (tiles, upload, framer, and the Overlay on the broker tool). The
 page header moves into the form column at load so the preview is sticky
 from the top (82px, under the fixed portal header).
 
+**Same evening:** the name and service area lines are gone from the Broker
+Feature (no Text lines on that tool), and the Text section has Hook size,
+Call line size and Badge size sliders (`hook_size`, `call_size`,
+`badge_size`, px; defaults 70 / 62 / 50 by size, 0.9 of the hook, 22; a
+slider keeps its value once moved). The length-based hook sizing is gone.
+
 **The photo pick is the backdrop (Nikki, same night, after a stock photo
 replaced Bryan's cutout with a chairlift: "if I choose an alternate photo
 it should change the background, not the headshot"):** the Broker tool's

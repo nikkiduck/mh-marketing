@@ -45,7 +45,7 @@ $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (s
 $default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' && $pk !== 'broker') ? 'bottom' : 'top'));   // the Broker Feature: with the words at every size (2026-11-05, the stack)
 $default_badge = ($default_size === 'story' && $default_logo !== 'top') ? 'right' : 'left';
 $themes = plan_themes($pk); $labels = plan_labels(); $styles = social_line_styles(); $defaults = social_line_defaults();
-$line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
+$line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature draws none (2026-11-05 evening)
 ?>
   <div class="sp-grid">
     <form id="spForm" class="sp-form" method="post" action="<?= $e($export_url) ?>" autocomplete="off">
@@ -208,7 +208,7 @@ $line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : 
         <h2 class="sp-step-h">Text</h2>
         <div class="sp-fields">
           <label class="sp-field">Headline <span class="sp-only-multi">(Enter for a new line)</span> <textarea name="headline" maxlength="140" rows="2"></textarea></label>
-          <?php foreach ($line_names as $i => $nm): ?>
+          <?php foreach ($pk === 'broker' ? [] : $line_names as $i => $nm): ?>
           <div class="sp-line<?= $i === 2 ? ' sp-only-long sp-only-3' : ($i === 3 ? ' sp-only-long' : '') ?>">
             <label class="sp-field"><?= $e($nm) ?> <input name="line_text[]" maxlength="90"></label>
             <label class="sp-field sp-style"><?= $e($nm) ?> style
@@ -233,16 +233,10 @@ $line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : 
           <label class="sp-pillopt"><input type="radio" name="hook2" value="<?= $e($k) ?>"<?= $k === (isset(plan_hook_styles()[$wh]) ? $wh : 'sans') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Name and area</span>
-          <?php $wp = (string)($pk_preset['who_place'] ?? 'none'); if (!in_array($wp, ['corner', 'under'], true)) $wp = 'none';
-          foreach (['none' => 'Off', 'corner' => 'Lower right', 'under' => 'Under the hook'] as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="who_place" value="<?= $e($k) ?>"<?= $k === $wp ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
         <div class="sp-ranges">
-          <label class="sp-range">Name size <input type="range" name="who_name" min="24" max="80" step="2" value="44"><output>44px</output></label>
-          <label class="sp-range">Area size <input type="range" name="who_area" min="32" max="120" step="2" value="64"><output>64px</output></label>
+          <label class="sp-range">Hook size <input type="range" name="hook_size" min="30" max="120" step="2" value="70"><output>70px</output></label>
+          <label class="sp-range">Call line size <input type="range" name="call_size" min="24" max="100" step="2" value="62"><output>62px</output></label>
+          <label class="sp-range">Badge size <input type="range" name="badge_size" min="14" max="40" step="1" value="22"><output>22px</output></label>
         </div>
         <?php endif; ?>
         <div class="sp-ranges">
@@ -518,7 +512,7 @@ $line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : 
 
   // ── The words, from the subject ──
   const setLabel = v => { labelSel.value = v; if (labelSel.value !== v) labelSel.value = '__none'; };
-  const setLines = arr => { for (let i = 0; i < 4; i++) { lineText(i).value = (arr[i] && arr[i][0]) || ''; if (arr[i] && arr[i][1]) lineStyle(i).value = arr[i][1]; } };
+  const setLines = arr => { for (let i = 0; i < 4; i++) { if (!lineText(i)) continue; lineText(i).value = (arr[i] && arr[i][0]) || ''; if (arr[i] && arr[i][1]) lineStyle(i).value = arr[i][1]; } };
   function fill() {
     if (KIND === 'property') {
       const l = LISTINGS.find(x => x.id === subject()); if (!l) return;
@@ -532,7 +526,6 @@ $line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : 
       const opt = f('hook').selectedOptions[0], tpl = opt ? opt.dataset.tpl : '';
       if (tpl) f('headline').value = tpl.replace(/\{name\}/g, a.name).replace(/\{first\}/g, a.first).replace(/\{market\}/g, market);
       // The name, then the service area alone (Nikki, 2026-11-05: no title; 2026-11-02: no company name, the logo carries it).
-      setLines([[a.name, 'town'], [market, 'details'], ['', 'plain'], ['', 'note']]);
       setLabel(String(f('hook').value).startsWith('m') ? 'Milestone' : 'Broker Spotlight');
     } else if (KIND === 'location') {
       const opt = f('loc').selectedOptions[0]; if (!opt) return;
@@ -581,8 +574,16 @@ $line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : 
   });
 
   // ── The logo sliders: show each value; the text shadow follows the look (35 on dark, 0 on light) until it is moved. ──
-  function showRange(r) { const o = r.parentElement.querySelector('output'); if (o) o.textContent = r.name === 'logo_scale' ? r.value + '%' : ((r.name === 'who_name' || r.name === 'who_area') ? r.value + 'px' : r.value); }
+  function showRange(r) { const o = r.parentElement.querySelector('output'); if (o) o.textContent = r.name === 'logo_scale' ? r.value + '%' : (/^(hook_size|call_size|badge_size)$/.test(r.name) ? r.value + 'px' : r.value); }
   function syncShadowDefault() { const r = f('text_shadow'); if (!r.dataset.touched) { r.value = f('theme').value === 'light' ? 0 : 35; showRange(r); } }
+  // The Broker Feature's text sizes (hook, call line, badge) start from the size's defaults and keep them until moved.
+  function syncTextSizes() {
+    if (KIND !== 'broker') return;
+    const hook = { story: 70, post: 62, square: 50 }[fmt()] || 62;
+    const h = f('hook_size'), c = f('call_size');
+    if (!h.dataset.touched) { h.value = hook; showRange(h); }
+    if (!c.dataset.touched) { c.value = Math.round((h.dataset.touched ? +h.value : hook) * 0.9); showRange(c); }
+  }
   form.querySelectorAll('.sp-range input').forEach(showRange);
   document.getElementById('spResetLogo').addEventListener('click', () => {
     for (const [n, v] of [['logo_scale', 130], ['logo_dx', 0], ['logo_dy', 0], ['logo_shadow', 0]]) { f(n).value = v; delete f(n).dataset.touched; showRange(f(n)); }   // 130: the logo's starting size since 2026-11-05
@@ -805,13 +806,14 @@ $line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : 
     if (n === 'season') { fillTaglines(); fill(); loadPhotos(); return; }
     if (n === 'variant' || n === 'hook' || n === 'market' || n === 'tagline') fill();
     if (n === 'angle') { if (e.target.value === 'team') f('layout').value = 'split'; fillTeam(true); fill(); syncLayout(); }
-    if (n === 'size') { syncLayout(); scale(); syncSet(); }
+    if (n === 'size') { syncLayout(); scale(); syncSet(); syncTextSizes(); }
+    if (n === 'hook_size') { const c = f('call_size'); if (!c.dataset.touched) { c.value = Math.round(+e.target.value * 0.9); showRange(c); } }
     if (n === 'layout' || n === 'style' || n === 'arrange') { syncLayout(); framerApply(); }
     if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
     if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } if (KIND !== 'broker') framerSet(e.target.dataset.large, e.target.value); else bdSet(e.target.value === 'none' ? '' : e.target.dataset.large); }
     if (n === 'theme') syncShadowDefault();
-    if (['logo_scale', 'logo_dx', 'logo_dy', 'text_shadow', 'logo_shadow', 'backdrop_veil', 'who_name', 'who_area'].includes(n)) { showRange(e.target); e.target.dataset.touched = '1'; }
+    if (['logo_scale', 'logo_dx', 'logo_dy', 'text_shadow', 'logo_shadow', 'backdrop_veil', 'hook_size', 'call_size', 'badge_size'].includes(n)) { showRange(e.target); e.target.dataset.touched = '1'; }
     if (n === 'zoom') { framerApply(); framingStore(); }
     if (n === 'bd_zoom') bdApply();
     update();
@@ -857,7 +859,7 @@ $line_names = $pk === 'broker' ? ['Name', 'Service area', 'Line 3', 'Line 4'] : 
   if (KIND === 'broker') { const o = f('agent').selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; }
   const restored = restoreSaved();
   if (!restored) { fillTaglines(); fillTeam(true); }
-  syncLayout();
+  syncLayout(); syncTextSizes();
   if (!restored) fill();
   loadPhotos(restored ? SAVED.photo : undefined).then(() => {
     if (!restored || setOn()) return;   // a set's tabs were framed by loadPhotos
