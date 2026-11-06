@@ -141,6 +141,10 @@ define('MARKET_REPORT_EMAILS',              'jonathan.boxer@monthaus.com,nikki.b
 // "Send to Accounting" on a collateral order (agent.php, inc/accounting_mail.php,
 // 2026-11-06): where the order's details and receipt go. One address.
 define('ACCOUNTING_EMAIL',                   'accounting@monthaus.com');
+// ... and the address it comes from (Nikki, 2026-11-06: not the sender's own; the
+// sender is CC'd). Must be on a domain SendGrid has authenticated.
+define('ACCOUNTING_FROM_EMAIL',              'marketing@monthaus.com');
+define('ACCOUNTING_FROM_NAME',               'Mont Haus Marketing');
 
 /**
  * Dynamic QR codes (qr_codes.php, qr.php, inc/qr.php).
