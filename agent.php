@@ -14,6 +14,7 @@ require_once __DIR__ . '/inc/agent_roster.php';     // mk_slug_base() for the we
 require_once __DIR__ . '/inc/photos.php';           // headshots, and PHP's upload limits
 require_once __DIR__ . '/inc/qr.php';               // QR codes card on the Profile tab
 require_once __DIR__ . '/inc/receipts.php';         // receipt files: collateral orders and advertising placements
+require_once __DIR__ . '/inc/accounting_mail.php';  // Send to Accounting on a collateral order (sql/collateral_accounting_v1.sql)
 require_once __DIR__ . '/inc/creatives.php';        // creative files shown on the agent portal (sql/creatives_v1.sql)
 
 /**
@@ -1069,6 +1070,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header("Location: agent.php?id={$id}&tab=collateral"); exit;
     }
 
+    /* --- Send to Accounting (Nikki, 2026-11-06) ---
+     * Emails ACCOUNTING_EMAIL the order, who pays, the orders sharing its
+     * receipt, its notes and the receipt file (inc/accounting_mail.php), then
+     * stamps accounting_sent_at / _by so the card says so and the button asks
+     * before a second send. The browser already asked when there is no receipt. */
+    if ($action === 'send_to_accounting') {
+        $oid  = (int)($_POST['order_id'] ?? 0);
+        $back = "agent.php?id={$id}&tab=collateral";
+        if (!mk_column_exists($conn, 'marketing_collateral_orders', 'accounting_sent_at')) {
+            header("Location: {$back}&err=" . urlencode('Run sql/collateral_accounting_v1.sql first.')); exit;
+        }
+        $g = $conn->prepare("SELECT * FROM marketing_collateral_orders WHERE id=? AND intake_id=? LIMIT 1");
+        $g->bind_param('ii', $oid, $id); $g->execute(); $orow = $g->get_result()->fetch_assoc(); $g->close();
+        $arow = $conn->query("SELECT * FROM marketing_intakes WHERE id={$id} LIMIT 1")->fetch_assoc();
+        if (!$orow || !$arow) { header("Location: {$back}&err=" . urlencode('That order was not found.')); exit; }
+        $sender = trim(($_SESSION['user_first_name'] ?? '') . ' ' . ($_SESSION['user_last_name'] ?? '')) ?: (string)($_SESSION['user_email'] ?? 'Mont Haus');
+        [$ok, $detail] = mk_send_order_to_accounting($conn, $arow, $orow, $sender);
+        if (!$ok) { header("Location: {$back}&err=" . urlencode('Not sent to Accounting: ' . $detail) . "#order-{$oid}"); exit; }
+        $s = $conn->prepare("UPDATE marketing_collateral_orders SET accounting_sent_at = NOW(), accounting_sent_by = ? WHERE id=? AND intake_id=?");
+        $s->bind_param('sii', $sender, $oid, $id); $s->execute(); $s->close();
+        header("Location: {$back}&acct=" . urlencode('Sent to ' . ACCOUNTING_EMAIL . ': ' . $detail) . "#order-{$oid}"); exit;
+    }
+
     if ($action === 'delete_collateral_order') {
         $oid = (int)($_POST['order_id'] ?? 0);
         $grow = null;   // its proof files go with it
@@ -1578,6 +1602,7 @@ if ($r) {
         $coll_all[(int)$row['id']]   = $row;
     }
 }
+$has_acct = mk_column_exists($conn, 'marketing_collateral_orders', 'accounting_sent_at');   // Send to Accounting (sql/collateral_accounting_v1.sql)
 
 // ── Campaigns ─────────────────────────────────────────────────────────────────
 $has_medium = mk_column_exists($conn, 'marketing_campaigns', 'medium');   // print vs digital; checked here, above the early close
@@ -2325,6 +2350,8 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .order-link { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:600;
                   color:#55637a; text-decoration:none; background:#eff6ff; padding:2px 8px; border-radius:3px; margin-right:4px; }
     .order-link:hover { background:#dbeafe; }
+    .acct-sent { display:inline-flex; align-items:center; gap:3px; font-size:11px; font-weight:700; color:#1f5a35;
+                 background:#e9f3ec; padding:2px 8px; border-radius:3px; margin-right:4px; }   /* Sent to Accounting (2026-11-06) */
     .order-notes { font-size:12px; color:#6b7280; margin-top:4px; white-space:pre-wrap; }
     .order-actions { display:flex; gap:6px; margin-top:8px; }
     .add-order-btn { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
@@ -2802,6 +2829,11 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       <?php if (!empty($_GET['err'])): ?>
         <span class="saved-flash" style="background:#fee2e2;color:#991b1b;">
           <i class="ti ti-alert-triangle"></i> <?= htmlspecialchars($_GET['err']) ?>
+        </span>
+      <?php endif; ?>
+      <?php if (!empty($_GET['acct'])): // Send to Accounting (2026-11-06) ?>
+        <span class="saved-flash" style="background:#e9f3ec;color:#1f5a35;max-width:640px;white-space:normal;text-align:left;">
+          <i class="ti ti-send"></i> <?= htmlspecialchars($_GET['acct']) ?>
         </span>
       <?php endif; ?>
     </div>
@@ -3675,7 +3707,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
   <?php
   // ── Collateral orders block helper ───────────────────────────────────────────
-  function coll_orders_block(string $type, array $orders, int $aid, array $status_labels, array $status_colors): void { ?>
+  function coll_orders_block(string $type, array $orders, int $aid, array $status_labels, array $status_colors, bool $can_send = false): void { ?>
     <div class="coll-orders">
       <div class="coll-orders-title">Orders</div>
       <?php foreach ($orders as $o):
@@ -3706,6 +3738,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           <?php if ($o['delivered_at']): ?><span>Delivered: <strong><?= date('m/d/Y', strtotime($o['delivered_at'])) ?></strong></span><?php endif; ?>
         </div>
         <div>
+          <?php if ($can_send && !empty($o['accounting_sent_at'])): // Send to Accounting (2026-11-06) ?>
+            <span class="acct-sent" title="Sent by <?= htmlspecialchars((string)($o['accounting_sent_by'] ?? '')) ?>"><i class="ti ti-check" style="font-size:11px;"></i> Sent to Accounting <?= date('m/d/Y', strtotime($o['accounting_sent_at'])) ?></span>
+          <?php endif; ?>
           <?php if ($o['vendor_url']): ?>
             <a class="order-link" href="<?= htmlspecialchars($o['vendor_url']) ?>" target="_blank"><i class="ti ti-external-link" style="font-size:10px;"></i> Vendor</a>
           <?php endif; ?>
@@ -3729,6 +3764,15 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         <?php if ($o['notes']): ?><div class="order-notes"><?= htmlspecialchars($o['notes']) ?></div><?php endif; ?>
         <div class="order-actions">
           <button class="section-edit-btn" type="button" onclick="toggleInline('<?= $eid ?>')">Edit</button>
+          <?php if ($can_send): // Send to Accounting (2026-11-06): asks first when there is no receipt, and again when it was sent before ?>
+            <form method="POST" style="margin:0;" onsubmit="return acctConfirm(this, <?= !empty($o['receipt_file']) ? 1 : 0 ?>, '<?= !empty($o['accounting_sent_at']) ? date('m/d/Y', strtotime($o['accounting_sent_at'])) : '' ?>')">
+              <input type="hidden" name="_action" value="send_to_accounting">
+              <input type="hidden" name="order_id" value="<?= (int)$o['id'] ?>">
+              <button type="submit" class="btn btn-outline btn-xs" title="Email this order and its receipt to <?= htmlspecialchars(defined('ACCOUNTING_EMAIL') ? ACCOUNTING_EMAIL : 'accounting') ?>">
+                <i class="ti ti-send"></i> <?= !empty($o['accounting_sent_at']) ? 'Resend to Accounting' : 'Send to Accounting' ?>
+              </button>
+            </form>
+          <?php endif; ?>
           <?php if (!empty($o['receipt_file'])): ?>
             <!-- Sits here rather than inside the edit form — HTML forms can't nest -->
             <form method="POST" style="margin:0;" onsubmit="return confirm('Remove the receipt from this order?')">
@@ -4311,7 +4355,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <?= step((bool)$agent['coll_bc_chk_delivered'],'Delivered') ?>
           </div>
         <?php endif; ?>
-        <?php coll_orders_block('business_cards', $coll_orders['business_cards'] ?? [], $id, $order_status_labels, $order_status_colors); ?>
+        <?php coll_orders_block('business_cards', $coll_orders['business_cards'] ?? [], $id, $order_status_labels, $order_status_colors, $has_acct); ?>
         <div id="edit-bc" style="display:none;" class="inline-edit-form">
           <form method="POST">
             <input type="hidden" name="_action" value="update_intake_fields">
@@ -4353,7 +4397,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         <?php if ($agent['coll_yard_signs']): ?>
           <div class="coll-detail"><?= $agent['coll_ys_qty']?'Qty: '.htmlspecialchars($agent['coll_ys_qty']).'&nbsp;&nbsp;':'' ?><?= $agent['coll_ys_design']?'Design: '.htmlspecialchars($agent['coll_ys_design']):'' ?><?= $agent['coll_ys_info']?'<br>'.htmlspecialchars($agent['coll_ys_info']):'' ?></div>
         <?php endif; ?>
-        <?php coll_orders_block('yard_signs', $coll_orders['yard_signs'] ?? [], $id, $order_status_labels, $order_status_colors); ?>
+        <?php coll_orders_block('yard_signs', $coll_orders['yard_signs'] ?? [], $id, $order_status_labels, $order_status_colors, $has_acct); ?>
         <div id="edit-ys" style="display:none;" class="inline-edit-form">
           <form method="POST">
             <input type="hidden" name="_action" value="update_intake_fields">
@@ -4389,7 +4433,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         <?php if ($agent['coll_oh_signs']): ?>
           <div class="coll-detail"><?= $agent['coll_oh_qty']?'Qty: '.htmlspecialchars($agent['coll_oh_qty']):'' ?><?= $agent['coll_oh_qr_code']?' &mdash; QR: '.($agent['coll_oh_qr_url']?'<a href="'.htmlspecialchars($agent['coll_oh_qr_url']).'" target="_blank">'.htmlspecialchars($agent['coll_oh_qr_url']).'</a>':'Yes'):'' ?><?= $agent['coll_oh_info']?'<br>'.htmlspecialchars($agent['coll_oh_info']):'' ?></div>
         <?php endif; ?>
-        <?php coll_orders_block('oh_signs', $coll_orders['oh_signs'] ?? [], $id, $order_status_labels, $order_status_colors); ?>
+        <?php coll_orders_block('oh_signs', $coll_orders['oh_signs'] ?? [], $id, $order_status_labels, $order_status_colors, $has_acct); ?>
         <div id="edit-oh" style="display:none;" class="inline-edit-form">
           <form method="POST">
             <input type="hidden" name="_action" value="update_intake_fields">
@@ -4434,7 +4478,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <?= step((bool)$agent['coll_pc_chk_delivered'],'Delivered') ?>
           </div>
         <?php endif; ?>
-        <?php coll_orders_block('postcards', $coll_orders['postcards'] ?? [], $id, $order_status_labels, $order_status_colors); ?>
+        <?php coll_orders_block('postcards', $coll_orders['postcards'] ?? [], $id, $order_status_labels, $order_status_colors, $has_acct); ?>
         <div id="edit-pc" style="display:none;" class="inline-edit-form">
           <form method="POST">
             <input type="hidden" name="_action" value="update_intake_fields">
@@ -4474,7 +4518,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <?= step((bool)$agent['coll_br_chk_created'],'Created') ?>
           </div>
         <?php endif; ?>
-        <?php coll_orders_block('brochures', $coll_orders['brochures'] ?? [], $id, $order_status_labels, $order_status_colors); ?>
+        <?php coll_orders_block('brochures', $coll_orders['brochures'] ?? [], $id, $order_status_labels, $order_status_colors, $has_acct); ?>
         <div id="edit-br" style="display:none;" class="inline-edit-form">
           <form method="POST">
             <input type="hidden" name="_action" value="update_intake_fields">
@@ -4508,7 +4552,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         <?php if ($agent['coll_other']): ?>
           <div class="coll-detail"><?= htmlspecialchars($agent['coll_other']) ?></div>
         <?php endif; ?>
-        <?php coll_orders_block('other', $coll_orders['other'] ?? [], $id, $order_status_labels, $order_status_colors); ?>
+        <?php coll_orders_block('other', $coll_orders['other'] ?? [], $id, $order_status_labels, $order_status_colors, $has_acct); ?>
         <div id="edit-co" style="display:none;" class="inline-edit-form">
           <form method="POST">
             <input type="hidden" name="_action" value="update_intake_fields">
@@ -5998,6 +6042,15 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 })();
 
 // ── Toggle inline forms (URL / date pickers) ──────────────────────────────────
+// Send to Accounting (2026-11-06): the two questions, then one click only.
+function acctConfirm(form, hasReceipt, sentOn) {
+  if (!hasReceipt && !confirm('There is no receipt attached to this order. Send anyway?')) return false;
+  if (sentOn && !confirm('This order was sent to Accounting on ' + sentOn + '. Send again?')) return false;
+  var b = form.querySelector('button[type=submit]');
+  if (b) { b.disabled = true; b.innerHTML = '<i class="ti ti-send"></i> Sending&hellip;'; }
+  return true;
+}
+
 function toggleInline(id) {
   const el = document.getElementById(id);
   if (!el) return;

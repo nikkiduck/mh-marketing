@@ -138,6 +138,10 @@ define('ROSTER_ALERT_EMAILS',               'nikki.boxer@monthaus.com');
 // check, or still waiting on CAR. JB owns the report. Comma separated.
 define('MARKET_REPORT_EMAILS',              'jonathan.boxer@monthaus.com,nikki.boxer@monthaus.com');
 
+// "Send to Accounting" on a collateral order (agent.php, inc/accounting_mail.php,
+// 2026-11-06): where the order's details and receipt go. One address.
+define('ACCOUNTING_EMAIL',                   'accounting@monthaus.com');
+
 /**
  * Dynamic QR codes (qr_codes.php, qr.php, inc/qr.php).
  *

@@ -19,10 +19,10 @@ use PHPMailer\PHPMailer\Exception;
  * @param string       $from_email   From address (defaults to logged-in user's email).
  *                                   NOTE: must be on a domain authorized in SendGrid.
  *                                   All @wbaspen.com addresses are covered by the domain auth.
- * @param string       $from_name    From display name (defaults to logged-in user's full name)
+ * @param array        $attachments  Optional files to attach: [['path' => '/abs/file', 'name' => 'shown name'], ...]
  * @return bool
  */
-function send_email(string $to_email, string $to_name, string $subject, string $body_html, string $body_text = '', array $cc_emails = [], string &$error_detail = '', string $from_email = '', string $from_name = ''): bool
+function send_email(string $to_email, string $to_name, string $subject, string $body_html, string $body_text = '', array $cc_emails = [], string &$error_detail = '', string $from_email = '', string $from_name = '', array $attachments = []): bool
 {
     $mail = new PHPMailer(true);
 
@@ -59,6 +59,13 @@ function send_email(string $to_email, string $to_name, string $subject, string $
         $mail->Subject = $subject;
         $mail->Body    = $body_html;
         $mail->AltBody = $body_text ?: strip_tags($body_html); // fallback to stripped HTML if no plain text provided
+
+        // Attachments (2026-11-06, the receipt on "Send to Accounting"): a file
+        // that is missing on disk is skipped, not fatal; the caller says so in the body.
+        foreach ($attachments as $att) {
+            $path = (string)($att['path'] ?? '');
+            if ($path !== '' && is_file($path)) $mail->addAttachment($path, (string)($att['name'] ?? basename($path)));
+        }
 
         $mail->send();
         return true;

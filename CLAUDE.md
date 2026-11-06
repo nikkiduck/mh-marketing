@@ -1090,6 +1090,27 @@ orders pointing at one filename would mean clearing the receipt on one agent
 silently breaking the link for the other two. A few duplicated PDFs is the better
 trade. `receipt.php` also takes `?invoice_id=` for the invoice's own copy.
 
+### Send to Accounting (2026-11-06)
+
+Every collateral order card (agent.php, Collateral tab) has a "Send to
+Accounting" button: it emails `ACCOUNTING_EMAIL` (inc/config.php,
+accounting@monthaus.com) the order's details, who pays, the other orders on
+the same receipt (Billed with on the same agent, or an order_split.php vendor
+invoice across agents, each with its cost and the combined figure, because
+accounting books per agent and one invoice must not read as new money each
+time), the notes, the receipt file as an attachment, and a link to the
+agent's Collateral tab (accounting has admin logins). Built and sent by
+`inc/accounting_mail.php` through `send_email()` (inc/mailer.php, which took
+an optional `$attachments` list that day) from the signed-in admin, so a
+reply reaches whoever pressed it. The browser asks first when the order has
+no receipt ("Send anyway?") and again when it was sent before. On success
+`accounting_sent_at` / `accounting_sent_by`
+(sql/collateral_accounting_v1.sql) are stamped and the card shows "Sent to
+Accounting mm/dd/yyyy"; until that SQL has run the button is hidden. The
+look is the B2B tool's Aspen header band (send.monthaus.com, same server)
+over one white card in the portal palette. Collateral only for now; Nikki
+may extend it to advertising placements later.
+
 ### The JavaScript is a second implementation, and is labelled one
 
 The live preview at the bottom of `order_split.php` is a transliteration of
