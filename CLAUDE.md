@@ -1102,8 +1102,8 @@ time), the notes, the receipt file as an attachment, and an "Open in Billing"
 link to billing.php?tab=agents (accounting has admin logins). Subject:
 "Marketing Order Receipt: {agent}". Built and sent by
 `inc/accounting_mail.php` through `send_email()` (inc/mailer.php, which took
-an optional `$attachments` list that day) from the signed-in admin, so a
-reply reaches whoever pressed it. The browser asks first when the order has
+an optional `$attachments` list that day) from the signed-in admin, who is
+CC'd, so they hold the same copy and a reply reaches them. The browser asks first when the order has
 no receipt ("Send anyway?") and again when it was sent before. On success
 `accounting_sent_at` / `accounting_sent_by`
 (sql/collateral_accounting_v1.sql) are stamped and the card shows "Sent to

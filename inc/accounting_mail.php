@@ -246,7 +246,12 @@ function mk_send_order_to_accounting(mysqli $conn, array $agent, array $o, strin
         if (pathinfo($name, PATHINFO_EXTENSION) === '') $name .= '.' . pathinfo($path, PATHINFO_EXTENSION);
         $att[] = ['path' => $path, 'name' => $name];
     }
+    // Whoever pressed the button is copied (Nikki, 2026-11-06: "can I be copied?"),
+    // so the sender has the same email and attachment accounting got.
+    $cc = [];
+    $me = strtolower(trim((string)($_SESSION['user_email'] ?? '')));
+    if ($me !== '' && filter_var($me, FILTER_VALIDATE_EMAIL) && $me !== strtolower($to)) $cc[] = $me;
     $err = '';
-    $ok  = send_email($to, 'Mont Haus Accounting', $mail['subject'], $mail['html'], $mail['text'], [], $err, '', '', $att);
+    $ok  = send_email($to, 'Mont Haus Accounting', $mail['subject'], $mail['html'], $mail['text'], $cc, $err, '', '', $att);
     return [$ok, $ok ? $mail['subject'] : ($err ?: 'The mail server did not accept the message.')];
 }
