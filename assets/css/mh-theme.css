@@ -182,7 +182,12 @@ select:not([multiple]):not([size])::-ms-expand { display: none; }
     padding: 0.55rem 0.9rem;
 }
 .attn-chip b { color: var(--mh-ink); font-weight: 500; }
-.attn-chip:hover, .attn-chip.on { border-color: var(--mh-gold); color: var(--mh-ink); }
+.attn-chip:hover { border-color: var(--mh-gold); color: var(--mh-ink); }
+/* Selected: filled, like the list/grid toggle beside it. index.php's own CSS fills it
+   #111 too; this sheet loads after it, so the text colours must be set here as well
+   (2026-11-05: the label came out dark on black). */
+.attn-chip.on, .attn-chip.on.alert { background: var(--mh-ink); border-color: var(--mh-ink); color: var(--mh-page); }
+.attn-chip.on b, .attn-chip.on.money b { color: var(--mh-page); }
 .attn-chip.alert { border-color: #e3c9c9; background: #fdf6f4; color: #8a3a3a; }
 .attn-chip.money b { color: var(--mh-gold-dk); }
 .attn-ok { color: var(--mh-dim); font-size: 0.78rem; letter-spacing: 0.06em; }
