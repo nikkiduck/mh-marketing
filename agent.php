@@ -3739,7 +3739,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         </div>
         <div>
           <?php if ($can_send && !empty($o['accounting_sent_at'])): // Send to Accounting (2026-11-06) ?>
-            <span class="acct-sent" title="Sent by <?= htmlspecialchars((string)($o['accounting_sent_by'] ?? '')) ?>"><i class="ti ti-check" style="font-size:11px;"></i> Sent to Accounting <?= date('m/d/Y', strtotime($o['accounting_sent_at'])) ?></span>
+            <span class="acct-sent" title="Sent by <?= htmlspecialchars((string)($o['accounting_sent_by'] ?? '')) ?>"><i class="ti ti-check" style="font-size:11px;"></i> Sent to Accounting <?= date('m/d/Y', strtotime($o['accounting_sent_at'] . ' UTC')) ?></span>
           <?php endif; ?>
           <?php if ($o['vendor_url']): ?>
             <a class="order-link" href="<?= htmlspecialchars($o['vendor_url']) ?>" target="_blank"><i class="ti ti-external-link" style="font-size:10px;"></i> Vendor</a>

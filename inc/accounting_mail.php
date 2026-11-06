@@ -31,6 +31,8 @@ const MK_ACCT_HEADER_IMAGE = 'https://send.monthaus.com/assets/images/email/head
 function mk_acct_e(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function mk_acct_money($v): string { return '$' . number_format((float)$v, 2); }
 function mk_acct_date(?string $d): string { return ($d && $d !== '0000-00-00') ? date('m/d/Y', strtotime($d)) : ''; }
+/** A shared-receipt row: its own cost, or "included" when the figure sits on the order it is billed with. */
+function mk_acct_cost_or_included(array $o): string { return ($o['cost'] !== null && $o['cost'] !== '') ? mk_acct_money($o['cost']) : 'included'; }
 
 /** "yard_signs" to "Yard Signs"; the card's own label when it has one. */
 function mk_acct_order_title(array $o): string {
@@ -132,15 +134,15 @@ function mk_acct_order_email(array $agent, array $o, array $sib, string $sender_
     // Shared receipt: the other orders on it and the combined figure.
     $shared = [];   // [heading, rows[[who, what, cost]], total line]
     if ($sib['billed']) {
-        $srows = [[$agent_name, $title, $cost]];
+        $srows = [[$agent_name, $title, mk_acct_cost_or_included($o)]];
         $tot = (float)($o['cost'] ?? 0);
-        foreach ($sib['billed'] as $s) { $srows[] = [$s['agent_name'], mk_acct_order_title($s), mk_acct_money($s['cost'] ?? 0)]; $tot += (float)($s['cost'] ?? 0); }
+        foreach ($sib['billed'] as $s) { $srows[] = [$s['agent_name'], mk_acct_order_title($s), mk_acct_cost_or_included($s)]; $tot += (float)($s['cost'] ?? 0); }
         $shared[] = ['This order is billed with ' . count($sib['billed']) . ' other order' . (count($sib['billed']) === 1 ? '' : 's') . ' on one receipt', $srows, 'Receipt total ' . mk_acct_money($tot)];
     }
     if ($sib['invoice']) {
-        $srows = [[$agent_name, $title, $cost]];
+        $srows = [[$agent_name, $title, mk_acct_cost_or_included($o)]];
         $tot = (float)($o['cost'] ?? 0);
-        foreach ($sib['invoice'] as $s) { $srows[] = [$s['agent_name'], mk_acct_order_title($s), mk_acct_money($s['cost'] ?? 0)]; $tot += (float)($s['cost'] ?? 0); }
+        foreach ($sib['invoice'] as $s) { $srows[] = [$s['agent_name'], mk_acct_order_title($s), mk_acct_cost_or_included($s)]; $tot += (float)($s['cost'] ?? 0); }
         $inv = $sib['invoice_row'];
         $head = 'This order is one agent\'s share of a vendor invoice split over ' . (count($sib['invoice']) + 1) . ' orders';
         if ($inv && !empty($inv['order_number'])) $head .= ' (' . ($inv['vendor'] ? $inv['vendor'] . ' ' : '') . '#' . $inv['order_number'] . ')';
@@ -153,7 +155,8 @@ function mk_acct_order_email(array $agent, array $o, array $sib, string $sender_
     }
 
     $notes = trim((string)($o['notes'] ?? ''));
-    $sent_line = 'Sent by ' . $sender_name . ' from the Mont Haus marketing portal, ' . date('F j, Y \a\t g:i A');
+    // Mountain time: this server runs PHP and MySQL in UTC.
+    $sent_line = 'Sent by ' . $sender_name . ' from the Mont Haus marketing portal, ' . (new DateTime('now', new DateTimeZone('America/Denver')))->format('F j, Y \a\t g:i A');
 
     // ---- HTML ------------------------------------------------------------
     $e = 'mk_acct_e';
