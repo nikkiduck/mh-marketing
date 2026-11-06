@@ -25,8 +25,9 @@ require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/mailer.php';
 require_once __DIR__ . '/schema.php';
 
-/** The header image the email opens with. A public URL on this server. */
-const MK_ACCT_HEADER_IMAGE = 'https://send.monthaus.com/assets/images/email/header-aspen.jpg';
+/** The header image the email opens with: the Aspen band in the slate scheme (Nikki, 2026-11-06;
+ *  the B2B tool's header-aspen.jpg on send.monthaus.com is still the older sepia tone). */
+const MK_ACCT_HEADER_IMAGE = SITE_URL . '/assets/images/email/header-aspen-slate.jpg';
 
 function mk_acct_e(?string $s): string { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 function mk_acct_money($v): string { return '$' . number_format((float)$v, 2); }
@@ -100,11 +101,11 @@ function mk_acct_order_email(array $agent, array $o, array $sib, string $sender_
     $title      = mk_acct_order_title($o);
     $who        = mk_acct_who_pays($o);
     $cost       = $o['cost'] !== null && $o['cost'] !== '' ? mk_acct_money($o['cost']) : '';
-    $link       = SITE_URL . '/agent.php?id=' . (int)$o['intake_id'] . '&tab=collateral#order-' . (int)$o['id'];
+    $link       = SITE_URL . '/billing.php?tab=agents';   // Billing, Agents tab (Nikki, 2026-11-06)
     $has_rcpt   = !empty($o['receipt_file']) && is_file(RECEIPTS_DIR . basename((string)$o['receipt_file']));
     $rcpt_name  = (string)($o['receipt_orig_name'] ?: $o['receipt_file'] ?: '');
 
-    $subject = 'Collateral order: ' . $agent_name . ', ' . $title . ($cost !== '' ? ', ' . $cost : '') . ($who !== '' ? ', ' . $who : '');
+    $subject = 'Marketing Order Receipt: ' . $agent_name;   // Nikki's wording, 2026-11-06
 
     // Detail rows: label, value; blanks are left out.
     $vendor = trim((string)($o['vendor'] ?? ''));
@@ -205,8 +206,8 @@ function mk_acct_order_email(array $agent, array $o, array $sib, string $sender_
     $h .= '<tr><td class="px" style="padding:20px 40px 0;' . $font . 'font-size:14px;color:' . $dim . ';">' . $rcpt_html . '</td></tr>';
     // Button
     $h .= '<tr><td class="px" align="left" style="padding:24px 40px 32px;"><table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:' . $slate . ';">';
-    $h .= '<a href="' . $e($link) . '" style="display:inline-block;padding:13px 24px;' . $font . 'font-size:13px;font-weight:bold;letter-spacing:.5px;color:#ffffff;text-decoration:none;">Open in Agent Management</a>';
-    $h .= '</td></tr></table><div style="' . $font . 'font-size:12px;color:' . $dim . ';margin-top:10px;">Opens the agent\'s Collateral tab on the marketing portal (admin sign-in).</div></td></tr>';
+    $h .= '<a href="' . $e($link) . '" style="display:inline-block;padding:13px 24px;' . $font . 'font-size:13px;font-weight:bold;letter-spacing:.5px;color:#ffffff;text-decoration:none;">Open in Billing</a>';
+    $h .= '</td></tr></table><div style="' . $font . 'font-size:12px;color:' . $dim . ';margin-top:10px;">Opens Billing on the marketing portal (admin sign-in).</div></td></tr>';
     // Footer
     $h .= '<tr><td class="px" style="padding:16px 40px 20px;border-top:1px solid ' . $line . ';' . $font . 'font-size:11px;line-height:1.5;color:' . $dim . ';">' . $e($sent_line) . '<br>Mont Haus International Realty</td></tr>';
     $h .= '</table></td></tr></table></body></html>';
@@ -222,7 +223,7 @@ function mk_acct_order_email(array $agent, array $o, array $sib, string $sender_
     }
     if ($notes !== '') $t .= "\nNotes:\n" . $notes . "\n";
     $t .= "\n" . ($has_rcpt ? 'Receipt attached: ' . $rcpt_name : 'No receipt was attached to this order.') . "\n";
-    $t .= "\nOpen in Agent Management: " . $link . "\n\n" . $sent_line . "\nMont Haus International Realty\n";
+    $t .= "\nOpen in Billing: " . $link . "\n\n" . $sent_line . "\nMont Haus International Realty\n";
 
     return ['subject' => $subject, 'html' => $h, 'text' => $t, 'has_receipt' => $has_rcpt];
 }
