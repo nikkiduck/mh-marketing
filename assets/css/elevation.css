@@ -67,10 +67,10 @@
 .ev-step-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .ev-step-head strong { font-weight: 500; }
 .ev-per { color: var(--muted); font-size: 14px; }
-.ev-track { height: 12px; background: #ece6da; border-radius: 6px; overflow: hidden; }
+.ev-track { height: 12px; background: #e6e9ee; border-radius: 6px; overflow: hidden; }
 .ev-fill { height: 100%; background: var(--ink); border-radius: 6px; transition: width .25s ease; }
 .ev-step.last .ev-fill, .ev-fill.met { background: var(--gold); }
-.ev-callout { background: #f3eee4; border-radius: 10px; padding: 14px 16px; font-size: 15px; margin: 0; }
+.ev-callout { background: #eef1f5; border-radius: 10px; padding: 14px 16px; font-size: 15px; margin: 0; }
 .ev-callout b { font-weight: 600; }
 .ev-pace { display: flex; flex-direction: column; gap: 10px; }
 .ev-pace-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
@@ -90,7 +90,7 @@
 .ev-qin input:focus-visible { outline: 2px solid var(--gold); outline-offset: 0; border-color: var(--gold); }
 .ev-warn { color: var(--ev-red); font-size: 14.5px; min-height: 1.3em; margin: 0; }
 .ev-share { display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
-.ev-bar { width: 84px; height: 8px; background: #ece6da; border-radius: 4px; overflow: hidden; display: inline-block; }
+.ev-bar { width: 84px; height: 8px; background: #e6e9ee; border-radius: 4px; overflow: hidden; display: inline-block; }
 .ev-bar > i { display: block; height: 100%; background: var(--ink); }
 .ev-flag { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; margin-left: 8px; }
 .ev-flag.low { color: var(--ok); }
@@ -171,7 +171,7 @@
 .ev-s-table td.each { font-size: 13px; color: var(--muted, #6b7a8f); white-space: nowrap; }
 .ev-s-specifics { display: block; color: var(--muted, #6b7a8f); font-size: 13px; line-height: 1.4; margin-top: 2px; }
 .ev-s-share { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
-.ev-s-bar { width: 64px; height: 7px; background: #ece6da; border-radius: 4px; overflow: hidden; display: inline-block; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.ev-s-bar { width: 64px; height: 7px; background: #e6e9ee; border-radius: 4px; overflow: hidden; display: inline-block; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .ev-s-bar > i { display: block; height: 100%; background: var(--ink, #2b3038); }
 .ev-s-flag { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
 .ev-s-flag.low { color: var(--ok, #2f6b45); }
@@ -190,7 +190,7 @@
 .ev-s-pace { display: flex; flex-direction: column; gap: 8px; }
 .ev-s-pacehead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .ev-s-pacehead b { font-size: 22px; font-weight: 500; }
-.ev-s-track { height: 10px; background: #ece6da; border-radius: 5px; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.ev-s-track { height: 10px; background: #e6e9ee; border-radius: 5px; overflow: hidden; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 .ev-s-fill { height: 100%; background: var(--ink, #2b3038); border-radius: 5px; }
 .ev-s-fill.met { background: var(--gold, #4a5566); }
 .ev-s-source { break-inside: avoid; }

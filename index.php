@@ -553,7 +553,7 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
                     font-size:12px; font-weight:700; color:#fff; overflow:hidden; }
     .agent-avatar img { width:100%; height:100%; object-fit:cover; }
     .who-name { font-weight:700; color:#111; text-decoration:none; display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px; }
-    a.who-name:hover { color:#f97316; }
+    a.who-name:hover { color:#4a5569; }
     .who-title { font-size:11px; color:#9ca3af; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:230px; }
 
     .boards { font-size:12px; color:#6b7280; white-space:nowrap; }

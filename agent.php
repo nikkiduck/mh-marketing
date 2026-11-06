@@ -1966,7 +1966,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     }
     .tab-btn:hover { color:#111; }
     .tab-btn.active { color:#111; border-bottom-color:#111; }
-    .tab-btn .badge { background:#f97316; color:#fff; border-radius:10px;
+    .tab-btn .badge { background:#4a5566; color:#fff; border-radius:10px;
                       padding:1px 6px; font-size:10px; font-weight:700; }
     .tab-panel { display:none; }
     .tab-panel.active { display:block; }
@@ -2279,7 +2279,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .listing-addr { font-size:13px; font-weight:700; color:#111; margin-bottom:2px; }
     .listing-city { font-size:11px; color:#9ca3af; margin-bottom:6px; }
     .listing-price { font-size:14px; font-weight:700; color:#111; }
-    .listing-link { display:block; margin-top:8px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:#f97316; text-decoration:none; }
+    .listing-link { display:block; margin-top:8px; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:#4a5569; text-decoration:none; }
     .listing-link:hover { text-decoration:underline; }
     /* Pocket listings (2026-10-14): off-MLS, entered on this page */
     .listing-status.done { color:#9ca3af; }
@@ -2328,10 +2328,10 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .order-notes { font-size:12px; color:#6b7280; margin-top:4px; white-space:pre-wrap; }
     .order-actions { display:flex; gap:6px; margin-top:8px; }
     .add-order-btn { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700;
-                     color:#f97316; background:none; border:1px dashed #fed7aa; border-radius:4px;
+                     color:#4a5569; background:none; border:1px dashed #c7ced8; border-radius:4px;
                      padding:4px 10px; cursor:pointer; text-transform:uppercase; letter-spacing:.3px;
                      transition:background .15s, border-color .15s; }
-    .add-order-btn:hover { background:#fff7ed; border-color:#f97316; }
+    .add-order-btn:hover { background:#eef1f5; border-color:#4a5566; }
 
     /* ── Section edit buttons ── */
     .section-edit-btn {

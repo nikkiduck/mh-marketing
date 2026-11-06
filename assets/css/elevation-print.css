@@ -23,7 +23,7 @@ body.ev-export { background: #fff; }
 .ev-tb-sp { flex: 1; }
 .ev-tb-btn { font: 500 14px var(--sans); color: #fff; background: transparent; border: 1px solid #3a352c; border-radius: 10px; padding: 8px 14px; cursor: pointer; text-decoration: none; }
 .ev-tb-btn:hover { border-color: #c2c8d1; }
-.ev-tb-btn.main { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+.ev-tb-btn.main { background: var(--gold); color: #fff; border-color: var(--gold); }   /* white on the button tone (Nikki, 2026-11-05) */
 .ev-doc { max-width: 8.5in; margin: 24px auto; background: #fff; padding: 0.6in 0.65in 0.7in; box-shadow: 0 2px 16px rgba(0,0,0,.12); }
 body.ev-export .ev-doc { max-width: none; margin: 0; padding: 0; box-shadow: none; }
 @media (max-width: 700px) { .ev-doc { margin: 0; padding: 20px 16px 32px; box-shadow: none; } }

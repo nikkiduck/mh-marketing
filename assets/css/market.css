@@ -7,7 +7,7 @@
 
 .mr {
   --mr-ink: #2b3038; --mr-gold: #4a5566; --mr-gold-deep: #4a5569; --mr-card: #ffffff; --mr-line: #dfe3e8;
-  --mr-text: #1f242c; --mr-muted: #6b7a8f; --mr-panel: #f6f7f9; --mr-warn: #8a5a12; --mr-grid: #ece7dd; --mr-bar: #c2c8d1;
+  --mr-text: #1f242c; --mr-muted: #6b7a8f; --mr-panel: #f6f7f9; --mr-warn: #8a5a12; --mr-grid: #e6e9ee; --mr-bar: #c2c8d1;
   --mr-serif: 'Cormorant Garamond', Georgia, serif; --mr-sans: 'Public Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-family: var(--mr-sans); color: var(--mr-text); font-size: 14px; line-height: 1.5; font-weight: 400; letter-spacing: 0;
   display: flex; flex-direction: column; gap: 24px;
@@ -21,16 +21,16 @@
 .mr-topright { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
 .mr-month { font-size: 13px; color: var(--mr-muted); display: flex; align-items: center; gap: 8px; }
 .mr-month select { font: 14px var(--mr-sans); color: var(--mr-text); padding: 7px 10px; border: 1px solid var(--mr-line); border-radius: 10px; background: #fff; }
-.mr-postlink, .mr-btn { display: inline-block; font: 500 14px var(--mr-sans); color: var(--mr-ink); background: var(--mr-gold); border-radius: 999px; padding: 9px 16px; text-decoration: none; white-space: nowrap; }
-.mr-postlink:hover, .mr-btn:hover { background: #353e4b; text-decoration: none; color: var(--mr-ink); }
+.mr-postlink, .mr-btn { display: inline-block; font: 500 14px var(--mr-sans); color: #fff; background: var(--mr-gold);   /* white on the button tone (Nikki, 2026-11-05: ink on the slate went dark on dark) */ border-radius: 999px; padding: 9px 16px; text-decoration: none; white-space: nowrap; }
+.mr-postlink:hover, .mr-btn:hover { background: #353e4b; text-decoration: none; color: #fff; }
 .mr-take { margin: -8px 0 0; font-size: 16px; max-width: 70ch; text-wrap: pretty; color: var(--mr-text); }
 .mr-take span { font-weight: 500; }
 
 .mr-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--mr-line); padding-bottom: 8px; }
 .mr-tabs { display: flex; flex-wrap: wrap; gap: 2px; }
 .mr-tab, .mr-seg button { font: 14px var(--mr-sans); background: none; border: 0; color: var(--mr-muted); padding: 6px 10px; border-radius: 8px; cursor: pointer; }
-.mr-tab:hover, .mr-seg button:hover { color: var(--mr-text); background: #f3eee4; }
-.mr-tab[aria-selected="true"] { color: var(--mr-text); background: #f3eee4; box-shadow: inset 0 -2px 0 var(--mr-gold); font-weight: 500; }
+.mr-tab:hover, .mr-seg button:hover { color: var(--mr-text); background: #e9edf2; }   /* cool tint, not the old cream (Nikki, 2026-11-05) */
+.mr-tab[aria-selected="true"] { color: var(--mr-text); background: #e9edf2; box-shadow: inset 0 -2px 0 var(--mr-gold); font-weight: 500; }
 .mr-tab:focus-visible, .mr-seg button:focus-visible { outline: 2px solid var(--mr-gold); outline-offset: 1px; }
 .mr-seg { display: inline-flex; border: 1px solid var(--mr-line); border-radius: 10px; padding: 2px; gap: 2px; background: #fff; }
 .mr-seg button[aria-pressed="true"] { background: var(--mr-ink); color: #fff; }

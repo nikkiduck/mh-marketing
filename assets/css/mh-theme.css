@@ -100,6 +100,9 @@ a:hover { color: var(--mh-gold); }
     padding: 0.7rem 1.6rem;
 }
 .btn-primary:hover { background: var(--mh-gold); color: #fff; border-color: var(--mh-gold); }
+/* Disabled (Save order before a change): Bootstrap's .btn:disabled outranks .btn-primary and
+   brought its blue back; same outline, faded (2026-11-05). */
+.btn-primary:disabled, .btn-primary.disabled { background: transparent; color: var(--mh-gold-dk); border-color: var(--mh-gold); opacity: .45; }
 .btn-outline {
     color: var(--mh-dim);
     background: transparent;
