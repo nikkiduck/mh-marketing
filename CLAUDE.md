@@ -2606,6 +2606,26 @@ retired the same day and 301s here.
 
 ### Market Report and Market Snapshot posts (2026-10-18)
 
+**PDF flyer for a client (2026-11-08, Nikki: "so agents can download and
+share with a client").** `portal/market_flyer.php?market=&pt=SF|TC&m=` prints
+one US Letter page for the market tab and property type the report shows:
+the county tile blocks (the eight figures of the web section, each against
+the same month last year, the year-to-date figure under it), the metro
+figures for Denver and Colorado Springs, then, as far as the page has room
+(a size budget in `market_flyer_model()`), the Aspen Glenwood town table,
+our own feed's town table (biggest towns first, trimmed to what fits), and
+the other property type's counties; the footer carries the agent's face
+crop, name, phone and email (an admin with no linked account gets the
+brokerage line) and the boards' credit lines. Layout and model:
+`inc/market_flyer_render.php` (standalone, like the listing flyer's);
+Chromium through `flyer_export_pdf()`. The button sits beside "Snapshot
+post for this market"; market-report.js keeps its market, property type
+and month current. **Admin-only until Nikki approves the style:**
+`MARKET_FLYER_LIVE` in inc/market.php is false, so portal/market.php passes
+no flyer URL (no button for agents) and the endpoint turns agents away;
+flip it to true and both follow. `&html=1` shows an admin the HTML in the
+browser.
+
 **The month refreshes itself (2026-11-05, Nikki: "we need to make this
 automatic each month").** `cron/refresh_market_data.php` runs every morning
 from the 5th to the 25th (15:10 UTC): CAR's sortable tables and 12 county

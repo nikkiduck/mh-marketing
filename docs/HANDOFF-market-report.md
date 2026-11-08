@@ -298,6 +298,17 @@ sales that month (Garfield for Aspen, not Pitkin), as the artifact did. Its
 CLAUDE.md flags this as something JB may want changed; confirm with him
 before changing `drawMarket()`'s choice of `sf`.
 
+## The PDF flyer (2026-11-08)
+
+`portal/market_flyer.php` prints one market, one property type and one month
+as a US Letter page for a client, through `inc/market_flyer_render.php` and
+Chromium. What goes on the page is decided by a size budget: the chosen
+type's county blocks and the metro figures always, then the board's town
+table, our feed's town table (biggest towns first, cut to what fits) and the
+other property type's counties while there is room. Admin-only until Nikki
+approves the style (`MARKET_FLYER_LIVE` in inc/market.php). Details in
+CLAUDE.md > Market Report and Market Snapshot posts.
+
 ## Ideas not built
 
 From the artifact's CLAUDE.md, section 9: automate the fetch and parse as

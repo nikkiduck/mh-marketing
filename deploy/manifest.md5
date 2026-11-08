@@ -7,11 +7,11 @@ ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 24ba7edcace4e458d8ea5b50303f629e  assets/css/elevation-print.css
 e21f7ff6086fdea2b3fec475c3bf1a73  assets/css/elevation.css
 ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
-ea19d7813a8c74d731b18105a13bc4a5  assets/css/market.css
+c9f757ef15cb143eb1e007d48cea3cf8  assets/css/market.css
 480bf38c8914ca4843d92b88280d01f7  assets/css/mh-theme.css
 d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
 ba73445937a812afe57c74e4349fe887  assets/css/social.css
-fc21c7628d6d4e564b6502274aeb56fc  assets/js/market-report.js
+03cdf667438fdcef87108573889d189c  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 2d85cea4712b33eb75b1bb384e92e261  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
@@ -57,12 +57,12 @@ e2475866b1e99360f59246920a5eff56  inc/hs_helpers.php
 06406477f9bc1bf6dc3ceaf577ba202d  inc/hs_template.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
 78c3a4e157cff752778a59810cd4aaaa  inc/mailer.php
-8bcd2252552b967ed112ca9efca7fa69  inc/market.php
+52389ed4688a3bdafe9127e3186332a7  inc/market.php
 ea0157ed3088c193eaa5a6c26bc6ee88  inc/market_card_render.php
 722ea95ad3417001bec7af8547d140f3  inc/market_data.php
 ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 0aeac91bf91e6379d8ed88950c87c18a  inc/market_post_body.php
-67d1e81759ce0b3d891963088c15f066  inc/market_report_body.php
+29fbb37c9c31d7825adb138b352c36b7  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
 0f05a134a15d91c86814c5811b43f36d  inc/plan.php
@@ -86,7 +86,7 @@ e55e413a4d83f451c678aee863fe6d05  intake.php
 0f76181f22712da050ea376c236e2301  leadership.php
 1d44947a95310027842c984a8020ac42  login.php
 48345dd02111e4387cc3305d1c677d13  logout.php
-b2ad9c459b7d150893d83f1cd33332f2  market_report.php
+0d454e08548c8b15d51ac51bde3c5612  market_report.php
 655ea727bc386c5379fef05c6504c170  market_snapshot.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
 b6b13d82e0f8adb87cc9ba58ce1f748d  oauth_start.php
@@ -113,7 +113,7 @@ aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 03b2a77e2a597f13fc056728330747f0  portal/general.php
 1a848496d229059a6f0a0990bd565175  portal/hotsheets.php
 6bd2ee585e004b943476efe24c910016  portal/index.php
-3cfd20db36fa046a3e9287837d53bc1c  portal/market.php
+066400904139b5d5cf302dad837819c7  portal/market.php
 6e25e50cfac2e6689da36e4ead4aee68  portal/market_export.php
 d11b1b570b09764e3a760efe4c66ad9b  portal/market_post.php
 9a09ec5ad2d6fe7e47f548392f60550c  portal/market_render.php
@@ -156,3 +156,5 @@ df9c9acc1b520b4ccd5374a16a4a5b94  users.php
 6f6b2473b55a68a0e144ec9c163b2154  inc/accounting_mail.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
+1cea3e93714261bd12b865bcc2ea11d0  inc/market_flyer_render.php
+ad05ca9c064238a56d464ea8cf9ced81  portal/market_flyer.php

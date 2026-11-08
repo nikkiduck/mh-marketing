@@ -41,7 +41,10 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
     $w  = ['month' => market_month_label($m), 'monthName' => market_month_name($m), 'ly' => market_month_short(market_month_ly($m)),
            'lyLab' => market_month_label(market_month_ly($m)), 'lyYr' => market_year(market_month_ly($m)), 'yr' => market_year($m)];
 
+    $otherPt  = $pt === 'TC' ? 'SF' : 'TC';
+    $otherPtype = $otherPt === 'TC' ? 'Townhouse-condo' : 'Single family';
     $counties = array_values(array_filter($data['county'], fn($r) => ($r['market'] ?? '') === $market && ($r['ptype'] ?? '') === $ptype));
+    $others   = array_values(array_filter($data['county'], fn($r) => ($r['market'] ?? '') === $market && ($r['ptype'] ?? '') === $otherPtype));
     $towns    = array_values(array_filter((array)($data['towns'] ?? []), fn($r) => ($r['market'] ?? '') === $market && ($r['ptype'] ?? '') === $ptype));
     $metro    = null;
     foreach ((array)($data['front_range'] ?? []) as $f) if (($f['market'] ?? '') === $market) { $metro = $f; break; }
@@ -49,7 +52,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
 
     // A county block: the eight tiles the report draws, in its order.
     $blocks = [];
-    foreach ($counties as $r) {
+    $countyBlock = function (array $r, string $words) use ($w, $board): array {
         $tiles = [
             market_flyer_tile('Closed sales', market_int($r['sold']), market_change($r['sold'], $r['sold_ly']), $w,
                               $r['ytd_sold'] !== null ? 'YTD ' . market_int($r['ytd_sold']) . market_flyer_paren(market_change($r['ytd_sold'], $r['ytd_sold_ly'])) : ''),
@@ -66,9 +69,10 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
             market_flyer_tile('New listings', market_int($r['new_listings']), market_change($r['new_listings'], $r['new_listings_ly']), $w,
                               $r['ytd_new_listings'] !== null ? 'YTD ' . market_int($r['ytd_new_listings']) : ''),
         ];
-        $blocks[] = ['title' => (string)$r['county'], 'sub' => (string)($r['mls'] ?? $board['mls']), 'tiles' => $tiles,
-                     'thin' => ($r['sold'] ?? null) !== null && (int)$r['sold'] < 10];
-    }
+        return ['title' => (string)$r['county'], 'sub' => $words . ' · ' . (string)($r['mls'] ?? $board['mls']), 'tiles' => $tiles,
+                'thin' => ($r['sold'] ?? null) !== null && (int)$r['sold'] < 10];
+    };
+    foreach ($counties as $r) $blocks[] = $countyBlock($r, market_ptype_words($pt));
 
     // The metro figures (REcolorado's Market Watch, PPAR's headline): what the post states, all residential.
     $metroBlock = null;
@@ -83,7 +87,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
         if (($metro['pending'] ?? null) !== null) $t[] = market_flyer_tile('Pending', market_int($metro['pending']), $pc($metro['pending_change_pct'] ?? null), $w);
         if (($metro['active'] ?? null) !== null) $t[] = market_flyer_tile('Active listings', market_int($metro['active']), $pc($metro['active_change_pct'] ?? null), $w);
         if (($metro['weeks_of_inventory'] ?? null) !== null) $t[] = market_flyer_tile('Weeks of inventory', market_int($metro['weeks_of_inventory']), null, $w);
-        if (($metro['avg_days'] ?? null) !== null) $t[] = market_flyer_tile('Average days on market', market_int($metro['avg_days']), null, $w);
+        if (($metro['avg_days_on_market'] ?? null) !== null) $t[] = market_flyer_tile('Average days on market', market_int($metro['avg_days_on_market']), null, $w);
         $metroBlock = ['title' => (string)$metro['region'], 'sub' => trim((string)($metro['mls'] ?? '') . ' · ' . (string)($metro['scope'] ?? 'All residential'), ' ·'), 'tiles' => array_slice($t, 0, 8)];
     }
 
@@ -100,6 +104,53 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
         ];
     }
 
+    // Town by town from our own MLS feed (inc/market_feed.php), the report's second town table:
+    // the Communities towns this board serves, for the chosen class, most year-to-date sales first.
+    $feedRows = [];
+    $cls = $pt;
+    foreach ((array)($data['towns_feed'] ?? []) as $t) {
+        if (($t['market'] ?? '') !== $market || empty($t[$cls])) continue;
+        $p = $t[$cls]; $mo = (array)($p['month'] ?? []); $ly = (array)($p['ly'] ?? []); $ytd = (array)($p['ytd'] ?? []); $yl = (array)($p['ytd_ly'] ?? []);
+        if (empty($mo['sold']) && empty($ytd['sold'])) continue;
+        $feedRows[] = [
+            'town'    => (string)$t['label'], 'ytd_n' => (int)($ytd['sold'] ?? 0),
+            'sold'    => market_int($mo['sold'] ?? null), 'sold_chg' => market_flyer_signed(market_change($mo['sold'] ?? null, $ly['sold'] ?? null)),
+            'median'  => !empty($mo['sold']) ? market_money($mo['median'] ?? null) : '–', 'median_chg' => market_flyer_signed(market_change($mo['median'] ?? null, $ly['median'] ?? null)),
+            'ppsf'    => ($mo['price_per_sqft'] ?? null) !== null ? '$' . market_int($mo['price_per_sqft']) : '–',
+            'dom'     => !empty($mo['sold']) ? market_int($mo['avg_dom'] ?? null) : '–',
+            'ytd_sold' => market_int($ytd['sold'] ?? null), 'ytd_median' => market_money($ytd['median'] ?? null),
+            'ytd_chg' => market_flyer_signed(market_change($ytd['median'] ?? null, $yl['median'] ?? null)),
+            'inv'     => isset($p['inventory']['active']) ? market_int($p['inventory']['active']) : '–',
+        ];
+    }
+    usort($feedRows, fn($a, $b) => [$b['ytd_n'], $a['town']] <=> [$a['ytd_n'], $b['town']]);
+
+    // What fits on the page, in order of worth to a client: the chosen type's
+    // counties and the metro figures always; then the board's town table, our
+    // feed's town table, and the other property type's counties, each only when
+    // there is room (about 546 pt of body under the header and over the footer).
+    // (Measured on the first samples, 2026-11-08: a block of eight tiles is 125 pt, a
+    // table row 15 pt, each section adds the 12 pt gap, and the footer grows a
+    // line per credit, so the body has about 500 pt to give.)
+    // Measured on the samples of 2026-11-08: a block of eight tiles is about 153 pt
+    // plus the 12 pt gap, a block of one tile row 60 pt less, a table 48 pt plus
+    // 16 pt a row, and the body has about 546 pt between the header and the footer.
+    $budget = 546.0;
+    $cost = fn(array $b) => 12.0 + 153.0 - (count($b['tiles']) <= 4 ? 60.0 : 0.0) + (!empty($b['thin']) ? 14.0 : 0.0);
+    foreach ($blocks as $b) $budget -= $cost($b);
+    if ($metroBlock) $budget -= $cost($metroBlock);
+    $townRowsOut = []; $feedOut = []; $otherBlocks = [];
+    if ($townRows && $budget >= 48 + 16 * count($townRows)) { $townRowsOut = $townRows; $budget -= 48 + 16 * count($townRows); }
+    if ($feedRows) {   // as many towns as fit, biggest first: all of them, or three at least
+        $n = min(count($feedRows), (int)floor(($budget - 48) / 16));
+        if ($n >= 1 && ($n === count($feedRows) || $n >= 3)) { $feedOut = array_slice($feedRows, 0, $n); $budget -= 48 + 16 * $n; }
+    }
+    if ($others) {
+        $ob = array_map(fn($r) => $countyBlock($r, market_ptype_words($otherPt)), $others);
+        $need = array_sum(array_map($cost, $ob));
+        if ($budget >= $need) { $otherBlocks = $ob; $budget -= $need; }
+    }
+
     $credits = [];
     if ($counties && !empty($board['county_credit'])) $credits[] = (string)$board['county_credit'];
     if ($towns && !empty($board['credit']) && $board['credit'] !== ($board['county_credit'] ?? '')) $credits[] = (string)$board['credit'];
@@ -109,6 +160,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
             : "Regional figures from the Pikes Peak REALTOR® Services (elevateMLS) market trends page, {$w['month']}.";
     }
     if (!$counties && $metro && !empty($board['credit'])) $credits[] = (string)$board['credit'];
+    if ($feedOut) $credits[] = 'Town figures from the MLS listing data Mont Haus receives (IDX), compiled by Mont Haus International Realty; for sale is the count at month end.';
 
     return [
         'market'  => $market,
@@ -117,13 +169,15 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
         'areas'   => (string)($board['areas'] ?? ''),
         'month'   => $m,
         'label'   => $w['month'],
-        'ly'      => $w['lyLab'],
+        'ly'      => $w['ly'],   // "Oct 2025", for the table headings
         'ptype'   => $pt,
-        'ptwords' => market_ptype_words($pt),
+        'ptwords' => $otherBlocks ? market_ptype_words($pt) . ' and ' . lcfirst(market_ptype_words($otherPt)) : market_ptype_words($pt),
         'as_of'   => (string)($data['meta']['current_as_of'] ?? ''),
         'blocks'  => $blocks,
         'metro'   => $metroBlock,
-        'towns'   => $townRows,
+        'towns'   => $townRowsOut,
+        'feed'    => $feedOut,
+        'other'   => $otherBlocks,
         'credits' => array_values(array_unique($credits)),
         'agent'   => $agent,
     ];
@@ -131,7 +185,8 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
 
 /** One tile: label, value, "+12.5% vs Oct 2025" (or $alt when given), and a small second line. */
 function market_flyer_tile(string $label, string $value, ?float $chg, array $w, string $small = '', ?string $alt = null): array {
-    $vs = $alt ?? ($chg === null ? '' : market_flyer_signed($chg) . ' vs ' . $w['ly']);
+    $s  = $chg === null ? '' : market_flyer_signed($chg);
+    $vs = $alt ?? ($s === '' ? '' : ($s === 'Even' ? 'Even with ' . $w['ly'] : $s . ' vs ' . $w['ly']));
     return ['label' => $label, 'value' => $value, 'vs' => $vs, 'dir' => $alt !== null ? 0 : market_dir($chg), 'small' => $small];
 }
 
@@ -209,7 +264,7 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#1f242c;fo
 .sub{font-size:9.5pt;color:#5c6574;margin:5pt 0 0;line-height:1.4}
 .sub b{color:#1f242c;font-weight:500}
 .head .logo{height:46pt;width:auto;flex:none;margin-top:2pt}
-.body{flex:1;min-height:0;display:flex;flex-direction:column;gap:12pt;padding-top:12pt}
+.body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:12pt;padding-top:12pt}
 .block{flex:none}
 .bhead{display:flex;align-items:baseline;justify-content:space-between;gap:12pt;margin:0 0 5pt}
 .bhead h2{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:16pt;line-height:1.1;margin:0}
@@ -223,9 +278,9 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#1f242c;fo
 .tile .vs.down::before{content:'▼ ';font-size:5.5pt;color:#8a4b3c;vertical-align:1pt}
 .tile .sm{font-size:6.8pt;color:#8a94a3;margin-top:1pt;line-height:1.25}
 .thin{font-size:7.4pt;color:#8a5a12;margin:4pt 0 0}
-table{width:100%;border-collapse:collapse;font-size:8.2pt}
-th{font-weight:500;font-size:6.6pt;letter-spacing:.12em;text-transform:uppercase;color:#6b7a8f;text-align:right;padding:0 4pt 4pt;border-bottom:.75pt solid #1f242c;white-space:nowrap}
-td{text-align:right;padding:3.2pt 4pt;border-bottom:.5pt solid #dfe3e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-size:8pt;table-layout:auto}
+th{font-weight:500;font-size:6.3pt;letter-spacing:.1em;text-transform:uppercase;color:#6b7a8f;text-align:right;padding:0 3pt 4pt;border-bottom:.75pt solid #1f242c;white-space:normal;line-height:1.2;vertical-align:bottom}
+td{text-align:right;padding:3pt 3pt;border-bottom:.5pt solid #dfe3e8;white-space:nowrap;font-variant-numeric:tabular-nums}
 th.l,td.l{text-align:left;padding-left:0}
 td.l{font-weight:500}
 td.chg{color:#5c6574;font-size:7.6pt}
@@ -267,6 +322,17 @@ CSS;
         }
         $body .= '</tbody></table></section>';
     }
+    if (!empty($f['feed'])) {
+        $body .= '<section class="block"><div class="bhead"><h2>Town by town, from the MLS feed</h2><span>' . $e($f['ptwords'] === market_ptype_words($f['ptype']) ? $f['ptwords'] : market_ptype_words($f['ptype'])) . '</span></div>'
+               . '<table><thead><tr><th class="l">Town</th><th>Closed</th><th>vs ' . $e($f['ly']) . '</th><th>Median</th><th>vs ' . $e($f['ly']) . '</th><th>$ / sq ft</th><th>Days on mkt</th>'
+               . '<th>Closed YTD</th><th>Median YTD</th><th>YTD vs ' . $e(substr($f['ly'], -4)) . '</th><th>For sale</th></tr></thead><tbody>';
+        foreach ($f['feed'] as $t) {
+            $body .= '<tr><td class="l">' . $e($t['town']) . '</td><td>' . $e($t['sold']) . '</td><td class="chg">' . $e($t['sold_chg']) . '</td><td>' . $e($t['median']) . '</td><td class="chg">' . $e($t['median_chg']) . '</td>'
+                   . '<td>' . $e($t['ppsf']) . '</td><td>' . $e($t['dom']) . '</td><td>' . $e($t['ytd_sold']) . '</td><td>' . $e($t['ytd_median']) . '</td><td class="chg">' . $e($t['ytd_chg']) . '</td><td>' . $e($t['inv']) . '</td></tr>';
+        }
+        $body .= '</tbody></table></section>';
+    }
+    foreach ((array)($f['other'] ?? []) as $b) $body .= $blockHtml($b);
 
     $a = $f['agent'];
     $who = '<div class="who">';
@@ -280,7 +346,7 @@ CSS;
 
     $credit = '<div class="credit">';
     foreach ($f['credits'] as $c) $credit .= '<p>' . $e($c) . '</p>';
-    $credit .= '<p>Monthly figures in small markets swing on a handful of sales; year-to-date figures are steadier. Prepared ' . $e(date('F j, Y')) . '.</p>';
+    $credit .= '<p>Monthly figures in small markets swing on a handful of sales; year-to-date figures are steadier. <span style="white-space:nowrap">Prepared ' . $e(date('M j, Y')) . '.</span></p>';
     $credit .= '<p class="brand">Mont Haus International Realty</p></div>';
 
     $sub = '<b>' . $e($f['mls']) . '</b>' . ($f['areas'] !== '' ? ' · ' . $e($f['areas']) : '');
