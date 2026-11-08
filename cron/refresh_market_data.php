@@ -559,7 +559,9 @@ $trend = array_values(array_filter($prev['county_trend'], fn($t) => ($t['month']
 foreach (MR_COUNTIES as $c => $mk) foreach (['SF', 'TC'] as $pt) {
     $t = $tables[$pt][$c];
     $trend[] = ['county' => "$c County", 'market' => $mk, 'ptype' => MR_PTYPES[$pt], 'month' => $month,
-                'sold' => $t['closed'], 'new_listings' => $t['new'], 'median' => $t['median'], 'inventory' => $t['inv']];
+                'sold' => $t['closed'], 'new_listings' => $t['new'],
+                'median' => empty($t['closed']) ? null : $t['median'],   // no sales = no price, as the PDF rows (not the table's $0)
+                'inventory' => $t['inv']];
 }
 $months = array_values(array_unique(array_column($trend, 'month'))); sort($months);
 $keep = array_slice($months, -MR_TREND_MONTHS);
@@ -600,6 +602,10 @@ foreach ($county as $row) {
     [$c, $pt] = explode('|', $row['key']);
     $t = $tables[$pt][$c];
     foreach ([['sold', 'closed'], ['new_listings', 'new'], ['median', 'median'], ['inventory', 'inv']] as [$rk, $tk]) {
+        // No sales in the month: the PDF parser stores no median (see the
+        // no-sales rule above) while CAR's table prints $0. Both say the same
+        // thing (Montrose TC, October 2026: two mornings of false alarms).
+        if ($rk === 'median' && $row[$rk] === null && empty($row['sold']) && (float)$t[$tk] == 0.0) continue;
         if ((string)$row[$rk] !== (string)$t[$tk]) $bad[] = "{$row['key']} $rk: PDF {$row[$rk]}, table {$t[$tk]}";
         $mine = mr_change_pct($row[$rk], $row[$rk . '_ly']);
         $theirs = $t[$tk . '_chg'];
