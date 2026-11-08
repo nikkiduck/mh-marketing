@@ -86,6 +86,7 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
       </div>
       <div class="mr-mkbtns">
       <?php if (!empty($boot['urls']['flyer'])): // the one-page PDF for a client (portal/market_flyer.php, 2026-11-08); market-report.js fills in the market and property type ?>
+      <label class="mr-place" for="mr-mk-place">Flyer for <select id="mr-mk-place" aria-label="Place on the flyer"><option value="">Whole market</option></select></label>
       <a class="mr-btn mr-btn-outline" id="mr-mk-flyer" href="<?= $e($boot['urls']['flyer']) ?>">Download PDF flyer</a>
       <?php endif; ?>
       <?php if (!empty($boot['urls']['post'])): ?>

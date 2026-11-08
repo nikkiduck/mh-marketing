@@ -219,6 +219,8 @@ function market_boot(array $data, array $urls): array {
         'front'      => $data['front_range'],
         'feed_towns' => array_values((array)($data['towns_feed'] ?? [])),   // the Communities towns from our own feed (inc/market_feed.php)
         'feed_note'  => (string)($data['feed_note'] ?? ''),
+        // The places a flyer can be made for, per market (the cards' list; portal/market_flyer.php, 2026-11-08).
+        'places'     => array_values(array_map(fn($k, $d) => ['key' => $k, 'market' => $d['market'], 'title' => $d['title']], array_keys(market_cards($data)), market_cards($data))),
     ];
 }
 

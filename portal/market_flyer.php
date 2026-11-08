@@ -21,9 +21,11 @@ if (!MARKET_FLYER_LIVE && !is_elevated_admin()) portal_stop('Coming soon', 'The 
 $month = market_pick_month((string)($_GET['m'] ?? ''));
 $data  = $month !== '' ? market_load($month) : null;
 if (!$data) portal_stop('Nothing to print yet', 'No market data is on file for that month.');
+market_attach_feed($data);   // the Communities towns from our own feed, the report's second town table
 
 $market = preg_replace('/[^a-z]/', '', (string)($_GET['market'] ?? ''));
 $pt     = (($_GET['pt'] ?? 'SF') === 'TC') ? 'TC' : 'SF';
+$place  = preg_replace('/[^a-z0-9-]/', '', (string)($_GET['place'] ?? ''));   // a card key (market_cards()), or blank for the whole market
 
 $agent = ['name' => '', 'phone' => '', 'email' => '', 'photo' => '', 'photo_url' => ''];
 if ($ctx) {
@@ -36,7 +38,7 @@ if ($ctx) {
     }
 }
 
-$f = market_flyer_model($data, $market, $pt, $agent);
+$f = market_flyer_model($data, $market, $pt, $agent, $place);
 if (!$f) portal_stop('Nothing to print', 'There are no figures for that market in ' . ph(market_month_label($month)) . '.');
 
 if (isset($_GET['html']) && is_elevated_admin()) {

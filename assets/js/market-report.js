@@ -207,8 +207,19 @@
     $('#mr-mk-areas').textContent = b.areas || '';
     const post = $('#mr-mk-post');
     if (post) { const u = new URL(B.urls.post, location.origin); u.searchParams.set('market', b.market); u.searchParams.set('month', B.month); post.href = u.pathname + u.search; }
-    const fly = $('#mr-mk-flyer');   // the PDF flyer for a client (2026-11-08): this market, this property type, this month
-    if (fly && B.urls.flyer) { const u = new URL(B.urls.flyer, location.origin); u.searchParams.set('market', b.market); u.searchParams.set('m', B.month); u.searchParams.set('pt', state.ptype === 'Single family' ? 'SF' : 'TC'); fly.href = u.pathname + u.search; }
+    // The PDF flyer for a client (2026-11-08): this market or one place in it (the cards' list), this property type, this month.
+    const fly = $('#mr-mk-flyer'), placeSel = $('#mr-mk-place');
+    if (fly && B.urls.flyer) {
+      if (placeSel && placeSel.dataset.market !== b.market) {
+        placeSel.dataset.market = b.market;
+        placeSel.replaceChildren(h('option', null, 'Whole market'));
+        (B.places || []).filter((p) => p.market === b.market).forEach((p) => { const o = h('option', null, p.title); o.value = p.key; placeSel.appendChild(o); });
+        placeSel.onchange = () => setFlyerHref();
+      }
+      var setFlyerHref = () => { const u = new URL(B.urls.flyer, location.origin); u.searchParams.set('market', b.market); u.searchParams.set('m', B.month); u.searchParams.set('pt', state.ptype === 'Single family' ? 'SF' : 'TC'); if (placeSel && placeSel.value) u.searchParams.set('place', placeSel.value); fly.href = u.pathname + u.search; };
+      if (placeSel) placeSel.onchange = setFlyerHref;
+      setFlyerHref();
+    }
     const rows = B.county;
     const counties = rows.filter((r) => r.market === b.market && r.ptype === state.ptype);
     // The headline names the market's county with the most single-family sales this month (the artifact's rule).

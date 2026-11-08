@@ -7,11 +7,11 @@ ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 24ba7edcace4e458d8ea5b50303f629e  assets/css/elevation-print.css
 e21f7ff6086fdea2b3fec475c3bf1a73  assets/css/elevation.css
 ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
-c9f757ef15cb143eb1e007d48cea3cf8  assets/css/market.css
+bc3a09f0c1d9434b199705a14369bc95  assets/css/market.css
 480bf38c8914ca4843d92b88280d01f7  assets/css/mh-theme.css
 d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
 ba73445937a812afe57c74e4349fe887  assets/css/social.css
-03cdf667438fdcef87108573889d189c  assets/js/market-report.js
+e539e5bb247a1ef82888690dd966de01  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 2d85cea4712b33eb75b1bb384e92e261  billing.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
@@ -59,10 +59,10 @@ e2475866b1e99360f59246920a5eff56  inc/hs_helpers.php
 78c3a4e157cff752778a59810cd4aaaa  inc/mailer.php
 52389ed4688a3bdafe9127e3186332a7  inc/market.php
 ea0157ed3088c193eaa5a6c26bc6ee88  inc/market_card_render.php
-722ea95ad3417001bec7af8547d140f3  inc/market_data.php
+8cbafc77cf112085f0ded498a8189db6  inc/market_data.php
 ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 0aeac91bf91e6379d8ed88950c87c18a  inc/market_post_body.php
-29fbb37c9c31d7825adb138b352c36b7  inc/market_report_body.php
+5d461821bd57dfba63e198c4244d2eed  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
 0f05a134a15d91c86814c5811b43f36d  inc/plan.php
@@ -156,5 +156,5 @@ df9c9acc1b520b4ccd5374a16a4a5b94  users.php
 6f6b2473b55a68a0e144ec9c163b2154  inc/accounting_mail.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
-1cea3e93714261bd12b865bcc2ea11d0  inc/market_flyer_render.php
-ad05ca9c064238a56d464ea8cf9ced81  portal/market_flyer.php
+e0f0c5ecc5887bedb3c07500e49685f1  inc/market_flyer_render.php
+7f7bbd1acf7fc44a7b42065910da32ae  portal/market_flyer.php

@@ -2618,9 +2618,14 @@ the other property type's counties; the footer carries the agent's face
 crop, name, phone and email (an admin with no linked account gets the
 brokerage line) and the boards' credit lines. Layout and model:
 `inc/market_flyer_render.php` (standalone, like the listing flyer's);
-Chromium through `flyer_export_pdf()`. The button sits beside "Snapshot
-post for this market"; market-report.js keeps its market, property type
-and month current. **Admin-only until Nikki approves the style:**
+Chromium through `flyer_export_pdf()`. The button sits beside "Snapshot post for this market" with a "Flyer
+for" picker: the whole market, or one place in it (the cards' list,
+`market_boot()`'s `places`; Nikki, 2026-11-08: "I'm not able to do just
+an Aspen flyer?"). A place flyer shows both property types of the place
+(the chosen one first; a town whose PDF is not out yet comes from our
+feed), then the county it sits in (the county card's `place` names its
+towns) and the market's other counties while there is room. market-report.js
+keeps market, place, property type and month current. **Admin-only until Nikki approves the style:**
 `MARKET_FLYER_LIVE` in inc/market.php is false, so portal/market.php passes
 no flyer URL (no button for agents) and the endpoint turns agents away;
 flip it to true and both follow. `&html=1` shows an admin the HTML in the
