@@ -84,6 +84,10 @@ month M (the last full month) it:
    inventory exactly, and the printed changes within 0.05 points of the
    change recomputed from the PDF's two years. Any disagreement = nothing is
    published and the email says what differed;
+   One agreed exception (2026-11-08): a county with no sales in the month
+   has no median in the PDF rows (the no-sales rule) while CAR's table
+   prints $0; the check reads those as the same, and the trend row stores
+   null, not 0. Montrose TC in October 2026 failed two mornings on it.
 7. publishes to `/var/log/mh-marketing/market_data/<YYYY-MM>/` (outside the
    repo, like the boards cache; `inc/market_data.php` reads that folder
    first, then `inc/market_data/`). The report, the cards and the Month
