@@ -23,6 +23,9 @@
 .mr-month select { font: 14px var(--mr-sans); color: var(--mr-text); padding: 7px 10px; border: 1px solid var(--mr-line); border-radius: 10px; background: #fff; }
 .mr-postlink, .mr-btn { display: inline-block; font: 500 14px var(--mr-sans); color: #fff; background: var(--mr-gold);   /* white on the button tone (Nikki, 2026-11-05: ink on the slate went dark on dark) */ border-radius: 999px; padding: 9px 16px; text-decoration: none; white-space: nowrap; }
 .mr-postlink:hover, .mr-btn:hover { background: #353e4b; text-decoration: none; color: #fff; }
+.mr-mkbtns { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mr-btn-outline { background: #fff; color: var(--mr-gold-deep); border: 1px solid var(--mr-gold); }   /* the PDF flyer (2026-11-08) */
+.mr-btn-outline:hover { background: var(--mr-gold); color: #fff; }
 .mr-take { margin: -8px 0 0; font-size: 16px; max-width: 70ch; text-wrap: pretty; color: var(--mr-text); }
 .mr-take span { font-weight: 500; }
 

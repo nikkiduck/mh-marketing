@@ -84,9 +84,14 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
         <h2 class="mr-h2" id="mr-mk-name">–</h2>
         <p class="mr-note" id="mr-mk-areas">–</p>
       </div>
+      <div class="mr-mkbtns">
+      <?php if (!empty($boot['urls']['flyer'])): // the one-page PDF for a client (portal/market_flyer.php, 2026-11-08); market-report.js fills in the market and property type ?>
+      <a class="mr-btn mr-btn-outline" id="mr-mk-flyer" href="<?= $e($boot['urls']['flyer']) ?>">Download PDF flyer</a>
+      <?php endif; ?>
       <?php if (!empty($boot['urls']['post'])): ?>
       <a class="mr-btn" id="mr-mk-post" href="<?= $e($boot['urls']['post']) ?>">Snapshot post for this market ›</a>
       <?php endif; ?>
+      </div>
     </div>
     <div class="mr-sec" id="mr-mk-extra"></div>
     <div class="mr-sec" id="mr-mk-counties"></div>
