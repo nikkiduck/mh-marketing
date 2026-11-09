@@ -415,7 +415,7 @@ function send_report(string $subject, array $lines, array $notes = []): void {
     global $recipients, $noMail, $monthLabel;
     $html = '<div style="font:14px/1.5 -apple-system,Helvetica,Arial,sans-serif;color:#1f242c;max-width:640px">'
           . '<h2 style="font-weight:600;font-size:18px;margin:0 0 12px">' . htmlspecialchars($subject) . '</h2>';
-    foreach ($lines as $l) $html .= '<p style="margin:0 0 10px">' . $l . '</p>';
+    foreach ($lines as $l) $html .= '<div style="margin:0 0 10px">' . $l . '</div>';   // a div, so a line may hold a list
     if ($notes) {
         $html .= '<p style="margin:14px 0 4px;font-weight:600">Notes</p><ul style="margin:0 0 10px;padding-left:20px">';
         foreach ($notes as $n) $html .= '<li>' . htmlspecialchars($n) . '</li>';
@@ -666,7 +666,17 @@ if ($outDir === '' && $changed) {
     ];
     if ($front[0]['closed'] !== null) $lines[] = 'Denver Metro (REcolorado): ' . market_int($front[0]['closed']) . ' closed (' . market_whole_pct_text($front[0]['closed_change_pct']) . '), median ' . market_money($front[0]['median']) . ' (' . market_whole_pct_text($front[0]['median_change_pct']) . ').';
     if ($pp) $lines[] = 'Pikes Peak (PPAR): ' . market_int($pp['closed']) . ' closed, median ' . market_money($pp['median']) . ', ' . $pp['avg_days'] . ' days on market.';
-    if ($late) $lines[] = '<strong>Still to come</strong> (the run repeats each morning and fills these in): ' . htmlspecialchars(implode('; ', $late)) . '.';
+    if ($late) {
+        // One item per line (Nikki, 2026-11-09: "more reader-friendly, add line breaks"); the Aspen
+        // Glenwood town reports, which arrive together, are one line naming the towns.
+        $towns = []; $items = [];
+        foreach ($late as $l) {
+            if (preg_match('/^(.+?) town report \(.+\) not on aspenglenwoodmls\.com yet$/', $l, $m)) $towns[] = $m[1]; else $items[] = $l;
+        }
+        if ($towns) array_unshift($items, 'Aspen Glenwood MLS town reports not on aspenglenwoodmls.com yet: ' . implode(', ', $towns));
+        $lines[] = '<strong>Still to come</strong> <span style="color:#6b7280">(the run repeats each morning and fills these in)</span>'
+                 . '<ul style="margin:6px 0 0;padding-left:20px">' . implode('', array_map(fn($i) => '<li style="margin:0 0 4px">' . htmlspecialchars($i) . '</li>', $items)) . '</ul>';
+    }
     send_report("Market Report: $monthLabel is live" . ($late ? ' (part late)' : ''), $lines, $meta['notes']);
     $state['published'][$month] = $meta['generated']; save_state();
 }
