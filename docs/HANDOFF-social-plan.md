@@ -355,6 +355,32 @@ suggestion, only a Done tick, and counts toward "n of 8 ready" when
 ticked. Still eight slots a week on the sample week's days; adding or
 removing a day is not built.
 
+## Branding days are the week's own (2026-11-09)
+
+Nikki: "Instead of assigning the Branding story days automatically, let me
+choose which days. Maybe a tool at the top saying Branding Story and I
+check which days I'm planning it, then it can add to the week structure
+with suggestions." A Branding Story bar sits above the week table with a
+pill per day, Monday to Sunday; the ticked days each get a Branding row
+(with the season's taglines in turn as the suggestions), the others have
+none. Tuesday and Friday are ticked until a week says otherwise
+(`branding_days` in the week's JSON; the key absent = the default;
+plan_branding_days()). Unticking a day with a saved Branding story asks
+first, then drops it (plan_week_set_branding_days()). So the slots now
+have STABLE ids rather than positions: the six regular pieces keep their
+sample-week index (0, 1, 3, 4, 5, 7) and a Branding story is
+PLAN_BRANDING_BASE (100) + the day's index (Monday 100 … Sunday 106);
+plan_week_load() reads the old ids 2 and 6 as 101 and 104, so the weeks
+saved before (W45's Tuesday story, W46's content choices) carry over.
+plan_week_slots() builds the week in day order, a day's regular piece
+before its Branding story, and everything (the page, plan_save.php, the
+builders' plan_item_context(), plan_export.php) reads the week through
+it; `plan_slot_base()` gives the "usual" kind of any id, a Branding day
+included. "n of N ready" counts the week's own slots, so a week with one
+Branding day is out of 7, with four out of 10. Adding other kinds to
+extra days is still through the Content dropdown of an existing slot;
+a free day with no slot cannot take a non-Branding piece (not asked for).
+
 ## Market Stats as a list of slides (2026-11-09)
 
 Nikki: "market stats is a little unique because each week is a couple of

@@ -2895,7 +2895,14 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   tick, x to remove, + Add slide; stored as `slides` in the market item;
   "k of n done" until all are ticked, then Done and the slot counts as
   ready; suggested two places a week from `plan_market_pairs()` anchored
-  on 2026-W46 (Aspen + Snowmass Village first).
+  on 2026-W46 (Aspen + Snowmass Village first). **Branding days are the
+  week's own (Nikki, 2026-11-09: "let me choose which days"):** a
+  Branding Story bar above the table ticks the days (Monday to Sunday)
+  that get a Branding row, Tuesday + Friday by default (`branding_days`
+  in the JSON); slot ids are STABLE since then: regular pieces 0, 1, 3, 4,
+  5, 7 and a Branding story 100 + the day index (Mon 100 … Sun 106), the
+  old 2 and 6 read as 101 and 104 on load. Unticking a day drops its
+  saved story (confirm first); "n of N ready" is the week's own count.
   `PLAN_STORE_DIR`, when defined, replaces the folder (the local harness).
   **Each frame of a set is a tab (Nikki, 2026-11-03: "more control over
   each photo in a set ... each of the photo options has its own tab"):**

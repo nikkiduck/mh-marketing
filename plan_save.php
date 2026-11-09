@@ -15,6 +15,9 @@
  *   kind    give the slot another content kind for this week (the Content
  *           dropdown, 2026-11-09): slot_kind (a plan_slot_options() key),
  *           slot_words for Other; a piece saved under another kind is dropped
+ *   branding_days  the week's Branding Story days (2026-11-09): days[] of
+ *           PLAN_DAYS names; an unticked day's Branding slot goes, with
+ *           anything saved in it
  *   status  the week: status=planned|open
  * Super admin only (plan_gate()).
  */
@@ -32,6 +35,10 @@ $slots = plan_week_slots($plan);   // the week's own content choices (2026-11-09
 $action = (string)($_POST['plan_action'] ?? 'item');
 $back = 'social_plan.php?week=' . rawurlencode($week);
 
+if ($action === 'branding_days') {
+    plan_week_set_branding_days($week, (array)($_POST['days'] ?? []));
+    header('Location: ' . $back); exit;
+}
 if ($action === 'status') {
     plan_week_set_status($week, (string)($_POST['status'] ?? 'open'));
     header('Location: ' . $back); exit;

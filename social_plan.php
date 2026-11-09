@@ -14,7 +14,9 @@
  * words (plan_week_slots()); the suggestions follow the choice. The Market
  * Stats row is a list of slides (place + property type, each with its own
  * Story link into the Market Snapshot and its own Done tick; + Add slide,
- * x to remove), suggested two places a week (plan_market_pairs()). The picks step through rotations by the ISO week
+ * x to remove), suggested two places a week (plan_market_pairs()). The
+ * Branding Story bar above the table ticks the days that get a Branding
+ * slot this week (plan_branding_days(); Tuesday and Friday until changed). The picks step through rotations by the ISO week
  * (plan_week(): markets through the Market Snapshot's places, brokers
  * through the approved roster, locations through the offices and areas,
  * hooks through the plan's six), so the same week always suggests the same
@@ -72,7 +74,7 @@ $suggest = function (array $slot, int $n) use ($idx, $cards, $pickOf, $lwords, $
         case 'market':
             return ['', []];   // a list of slides, drawn by the row (plan_market_slides(), 2026-11-09)
         case 'branding':
-            $t = $season['taglines'][$n] ?? $season['taglines'][0];
+            $t = $season['taglines'][$n % max(1, count($season['taglines']))] ?? $season['taglines'][0];   // the week's nth Branding story takes the nth tagline, round again after the last
             return [$season['name'] . ': "' . str_replace("\n", ' ', $t) . '"', [['Story', 'template_branding.php?season=' . rawurlencode($week['season']) . '&size=story']]];
         case 'location':
             $loc = plan_rotate($locPool, $idx + $n);
@@ -98,7 +100,7 @@ $slotOpts = plan_slot_options();
 
 admin_tool_header([
     'title'   => 'Weekly Plans',
-    'hint'    => 'The Social Media Plan: eight pieces a week (3 property, 1 market stats, 1 location, 1 broker, 2 branding). Open a day\'s piece, make it or change the suggestion, and save it to the week; mark the week planned and go on to the next.',
+    'hint'    => 'The Social Media Plan: six pieces a week (3 property, 1 market stats, 1 location, 1 broker) plus a Branding story on the days you tick. Open a day\'s piece, make it or change the suggestion, and save it to the week; mark the week planned and go on to the next.',
     'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'active'  => 'social',
@@ -115,6 +117,13 @@ admin_tool_header([
     .pl-week a { font-size:13px; color:#4a5569; text-decoration:none; border:1px solid #dfe3e8; border-radius:999px; padding:5px 12px; background:#fff; }
     .pl-week a:hover { border-color:#4a5566; }
     .pl-week .pl-this { color:#6b7a8f; font-size:13px; }
+    .pl-brand { display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin:0 0 14px; padding:9px 14px; background:#fff; border:1px solid #dfe3e8; border-radius:12px; font-size:13.5px; color:#434b57; }
+    .pl-brand-l { font-weight:600; color:#1f242c; margin-right:6px; }
+    .pl-brand label { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border:1px solid #dfe3e8; border-radius:999px; cursor:pointer; color:#6b7a8f; background:#fff; }
+    .pl-brand label.on { border-color:#4a5566; color:#1f242c; background:#eceff3; }
+    .pl-brand label:hover { border-color:#4a5566; }
+    .pl-brand label input { margin:0; }
+    .pl-brand-n { margin-left:auto; color:#6b7a8f; font-size:13px; }
     .pl-flash { background:#e9f3ec; border:1px solid #bfe0c9; color:#1f5a35; border-radius:10px; padding:9px 14px; font-size:13.5px; margin:0 0 14px; }
     .pl-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid #dfe3e8; border-radius:14px; overflow:hidden; }
     .pl-table th, .pl-table td { text-align:left; padding:12px 14px; border-top:1px solid #dfe3e8; vertical-align:top; font-size:14px; }
@@ -187,6 +196,10 @@ admin_tool_header([
 // tick, which the change drops); Other opens the words box and saves on its button.
 ?>
 <script>
+function plBrandDay(box) {
+  if (!box.checked && box.dataset.saved === '1' && !confirm('That day has a Branding story saved. Drop it and take the day out?')) { box.checked = true; return; }
+  box.form.submit();
+}
 function plKind(sel) {
   var other = sel.form.querySelector('.pl-other');
   if (sel.value === 'other') { other.hidden = false; other.querySelector('input').focus(); return; }
@@ -206,7 +219,7 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
       <a href="social_plan.php?week=<?= $e($w['key']) ?>" class="<?= $w['key'] === $week['key'] ? 'cur' : '' ?>">
         <b><?= $w['is_this'] ? 'This week' : ($w['ahead'] === 1 ? 'Next week' : ($w['ahead'] < 0 ? 'Past' : 'In ' . $w['ahead'] . ' weeks')) ?></b>
         <small><?= $e($w['short']) ?></small>
-        <small class="<?= $w['plan']['status'] === 'planned' ? 'done' : '' ?>"><?= $w['plan']['status'] === 'planned' ? 'Planned ✓' : ($n ? $n . ' of ' . count($slots) . ' ready' : 'Nothing saved') ?></small>
+        <small class="<?= $w['plan']['status'] === 'planned' ? 'done' : '' ?>"><?= $w['plan']['status'] === 'planned' ? 'Planned ✓' : ($n ? $n . ' of ' . count(plan_week_slots($w['plan'])) . ' ready' : 'Nothing saved') ?></small>
       </a>
       <?php endforeach; ?>
     </div>
@@ -216,6 +229,14 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
       <a href="social_plan.php?week=<?= $e($week['next']) ?>">Next week ›</a>
       <?php if ($week['key'] !== $week['this']): ?><a href="social_plan.php">This week</a><?php else: ?><span class="pl-this">This week · <?= $e($season['name']) ?> season</span><?php endif; ?>
     </div>
+    <?php $bdays = plan_branding_days($plan); $bsaved = []; foreach ($bdays as $d) { $bi = plan_branding_slot_id($d); $bsaved[$d] = isset($plan['items'][$bi]) && (!empty($plan['items'][$bi]['form']) || !empty($plan['items'][$bi]['done'])); } ?>
+    <form method="post" action="plan_save.php" class="pl-brand" id="plBrand"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_action" value="branding_days">
+      <span class="pl-brand-l">Branding Story</span>
+      <?php foreach (PLAN_DAYS as $d): $on = in_array($d, $bdays, true); ?>
+      <label class="<?= $on ? 'on' : '' ?>"><input type="checkbox" name="days[]" value="<?= $e($d) ?>"<?= $on ? ' checked' : '' ?> data-saved="<?= !empty($bsaved[$d]) ? 1 : 0 ?>" onchange="plBrandDay(this)"> <?= $e(substr($d, 0, 3)) ?></label>
+      <?php endforeach; ?>
+      <span class="pl-brand-n"><?= count($bdays) ?> <?= count($bdays) === 1 ? 'story' : 'stories' ?> this week</span>
+    </form>
     <?php if ($flashSlot >= 0 && isset($slots[$flashSlot])): ?>
     <p class="pl-flash"><?= $sv !== '' ? 'Saved to the week: ' . $e($dayWords($flashSlot)) . '.' : 'Back to the suggestion: ' . $e($dayWords($flashSlot)) . '.' ?></p>
     <?php endif; ?>
@@ -234,7 +255,7 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
           <td class="day"><?= $day === $prevDay ? '' : $e($day) ?></td>
           <td class="piece">
             <form method="post" action="plan_save.php" class="pl-kind"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_slot" value="<?= $i ?>"><input type="hidden" name="plan_action" value="kind">
-              <?php $cur = plan_slot_option_key($slot); $usual = plan_slot_option_key(plan_slots()[$i]); ?>
+              <?php $cur = plan_slot_option_key($slot); $usual = plan_slot_option_key(plan_slot_base($i)); ?>
               <select name="slot_kind" data-was="<?= $e($cur) ?>" data-saved="<?= $saved || $done ? 1 : 0 ?>" onchange="plKind(this)" aria-label="<?= $e($day) ?> content">
                 <?php foreach ($slotOpts as $k => $o): ?><option value="<?= $e($k) ?>"<?= $k === $cur ? ' selected' : '' ?>><?= $e($o['words']) ?><?= $k === $usual ? ' *' : '' ?></option><?php endforeach; ?>
               </select>
