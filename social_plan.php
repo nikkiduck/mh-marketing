@@ -211,7 +211,7 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
             <form method="post" action="plan_save.php" class="pl-kind"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_slot" value="<?= $i ?>"><input type="hidden" name="plan_action" value="kind">
               <?php $cur = plan_slot_option_key($slot); $usual = plan_slot_option_key(plan_slots()[$i]); ?>
               <select name="slot_kind" data-was="<?= $e($cur) ?>" data-saved="<?= $saved || $done ? 1 : 0 ?>" onchange="plKind(this)" aria-label="<?= $e($day) ?> content">
-                <?php foreach ($slotOpts as $k => $o): ?><option value="<?= $e($k) ?>"<?= $k === $cur ? ' selected' : '' ?>><?= $e($o['words']) ?><?= $k === $usual ? ' (usual)' : '' ?></option><?php endforeach; ?>
+                <?php foreach ($slotOpts as $k => $o): ?><option value="<?= $e($k) ?>"<?= $k === $cur ? ' selected' : '' ?>><?= $e($o['words']) ?><?= $k === $usual ? ' *' : '' ?></option><?php endforeach; ?>
               </select>
               <span class="pl-other"<?= $cur === 'other' ? '' : ' hidden' ?>><input type="text" name="slot_words" maxlength="80" placeholder="What is it?" value="<?= $e($cur === 'other' ? $slot['words'] : '') ?>" aria-label="Other content"><button type="submit" class="soft">Save</button></span>
             </form>

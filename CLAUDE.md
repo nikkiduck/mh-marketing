@@ -2879,7 +2879,7 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   Done tick, and a footer with Mark this week planned / Reopen and Plan next
   week. **Content per slot (Nikki, 2026-11-09: "change up the weekly
   plan"):** the Content column is a dropdown of the plan's kinds
-  (`plan_slot_options()`, the sample week's own marked "(usual)") plus
+  (`plan_slot_options()`, the sample week's own marked with an asterisk) plus
   Other with a text box for a piece made outside the tools; the choice is
   stored per week in the JSON's `slots` and `plan_week_slots()` applies it
   everywhere the week is read (the page, plan_save.php, the builders'

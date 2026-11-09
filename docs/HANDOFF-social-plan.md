@@ -338,7 +338,7 @@ spot can be a dropdown or a text input?" The week table's Content column
 is a dropdown of the plan's kinds (`plan_slot_options()`: Property · New
 Listing / Featured Listing / Just Sold or Rental, Market Stats, Branding,
 Location Feature, Broker Feature, Other), the sample week's own kind
-marked "(usual)". Picking a kind posts `plan_action=kind` to plan_save.php
+marked with an asterisk (Nikki, 2026-11-09: not "(usual)"). Picking a kind posts `plan_action=kind` to plan_save.php
 at once (`plan_slot_set_kind()`); Other opens a text box for the words (a
 reel, a repost; 80 characters) with its own Save. The choice is stored per
 week in the JSON's `slots` (type, variant, words); `plan_week_slots()`
