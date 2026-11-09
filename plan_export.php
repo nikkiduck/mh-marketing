@@ -3,7 +3,8 @@
  * plan_export.php — a Social Media Plan template as a download: the PNG of
  * one picture (headless Chromium, social_export_png()), or the story SET as a
  * ZIP of PNGs numbered in play order (plan_export_zip()); from the week page,
- * a saved piece by plan_week + plan_slot (2026-11-03). A copy of each PNG,
+ * a saved piece by plan_week + plan_slot (2026-11-03) + plan_piece (post |
+ * story, 2026-11-09). A copy of each PNG,
  * or the ZIP, is kept under CREATIVES_DIR/social/admin-<user id>/. Admins
  * only. See inc/plan.php.
  */
@@ -17,8 +18,11 @@ $in = $_POST;
 // From the week page (2026-11-03): no form, just the week and slot; the saved piece's form is the request.
 if (!isset($in['kind']) && isset($in['plan_week'], $in['plan_slot'])) {
     $item = plan_week_load((string)$in['plan_week'])['items'][(int)$in['plan_slot']] ?? null;
-    if (!$item || empty($item['form'])) portal_stop('Nothing saved for that day', 'Open the piece from Weekly Plans, make it, and save it to the week first.');
-    $in = $item['form'];
+    $pieces = plan_item_pieces($item);
+    $pc = (string)($in['plan_piece'] ?? '');   // post | story (2026-11-09); the only piece when not said
+    $piece = $pieces[$pc] ?? (count($pieces) === 1 ? reset($pieces) : null);
+    if (!$piece) portal_stop('Nothing saved for that day', 'Open the piece from Weekly Plans, make it, and save it to the week first.');
+    $in = $piece['form'];
     if (($item['kind'] ?? '') === 'property' && ($l = plan_listing($conn, (string)($in['listing'] ?? '')))) plan_listing_tiles($l);   // the listing's photos into the session, so the saved ids pass plan_photo()
 }
 $r = plan_post_from_request($conn, $ctx, $in);

@@ -4,14 +4,16 @@
  * 2026-11-03) and returns to the week page. POST with the CSRF token,
  * plan_week (YYYY-Www), plan_slot (0 to 7) and plan_action:
  *   item    the builder's form (its Save to the week button): kept as the
- *           slot's piece, with the caption and a one-line summary
+ *           slot's post or story piece by the form's size (2026-11-09; the
+ *           other piece stays), with the caption and a one-line summary
  *   done    tick or untick an Other slot: done=1|0 (the market slot's ticks
  *           are per slide, below)
  *   slides  the market slot's slide list (2026-11-09): slide_action=done|
  *           undone|remove with slide=<index>, or add with place (a
  *           market_card_defs() key) + ptype (SF|TC); the first change to a
  *           slot still on its suggestion keeps the suggestion as the list
- *   clear   drop the slot's piece (back to the suggestion)
+ *   clear   drop the slot's piece (back to the suggestion); with
+ *           plan_piece=post|story only that piece
  *   kind    give the slot another content kind for this week (the Content
  *           dropdown, 2026-11-09): slot_kind (a plan_slot_options() key),
  *           slot_words for Other; a piece saved under another kind is dropped
@@ -53,7 +55,8 @@ if ($action === 'kind') {
     header('Location: ' . $back); exit;
 }
 if ($action === 'clear') {
-    plan_item_clear($week, $slot);
+    $pc = (string)($_POST['plan_piece'] ?? '');
+    if ($pc === 'post' || $pc === 'story') plan_piece_clear($week, $slot, $pc); else plan_item_clear($week, $slot);
     header('Location: ' . $back . '&cleared=' . $slot); exit;
 }
 if ($action === 'slides') {
@@ -80,15 +83,14 @@ if ($kind !== $def['type']) portal_stop('Wrong tool for the day', 'This slot is 
 $form = plan_form_from_post($_POST);
 $r = plan_post_from_request($conn, $ctx, $form);
 if (is_string($r)) portal_stop('Nothing to save yet', ph($r));
-$item = [
-    'kind'     => $kind,
+$piece = [
     'form'     => $form,
     'caption'  => mb_substr(trim(str_replace("\r", '', (string)($_POST['caption'] ?? ''))), 0, 2200),
     'summary'  => plan_item_summary($conn, $kind, $form),
     'frames'   => count($r['frames']),
     'saved_at' => date('c'),
 ];
-if (!plan_item_save($week, $slot, $item)) {
+if (!plan_piece_save($week, $slot, $kind, plan_piece_bucket($form), $piece)) {
     portal_stop('The week could not be saved', 'The plans folder on the server would not take the file. Email ' . PORTAL_MARKETING_EMAIL . ' and we will sort it out.');
 }
 header('Location: ' . $back . '&saved=' . $slot);

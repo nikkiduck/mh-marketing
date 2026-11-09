@@ -2903,6 +2903,12 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   5, 7 and a Branding story 100 + the day index (Mon 100 … Sun 106), the
   old 2 and 6 read as 101 and 104 on load. Unticking a day drops its
   saved story (confirm first); "n of N ready" is the week's own count.
+- **A post and a story per slot (Nikki, 2026-11-09: "one save cannot
+  overwrite the other"):** a builder slot's item holds `post` and `story`
+  pieces (each form, caption, summary, frames, saved_at), filed by the
+  saved form's size (`plan_piece_bucket()`, `plan_piece_save()`); the week
+  row lists both with their own Edit (?piece=), PNG/ZIP (plan_piece) and
+  Reset; an older top-level form reads as the piece of its size.
 - **Property cover and set defaults (Nikki, 2026-11-09):** the Property
   tool opens Centered, badge above the headline, logo None; the set's
   Auto rule puts nothing on the slide after the cover and the M mark lower

@@ -355,6 +355,28 @@ suggestion, only a Done tick, and counts toward "n of 8 ready" when
 ticked. Still eight slots a week on the sample week's days; adding or
 removing a day is not built.
 
+## A post and a story per slot (2026-11-09)
+
+Nikki: "for the Featured Listings when I have both a story and post
+scheduled, one save cannot overwrite the other. I created my Post set for
+Wrights Rd then created my Story set ... the Story changes overwrote my
+Post changes." A builder slot's item now holds two pieces, `post` (the
+post or square size) and `story`, each { form, caption, summary, frames,
+saved_at }; Save to the week files the form under the piece of its size
+(plan_piece_bucket(), plan_piece_save(); the other piece stays), and an
+item saved before, with its form at the top level, reads as the piece of
+its size (plan_week_load()). The week row lists each saved piece ("Post:
+…", "Story: …") and gives each its own line of buttons: Edit post / Edit
+story (the builder with ?piece=, plan_item_context() returns that piece;
+the suggestion buttons still carry ?size=, which picks the piece too),
+PNG or ZIP (plan_export.php with plan_piece) and Reset (plan_save.php
+clear with plan_piece; the item goes when nothing is left). An unsaved
+piece keeps its suggestion button (Post › or Story ›), so a row can show
+a saved post above a Story › button. The slot is ready with either piece
+saved. In the builder, switching the size before saving files the piece
+under the new size: a post opened and saved as a story becomes the story
+piece and leaves the post as it was.
+
 ## Property cover and set defaults (2026-11-09)
 
 Nikki: "Default = no logo on cover; center badge and text on cover; M mark

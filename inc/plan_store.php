@@ -12,10 +12,19 @@
  * through the functions here.
  *
  *   { "week": "2026-W46", "status": "open" | "planned", "updated_at": "…",
- *     "items": { "<slot>": { "kind": "property" | …, "form": { the builder's
- *       posted fields }, "caption": "…", "summary": "one line for the table",
- *       "frames": 5, "saved_at": "…" }
- *              | { "kind": "market", "done": true, "saved_at": "…" } } }
+ *     "items": { "<slot>": { "kind": "property" | …, "saved_at": "…",
+ *       "post":  { "form": { the builder's posted fields }, "caption": "…",
+ *                  "summary": "one line for the table", "frames": 5, "saved_at": "…" },
+ *       "story": { the same, for the story size } }
+ *              | { "kind": "market", "slides": […], "saved_at": "…" }
+ *              | { "kind": "other", "done": true, "saved_at": "…" } } }
+ *
+ * A builder slot holds TWO pieces since 2026-11-09 (Nikki: "when I have
+ * both a story and post scheduled, one save cannot overwrite the other"):
+ * the post (post or square size) and the story, each saved by the size of
+ * the form (plan_piece_bucket()), each with its own Edit, Download and
+ * Reset on the week page. An item saved before, with its form at the top
+ * level, reads as the piece of its size (plan_week_load()).
  *
  * The slots are the plan's sample week (plan_slots(): Monday property,
  * Tuesday market + branding, Wednesday property, Thursday location, Friday
@@ -211,7 +220,14 @@ function plan_week_load(string $key): array {
     if (!is_array($j)) return $empty;
     $legacy = [2 => plan_branding_slot_id('Tuesday'), 6 => plan_branding_slot_id('Friday')];   // the Branding stories' ids before 2026-11-09
     $items = [];
-    foreach ((array)($j['items'] ?? []) as $k => $it) if (is_array($it)) $items[$legacy[(int)$k] ?? (int)$k] = $it;
+    foreach ((array)($j['items'] ?? []) as $k => $it) {
+        if (!is_array($it)) continue;
+        if (!empty($it['form']) && is_array($it['form'])) {   // saved before the two pieces: the form at the top level is the piece of its size
+            $piece = array_intersect_key($it, array_flip(['form', 'caption', 'summary', 'frames', 'saved_at']));
+            $it = ['kind' => (string)($it['kind'] ?? ''), 'saved_at' => (string)($it['saved_at'] ?? ''), plan_piece_bucket($it['form']) => $piece];
+        }
+        $items[$legacy[(int)$k] ?? (int)$k] = $it;
+    }
     $slots = []; $opts = plan_slot_options();
     foreach ((array)($j['slots'] ?? []) as $k => $c) {
         $k = $legacy[(int)$k] ?? (int)$k;
@@ -243,6 +259,41 @@ function plan_item_save(string $key, int $slot, array $item): bool {
 
 function plan_item_clear(string $key, int $slot): bool {
     $p = plan_week_load($key); unset($p['items'][$slot]); return plan_week_store($p);
+}
+
+/** Which of a slot's two pieces a builder form is: 'story' at the story size, else 'post' (a post or a square). */
+function plan_piece_bucket(array $form): string { return (string)($form['size'] ?? '') === 'story' ? 'story' : 'post'; }
+
+/** The bucket a builder page or a week-page link means: ?piece=post|story, else by ?size= (the suggestion buttons carry the size). */
+function plan_piece_from_get(array $get): string {
+    $p = (string)($get['piece'] ?? '');
+    return $p === 'story' || $p === 'post' ? $p : (((string)($get['size'] ?? '')) === 'story' ? 'story' : 'post');
+}
+
+/** A slot item's saved pieces: ['post' => piece, 'story' => piece], only the ones there (each has a form). */
+function plan_item_pieces(?array $item): array {
+    $out = [];
+    foreach (['post', 'story'] as $b) if ($item && !empty($item[$b]['form'])) $out[$b] = $item[$b];
+    return $out;
+}
+
+/** Keep one piece of a builder slot (the other piece, if any, stays). $piece: form, caption, summary, frames, saved_at. */
+function plan_piece_save(string $key, int $slot, string $kind, string $bucket, array $piece): bool {
+    $p = plan_week_load($key);
+    $it = $p['items'][$slot] ?? [];
+    if (($it['kind'] ?? '') !== $kind) $it = ['kind' => $kind];   // another kind's record (a Done tick, slides) makes way
+    $it['kind'] = $kind; $it[$bucket] = $piece; $it['saved_at'] = (string)($piece['saved_at'] ?? date('c'));
+    $p['items'][$slot] = $it;
+    return plan_week_store($p);
+}
+
+/** Drop one piece of a builder slot; the item goes when nothing is left. */
+function plan_piece_clear(string $key, int $slot, string $bucket): bool {
+    $p = plan_week_load($key);
+    if (!isset($p['items'][$slot])) return true;
+    unset($p['items'][$slot][$bucket]);
+    if (!plan_item_pieces($p['items'][$slot])) unset($p['items'][$slot]);
+    return plan_week_store($p);
 }
 
 /**
@@ -288,10 +339,10 @@ function plan_week_set_status(string $key, string $status): bool {
     $p = plan_week_load($key); $p['status'] = $status === 'planned' ? 'planned' : 'open'; return plan_week_store($p);
 }
 
-/** How many of the week's slots are ready: saved pieces, the market slot when every slide is ticked, an Other slot when ticked. */
+/** How many of the week's slots are ready: a slot with a saved piece (post or story), the market slot when every slide is ticked, an Other slot when ticked. */
 function plan_week_ready(array $plan): int {
     $n = 0;
-    foreach ($plan['items'] as $it) if (!empty($it['form']) || (isset($it['slides']) ? plan_market_item_ready($it) : !empty($it['done']))) $n++;
+    foreach ($plan['items'] as $it) if (plan_item_pieces($it) || (isset($it['slides']) ? plan_market_item_ready($it) : !empty($it['done']))) $n++;
     return $n;
 }
 
@@ -345,8 +396,10 @@ function plan_preset_from_form(string $kind, array $form): array {
 
 /**
  * The week and slot a builder page was opened for (?week=&slot=), with the
- * saved item when there is one; null when the page was opened on its own.
- *   week (plan_week()), slot, def (plan_week_slots()[slot]), plan, item (or null)
+ * saved piece when there is one; null when the page was opened on its own.
+ *   week (plan_week()), slot, def (plan_week_slots()[slot]), plan, piece
+ *   (post | story), item (that piece: form, caption, summary, frames,
+ *   saved_at; or null)
  */
 function plan_item_context(array $get, string $kind): ?array {
     $key = (string)($get['week'] ?? '');
@@ -355,8 +408,9 @@ function plan_item_context(array $get, string $kind): ?array {
     $plan = plan_week_load($key);
     $def = plan_week_slots($plan)[$slot] ?? null;   // the week's own content choice for the slot (2026-11-09)
     if (!$def || $def['type'] !== $kind) return null;
-    $item = $plan['items'][$slot] ?? null;
-    return ['week' => plan_week($key), 'slot' => $slot, 'def' => $def, 'plan' => $plan, 'item' => ($item && !empty($item['form'])) ? $item : null];
+    $bucket = plan_piece_from_get($get);   // the post or the story piece (2026-11-09; the suggestion buttons carry ?size=, Edit carries ?piece=)
+    $piece = plan_item_pieces($plan['items'][$slot] ?? null)[$bucket] ?? null;
+    return ['week' => plan_week($key), 'slot' => $slot, 'def' => $def, 'plan' => $plan, 'piece' => $bucket, 'item' => $piece];
 }
 
 /** One line for the week table: what the saved piece is. */
@@ -400,7 +454,7 @@ function plan_builder_header(?array $pk_plan): array {
     $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     $w = $pk_plan['week'];
     $hint = 'Weekly Plans · week of ' . $w['label'] . ' · ' . $pk_plan['def']['day'] . ', ' . $pk_plan['def']['words']
-          . ($pk_plan['item'] ? ' (saved ' . plan_when((string)$pk_plan['item']['saved_at']) . ', loaded below)' : '')
+          . ($pk_plan['item'] ? ' (the ' . $pk_plan['piece'] . ' saved ' . plan_when((string)$pk_plan['item']['saved_at']) . ', loaded below)' : '')
           . '. Save to the week puts it in place and takes you back. ';
     $back = '<a class="btn btn-outline btn-sm" href="social_plan.php?week=' . $e($w['key']) . '"><i class="ti ti-arrow-left"></i> Back to the week</a>';
     return ['hint' => $hint, 'back' => $back];

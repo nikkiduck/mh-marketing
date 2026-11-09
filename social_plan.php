@@ -6,7 +6,8 @@
  * opens the right template with it preselected. Since 2026-11-03 each piece
  * can be SAVED to the week (inc/plan_store.php): the builder's Save to the
  * week keeps its form, the row then shows what was saved with Edit,
- * Download and Reset, the market slot has a Done tick, the week can be
+ * Download and Reset (a post piece and a story piece side by side since
+ * 2026-11-09, each with its own), the market slot has a Done tick, the week can be
  * marked planned and the next one opened, and the strip at the top shows
  * this week and the four ahead with how many of their eight pieces are
  * ready. Since 2026-11-09 the Content column is a dropdown: a day's piece
@@ -170,6 +171,12 @@ admin_tool_header([
     .pl-table td.go a.soft, .pl-table td.go button.soft { background:#fff; color:#4a5569; border:1px solid #dfe3e8; }
     .pl-table td.go a.soft:hover, .pl-table td.go button.soft:hover { border-color:#4a5566; background:#fff; }
     .pl-table td.go form { display:inline; }
+    .pl-go-row { display:flex; justify-content:flex-end; align-items:center; gap:6px; }
+    .pl-go-row + .pl-go-row { margin-top:6px; }
+    .pl-go-row a, .pl-go-row button { margin-left:0 !important; }
+    .pl-table td.pick .pl-piece + .pl-piece { margin-top:6px; }
+    .pl-table td.pick .pl-piece b { color:#434b57; font-weight:600; }
+    .pl-table td.pick .pl-piece + .sug, .pl-table td.pick .pl-piece .cap + .sug { display:block; margin-top:6px; }
     .pl-table td.go label.tick { font-size:13px; color:#434b57; margin-left:6px; cursor:pointer; }
     .pl-table tr.alt td { border-top-style:dashed; }
     .pl-foot { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:16px 0 0; font-size:14px; color:#434b57; }
@@ -189,7 +196,7 @@ admin_tool_header([
     .pl-type a.tool:hover { text-decoration:underline; }
     .pl-rot { margin-top:26px; font-size:13px; color:#6b7a8f; line-height:1.6; }
     .pl-rot b { color:#434b57; font-weight:600; }
-    @media (max-width:760px) { .pl-table td.piece, .pl-table td.day, .pl-table td.st { white-space:normal; width:auto; } .pl-table td.go { text-align:left; } .pl-table td.go a, .pl-table td.go button { margin:4px 6px 0 0; } }
+    @media (max-width:760px) { .pl-table td.piece, .pl-table td.day, .pl-table td.st { white-space:normal; width:auto; } .pl-table td.go { text-align:left; } .pl-table td.go a, .pl-table td.go button { margin:4px 6px 0 0; } .pl-go-row { justify-content:flex-start; } }
     ',
 ]);
 // The Content dropdown (2026-11-09): a plan kind saves at once (a confirm when the day has a saved piece or a Done
@@ -245,7 +252,7 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
       <tbody>
       <?php $prevDay = ''; foreach ($rows as $i => [$day, $piece, $pick, $buttons, $nth]):
         $slot = $slots[$i]; $item = $plan['items'][$i] ?? null; $tool = plan_slot_tool($slot);
-        $saved = $item && !empty($item['form']); $done = $item && !empty($item['done']);
+        $pieces = plan_item_pieces($item); $saved = (bool)$pieces; $done = $item && !empty($item['done']);   // a post and a story piece per slot (2026-11-09)
         $isMarket = $slot['type'] === 'market';
         $mslides = $isMarket ? plan_market_slides($item, $idx, $nth) : []; $msaved = $isMarket && $item && isset($item['slides']);
         $mdone = count(array_filter($mslides, fn($x) => !empty($x['done'])));
@@ -282,9 +289,11 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
               </form>
               <?php if ($msaved): ?><span class="sug"><b>Suggestion was:</b> <?= $e(implode(', ', array_map(fn($x) => plan_market_slide_words($x), plan_market_slides_suggest($idx, $nth)))) ?></span><?php endif; ?>
             <?php elseif ($saved): ?>
-              <?= $e($item['summary'] ?? '') ?>
-              <?php if (trim((string)($item['caption'] ?? '')) !== ''): ?><span class="cap"><?= $e(mb_strimwidth(trim((string)$item['caption']), 0, 160, '…')) ?></span><?php endif; ?>
-              <span class="sug"><br><b>Suggestion was:</b> <?= $e($pick) ?></span>
+              <?php foreach ($pieces as $b => $pc): ?>
+              <div class="pl-piece"><b><?= $b === 'story' ? 'Story' : 'Post' ?>:</b> <?= $e($pc['summary'] ?? '') ?>
+                <?php if (trim((string)($pc['caption'] ?? '')) !== ''): ?><span class="cap"><?= $e(mb_strimwidth(trim((string)$pc['caption']), 0, 160, '…')) ?></span><?php endif; ?></div>
+              <?php endforeach; ?>
+              <span class="sug"><b>Suggestion was:</b> <?= $e($pick) ?></span>
             <?php else: ?>
               <?= $e($pick) ?>
             <?php endif; ?>
@@ -303,13 +312,21 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
               <?php foreach ($buttons as [$w, $href]): ?><a href="<?= $e($href) ?>"><?= $e($w) ?> ›</a><?php endforeach; ?>
               <form method="post" action="plan_save.php"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_slot" value="<?= $i ?>"><input type="hidden" name="plan_action" value="done"><input type="hidden" name="done" value="<?= $done ? 0 : 1 ?>">
                 <label class="tick"><input type="checkbox" onchange="this.form.submit()"<?= $done ? ' checked' : '' ?>> Done</label></form>
-            <?php elseif ($saved): ?>
-              <a href="<?= $e($tool . '?week=' . rawurlencode($week['key']) . '&slot=' . $i) ?>">Edit ›</a>
-              <form method="post" action="plan_export.php"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_slot" value="<?= $i ?>"><button type="submit" class="soft"><?= (int)($item['frames'] ?? 1) > 1 ? 'Download ZIP' : 'Download PNG' ?></button></form>
-              <form method="post" action="plan_save.php" onsubmit="return confirm('Drop what is saved for this day and go back to the suggestion?')"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_slot" value="<?= $i ?>"><input type="hidden" name="plan_action" value="clear"><button type="submit" class="soft">Reset</button></form>
             <?php else: ?>
-              <?php foreach ($buttons as [$w, $href]): ?><a href="<?= $e($href . $wq . $i) ?>"><?= $e($w) ?> ›</a><?php endforeach; ?>
-              <?php if (!$buttons): ?><a href="<?= $e($tool . '?week=' . rawurlencode($week['key']) . '&slot=' . $i) ?>" class="soft">Choose ›</a><?php endif; ?>
+              <?php // One line per piece: a saved post or story has Edit, Download and Reset of its own; an unsaved one its suggestion button (2026-11-09)
+              $byBucket = []; foreach ($buttons as [$w, $href]) $byBucket[$w === 'Story' ? 'story' : 'post'] = [$w, $href];
+              foreach (['post', 'story'] as $b): $pc = $pieces[$b] ?? null; ?>
+                <?php if ($pc): ?>
+                <div class="pl-go-row">
+                  <a href="<?= $e($tool . '?week=' . rawurlencode($week['key']) . '&slot=' . $i . '&piece=' . $b) ?>">Edit <?= $b ?> ›</a>
+                  <form method="post" action="plan_export.php"><?= $hid ?><input type="hidden" name="plan_piece" value="<?= $b ?>"><button type="submit" class="soft"><?= (int)($pc['frames'] ?? 1) > 1 ? 'ZIP' : 'PNG' ?></button></form>
+                  <form method="post" action="plan_save.php" onsubmit="return confirm('Drop the saved <?= $b ?> for this day?')"><?= $hid ?><input type="hidden" name="plan_action" value="clear"><input type="hidden" name="plan_piece" value="<?= $b ?>"><button type="submit" class="soft">Reset</button></form>
+                </div>
+                <?php elseif (isset($byBucket[$b])): ?>
+                <div class="pl-go-row"><a href="<?= $e($byBucket[$b][1] . $wq . $i) ?>"><?= $e($byBucket[$b][0]) ?> ›</a></div>
+                <?php endif; ?>
+              <?php endforeach; ?>
+              <?php if (!$buttons && !$pieces): ?><a href="<?= $e($tool . '?week=' . rawurlencode($week['key']) . '&slot=' . $i) ?>" class="soft">Choose ›</a><?php endif; ?>
             <?php endif; ?>
           </td>
         </tr>
