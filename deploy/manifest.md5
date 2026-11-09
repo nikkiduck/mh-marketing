@@ -156,5 +156,5 @@ df9c9acc1b520b4ccd5374a16a4a5b94  users.php
 6f6b2473b55a68a0e144ec9c163b2154  inc/accounting_mail.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
-e0f0c5ecc5887bedb3c07500e49685f1  inc/market_flyer_render.php
-7f7bbd1acf7fc44a7b42065910da32ae  portal/market_flyer.php
+eedcbbeabe7e006e5d0b078944a6fb87  inc/market_flyer_render.php
+bab7ce78c6827745173aa89859f1ceae  portal/market_flyer.php

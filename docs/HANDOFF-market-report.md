@@ -305,9 +305,13 @@ as a US Letter page for a client, through `inc/market_flyer_render.php` and
 Chromium. What goes on the page is decided by a size budget: the chosen
 type's county blocks and the metro figures always, then the board's town
 table, our feed's town table (biggest towns first, cut to what fits) and the
-other property type's counties while there is room. Admin-only until Nikki
-approves the style (`MARKET_FLYER_LIVE` in inc/market.php). Details in
-CLAUDE.md > Market Report and Market Snapshot posts.
+other property type's counties while there is room. The footer always
+carries an agent (Jonathan Boxer when an admin with no profile makes it;
+2026-11-09), square headshot, and the sources as one block of text; blocks
+about the flyer's own place are headed by the property type and no block
+names its source. Admin-only until Nikki approves the style
+(`MARKET_FLYER_LIVE` in inc/market.php). Details in CLAUDE.md > Market
+Report and Market Snapshot posts.
 
 ## Ideas not built
 

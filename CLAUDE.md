@@ -2614,9 +2614,18 @@ the same month last year, the year-to-date figure under it), the metro
 figures for Denver and Colorado Springs, then, as far as the page has room
 (a size budget in `market_flyer_model()`), the Aspen Glenwood town table,
 our own feed's town table (biggest towns first, trimmed to what fits), and
-the other property type's counties; the footer carries the agent's face
-crop, name, phone and email (an admin with no linked account gets the
-brokerage line) and the boards' credit lines. Layout and model:
+the other property type's counties; the footer carries the agent's square
+face crop, name, phone and email and the boards' credit lines as one block
+of running text. **A flyer always carries an agent (Nikki, 2026-11-09):**
+an admin with no agent profile gets Jonathan Boxer's lines
+(`MARKET_FLYER_FALLBACK_EMAIL` in portal/market_flyer.php, the active
+intake with that email). Her markup the same day: the eyebrow is "Market
+Report · October 2026" and the property type(s) sit under the title where
+the MLS and region line was; a block about the flyer's own place is headed
+by its property type ("Single-family homes", "All residential · 11
+counties"), any other block keeps its place as the heading with the type
+beside it; no block names its MLS or feed (the footer does); the "Fewer
+than ten sales" line is gone. Layout and model:
 `inc/market_flyer_render.php` (standalone, like the listing flyer's);
 Chromium through `flyer_export_pdf()`. The button sits beside "Snapshot post for this market" with a "Flyer
 for" picker: the whole market, or one place in it (the cards' list,

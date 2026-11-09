@@ -8,13 +8,18 @@
  * One market (a tab of the report) or one PLACE in it (the snapshot cards'
  * list, market_cards(): a county, an Aspen Glenwood town, Denver Metro, or a
  * Communities town from our own feed), one property type (the report's
- * toggle), one month: US Letter, the brokerage logo, the name and the MLS
- * that serves it, blocks of tiles (closed sales, median and average price,
+ * toggle), one month: US Letter, the brokerage logo, the place's name with
+ * the property type(s) under it, blocks of tiles (closed sales, median and average price,
  * days on market, % of list, months of supply, homes for sale, new listings,
  * each against the same month last year, the steadier year-to-date figure
- * where there is one), and a footer with the agent's photo, name and contact
- * lines beside the boards' credit lines, which CAR's and ShowingTime's terms
- * require. What else goes on the page is decided by a size budget: for a
+ * where there is one), and a footer with the agent's square headshot, name
+ * and contact lines (always an agent: the caller supplies Jonathan Boxer when
+ * nobody is signed in as one; Nikki, 2026-11-09) beside the boards' credit
+ * lines as one block of text, which CAR's and ShowingTime's terms require. A
+ * block about the flyer's own place is headed by its property type (the place
+ * is the page title); any other block keeps its place as the heading with the
+ * type beside it; no block names its source, the footer does (Nikki's markup,
+ * 2026-11-09). What else goes on the page is decided by a size budget: for a
  * whole market, the board's town table, our feed's town table and the other
  * property type's counties while there is room; for a place, both property
  * types of the place first, then the market's counties for context.
@@ -62,7 +67,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
     foreach ((array)($data['front_range'] ?? []) as $f) if (($f['market'] ?? '') === $market) { $metro = $f; break; }
 
     // A block of the eight CAR tiles, from a county row or a town row (same fields).
-    $carBlock = function (array $r, string $title, string $words) use ($w, $board): array {
+    $carBlock = function (array $r, string $title, string $words) use ($w): array {
         $tiles = [
             market_flyer_tile('Closed sales', market_int($r['sold']), market_change($r['sold'], $r['sold_ly']), $w,
                               $r['ytd_sold'] !== null ? 'YTD ' . market_int($r['ytd_sold']) . market_flyer_paren(market_change($r['ytd_sold'], $r['ytd_sold_ly'])) : ''),
@@ -79,12 +84,11 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
             market_flyer_tile('New listings', market_int($r['new_listings']), market_change($r['new_listings'], $r['new_listings_ly']), $w,
                               $r['ytd_new_listings'] !== null ? 'YTD ' . market_int($r['ytd_new_listings']) : ''),
         ];
-        return ['title' => $title, 'sub' => $words . ' · ' . (string)($r['mls'] ?? $board['mls']), 'tiles' => $tiles,
-                'thin' => ($r['sold'] ?? null) !== null && (int)$r['sold'] < 10];
+        return ['title' => $title, 'words' => $words, 'tiles' => $tiles];
     };
 
     // A block from our own feed for a Communities town (inc/market_feed.php): what the feed knows.
-    $feedBlock = function (array $t, string $cls, string $words) use ($w, $board): ?array {
+    $feedBlock = function (array $t, string $cls, string $words) use ($w): ?array {
         $p = $t[$cls] ?? null;
         if (!$p) return null;
         $mo = (array)($p['month'] ?? []); $ly = (array)($p['ly'] ?? []); $ytd = (array)($p['ytd'] ?? []); $yl = (array)($p['ytd_ly'] ?? []); $inv = $p['inventory'] ?? null;
@@ -108,7 +112,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
         ];
         if ($inv && $n($inv['active'] ?? null))        $tiles[] = market_flyer_tile('Homes for sale', market_int($inv['active']), null, $w, 'At month end');
         if ($inv && $n($inv['months_supply'] ?? null)) $tiles[] = market_flyer_tile('Months of supply', market_dec1($inv['months_supply']), null, $w);
-        return ['title' => (string)$t['label'], 'sub' => $words . ' · ' . (string)$board['mls'] . ' feed', 'tiles' => $tiles, 'thin' => $sold < 10];
+        return ['title' => (string)$t['label'], 'words' => $words, 'tiles' => $tiles];
     };
 
     // The metro figures (REcolorado's Market Watch, PPAR's headline): what the post states, all residential.
@@ -125,7 +129,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
         if (($metro['active'] ?? null) !== null) $t[] = market_flyer_tile('Active listings', market_int($metro['active']), $pc($metro['active_change_pct'] ?? null), $w);
         if (($metro['weeks_of_inventory'] ?? null) !== null) $t[] = market_flyer_tile('Weeks of inventory', market_int($metro['weeks_of_inventory']), null, $w);
         if (($metro['avg_days_on_market'] ?? null) !== null) $t[] = market_flyer_tile('Average days on market', market_int($metro['avg_days_on_market']), null, $w);
-        $metroBlock = ['title' => (string)$metro['region'], 'sub' => trim((string)($metro['mls'] ?? '') . ' · ' . (string)($metro['scope'] ?? 'All residential'), ' ·'), 'tiles' => array_slice($t, 0, 8)];
+        $metroBlock = ['title' => (string)$metro['region'], 'words' => (string)($metro['scope'] ?? 'All residential'), 'tiles' => array_slice($t, 0, 8)];
     }
 
     // Town table (Aspen Glenwood MLS): the report's columns.
@@ -170,7 +174,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
     // 153 pt plus the 12 pt gap, a block of one tile row 60 pt less, a table 48 pt
     // plus 16 pt a row, and the body has about 546 pt between header and footer.
     $budget = 546.0;
-    $cost = fn(array $b) => 12.0 + 153.0 - (count($b['tiles']) <= 4 ? 60.0 : 0.0) + (!empty($b['thin']) ? 14.0 : 0.0);
+    $cost = fn(array $b) => 12.0 + 153.0 - (count($b['tiles']) <= 4 ? 60.0 : 0.0);
     $fitTable = function (array $rows, bool $trim) use (&$budget): array {   // the rows that fit; trimmed to the biggest when allowed (three at least)
         if (!$rows) return [];
         $n = min(count($rows), (int)floor(($budget - 48) / 16));
@@ -243,7 +247,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
             $used['metro'] = true;
         }
         if (!$blocks) return null;
-        $bothTypes = count(array_filter($blocks, fn($b) => str_starts_with($b['sub'], market_ptype_words($otherPt)))) > 0;
+        $bothTypes = count(array_filter($blocks, fn($b) => $b['words'] === market_ptype_words($otherPt))) > 0;
         foreach ($blocks as $b) $budget -= $cost($b);
         if ($contextCounties) {
             // The market's counties for context, the county the place sits in first (the
@@ -287,7 +291,7 @@ function market_flyer_model(array $data, string $market, string $pt, array $agen
         'label'   => $w['month'],
         'ly'      => $w['ly'],   // "Oct 2025", for the table headings
         'ptype'   => $pt,
-        'ptwords' => $bothTypes ? market_ptype_words($pt) . ' and ' . lcfirst(market_ptype_words($otherPt)) : market_ptype_words($pt),
+        'ptwords' => $bothTypes ? market_ptype_words($pt) . ' and ' . market_ptype_words($otherPt) : market_ptype_words($pt),   // the line under the title
         'as_of'   => (string)($data['meta']['current_as_of'] ?? ''),
         'blocks'  => $blocks,
         'metro'   => null,   // folded into blocks
@@ -377,8 +381,7 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#1f242c;fo
 .head .l{min-width:0;flex:1}
 .eyebrow{font-size:7.5pt;letter-spacing:.22em;text-transform:uppercase;color:#4a5566;font-weight:500;margin:0 0 5pt}
 .title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:30pt;line-height:1.02;margin:0;color:#1f242c}
-.sub{font-size:9.5pt;color:#5c6574;margin:5pt 0 0;line-height:1.4}
-.sub b{color:#1f242c;font-weight:500}
+.sub{font-size:7.5pt;letter-spacing:.22em;text-transform:uppercase;color:#4a5566;font-weight:500;margin:7pt 0 0;line-height:1.4}
 .head .logo{height:46pt;width:auto;flex:none;margin-top:2pt}
 .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:12pt;padding-top:12pt}
 .block{flex:none}
@@ -393,7 +396,6 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#1f242c;fo
 .tile .vs.up::before{content:'▲ ';font-size:5.5pt;color:#3d6b4f;vertical-align:1pt}
 .tile .vs.down::before{content:'▼ ';font-size:5.5pt;color:#8a4b3c;vertical-align:1pt}
 .tile .sm{font-size:6.8pt;color:#8a94a3;margin-top:1pt;line-height:1.25}
-.thin{font-size:7.4pt;color:#8a5a12;margin:4pt 0 0}
 table{width:100%;border-collapse:collapse;font-size:8pt;table-layout:auto}
 th{font-weight:500;font-size:6.3pt;letter-spacing:.1em;text-transform:uppercase;color:#6b7a8f;text-align:right;padding:0 3pt 4pt;border-bottom:.75pt solid #1f242c;white-space:normal;line-height:1.2;vertical-align:bottom}
 td{text-align:right;padding:3pt 3pt;border-bottom:.5pt solid #dfe3e8;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -402,17 +404,23 @@ td.l{font-weight:500}
 td.chg{color:#5c6574;font-size:7.6pt}
 .foot{flex:none;border-top:1.5pt solid #1f242c;margin-top:auto;padding-top:11pt;display:flex;align-items:flex-start;gap:14pt}
 .who{display:flex;align-items:center;gap:10pt;flex:none;max-width:250pt}
-.who .ph{width:50pt;height:50pt;border-radius:50%;object-fit:cover;flex:none;background:#e9edf2}
+.who .ph{width:52pt;height:52pt;border-radius:0;object-fit:cover;flex:none;background:#e9edf2}
 .who .nm{font-family:'Cormorant Garamond',Georgia,serif;font-size:17pt;font-weight:500;line-height:1.1;white-space:nowrap}
 .who .ct{font-size:7.6pt;letter-spacing:.06em;text-transform:uppercase;color:#5c6574;line-height:1.5;margin-top:2pt}
 .who .ct b{color:#1f242c;font-weight:500}
-.credit{flex:1;min-width:0;font-size:6.2pt;line-height:1.4;color:#8a94a3;text-align:right}
-.credit p{margin:0 0 2pt}
-.credit .brand{color:#4a5566;font-weight:500;letter-spacing:.1em;text-transform:uppercase;font-size:6.6pt;margin-top:3pt}
+.credit{flex:1;min-width:0;font-size:6.2pt;line-height:1.45;color:#8a94a3;text-align:left;padding-top:1pt}
+.credit p{margin:0}
+.credit .brand{color:#4a5566;font-weight:500;letter-spacing:.1em;text-transform:uppercase;font-size:6.6pt;margin-top:4pt}
 CSS;
 
-    $blockHtml = function (array $b) use ($e): string {
-        $h = '<section class="block"><div class="bhead"><h2>' . $e($b['title']) . '</h2><span>' . $e($b['sub']) . '</span></div><div class="tiles">';
+    // A block about the flyer's own place is headed by its property type (the place is the
+    // title of the page); any other block keeps its place, with the type beside it.
+    $blockHtml = function (array $b) use ($e, $f): string {
+        $title = trim((string)$b['title']); $name = trim((string)$f['name']);
+        $self  = $name !== '' && stripos($title, $name) === 0;                     // "Denver Metro (11 counties)" on the Denver Metro flyer
+        $rest  = $self ? trim(substr($title, strlen($name)), " ()\t") : '';         // "11 counties"
+        $h = '<section class="block"><div class="bhead"><h2>' . $e($self ? $b['words'] : $title) . '</h2>'
+           . '<span>' . $e($self ? $rest : $b['words']) . '</span></div><div class="tiles">';
         foreach ($b['tiles'] as $t) {
             $cls = $t['dir'] > 0 ? ' up' : ($t['dir'] < 0 ? ' down' : '');
             $h .= '<div class="tile"><div class="lab">' . $e($t['label']) . '</div><div class="v">' . $e($t['value']) . '</div>';
@@ -420,16 +428,14 @@ CSS;
             if ($t['small'] !== '') $h .= '<div class="sm">' . $e($t['small']) . '</div>';
             $h .= '</div>';
         }
-        $h .= '</div>';
-        if (!empty($b['thin'])) $h .= '<p class="thin">Fewer than ten sales this month: the year-to-date figures are the steadier read.</p>';
-        return $h . '</section>';
+        return $h . '</div></section>';
     };
 
     $body = '';
     foreach ($f['blocks'] as $b) $body .= $blockHtml($b);
     if (!empty($f['metro'])) $body .= $blockHtml($f['metro']);
     if ($f['towns']) {
-        $body .= '<section class="block"><div class="bhead"><h2>Town by town</h2><span>' . $e($f['mls']) . ' town reports · ' . $e(market_ptype_words($f['ptype'])) . '</span></div>'
+        $body .= '<section class="block"><div class="bhead"><h2>Town by town</h2><span>' . $e(market_ptype_words($f['ptype'])) . '</span></div>'
                . '<table><thead><tr><th class="l">Town</th><th>Closed</th><th>vs ' . $e($f['ly']) . '</th><th>Median</th><th>vs ' . $e($f['ly']) . '</th>'
                . '<th>Closed YTD</th><th>Median YTD</th><th>YTD vs ' . $e(substr($f['ly'], -4)) . '</th><th>Days on mkt</th><th>Mo. supply</th><th>For sale</th></tr></thead><tbody>';
         foreach ($f['towns'] as $t) {
@@ -460,16 +466,16 @@ CSS;
     $lines[] = 'monthaus.com';
     $who .= implode('<br>', $lines) . '</div></div></div>';
 
-    $credit = '<div class="credit">';
-    foreach ($f['credits'] as $c) $credit .= '<p>' . $e($c) . '</p>';
-    $credit .= '<p>Monthly figures in small markets swing on a handful of sales; year-to-date figures are steadier. <span style="white-space:nowrap">Prepared ' . $e(date('M j, Y')) . '.</span></p>';
-    $credit .= '<p class="brand">Mont Haus International Realty</p></div>';
-
-    $sub = '<b>' . $e($f['mls']) . '</b>' . ($f['areas'] !== '' ? ' · ' . $e($f['areas']) : '');
+    // The sources as one block of running text (Nikki, 2026-11-09: "make it all one block without paragraph breaks").
+    $sentences = $f['credits'];
+    $sentences[] = 'Monthly figures in small markets swing on a handful of sales; year-to-date figures are steadier.';
+    $sentences[] = 'Prepared ' . date('M j, Y') . '.';
+    $credit = '<div class="credit"><p>' . $e(implode(' ', array_map(fn($c) => rtrim(trim($c), '.') . '.', $sentences))) . '</p>'
+            . '<p class="brand">Mont Haus International Realty</p></div>';
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>' . $e($f['name'] . ', ' . $f['label']) . '</title><style>' . $css . '</style></head><body>'
-         . '<header class="head"><div class="l"><p class="eyebrow">Market Report · ' . $e($f['label']) . ' · ' . $e($f['ptwords']) . '</p>'
-         . '<h1 class="title">' . $e($f['name']) . '</h1><p class="sub">' . $sub . '</p></div>'
+         . '<header class="head"><div class="l"><p class="eyebrow">Market Report · ' . $e($f['label']) . '</p>'
+         . '<h1 class="title">' . $e($f['name']) . '</h1><p class="sub">' . $e($f['ptwords']) . '</p></div>'
          . '<img class="logo" src="' . $e($logo) . '" alt="Mont Haus International Realty"></header>'
          . '<main class="body">' . $body . '</main>'
          . '<footer class="foot">' . $who . $credit . '</footer>'
