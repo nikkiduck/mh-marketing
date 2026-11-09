@@ -6,8 +6,11 @@
  *   item    the builder's form (its Save to the week button): kept as the
  *           slot's piece, with the caption and a one-line summary
  *   done    tick or untick the market slot (the Market Snapshot is made in
- *           its own tool): done=1|0
+ *           its own tool) or an Other slot: done=1|0
  *   clear   drop the slot's piece (back to the suggestion)
+ *   kind    give the slot another content kind for this week (the Content
+ *           dropdown, 2026-11-09): slot_kind (a plan_slot_options() key),
+ *           slot_words for Other; a piece saved under another kind is dropped
  *   status  the week: status=planned|open
  * Super admin only (plan_gate()).
  */
@@ -19,8 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
 }
 $week = (string)($_POST['plan_week'] ?? '');
 $slot = (int)($_POST['plan_slot'] ?? -1);
-$slots = plan_slots();
 if (!plan_store_key_ok($week)) portal_stop('Which week?', 'The week was missing from the request. Go back to Weekly Plans and try again.');
+$slots = plan_week_slots(plan_week_load($week));   // the week's own content choices (2026-11-09)
 $action = (string)($_POST['plan_action'] ?? 'item');
 $back = 'social_plan.php?week=' . rawurlencode($week);
 
@@ -31,6 +34,12 @@ if ($action === 'status') {
 if (!isset($slots[$slot])) portal_stop('Which piece?', 'That day and piece are not in the plan\'s week. Go back to Weekly Plans and try again.');
 $def = $slots[$slot];
 
+if ($action === 'kind') {
+    if (!plan_slot_set_kind($week, $slot, (string)($_POST['slot_kind'] ?? ''), (string)($_POST['slot_words'] ?? ''))) {
+        portal_stop('That content is not one of the plan\'s', 'Go back to Weekly Plans and choose again.');
+    }
+    header('Location: ' . $back); exit;
+}
 if ($action === 'clear') {
     plan_item_clear($week, $slot);
     header('Location: ' . $back . '&cleared=' . $slot); exit;

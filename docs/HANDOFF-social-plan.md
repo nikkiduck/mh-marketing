@@ -294,8 +294,9 @@ have my saved options load; four weeks in advance."
 - **The week page** (social_plan.php, "Weekly Plans"): a strip of this
   week and the next four with "n of 8 ready" or "Planned ✓"; the table's
   rows show the suggestion, or what is saved (with the suggestion under it)
-  and Saved + time; buttons: Post / Story set (into the builder with
-  ?week=&slot= and the suggestion preselected), or for a saved row Edit,
+  and Saved + time; buttons: Post / Story (into the builder with
+  ?week=&slot= and the suggestion preselected; the story size opens with
+  the set ticked, so the button says Story since 2026-11-09), or for a saved row Edit,
   Download (plan_export.php with plan_week + plan_slot: the saved form is
   the request; a property's listing photos are primed into the session
   first so the saved photo ids pass plan_photo()) and Reset (back to the
@@ -324,10 +325,35 @@ have my saved options load; four weeks in advance."
   controls hold whichever tab is open), and "Logo on this frame" is its
   logo. + Add photo appends the next unused photo; Remove this frame drops
   the open one. The request reads them into plan_render_photo_frame().
-- The slot's KIND is fixed; the subject, size and everything else are
-  free. A saved piece re-renders from the live feed when downloaded later:
-  the saved words stay, but a listing's photos are the feed's today, and a
-  photo that left the feed drops out of the set.
+- The slot's kind is the sample week's unless the week says otherwise
+  (below); the subject, size and everything else are free. A saved piece
+  re-renders from the live feed when downloaded later: the saved words
+  stay, but a listing's photos are the feed's today, and a photo that left
+  the feed drops out of the set.
+
+## Content per slot (2026-11-09)
+
+Nikki: "I want to be able to change up the weekly plan. Maybe the Content
+spot can be a dropdown or a text input?" The week table's Content column
+is a dropdown of the plan's kinds (`plan_slot_options()`: Property · New
+Listing / Featured Listing / Just Sold or Rental, Market Stats, Branding,
+Location Feature, Broker Feature, Other), the sample week's own kind
+marked "(usual)". Picking a kind posts `plan_action=kind` to plan_save.php
+at once (`plan_slot_set_kind()`); Other opens a text box for the words (a
+reel, a repost; 80 characters) with its own Save. The choice is stored per
+week in the JSON's `slots` (type, variant, words); `plan_week_slots()`
+applies it, and the page, plan_save.php and the builders'
+`plan_item_context()` all read the week through it, so a builder opened
+for the slot checks against the week's kind. Changing a slot's kind drops
+a piece or Done tick saved under the old kind (a confirm on the page
+first); choosing the usual kind again removes the record. The suggestions
+follow the choice: the nth slot of a kind in the week steps that kind's
+rotation on by n, so two Broker Feature slots suggest this week's broker
+and the next, two Branding slots the season's first and second tagline,
+two New Listing slots the two newest. An Other slot has no tool and no
+suggestion, only a Done tick, and counts toward "n of 8 ready" when
+ticked. Still eight slots a week on the sample week's days; adding or
+removing a day is not built.
 
 ## The set, second pass (2026-11-02, evening)
 

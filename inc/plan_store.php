@@ -19,9 +19,13 @@
  *
  * The slots are the plan's sample week in order (plan_slots(): Monday
  * property, Tuesday market + branding, Wednesday property, Thursday
- * location, Friday property + branding, Saturday broker); a slot's kind is
- * fixed, what goes in it is not. The market slot is the Market Snapshot
- * tool's (not a plan builder), so it only carries a Done tick.
+ * location, Friday property + branding, Saturday broker). Since 2026-11-09
+ * (Nikki: "I want to be able to change up the weekly plan") a week may give
+ * a slot another content kind: "slots": { "<slot>": { "type", "variant",
+ * "words" } }, chosen from plan_slot_options() in the week table's Content
+ * dropdown (plan_week_slots() applies them; Other = words typed by Nikki
+ * for a piece made outside the tools). The market slot and an Other slot
+ * are not a plan builder's, so they only carry a Done tick.
  *
  * The saved "form" is the builder's own POST (plan_form_from_post(): the
  * token, the plan fields and the preview-only fields dropped), so
@@ -39,7 +43,45 @@ function plan_slots(): array {
     return $out;
 }
 
-/** The slot's tool page, or '' for the market slot (the Market Snapshot's own page). */
+/**
+ * The content kinds a slot may hold (the week table's Content dropdown,
+ * 2026-11-09): key => type, variant (property), words. The key of a sample
+ * week slot is plan_slot_option_key(); 'other' is a piece made outside the
+ * tools (a reel, a repost), with Nikki's own words and a Done tick.
+ */
+function plan_slot_options(): array {
+    return [
+        'property:new'      => ['type' => 'property', 'variant' => 'new',      'words' => 'Property · New Listing'],
+        'property:featured' => ['type' => 'property', 'variant' => 'featured', 'words' => 'Property · Featured Listing'],
+        'property:sold'     => ['type' => 'property', 'variant' => 'sold',     'words' => 'Property · Just Sold or Rental'],
+        'market'            => ['type' => 'market',   'words' => 'Market Stats'],
+        'branding'          => ['type' => 'branding', 'words' => 'Branding'],
+        'location'          => ['type' => 'location', 'words' => 'Location Feature'],
+        'broker'            => ['type' => 'broker',   'words' => 'Broker Feature'],
+        'other'             => ['type' => 'other',    'words' => 'Other'],
+    ];
+}
+
+/** The option key of a slot: its type, plus the variant for a property slot. */
+function plan_slot_option_key(array $slot): string {
+    return $slot['type'] . ($slot['type'] === 'property' ? ':' . (string)($slot['variant'] ?? 'featured') : '');
+}
+
+/**
+ * The week's slots as the week has them: the sample week, with the week's
+ * own content choices applied ('custom' => true on a changed slot; an
+ * Other slot's words are Nikki's). What every page and save works from.
+ */
+function plan_week_slots(array $plan): array {
+    $slots = plan_slots();
+    foreach ((array)($plan['slots'] ?? []) as $i => $c) {
+        if (!isset($slots[$i])) continue;
+        $slots[$i] = ['day' => $slots[$i]['day'], 'type' => $c['type'], 'words' => $c['words'], 'custom' => true] + ($c['type'] === 'property' ? ['variant' => $c['variant']] : []);
+    }
+    return $slots;
+}
+
+/** The slot's tool page, or '' for the market slot (the Market Snapshot's own page) and an Other slot. */
 function plan_slot_tool(array $slot): string {
     return ['property' => 'template_property.php', 'broker' => 'template_broker.php', 'location' => 'template_location.php', 'branding' => 'template_branding.php'][$slot['type']] ?? '';
 }
@@ -54,7 +96,7 @@ function plan_store_key_ok(string $key): bool { return (bool)preg_match('/^\d{4}
 
 /** The week's record (an empty one for a week never saved). Item keys are slot indexes. */
 function plan_week_load(string $key): array {
-    $empty = ['week' => $key, 'status' => 'open', 'updated_at' => '', 'items' => []];
+    $empty = ['week' => $key, 'status' => 'open', 'updated_at' => '', 'items' => [], 'slots' => []];
     if (!plan_store_key_ok($key)) return $empty;
     $f = plan_store_dir() . '/' . $key . '.json';
     if (!is_file($f)) return $empty;
@@ -62,13 +104,22 @@ function plan_week_load(string $key): array {
     if (!is_array($j)) return $empty;
     $items = [];
     foreach ((array)($j['items'] ?? []) as $k => $it) if (is_array($it)) $items[(int)$k] = $it;
-    return ['week' => $key, 'status' => ($j['status'] ?? '') === 'planned' ? 'planned' : 'open', 'updated_at' => (string)($j['updated_at'] ?? ''), 'items' => $items];
+    $slots = []; $opts = plan_slot_options();
+    foreach ((array)($j['slots'] ?? []) as $k => $c) {
+        if (!is_array($c)) continue;
+        $ok = (string)($c['type'] ?? '') . ((($c['type'] ?? '') === 'property') ? ':' . (string)($c['variant'] ?? '') : '');
+        if (!isset($opts[$ok])) continue;
+        $slots[(int)$k] = $opts[$ok];
+        if ($ok === 'other' && trim((string)($c['words'] ?? '')) !== '') $slots[(int)$k]['words'] = trim((string)$c['words']);
+    }
+    return ['week' => $key, 'status' => ($j['status'] ?? '') === 'planned' ? 'planned' : 'open', 'updated_at' => (string)($j['updated_at'] ?? ''), 'items' => $items, 'slots' => $slots];
 }
 
 function plan_week_store(array $plan): bool {
     if (!plan_store_key_ok((string)$plan['week'])) return false;
     $plan['updated_at'] = date('c');
     ksort($plan['items']);
+    if (empty($plan['slots'])) unset($plan['slots']); else ksort($plan['slots']);
     $f = plan_store_dir() . '/' . $plan['week'] . '.json';
     $ok = @file_put_contents($f, json_encode($plan, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) !== false;
     if ($ok) @chmod($f, 0664);
@@ -81,6 +132,30 @@ function plan_item_save(string $key, int $slot, array $item): bool {
 
 function plan_item_clear(string $key, int $slot): bool {
     $p = plan_week_load($key); unset($p['items'][$slot]); return plan_week_store($p);
+}
+
+/**
+ * Give a slot another content kind for this week (the Content dropdown):
+ * $option is a plan_slot_options() key, $words the typed words for Other.
+ * Back to the sample week's own kind = no record. A piece saved in the slot
+ * under a different kind is dropped (the builder's form belongs to its
+ * tool); a Done tick is dropped too, since it was for another piece.
+ */
+function plan_slot_set_kind(string $key, int $slot, string $option, string $words = ''): bool {
+    $opts = plan_slot_options(); $base = plan_slots()[$slot] ?? null;
+    if (!$base || !isset($opts[$option])) return false;
+    $p = plan_week_load($key);
+    $before = plan_week_slots($p)[$slot];
+    if ($option === plan_slot_option_key($base)) unset($p['slots'][$slot]);
+    else {
+        $c = ['type' => $opts[$option]['type'], 'words' => $opts[$option]['words']];
+        if ($c['type'] === 'property') $c['variant'] = $opts[$option]['variant'];
+        if ($option === 'other') $c['words'] = mb_substr(trim(preg_replace('/\s+/', ' ', $words)), 0, 80) ?: 'Other';
+        $p['slots'][$slot] = $c;
+    }
+    $after = plan_week_slots($p)[$slot];
+    if (plan_slot_option_key($after) !== plan_slot_option_key($before) && isset($p['items'][$slot])) unset($p['items'][$slot]);
+    return plan_week_store($p);
 }
 
 function plan_week_set_status(string $key, string $status): bool {
@@ -151,9 +226,9 @@ function plan_item_context(array $get, string $kind): ?array {
     $key = (string)($get['week'] ?? '');
     if (!plan_store_key_ok($key) || !isset($get['slot'])) return null;
     $slot = (int)$get['slot'];
-    $def = plan_slots()[$slot] ?? null;
-    if (!$def || $def['type'] !== $kind) return null;
     $plan = plan_week_load($key);
+    $def = plan_week_slots($plan)[$slot] ?? null;   // the week's own content choice for the slot (2026-11-09)
+    if (!$def || $def['type'] !== $kind) return null;
     $item = $plan['items'][$slot] ?? null;
     return ['week' => plan_week($key), 'slot' => $slot, 'def' => $def, 'plan' => $plan, 'item' => ($item && !empty($item['form'])) ? $item : null];
 }

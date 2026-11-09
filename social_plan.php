@@ -9,7 +9,9 @@
  * Download and Reset, the market slot has a Done tick, the week can be
  * marked planned and the next one opened, and the strip at the top shows
  * this week and the four ahead with how many of their eight pieces are
- * ready. The picks step through rotations by the ISO week
+ * ready. Since 2026-11-09 the Content column is a dropdown: a day's piece
+ * can be another of the plan's kinds for this week, or Other with typed
+ * words (plan_week_slots()); the suggestions follow the choice. The picks step through rotations by the ISO week
  * (plan_week(): markets through the Market Snapshot's places, brokers
  * through the approved roster, locations through the offices and areas,
  * hooks through the plan's six), so the same week always suggests the same
@@ -28,51 +30,69 @@ $idx   = $week['index'];
 $def   = plan_definition();
 $agents = plan_agents($conn);
 $withPhoto = array_values(array_filter($agents, fn($a) => mk_photo_file($a['headshot_url']) !== ''));
-$broker = plan_rotate($withPhoto ?: array_values($agents), $idx);
-$hookIdx = count(plan_hooks()) ? (($idx % count(plan_hooks())) + count(plan_hooks())) % count(plan_hooks()) : 0;
-$hook = $broker ? plan_fill(plan_hooks()[$hookIdx], ['name' => $broker['name'], 'first' => $broker['first'], 'market' => $broker['market']]) : '';
 $locs = plan_locations();
 $locPool = array_values(array_filter($locs, fn($l) => in_array($l['kind'], ['office', 'area'], true)));
-$loc = plan_rotate($locPool, $idx);
 $angles = ['office', 'team', 'local'];
-$angle = $loc ? ($loc['kind'] === 'office' ? plan_rotate($angles, intdiv($idx, max(1, count($locPool)))) : plan_rotate(['team', 'local'], intdiv($idx, max(1, count($locPool))))) : 'office';
 $cards = market_card_defs();
-$mKey = plan_rotate(array_keys($cards), $idx); $mNext = plan_rotate(array_keys($cards), $idx + 1);
 $listings = plan_listings($conn);
 $groups = plan_listing_groups($listings);
-$pickNew = ($groups['New Listings'] ?? [])[0] ?? (($groups['Listings'] ?? [])[0] ?? null);
-$pickFeat = ($groups['Listings'] ?? [])[0] ?? (($groups['New Listings'] ?? [])[0] ?? null);
-$pickSold = ($groups['Just Sold'] ?? [])[0] ?? null;
-$pickRent = ($groups['Rentals'] ?? [])[0] ?? null;
 $season = plan_seasons()[$week['season']];
 $lwords = fn(?array $l) => $l ? (($l['address'] !== '' ? $l['address'] : 'Address withheld') . ', ' . $l['city'] . ($l['price_text'] !== '' ? ' · ' . $l['price_text'] : '') . ($l['agent'] !== '' ? ' · ' . $l['agent'] : '')) : 'Nothing in the feed to suggest';
 $plan  = plan_week_load($week['key']);
-$slots = plan_slots();
+$slots = plan_week_slots($plan);   // the week's own content choices (2026-11-09)
 $ready = plan_week_ready($plan);
 $strip = plan_week_strip($week);
 $csrf  = (string)$_SESSION['csrf_token'];
 $wq    = '&week=' . rawurlencode($week['key']) . '&slot=';   // appended to a builder link with the slot index
 $lq = fn(?array $l, string $v, string $size) => $l ? 'template_property.php?' . http_build_query(['listing' => $l['id'], 'variant' => $v, 'size' => $size]) : '';
 
-// The rows: day => [piece words, the pick's words, [[button words, href], …]]
-$rows = [
-    ['Monday',    'Property · New Listing',       $lwords($pickNew),
-                  $pickNew ? [['Post', $lq($pickNew, 'new', 'post')], ['Story set', $lq($pickNew, 'new', 'story')]] : []],   // the story size starts with the set ticked
-    ['Tuesday',   'Market Stats',                 ($cards[$mKey]['title'] ?? '') . ' (next week: ' . ($cards[$mNext]['title'] ?? '') . ')',
-                  [['Story', 'market_snapshot.php?market=' . rawurlencode((string)$mKey)]]],
-    ['Tuesday',   'Branding',                     $season['name'] . ': "' . str_replace("\n", ' ', $season['taglines'][0]) . '"',
-                  [['Story', 'template_branding.php?season=' . rawurlencode($week['season']) . '&size=story']]],
-    ['Wednesday', 'Property · Featured Listing',  $lwords($pickFeat),
-                  $pickFeat ? [['Post', $lq($pickFeat, 'featured', 'post')], ['Story set', $lq($pickFeat, 'featured', 'story')]] : []],
-    ['Thursday',  'Location Feature',             $loc ? (($loc['kind'] === 'office' ? $loc['label'] . ' office' : $loc['label']) . ' · ' . ['office' => 'the office', 'team' => 'team in place', 'local' => 'local angle'][$angle]) : '',
-                  $loc ? [['Story', 'template_location.php?' . http_build_query(['loc' => $loc['key'], 'angle' => $angle, 'size' => 'story'])]] : []],
-    ['Friday',    'Property · Just Sold or Rental', $pickSold ? 'Just Sold: ' . $lwords($pickSold) : ($pickRent ? 'Rental: ' . $lwords($pickRent) : 'No closing in the last ' . PLAN_CLOSED_DAYS . ' days and no rental in the feed'),
-                  $pickSold ? [['Post', $lq($pickSold, 'sold', 'post')], ['Story set', $lq($pickSold, 'sold', 'story')]] : ($pickRent ? [['Post', $lq($pickRent, 'rental', 'post')], ['Story set', $lq($pickRent, 'rental', 'story')]] : [])],
-    ['Friday',    'Branding',                     $season['name'] . ': "' . str_replace("\n", ' ', $season['taglines'][1] ?? $season['taglines'][0]) . '"',
-                  [['Story', 'template_branding.php?season=' . rawurlencode($week['season']) . '&size=story']]],
-    ['Saturday',  'Broker Feature',               $broker ? $broker['name'] . ' · ' . $broker['market'] . ' · "' . $hook . '"' : 'No approved broker on the roster',
-                  $broker ? [['Story', 'template_broker.php?' . http_build_query(['agent' => $broker['id'], 'hook' => $hookIdx, 'size' => 'story'])], ['Post', 'template_broker.php?' . http_build_query(['agent' => $broker['id'], 'hook' => $hookIdx, 'size' => 'post'])]] : []],
-];
+// The week's slots, each with its suggestion: [piece words, the pick's words, [[button words, href], …]].
+// Since 2026-11-09 a slot's content can be changed for the week (plan_week_slots(); the Content dropdown), so the
+// suggestion is built per slot by kind; the nth slot of a kind in the week steps its rotation on by n (two broker
+// slots suggest two brokers, two branding slots the season's first and second tagline).
+$pickOf = function (array $keys, int $n) use ($groups): ?array {
+    $pool = [];
+    foreach ($keys as $g) foreach ($groups[$g] ?? [] as $l) if (!isset($pool[$l['id']])) $pool[$l['id']] = $l;
+    return array_values($pool)[$n] ?? null;
+};
+$suggest = function (array $slot, int $n) use ($idx, $cards, $pickOf, $lwords, $lq, $season, $week, $withPhoto, $agents, $locPool, $angles, $e): array {
+    switch ($slot['type']) {
+        case 'property':
+            $v = (string)($slot['variant'] ?? 'featured');
+            if ($v === 'new') { $l = $pickOf(['New Listings', 'Listings'], $n); return [$lwords($l), $l ? [['Post', $lq($l, 'new', 'post')], ['Story', $lq($l, 'new', 'story')]] : []]; }   // the story size starts with the set ticked
+            if ($v === 'sold') {
+                $l = $pickOf(['Just Sold'], $n); $r = $l ? null : $pickOf(['Rentals'], $n);
+                $words = $l ? 'Just Sold: ' . $lwords($l) : ($r ? 'Rental: ' . $lwords($r) : 'No closing in the last ' . PLAN_CLOSED_DAYS . ' days and no rental in the feed');
+                return [$words, $l ? [['Post', $lq($l, 'sold', 'post')], ['Story', $lq($l, 'sold', 'story')]] : ($r ? [['Post', $lq($r, 'rental', 'post')], ['Story', $lq($r, 'rental', 'story')]] : [])];
+            }
+            $l = $pickOf(['Listings', 'New Listings'], $n); return [$lwords($l), $l ? [['Post', $lq($l, 'featured', 'post')], ['Story', $lq($l, 'featured', 'story')]] : []];
+        case 'market':
+            $mKey = plan_rotate(array_keys($cards), $idx + $n); $mNext = plan_rotate(array_keys($cards), $idx + $n + 1);
+            return [($cards[$mKey]['title'] ?? '') . ($n === 0 ? ' (next week: ' . ($cards[$mNext]['title'] ?? '') . ')' : ''), [['Story', 'market_snapshot.php?market=' . rawurlencode((string)$mKey)]]];
+        case 'branding':
+            $t = $season['taglines'][$n] ?? $season['taglines'][0];
+            return [$season['name'] . ': "' . str_replace("\n", ' ', $t) . '"', [['Story', 'template_branding.php?season=' . rawurlencode($week['season']) . '&size=story']]];
+        case 'location':
+            $loc = plan_rotate($locPool, $idx + $n);
+            $angle = $loc ? ($loc['kind'] === 'office' ? plan_rotate($angles, intdiv($idx + $n, max(1, count($locPool)))) : plan_rotate(['team', 'local'], intdiv($idx + $n, max(1, count($locPool))))) : 'office';
+            return [$loc ? (($loc['kind'] === 'office' ? $loc['label'] . ' office' : $loc['label']) . ' · ' . ['office' => 'the office', 'team' => 'team in place', 'local' => 'local angle'][$angle]) : '',
+                    $loc ? [['Story', 'template_location.php?' . http_build_query(['loc' => $loc['key'], 'angle' => $angle, 'size' => 'story'])]] : []];
+        case 'broker':
+            $broker = plan_rotate($withPhoto ?: array_values($agents), $idx + $n);
+            $hooks = plan_hooks(); $hookIdx = count($hooks) ? ((($idx + $n) % count($hooks)) + count($hooks)) % count($hooks) : 0;
+            $hook = $broker ? plan_fill($hooks[$hookIdx], ['name' => $broker['name'], 'first' => $broker['first'], 'market' => $broker['market']]) : '';
+            return [$broker ? $broker['name'] . ' · ' . $broker['market'] . ' · "' . $hook . '"' : 'No approved broker on the roster',
+                    $broker ? [['Story', 'template_broker.php?' . http_build_query(['agent' => $broker['id'], 'hook' => $hookIdx, 'size' => 'story'])], ['Post', 'template_broker.php?' . http_build_query(['agent' => $broker['id'], 'hook' => $hookIdx, 'size' => 'post'])]] : []];
+    }
+    return ['Made outside the plan tools; tick Done when it is up.', []];   // other
+};
+$rows = []; $seen = [];
+foreach ($slots as $i => $slot) {
+    $n = $seen[$slot['type']] ?? 0; $seen[$slot['type']] = $n + 1;
+    [$pick, $buttons] = $suggest($slot, $n);
+    $rows[$i] = [$slot['day'], $slot['words'], $pick, $buttons];
+}
+$slotOpts = plan_slot_options();
 
 admin_tool_header([
     'title'   => 'Weekly Plans',
@@ -98,7 +118,14 @@ admin_tool_header([
     .pl-table th, .pl-table td { text-align:left; padding:12px 14px; border-top:1px solid #dfe3e8; vertical-align:top; font-size:14px; }
     .pl-table th { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#6b7a8f; font-weight:600; border-top:0; background:#eceff3; }
     .pl-table td.day { font-weight:600; color:#1f242c; white-space:nowrap; width:100px; }
-    .pl-table td.piece { color:#434b57; white-space:nowrap; width:210px; }
+    .pl-table td.piece { color:#434b57; white-space:nowrap; width:230px; }
+    .pl-kind select { font:inherit; font-size:13.5px; color:#434b57; background:#fff; border:1px solid #dfe3e8; border-radius:8px; padding:5px 8px; max-width:100%; cursor:pointer; }
+    .pl-kind select:hover, .pl-kind select:focus { border-color:#4a5566; outline:0; }
+    .pl-kind .pl-other { display:flex; gap:6px; margin-top:6px; }
+    .pl-kind .pl-other[hidden] { display:none; }
+    .pl-kind .pl-other input { font:inherit; font-size:13.5px; flex:1; min-width:0; border:1px solid #dfe3e8; border-radius:8px; padding:5px 8px; }
+    .pl-kind .pl-other button { font:inherit; font-size:13px; font-weight:600; color:#4a5569; background:#fff; border:1px solid #dfe3e8; border-radius:999px; padding:5px 11px; cursor:pointer; }
+    .pl-kind .pl-other button:hover { border-color:#4a5566; }
     .pl-table td.pick { color:#1f242c; }
     .pl-table td.pick .sug { color:#6b7a8f; }
     .pl-table td.pick .sug b { color:#434b57; font-weight:600; }
@@ -136,6 +163,20 @@ admin_tool_header([
     @media (max-width:760px) { .pl-table td.piece, .pl-table td.day, .pl-table td.st { white-space:normal; width:auto; } .pl-table td.go { text-align:left; } .pl-table td.go a, .pl-table td.go button { margin:4px 6px 0 0; } }
     ',
 ]);
+// The Content dropdown (2026-11-09): a plan kind saves at once (a confirm when the day has a saved piece or a Done
+// tick, which the change drops); Other opens the words box and saves on its button.
+?>
+<script>
+function plKind(sel) {
+  var other = sel.form.querySelector('.pl-other');
+  if (sel.value === 'other') { other.hidden = false; other.querySelector('input').focus(); return; }
+  other.hidden = true;
+  if (sel.value === sel.dataset.was) return;
+  if (sel.dataset.saved === '1' && !confirm('Changing the content drops what is saved for this day. Go on?')) { sel.value = sel.dataset.was; if (sel.value === 'other') other.hidden = false; return; }
+  sel.form.submit();
+}
+</script>
+<?php
 $sv = (string)($_GET['saved'] ?? ''); $cl = (string)($_GET['cleared'] ?? '');
 $flashSlot = $sv !== '' ? (int)$sv : ($cl !== '' ? (int)$cl : -1);
 $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slots[$i]['words'] : '';
@@ -166,7 +207,15 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
         $saved = $item && !empty($item['form']); $done = $item && !empty($item['done']); ?>
         <tr<?= $day === $prevDay ? ' class="alt"' : '' ?>>
           <td class="day"><?= $day === $prevDay ? '' : $e($day) ?></td>
-          <td class="piece"><?= $e($piece) ?></td>
+          <td class="piece">
+            <form method="post" action="plan_save.php" class="pl-kind"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_slot" value="<?= $i ?>"><input type="hidden" name="plan_action" value="kind">
+              <?php $cur = plan_slot_option_key($slot); $usual = plan_slot_option_key(plan_slots()[$i]); ?>
+              <select name="slot_kind" data-was="<?= $e($cur) ?>" data-saved="<?= $saved || $done ? 1 : 0 ?>" onchange="plKind(this)" aria-label="<?= $e($day) ?> content">
+                <?php foreach ($slotOpts as $k => $o): ?><option value="<?= $e($k) ?>"<?= $k === $cur ? ' selected' : '' ?>><?= $e($o['words']) ?><?= $k === $usual ? ' (usual)' : '' ?></option><?php endforeach; ?>
+              </select>
+              <span class="pl-other"<?= $cur === 'other' ? '' : ' hidden' ?>><input type="text" name="slot_words" maxlength="80" placeholder="What is it?" value="<?= $e($cur === 'other' ? $slot['words'] : '') ?>" aria-label="Other content"><button type="submit" class="soft">Save</button></span>
+            </form>
+          </td>
           <td class="pick">
             <?php if ($saved): ?>
               <?= $e($item['summary'] ?? '') ?>

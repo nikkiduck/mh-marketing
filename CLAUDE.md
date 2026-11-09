@@ -2877,7 +2877,17 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   `plan_week` + `plan_slot`, the listing's photos primed into the session
   first) and Reset, the market slot (the Market Snapshot's own tool) with a
   Done tick, and a footer with Mark this week planned / Reopen and Plan next
-  week. A slot's kind is fixed (the plan's rhythm); what goes in it is not.
+  week. **Content per slot (Nikki, 2026-11-09: "change up the weekly
+  plan"):** the Content column is a dropdown of the plan's kinds
+  (`plan_slot_options()`, the sample week's own marked "(usual)") plus
+  Other with a text box for a piece made outside the tools; the choice is
+  stored per week in the JSON's `slots` and `plan_week_slots()` applies it
+  everywhere the week is read (the page, plan_save.php, the builders'
+  `plan_item_context()`). Changing the kind drops a piece saved under the
+  old one (confirm first); the usual kind again removes the record; the nth
+  slot of a kind steps that kind's rotation on by n. An Other slot has only
+  a Done tick. The property buttons say Post / Story (the story size opens
+  with the set ticked; "Story set" until 2026-11-09).
   `PLAN_STORE_DIR`, when defined, replaces the folder (the local harness).
   **Each frame of a set is a tab (Nikki, 2026-11-03: "more control over
   each photo in a set ... each of the photo options has its own tab"):**
