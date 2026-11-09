@@ -367,7 +367,7 @@ function plan_item_summary(mysqli $conn, string $kind, array $form): string {
     if ($kind === 'property') {
         $l = plan_listing($conn, (string)($form['listing'] ?? ''));
         $v = plan_property_variants()[(string)($form['variant'] ?? '')] ?? '';
-        $words = $l ? (($l['address'] !== '' ? $l['address'] : 'Address withheld') . ', ' . $l['city'] . ($l['price_text'] !== '' ? ' · ' . $l['price_text'] : '')) : 'A listing no longer in the feed';
+        $words = $l ? (($l['address'] !== '' ? $l['address'] : 'Address withheld') . ', ' . $l['city'] . ($l['agent'] !== '' ? ' · ' . $l['agent'] : '')) : 'A listing no longer in the feed';   // the broker, not the price (Nikki, 2026-11-09)
         if ($v !== '') $words = $v . ': ' . $words;
         if (!empty($form['set'])) $size .= ' set of ' . count((array)($form['frames'] ?? [])) . (!empty($form['endcard']) ? ' + end card' : '');
     } elseif ($kind === 'broker') {

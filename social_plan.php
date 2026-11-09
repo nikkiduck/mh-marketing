@@ -42,7 +42,7 @@ $cards = market_card_defs();
 $listings = plan_listings($conn);
 $groups = plan_listing_groups($listings);
 $season = plan_seasons()[$week['season']];
-$lwords = fn(?array $l) => $l ? (($l['address'] !== '' ? $l['address'] : 'Address withheld') . ', ' . $l['city'] . ($l['price_text'] !== '' ? ' · ' . $l['price_text'] : '') . ($l['agent'] !== '' ? ' · ' . $l['agent'] : '')) : 'Nothing in the feed to suggest';
+$lwords = fn(?array $l) => $l ? (($l['address'] !== '' ? $l['address'] : 'Address withheld') . ', ' . $l['city'] . ($l['agent'] !== '' ? ' · ' . $l['agent'] : '')) : 'Nothing in the feed to suggest';   // no price here (Nikki, 2026-11-09)
 $plan  = plan_week_load($week['key']);
 $slots = plan_week_slots($plan);   // the week's own content choices (2026-11-09)
 $ready = plan_week_ready($plan);

@@ -456,10 +456,20 @@ function plan_listings(mysqli $conn): array {
                                                  AND hc.change_type = 'closed' AND hc.detected_at >= '{$since_dt}')" : '') . "))";
     $r = $conn->query("SELECT st.market, st.listing_key, st.mls_id, st.status, st.is_rental, st.property_type, st.address, st.city,
                               st.list_price, st.close_price, st.close_date, st.beds, st.baths, st.sqft, st.primary_photo, st.url,
-                              st.list_agent_name, st.colist_agent_name, st.first_seen_at, {$new_sql} AS is_new
+                              st.list_agent_name, st.colist_agent_name, st.list_agent_mls_id, st.colist_agent_mls_id, st.first_seen_at, {$new_sql} AS is_new
                          FROM hs_listing_state st
                         WHERE st.in_feed = 1 AND (st.status IN ('Active','Active Under Contract','Pending','Coming Soon') OR {$closed_sql})
                         ORDER BY (LOWER(st.status) IN ('closed','sold','leased')), is_new DESC, (st.market = 'recolorado'), st.list_price DESC, st.address");
+    // The roster's board identities and names, so a listing's agent words name only OUR side(s) (Nikki, 2026-11-09:
+    // "only show Mont Haus broker(s), not external co-list agents": 970 Powder Lane's A. Scott Davidson is Christie's).
+    $ours = []; $names = [];
+    if (mk_table_exists($conn, 'agent_mls_ids')) { $q = $conn->query("SELECT DISTINCT market, mls_agent_id FROM agent_mls_ids WHERE mls_agent_id <> ''"); foreach ($q ? $q->fetch_all(MYSQLI_ASSOC) : [] as $i) $ours[$i['market'] . '|' . $i['mls_agent_id']] = true; }
+    $q = $conn->query("SELECT agent_name FROM marketing_intakes WHERE agent_name <> ''"); foreach ($q ? $q->fetch_all(MYSQLI_ASSOC) : [] as $i) $names[strtolower(trim((string)$i['agent_name']))] = true;
+    $isOurs = function (string $market, string $id, string $name) use ($ours, $names): bool {
+        if ($id !== '' && isset($ours[$market . '|' . $id])) return true;
+        foreach (explode('|', $name) as $seg) if (isset($names[strtolower(trim($seg))])) return true;   // "Weber Boxer Group | Jonathan Boxer Scott Weber"
+        return false;
+    };
     $seen = [];
     foreach ($r ? $r->fetch_all(MYSQLI_ASSOC) : [] as $l) {
         $k = strtolower(preg_replace('/\s+/', ' ', trim((string)$l['address']))) . '|' . strtolower(trim((string)$l['city'])) . '|' . (int)$l['is_rental'] . '|' . (string)$l['list_price'];
@@ -468,10 +478,13 @@ function plan_listings(mysqli $conn): array {
         $id = $l['market'] . '|' . $l['listing_key'];
         $closed = social_is_closed((string)$l['status']);
         $addr = trim((string)$l['address']);
-        // A team's feed name reads "Weber Boxer Group | Jonathan Boxer Scott Weber": the team name alone.
+        // A team's feed name reads "Weber Boxer Group | Jonathan Boxer Scott Weber": the team name alone. Only the sides that are
+        // ours; when neither is known to the roster (an office listing by someone not on it), the listing side as before.
         $side = fn(string $n) => trim(explode('|', $n)[0]);
-        $agent = $side((string)$l['list_agent_name']);
-        if ($side((string)$l['colist_agent_name']) !== '') $agent .= ' & ' . $side((string)$l['colist_agent_name']);
+        $sides = [];
+        if ($isOurs((string)$l['market'], (string)$l['list_agent_mls_id'], (string)$l['list_agent_name']) && $side((string)$l['list_agent_name']) !== '') $sides[] = $side((string)$l['list_agent_name']);
+        if ($isOurs((string)$l['market'], (string)$l['colist_agent_mls_id'], (string)$l['colist_agent_name']) && $side((string)$l['colist_agent_name']) !== '') $sides[] = $side((string)$l['colist_agent_name']);
+        $agent = $sides ? implode(' & ', $sides) : $side((string)$l['list_agent_name']);
         $cache[$id] = $l + [
             'id'         => $id,
             'closed'     => $closed,
