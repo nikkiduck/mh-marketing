@@ -361,7 +361,8 @@ Nikki: "market stats is a little unique because each week is a couple of
 submarkets each time. Today I'm going to do 4 story slides, 2 for Aspen
 (single family and townhomes) and 2 for Snowmass Village. Next week Basalt
 and Carbondale." The Market Stats row is a list of slides, one per place
-and property type ("Aspen · Single-family homes"), each with its own Story
+and property type ("Aspen · SF", "Aspen · T+C"; plan_market_ptype_short(),
+Nikki: "to save space"), each with its own Story
 link into the Market Snapshot (market_snapshot.php?market=&ptype=, which
 now preselects the property type too; inc/market_post_body.php reads
 `$ptype`, so the portal's own Templates page is unchanged) and its own

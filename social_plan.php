@@ -256,7 +256,7 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
               </ul>
               <form method="post" action="plan_save.php" class="pl-sl-add"><?= $hid ?><input type="hidden" name="plan_action" value="slides"><input type="hidden" name="slide_action" value="add">
                 <select name="place" aria-label="Place"><?php foreach ($cards as $k => $d): ?><option value="<?= $e($k) ?>"><?= $e($d['title']) ?></option><?php endforeach; ?></select>
-                <select name="ptype" aria-label="Property type"><?php foreach (market_card_ptypes() as $k => $t): ?><option value="<?= $e($k) ?>"><?= $e($t) ?></option><?php endforeach; ?></select>
+                <select name="ptype" aria-label="Property type"><?php foreach (market_card_ptypes() as $k => $t): ?><option value="<?= $e($k) ?>" title="<?= $e($t) ?>"><?= $e(plan_market_ptype_short($k)) ?></option><?php endforeach; ?></select>
                 <button type="submit">+ Add slide</button>
               </form>
               <?php if ($msaved): ?><span class="sug"><b>Suggestion was:</b> <?= $e(implode(', ', array_map(fn($x) => plan_market_slide_words($x), plan_market_slides_suggest($idx, $nth)))) ?></span><?php endif; ?>

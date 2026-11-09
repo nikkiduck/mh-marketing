@@ -127,10 +127,13 @@ function plan_market_slides(?array $item, int $weekIndex, int $n = 0): array {
     return $s;
 }
 
-/** "Aspen · Single-family homes" */
+/** The property types short, for the slide list (Nikki, 2026-11-09: "to save space"): SF, T+C. */
+function plan_market_ptype_short(string $pt): string { return ['SF' => 'SF', 'TC' => 'T+C'][$pt] ?? $pt; }
+
+/** "Aspen · SF" */
 function plan_market_slide_words(array $s): string {
     $d = market_card_defs()[(string)$s['place']] ?? null;
-    return ($d ? $d['title'] : (string)$s['place']) . ' · ' . (market_card_ptypes()[(string)$s['ptype']] ?? (string)$s['ptype']);
+    return ($d ? $d['title'] : (string)$s['place']) . ' · ' . plan_market_ptype_short((string)$s['ptype']);
 }
 
 /** The Market Snapshot tool with the slide's place and property type picked. */
