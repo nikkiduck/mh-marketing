@@ -58,7 +58,7 @@ function plan_render_photo_frame(array $p, ?string $base = null, bool $export = 
     $opt    = social_logo_options($p);
     if ($opt['color'] !== 'auto') { $c['logo'] = $base . '/assets/images/MH_vert-stack_' . $opt['color'] . '.svg'; $c['mark'] = $base . '/assets/images/M-mark_' . $opt['color'] . '.svg'; }
     $logoKind = ($p['logo_kind'] ?? 'full') === 'mark' ? 'mark' : 'full';
-    $logoH  = (int)round(($logoKind === 'mark' ? 118 : 152) * $opt['scale']);
+    $logoH  = (int)round(($logoKind === 'mark' ? 96 : 152) * $opt['scale']);   // the mark a little smaller on the set's slides (Nikki, 2026-11-09; was 118)
 
     $zoom = max(1.0, min(3.0, (float)($p['zoom'] ?? 1)));
     $fx   = max(0, min(100, (int)($p['focus_x'] ?? 50)));

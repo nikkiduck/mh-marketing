@@ -355,6 +355,23 @@ suggestion, only a Done tick, and counts toward "n of 8 ready" when
 ticked. Still eight slots a week on the sample week's days; adding or
 removing a day is not built.
 
+## Property cover and set defaults (2026-11-09)
+
+Nikki: "Default = no logo on cover; center badge and text on cover; M mark
+starts lower right slide 3; mark in sub-slides needs to be a little
+smaller." The Property tool opens on the Centered layout with the badge
+above the headline (`badge` body, drawn centred) and the logo None
+(inc/plan_body.php: `$offered_layouts` property = center then photo,
+`$default_logo` / `$default_badge` and the script's LOGO_DEFAULT /
+BADGE_DEFAULT for property). The set's Auto rule is no longer the
+every-other pattern in the cover's logo kind: the slide after the cover
+is the photo alone and every slide from the third carries the M mark
+lower right, whatever the cover shows (`$eff` in plan_post_from_request()
+and effLogo() in the script, which must stay in step; the photo tiles'
+order badges read "3 M", "4 M"). A per-frame choice (None / Logo / M
+mark) still overrides it. The mark on a photo frame is 96 px tall (was
+118; plan_render_photo_frame()); the stack stays 152.
+
 ## Branding days are the week's own (2026-11-09)
 
 Nikki: "Instead of assigning the Branding story days automatically, let me

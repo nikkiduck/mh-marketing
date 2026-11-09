@@ -735,9 +735,10 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     $out = ['kind' => $kind, 'set' => false, 'preview' => 0, 'frames' => [$main]];
 
     // The property SET (the plan: "each story should be a multi-image slideshow, not a single photo"; a post
-    // or square set is a carousel, 2026-11-02): the cover is the post's words on the first photo; each further
-    // photo is the photo alone, every other one with the logo lower right (plan_render_photo_frame()); an end
-    // card, when asked for, closes with the logo centred, the address and the broker.
+    // or square set is a carousel, 2026-11-02): the cover is the post's words on the first photo (centred, no
+    // logo by default since 2026-11-09); each further photo is the photo alone, the M mark lower right from the
+    // third slide on (plan_render_photo_frame()); an end card, when asked for, closes with the logo centred, the
+    // address and the broker.
     if ($kind === 'property' && !empty($in['set'])) {
         $frames = [];
         $seen = [];
@@ -767,9 +768,9 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         $n = 2;
         foreach (array_slice($frames, 1) as $i => $fr) {
             // The photo alone. The logo lower right as the admin chose for the frame (none, the stack or the M mark), or on
-            // Auto the every-other pattern: the first after the cover, the third, the fifth ... in the cover's logo kind
-            // (none at all when the cover has none).
-            $eff = $fr['choice'] === 'auto' ? (($logo !== 'none' && $i % 2 === 0) ? $logoKind : 'none') : $fr['choice'];
+            // Auto (Nikki, 2026-11-09): nothing on the slide after the cover, the M mark on every slide from the third
+            // ($i is the index after the cover: 0 = the second slide). Mirrored by effLogo() in inc/plan_body.php.
+            $eff = $fr['choice'] === 'auto' ? ($i >= 1 ? 'mark' : 'none') : $fr['choice'];
             $set[] = ['renderer' => 'frame', 'name' => sprintf('%02d', $n++),
                       // The frame's own photo and framing FIRST: + keeps the left side, and $common carries the cover's zoom and focus.
                       'post' => ['logo_kind' => $eff === 'mark' ? 'mark' : 'full', 'show_logo' => $eff !== 'none',

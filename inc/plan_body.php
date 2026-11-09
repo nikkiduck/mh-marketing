@@ -30,7 +30,7 @@ $pk_preset = (array)($pk_preset ?? []);
 $pk_plan = $pk_plan ?? null; $pk_saved = $pk_saved ?? null;
 $layouts = plan_layouts();
 $offered_layouts = match ($pk) {
-    'property' => ['photo', 'center'],
+    'property' => ['center', 'photo'],      // the cover opens centred, badge and words in the middle, no logo (Nikki, 2026-11-09)
     'branding' => ['center', 'photo'],
     'broker'   => ['photo'],                 // the Broker Feature has its own style (plan_agent_styles(): Cutout alone since 2026-11-02)
     default    => ['split', 'photo', 'center'],
@@ -42,8 +42,8 @@ foreach ($agent_styles as $sk => $sn) foreach (['post', 'square', 'story'] as $f
 $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (string)$pk_preset['size'] : ($pk === 'property' ? 'post' : 'story');
 // Where the logo starts: upper right over the photo on the split layout (its only place besides none), centred above
 // centred words, else the Instagram tool's defaults (upper right on a post, lower left on a story); the badge likewise.
-$default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' && $pk !== 'broker') ? 'bottom' : 'top'));   // the Broker Feature: with the words at every size (2026-11-05, the stack)
-$default_badge = ($default_size === 'story' && $default_logo !== 'top') ? 'right' : 'left';
+$default_logo  = $pk === 'property' ? 'none' : ($default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' && $pk !== 'broker') ? 'bottom' : 'top')));   // the Broker Feature: with the words at every size (2026-11-05, the stack); the property cover: no logo, the M mark comes on the set's third slide (2026-11-09)
+$default_badge = $pk === 'property' ? 'body' : (($default_size === 'story' && $default_logo !== 'top') ? 'right' : 'left');
 $themes = plan_themes($pk); $labels = plan_labels(); $styles = social_line_styles(); $defaults = social_line_defaults();
 $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature draws none (2026-11-05 evening)
 ?>
@@ -389,8 +389,8 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
   const lineText = i => form.querySelectorAll('input[name="line_text[]"]')[i];
   const lineStyle = i => form.querySelectorAll('select[name="line_style[]"]')[i];
   const subject = () => document.getElementById('spSubject') ? document.getElementById('spSubject').value : '';
-  const LOGO_DEFAULT = s => (s === 'story' && KIND !== 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits with the words at every size (2026-11-05)
-  const BADGE_DEFAULT = s => s === 'story' ? 'right' : 'left';
+  const LOGO_DEFAULT = s => KIND === 'property' ? 'none' : ((s === 'story' && KIND !== 'broker') ? 'bottom' : 'top');   // the Broker Feature's logo sits with the words at every size (2026-11-05); the property cover carries none (2026-11-09)
+  const BADGE_DEFAULT = s => KIND === 'property' ? 'body' : (s === 'story' ? 'right' : 'left');
   let prevSize = fmt();
   let frames = [];          // the set's photo ids, in order (property only)
   let frameLogos = {};      // photo id → auto | none | full | mark: the logo on that frame (2026-11-02)
@@ -422,8 +422,9 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
       + (coverFx ? '<input type="hidden" name="cover_zoom" value="' + coverFx.z + '"><input type="hidden" name="cover_fx" value="' + coverFx.x + '"><input type="hidden" name="cover_fy" value="' + coverFx.y + '">' : '') : '';
   }
   const frameLogoBox = document.getElementById('spFrameLogo');
-  // What a frame will carry: the explicit choice, else Auto's every-other pattern in the cover's logo kind (i = its index in frames, 1 = the first after the cover).
-  const effLogo = (id, i) => { const c = frameLogos[id] || 'auto'; if (c !== 'auto') return c; return (f('logo').value !== 'none' && (i - 1) % 2 === 0) ? f('logo_kind').value : 'none'; };
+  // What a frame will carry: the explicit choice, else Auto: nothing on the slide after the cover, the M mark lower right from the
+  // third slide on (Nikki, 2026-11-09; i = its index in frames, 1 = the first after the cover). Mirrors plan_post_from_request().
+  const effLogo = (id, i) => { const c = frameLogos[id] || 'auto'; if (c !== 'auto') return c; return i >= 2 ? 'mark' : 'none'; };
   let allTiles = [];        // the photos the picker holds
 
   // ── The story set (property, story size) ──

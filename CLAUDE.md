@@ -2903,6 +2903,12 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   5, 7 and a Branding story 100 + the day index (Mon 100 … Sun 106), the
   old 2 and 6 read as 101 and 104 on load. Unticking a day drops its
   saved story (confirm first); "n of N ready" is the week's own count.
+- **Property cover and set defaults (Nikki, 2026-11-09):** the Property
+  tool opens Centered, badge above the headline, logo None; the set's
+  Auto rule puts nothing on the slide after the cover and the M mark lower
+  right on every slide from the third (`$eff` in plan_post_from_request()
+  and effLogo() in inc/plan_body.php, kept in step); the frame mark is
+  96 px (was 118) in plan_render_photo_frame().
   `PLAN_STORE_DIR`, when defined, replaces the folder (the local harness).
   **Each frame of a set is a tab (Nikki, 2026-11-03: "more control over
   each photo in a set ... each of the photo options has its own tab"):**
