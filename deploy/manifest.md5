@@ -6,10 +6,14 @@
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 7d3bdf5f971f66d94748a3e09bfabb02  api/roster.php
+24ba7edcace4e458d8ea5b50303f629e  assets/css/elevation-print.css
+e21f7ff6086fdea2b3fec475c3bf1a73  assets/css/elevation.css
+ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
 bc3a09f0c1d9434b199705a14369bc95  assets/css/market.css
 480bf38c8914ca4843d92b88280d01f7  assets/css/mh-theme.css
 d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
 ba73445937a812afe57c74e4349fe887  assets/css/social.css
+95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
 e539e5bb247a1ef82888690dd966de01  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 2d85cea4712b33eb75b1bb384e92e261  billing.php
@@ -147,6 +151,7 @@ ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 bb450207a89479db56afa164a7f701bf  social_media.php
 118a687f545b3b4eea3e0f249f9b6a5b  social_plan.php
+c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
 6e7a49e64355ae64e66c673ef14f89c4  template_ad.php
 fb9ae30d6ee4855cec6fdf456b222c3e  template_branding.php
