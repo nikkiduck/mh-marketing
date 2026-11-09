@@ -11,7 +11,10 @@
  * this week and the four ahead with how many of their eight pieces are
  * ready. Since 2026-11-09 the Content column is a dropdown: a day's piece
  * can be another of the plan's kinds for this week, or Other with typed
- * words (plan_week_slots()); the suggestions follow the choice. The picks step through rotations by the ISO week
+ * words (plan_week_slots()); the suggestions follow the choice. The Market
+ * Stats row is a list of slides (place + property type, each with its own
+ * Story link into the Market Snapshot and its own Done tick; + Add slide,
+ * x to remove), suggested two places a week (plan_market_pairs()). The picks step through rotations by the ISO week
  * (plan_week(): markets through the Market Snapshot's places, brokers
  * through the approved roster, locations through the offices and areas,
  * hooks through the plan's six), so the same week always suggests the same
@@ -67,8 +70,7 @@ $suggest = function (array $slot, int $n) use ($idx, $cards, $pickOf, $lwords, $
             }
             $l = $pickOf(['Listings', 'New Listings'], $n); return [$lwords($l), $l ? [['Post', $lq($l, 'featured', 'post')], ['Story', $lq($l, 'featured', 'story')]] : []];
         case 'market':
-            $mKey = plan_rotate(array_keys($cards), $idx + $n); $mNext = plan_rotate(array_keys($cards), $idx + $n + 1);
-            return [($cards[$mKey]['title'] ?? '') . ($n === 0 ? ' (next week: ' . ($cards[$mNext]['title'] ?? '') . ')' : ''), [['Story', 'market_snapshot.php?market=' . rawurlencode((string)$mKey)]]];
+            return ['', []];   // a list of slides, drawn by the row (plan_market_slides(), 2026-11-09)
         case 'branding':
             $t = $season['taglines'][$n] ?? $season['taglines'][0];
             return [$season['name'] . ': "' . str_replace("\n", ' ', $t) . '"', [['Story', 'template_branding.php?season=' . rawurlencode($week['season']) . '&size=story']]];
@@ -90,7 +92,7 @@ $rows = []; $seen = [];
 foreach ($slots as $i => $slot) {
     $n = $seen[$slot['type']] ?? 0; $seen[$slot['type']] = $n + 1;
     [$pick, $buttons] = $suggest($slot, $n);
-    $rows[$i] = [$slot['day'], $slot['words'], $pick, $buttons];
+    $rows[$i] = [$slot['day'], $slot['words'], $pick, $buttons, $n];
 }
 $slotOpts = plan_slot_options();
 
@@ -134,7 +136,25 @@ admin_tool_header([
     .pl-st { display:inline-block; font-size:11.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; border-radius:999px; padding:3px 9px; }
     .pl-st.saved { background:#e9f3ec; color:#1f5a35; }
     .pl-st.sug { background:#eceff3; color:#6b7a8f; }
+    .pl-st.part { background:#fbf1dc; color:#7a5a1f; }
     .pl-table td.st small { display:block; margin-top:4px; color:#6b7a8f; font-size:12px; }
+    .pl-slides { list-style:none; margin:0; padding:0; }
+    .pl-slides li { display:flex; align-items:center; gap:10px; padding:3px 0; }
+    .pl-slides li + li { border-top:1px dashed #e6e9ee; }
+    .pl-slides li.none { color:#6b7a8f; }
+    .pl-slides form { display:inline; margin:0; }
+    .pl-slides label.tick { cursor:pointer; color:#1f242c; }
+    .pl-slides label.tick input { margin-right:6px; vertical-align:-1px; }
+    .pl-slides li.done label.tick { color:#6b7a8f; text-decoration:line-through; text-decoration-color:#b8c0cc; }
+    .pl-slides .pl-sl-go { font-size:13px; font-weight:600; color:#4a5569; text-decoration:none; white-space:nowrap; }
+    .pl-slides .pl-sl-go:hover { text-decoration:underline; }
+    .pl-slides .pl-sl-x { margin-left:auto; border:0; background:none; color:#9aa5b5; font-size:18px; line-height:1; padding:0 4px; cursor:pointer; font-family:inherit; }
+    .pl-slides .pl-sl-x:hover { color:#4a5566; }
+    .pl-sl-add { display:flex; gap:6px; align-items:center; margin-top:8px; flex-wrap:wrap; }
+    .pl-sl-add select { font:inherit; font-size:13px; color:#434b57; background:#fff; border:1px solid #dfe3e8; border-radius:8px; padding:4px 7px; max-width:100%; }
+    .pl-sl-add button { font:inherit; font-size:13px; font-weight:600; color:#4a5569; background:#fff; border:1px solid #dfe3e8; border-radius:999px; padding:4px 11px; cursor:pointer; }
+    .pl-sl-add button:hover { border-color:#4a5566; }
+    .pl-table td.pick .pl-slides + .pl-sl-add + .sug { display:block; margin-top:8px; }
     .pl-table td.go { white-space:nowrap; text-align:right; }
     .pl-table td.go a, .pl-table td.go button { display:inline-block; font-size:13px; font-weight:600; color:#fff; background:#4a5566; border:0; border-radius:999px; padding:7px 14px; text-decoration:none; margin-left:6px; cursor:pointer; font-family:inherit; }
     .pl-table td.go a:hover, .pl-table td.go button:hover { background:#353e4b; }
@@ -202,9 +222,14 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
     <table class="pl-table">
       <thead><tr><th>Day</th><th>Content</th><th>Suggestion, or what is saved</th><th>Status</th><th></th></tr></thead>
       <tbody>
-      <?php $prevDay = ''; foreach ($rows as $i => [$day, $piece, $pick, $buttons]):
+      <?php $prevDay = ''; foreach ($rows as $i => [$day, $piece, $pick, $buttons, $nth]):
         $slot = $slots[$i]; $item = $plan['items'][$i] ?? null; $tool = plan_slot_tool($slot);
-        $saved = $item && !empty($item['form']); $done = $item && !empty($item['done']); ?>
+        $saved = $item && !empty($item['form']); $done = $item && !empty($item['done']);
+        $isMarket = $slot['type'] === 'market';
+        $mslides = $isMarket ? plan_market_slides($item, $idx, $nth) : []; $msaved = $isMarket && $item && isset($item['slides']);
+        $mdone = count(array_filter($mslides, fn($x) => !empty($x['done'])));
+        if ($isMarket) { $done = $mslides && $mdone === count($mslides); }
+        $hid = '<input type="hidden" name="csrf_token" value="' . $e($csrf) . '"><input type="hidden" name="plan_week" value="' . $e($week['key']) . '"><input type="hidden" name="plan_slot" value="' . $i . '">'; ?>
         <tr<?= $day === $prevDay ? ' class="alt"' : '' ?>>
           <td class="day"><?= $day === $prevDay ? '' : $e($day) ?></td>
           <td class="piece">
@@ -217,7 +242,25 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
             </form>
           </td>
           <td class="pick">
-            <?php if ($saved): ?>
+            <?php if ($isMarket): ?>
+              <ul class="pl-slides">
+                <?php foreach ($mslides as $k => $sl): ?>
+                <li<?= !empty($sl['done']) ? ' class="done"' : '' ?>>
+                  <form method="post" action="plan_save.php"><?= $hid ?><input type="hidden" name="plan_action" value="slides"><input type="hidden" name="slide_action" value="<?= !empty($sl['done']) ? 'undone' : 'done' ?>"><input type="hidden" name="slide" value="<?= $k ?>">
+                    <label class="tick"><input type="checkbox" onchange="this.form.submit()"<?= !empty($sl['done']) ? ' checked' : '' ?>> <?= $e(plan_market_slide_words($sl)) ?></label></form>
+                  <a href="<?= $e(plan_market_slide_link($sl)) ?>" class="pl-sl-go">Story ›</a>
+                  <form method="post" action="plan_save.php"><?= $hid ?><input type="hidden" name="plan_action" value="slides"><input type="hidden" name="slide_action" value="remove"><input type="hidden" name="slide" value="<?= $k ?>"><button type="submit" class="pl-sl-x" title="Remove this slide" aria-label="Remove this slide">×</button></form>
+                </li>
+                <?php endforeach; ?>
+                <?php if (!$mslides): ?><li class="none">No slides this week</li><?php endif; ?>
+              </ul>
+              <form method="post" action="plan_save.php" class="pl-sl-add"><?= $hid ?><input type="hidden" name="plan_action" value="slides"><input type="hidden" name="slide_action" value="add">
+                <select name="place" aria-label="Place"><?php foreach ($cards as $k => $d): ?><option value="<?= $e($k) ?>"><?= $e($d['title']) ?></option><?php endforeach; ?></select>
+                <select name="ptype" aria-label="Property type"><?php foreach (market_card_ptypes() as $k => $t): ?><option value="<?= $e($k) ?>"><?= $e($t) ?></option><?php endforeach; ?></select>
+                <button type="submit">+ Add slide</button>
+              </form>
+              <?php if ($msaved): ?><span class="sug"><b>Suggestion was:</b> <?= $e(implode(', ', array_map(fn($x) => plan_market_slide_words($x), plan_market_slides_suggest($idx, $nth)))) ?></span><?php endif; ?>
+            <?php elseif ($saved): ?>
               <?= $e($item['summary'] ?? '') ?>
               <?php if (trim((string)($item['caption'] ?? '')) !== ''): ?><span class="cap"><?= $e(mb_strimwidth(trim((string)$item['caption']), 0, 160, '…')) ?></span><?php endif; ?>
               <span class="sug"><br><b>Suggestion was:</b> <?= $e($pick) ?></span>
@@ -226,11 +269,16 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
             <?php endif; ?>
           </td>
           <td class="st">
-            <?php if ($saved || $done): ?><span class="pl-st saved"><?= $done && !$saved ? 'Done' : 'Saved' ?></span><small><?= $e(plan_when((string)($item['saved_at'] ?? ''))) ?></small>
+            <?php if ($isMarket): ?>
+              <?php if ($done): ?><span class="pl-st saved">Done</span><?php elseif ($mdone): ?><span class="pl-st part"><?= $mdone ?> of <?= count($mslides) ?> done</span><?php else: ?><span class="pl-st sug"><?= $msaved ? count($mslides) . ' slides' : 'Suggested' ?></span><?php endif; ?>
+              <?php if ($msaved): ?><small><?= $e(plan_when((string)($item['saved_at'] ?? ''))) ?></small><?php endif; ?>
+            <?php elseif ($saved || $done): ?><span class="pl-st saved"><?= $done && !$saved ? 'Done' : 'Saved' ?></span><small><?= $e(plan_when((string)($item['saved_at'] ?? ''))) ?></small>
             <?php else: ?><span class="pl-st sug">Suggested</span><?php endif; ?>
           </td>
           <td class="go">
-            <?php if ($tool === ''): ?>
+            <?php if ($isMarket): ?>
+              <?php if ($msaved): ?><form method="post" action="plan_save.php" onsubmit="return confirm('Drop this week\'s slides and go back to the suggestion?')"><?= $hid ?><input type="hidden" name="plan_action" value="clear"><button type="submit" class="soft">Reset</button></form><?php endif; ?>
+            <?php elseif ($tool === ''): ?>
               <?php foreach ($buttons as [$w, $href]): ?><a href="<?= $e($href) ?>"><?= $e($w) ?> ›</a><?php endforeach; ?>
               <form method="post" action="plan_save.php"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_slot" value="<?= $i ?>"><input type="hidden" name="plan_action" value="done"><input type="hidden" name="done" value="<?= $done ? 0 : 1 ?>">
                 <label class="tick"><input type="checkbox" onchange="this.form.submit()"<?= $done ? ' checked' : '' ?>> Done</label></form>
@@ -271,7 +319,7 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
     </div>
 
     <p class="pl-rot">
-      <b>How the suggestions rotate.</b> Markets step through the Market Snapshot's <?= count($cards) ?> places in order (<?= $e(implode(', ', array_slice(array_column($cards, 'title'), 0, 6))) ?>, …),
+      <b>How the suggestions rotate.</b> Market Stats take two places a week, both property types each (Aspen + Snowmass Village, then Basalt + Carbondale, Glenwood Springs + Missouri Heights, Woody Creek + Old Snowmass, then the other markets' counties in pairs),
       brokers through the <?= count($withPhoto) ?> approved agents with a headshot by name, locations through the <?= count($locPool) ?> offices and areas, hooks through the plan's six,
       and the branding season follows the calendar. Each is one week on from the week before, so a week always suggests the same thing whenever you look at it. A saved piece keeps what you chose; Reset returns the day to its suggestion.
     </p>

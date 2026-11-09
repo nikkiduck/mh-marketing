@@ -5,8 +5,12 @@
  * plan_week (YYYY-Www), plan_slot (0 to 7) and plan_action:
  *   item    the builder's form (its Save to the week button): kept as the
  *           slot's piece, with the caption and a one-line summary
- *   done    tick or untick the market slot (the Market Snapshot is made in
- *           its own tool) or an Other slot: done=1|0
+ *   done    tick or untick an Other slot: done=1|0 (the market slot's ticks
+ *           are per slide, below)
+ *   slides  the market slot's slide list (2026-11-09): slide_action=done|
+ *           undone|remove with slide=<index>, or add with place (a
+ *           market_card_defs() key) + ptype (SF|TC); the first change to a
+ *           slot still on its suggestion keeps the suggestion as the list
  *   clear   drop the slot's piece (back to the suggestion)
  *   kind    give the slot another content kind for this week (the Content
  *           dropdown, 2026-11-09): slot_kind (a plan_slot_options() key),
@@ -23,7 +27,8 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
 $week = (string)($_POST['plan_week'] ?? '');
 $slot = (int)($_POST['plan_slot'] ?? -1);
 if (!plan_store_key_ok($week)) portal_stop('Which week?', 'The week was missing from the request. Go back to Weekly Plans and try again.');
-$slots = plan_week_slots(plan_week_load($week));   // the week's own content choices (2026-11-09)
+$plan  = plan_week_load($week);
+$slots = plan_week_slots($plan);   // the week's own content choices (2026-11-09)
 $action = (string)($_POST['plan_action'] ?? 'item');
 $back = 'social_plan.php?week=' . rawurlencode($week);
 
@@ -43,6 +48,18 @@ if ($action === 'kind') {
 if ($action === 'clear') {
     plan_item_clear($week, $slot);
     header('Location: ' . $back . '&cleared=' . $slot); exit;
+}
+if ($action === 'slides') {
+    if ($def['type'] !== 'market') portal_stop('Not a Market Stats day', 'Slides belong to a Market Stats day. Go back to Weekly Plans and try again.');
+    $n = 0; foreach ($slots as $j => $s2) if ($j < $slot && $s2['type'] === 'market') $n++;   // the nth market slot of the week steps the suggested pair on
+    $slides = plan_market_slides($plan['items'][$slot] ?? null, plan_week($week)['index'], $n);
+    $what = (string)($_POST['slide_action'] ?? ''); $k = (int)($_POST['slide'] ?? -1);
+    if ($what === 'add') $slides[] = ['place' => (string)($_POST['place'] ?? ''), 'ptype' => (string)($_POST['ptype'] ?? ''), 'done' => false];
+    elseif (isset($slides[$k]) && ($what === 'done' || $what === 'undone')) $slides[$k]['done'] = $what === 'done';
+    elseif (isset($slides[$k]) && $what === 'remove') array_splice($slides, $k, 1);
+    else portal_stop('Which slide?', 'That slide is not on the day any more. Go back to Weekly Plans and try again.');
+    plan_market_slides_save($week, $slot, $slides);
+    header('Location: ' . $back); exit;
 }
 if ($action === 'done') {
     if (!empty($_POST['done'])) plan_item_save($week, $slot, ['kind' => $def['type'], 'done' => true, 'saved_at' => date('c')]);

@@ -2887,7 +2887,15 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   old one (confirm first); the usual kind again removes the record; the nth
   slot of a kind steps that kind's rotation on by n. An Other slot has only
   a Done tick. The property buttons say Post / Story (the story size opens
-  with the set ticked; "Story set" until 2026-11-09).
+  with the set ticked; "Story set" until 2026-11-09). **The Market Stats
+  row is a list of slides (Nikki, 2026-11-09: "4 story slides, 2 for Aspen
+  and 2 for Snowmass Village; next week Basalt and Carbondale"):** one line
+  per place and property type with its own Story link
+  (market_snapshot.php?market=&ptype=, the tool preselects both) and Done
+  tick, x to remove, + Add slide; stored as `slides` in the market item;
+  "k of n done" until all are ticked, then Done and the slot counts as
+  ready; suggested two places a week from `plan_market_pairs()` anchored
+  on 2026-W46 (Aspen + Snowmass Village first).
   `PLAN_STORE_DIR`, when defined, replaces the folder (the local harness).
   **Each frame of a set is a tab (Nikki, 2026-11-03: "more control over
   each photo in a set ... each of the photo options has its own tab"):**

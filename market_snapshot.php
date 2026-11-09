@@ -5,7 +5,8 @@
  * body as the portal's Templates > Market Snapshot (inc/market_post_body.php)
  * under the admin header; the preview and the PNG come from the portal's
  * endpoints, which admit an admin without an account (market_gate()).
- * ?market=aspen&month=2026-09 preselects. See inc/market.php. Reached from
+ * ?market=aspen&month=2026-09 preselects, and ?ptype=TC the property type
+ * (the Weekly Plans slide links, 2026-11-09). See inc/market.php. Reached from
  * templates.php (the admin Templates page) and the Market Report.
  */
 require_once __DIR__ . '/inc/market.php';
@@ -19,6 +20,7 @@ $month  = market_pick_month((string)($_GET['month'] ?? ''));
 $data   = $month !== '' ? market_load($month) : null;
 if ($data) market_attach_feed($data);   // the feed towns join the Location list
 $market = market_card_key((string)($_GET['market'] ?? ''), $data ?? []);   // a card key, or a market id from the report's links
+$ptype  = (string)($_GET['ptype'] ?? 'SF') === 'TC' ? 'TC' : 'SF';          // Weekly Plans' slide links carry the property type (2026-11-09)
 $stock  = social_stock();
 $board_names = [];   // the picker's groups, from the month's boards.json
 foreach (($data['boards'] ?? []) as $b) $board_names[(string)$b['market']] = (string)$b['name'];

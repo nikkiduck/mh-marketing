@@ -106,7 +106,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
         <div class="sp-look">
           <span class="sp-look-l">Leads with</span>
           <?php foreach (market_card_ptypes() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="ptype" value="<?= $e($k) ?>"<?= $k === 'SF' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <label class="sp-pillopt"><input type="radio" name="ptype" value="<?= $e($k) ?>"<?= $k === ($ptype ?? 'SF') ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
         <p class="mp-note">The figures are <?= $e(market_month_label($month)) ?>'s, from the <a href="<?= $e($report_url) ?>">Market Report</a>.</p>

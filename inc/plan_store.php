@@ -24,8 +24,17 @@
  * a slot another content kind: "slots": { "<slot>": { "type", "variant",
  * "words" } }, chosen from plan_slot_options() in the week table's Content
  * dropdown (plan_week_slots() applies them; Other = words typed by Nikki
- * for a piece made outside the tools). The market slot and an Other slot
- * are not a plan builder's, so they only carry a Done tick.
+ * for a piece made outside the tools). An Other slot is not a plan
+ * builder's, so it only carries a Done tick. The market slot is a LIST OF
+ * SLIDES since 2026-11-09 (Nikki: "today I'm going to do 4 story slides,
+ * 2 for Aspen and 2 for Snowmass Village; next week Basalt and
+ * Carbondale"): { "kind": "market", "slides": [ { "place": a
+ * market_card_defs() key, "ptype": SF | TC, "done": bool }, … ],
+ * "saved_at" }, each slide a Market Snapshot card with its own Story link
+ * and Done tick; the suggestion is two places a week, both property types
+ * each (plan_market_pairs()), and the slot is ready when every slide is
+ * ticked. An older { "done": true } market item reads as the suggestion,
+ * all ticked.
  *
  * The saved "form" is the builder's own POST (plan_form_from_post(): the
  * token, the plan fields and the preview-only fields dropped), so
@@ -84,6 +93,67 @@ function plan_week_slots(array $plan): array {
 /** The slot's tool page, or '' for the market slot (the Market Snapshot's own page) and an Other slot. */
 function plan_slot_tool(array $slot): string {
     return ['property' => 'template_property.php', 'broker' => 'template_broker.php', 'location' => 'template_location.php', 'branding' => 'template_branding.php'][$slot['type']] ?? '';
+}
+
+/**
+ * Market Stats slides (2026-11-09). The places two a week, in this order,
+ * starting from PLAN_MARKET_PAIR_ANCHOR (the week Nikki named: Aspen +
+ * Snowmass Village, then Basalt + Carbondale); every place gets both
+ * property types, so four slides a week. The counties Pitkin and Garfield
+ * are not in the rotation (their towns are); add them to a week by hand.
+ */
+const PLAN_MARKET_PAIR_ANCHOR = '2026-W46';
+function plan_market_pairs(): array {
+    return [['town-aspen', 'town-snowmass'], ['town-basalt', 'town-carbondale'], ['town-glenwood', 'town-missouri-heights'], ['town-woody-creek', 'town-old-snowmass'],
+            ['eagle', 'san-miguel'], ['summit', 'routt'], ['montrose', 'ouray'], ['la-plata', 'denver-metro']];
+}
+
+/** The suggested slides for a week (its plan_week() index); $n = the nth market slot of the week, which steps the pair on. */
+function plan_market_slides_suggest(int $weekIndex, int $n = 0): array {
+    $pair = plan_rotate(plan_market_pairs(), $weekIndex - plan_week(PLAN_MARKET_PAIR_ANCHOR)['index'] + $n);
+    $defs = market_card_defs(); $out = [];
+    foreach ((array)$pair as $place) {
+        if (!isset($defs[$place])) continue;
+        foreach (array_keys(market_card_ptypes()) as $pt) $out[] = ['place' => $place, 'ptype' => $pt, 'done' => false];
+    }
+    return $out;
+}
+
+/** The market slot's slides as the week has them: the saved list, else the suggestion (an older Done tick = the suggestion, all ticked). */
+function plan_market_slides(?array $item, int $weekIndex, int $n = 0): array {
+    if ($item && isset($item['slides']) && is_array($item['slides'])) return array_values($item['slides']);
+    $s = plan_market_slides_suggest($weekIndex, $n);
+    if ($item && !empty($item['done'])) foreach ($s as &$x) $x['done'] = true;
+    return $s;
+}
+
+/** "Aspen · Single-family homes" */
+function plan_market_slide_words(array $s): string {
+    $d = market_card_defs()[(string)$s['place']] ?? null;
+    return ($d ? $d['title'] : (string)$s['place']) . ' · ' . (market_card_ptypes()[(string)$s['ptype']] ?? (string)$s['ptype']);
+}
+
+/** The Market Snapshot tool with the slide's place and property type picked. */
+function plan_market_slide_link(array $s): string {
+    return 'market_snapshot.php?' . http_build_query(['market' => $s['place'], 'ptype' => $s['ptype']]);
+}
+
+/** Keep the market slot's slides (only known places and types; the order as given). */
+function plan_market_slides_save(string $key, int $slot, array $slides): bool {
+    $defs = market_card_defs(); $pts = market_card_ptypes(); $clean = [];
+    foreach ($slides as $s) {
+        if (!is_array($s) || !isset($defs[(string)($s['place'] ?? '')]) || !isset($pts[(string)($s['ptype'] ?? '')])) continue;
+        $clean[] = ['place' => (string)$s['place'], 'ptype' => (string)$s['ptype'], 'done' => !empty($s['done'])];
+    }
+    return plan_item_save($key, $slot, ['kind' => 'market', 'slides' => $clean, 'saved_at' => date('c')]);
+}
+
+/** A market item is ready when it has slides and every one is ticked (or it is an older Done tick). */
+function plan_market_item_ready(array $it): bool {
+    if (!isset($it['slides'])) return !empty($it['done']);
+    if (!is_array($it['slides']) || !$it['slides']) return false;
+    foreach ($it['slides'] as $s) if (empty($s['done'])) return false;
+    return true;
 }
 
 function plan_store_dir(): string {
@@ -162,10 +232,10 @@ function plan_week_set_status(string $key, string $status): bool {
     $p = plan_week_load($key); $p['status'] = $status === 'planned' ? 'planned' : 'open'; return plan_week_store($p);
 }
 
-/** How many of the week's slots are ready: saved pieces plus the market slot when ticked done. */
+/** How many of the week's slots are ready: saved pieces, the market slot when every slide is ticked, an Other slot when ticked. */
 function plan_week_ready(array $plan): int {
     $n = 0;
-    foreach ($plan['items'] as $it) if (!empty($it['form']) || !empty($it['done'])) $n++;
+    foreach ($plan['items'] as $it) if (!empty($it['form']) || (isset($it['slides']) ? plan_market_item_ready($it) : !empty($it['done']))) $n++;
     return $n;
 }
 

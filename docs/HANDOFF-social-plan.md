@@ -355,6 +355,34 @@ suggestion, only a Done tick, and counts toward "n of 8 ready" when
 ticked. Still eight slots a week on the sample week's days; adding or
 removing a day is not built.
 
+## Market Stats as a list of slides (2026-11-09)
+
+Nikki: "market stats is a little unique because each week is a couple of
+submarkets each time. Today I'm going to do 4 story slides, 2 for Aspen
+(single family and townhomes) and 2 for Snowmass Village. Next week Basalt
+and Carbondale." The Market Stats row is a list of slides, one per place
+and property type ("Aspen · Single-family homes"), each with its own Story
+link into the Market Snapshot (market_snapshot.php?market=&ptype=, which
+now preselects the property type too; inc/market_post_body.php reads
+`$ptype`, so the portal's own Templates page is unchanged) and its own
+Done tick, an x to remove it, and under the list "+ Add slide" with a
+place dropdown (market_card_defs()) and the two property types. Stored in
+the market item as `slides` (place, ptype, done; plan_market_slides_save());
+the first change to a day still on its suggestion keeps the suggestion as
+the list. The status reads "k of n done" (amber) until every slide is
+ticked, then Done, and only then does the slot count toward "n of 8
+ready" (plan_market_item_ready()). Reset drops the list for the
+suggestion. The suggestion is two places a week, both property types each
+(plan_market_pairs(), from PLAN_MARKET_PAIR_ANCHOR = 2026-W46: Aspen +
+Snowmass Village, Basalt + Carbondale, Glenwood Springs + Missouri Heights,
+Woody Creek + Old Snowmass, Eagle + San Miguel, Summit + Routt, Montrose +
+Ouray, La Plata + Denver Metro, then round again); a second Market Stats
+slot in a week takes the next pair. Pitkin and Garfield counties are not
+in the rotation (their towns are); add them to a week by hand. An older
+market item with only `done: true` reads as the suggestion, all ticked.
+Not built: a Download all for the slides (the Snapshot does not render
+from a saved form yet).
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the
