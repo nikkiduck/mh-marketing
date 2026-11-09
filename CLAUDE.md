@@ -3222,7 +3222,16 @@ sizes, InDesign for one-offs. The prototype, a card on social_media.php
   mountain photo the same way).
 - `inc/ads_render.php` (standalone): ONE size, 970 x 250, `ads_sizes()` is
   where the others go, each with its own layout numbers (a 320 x 50 cannot
-  hold what a marquee holds). Photo left half, charcoal panel right
+  hold what a marquee holds). **Photo width is a choice (Nikki, same day:
+  "more of the photo, don't just split in half"):** `ads_shares()` Half /
+  More photo (58 %, the default) / Most photo (65 %), `share` on the form;
+  the photo's last 110 px melt into the panel colour (`.photo::after`) and
+  the words' column scales its type down as it narrows (`$k`). **Two
+  brokers (same day):** `agent2` on the form, `agents` (one or two) in the
+  ad; two stack as rows (headshot 70 px, name, phone) under one Presented
+  by line, and the logo becomes the small M mark upper right, because the
+  full stack has no room beside two names at the wider photo widths.
+  Photo left, charcoal panel right
   (`ads_palette()`: the website's footer #2b3038, light slate #aebbcc for
   the capitals, Jost), headline 300 weight fitted by length, address in the
   short form + city in spaced capitals (`ads_address_caps()`), "5 BEDS | 6

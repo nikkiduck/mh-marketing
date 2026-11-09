@@ -68,8 +68,12 @@ function ads_from_request(mysqli $conn, array $ctx, array $in): array|string {
     $size = isset(ads_sizes()[(string)($in['size'] ?? '')]) ? (string)$in['size'] : '970x250';
     $listing = plan_listing($conn, (string)($in['listing'] ?? ''));
     if (!$listing) return 'Choose a listing to see the ad.';
-    $agents = plan_agents($conn);
-    $agent = $agents[(int)($in['agent'] ?? 0)] ?? null;
+    $roster = plan_agents($conn);
+    $agent  = $roster[(int)($in['agent'] ?? 0)] ?? null;
+    $agent2 = $roster[(int)($in['agent2'] ?? 0)] ?? null;   // a second broker on the Presented by slide (Nikki, 2026-11-09)
+    if ($agent2 && $agent && $agent2['id'] === $agent['id']) $agent2 = null;
+    if (!$agent && $agent2) { $agent = $agent2; $agent2 = null; }
+    $share = isset(ads_shares()[(string)($in['share'] ?? '')]) ? (string)$in['share'] : ADS_SHARE_DEFAULT;
 
     $texture = (string)($in['texture'] ?? ADS_TEXTURE_DEFAULT);
     if (!isset(ads_textures()[$texture])) $texture = ADS_TEXTURE_DEFAULT;
@@ -102,17 +106,18 @@ function ads_from_request(mysqli $conn, array $ctx, array $in): array|string {
         ];
     }
 
-    $ag = null;
-    if ($agent) {
-        $u = $agent['face_url'] !== '' ? $agent['face_url'] : $agent['headshot_url'];
+    $ags = [];
+    foreach ([$agent, $agent2] as $x) {
+        if (!$x) continue;
+        $u = $x['face_url'] !== '' ? $x['face_url'] : $x['headshot_url'];
         $f = $u !== '' ? mk_photo_file($u) : '';
-        $ag = ['id' => $agent['id'], 'name' => $agent['name'], 'phone' => ads_agent_phones($conn)[$agent['id']] ?? '',
-               'headshot_url' => $u, 'headshot_file' => ($f !== '' && is_file($f)) ? (realpath($f) ?: $f) : null];
+        $ags[] = ['id' => $x['id'], 'name' => $x['name'], 'phone' => ads_agent_phones($conn)[$x['id']] ?? '',
+                  'headshot_url' => $u, 'headshot_file' => ($f !== '' && is_file($f)) ? (realpath($f) ?: $f) : null];
     }
     $preview = max(0, min(count($frames) - 1, (int)($in['frame'] ?? 0)));
     return [
-        'size' => $size, 'texture' => $texture, 'hold' => $hold, 'prefix' => $prefix,
-        'listing' => $listing, 'agent' => $ag, 'frames' => $frames, 'preview' => $preview,
+        'size' => $size, 'share' => $share, 'texture' => $texture, 'hold' => $hold, 'prefix' => $prefix,
+        'listing' => $listing, 'agents' => $ags, 'frames' => $frames, 'preview' => $preview,
         'name' => $prefix . '_' . ads_slug((string)$listing['address']) . '_' . $size,
     ];
 }

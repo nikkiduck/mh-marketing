@@ -45,14 +45,24 @@ $S = ads_size('970x250');
               <?php endforeach; ?>
             </select>
           </label>
-          <label class="sp-field">Broker on the Presented by slide
-            <select name="agent" id="adAgent">
-              <option value="0">None</option>
-              <?php foreach ($ad_agents as $a): ?>
-              <option value="<?= (int)$a['id'] ?>" data-phone="<?= $e($ad_phones[$a['id']] ?? '') ?>"><?= $e($a['name']) ?><?= isset($ad_phones[$a['id']]) ? ' · ' . $e($ad_phones[$a['id']]) : ' · no phone on the profile' ?></option>
-              <?php endforeach; ?>
-            </select>
-          </label>
+          <div class="sp-two">
+            <label class="sp-field">Broker on the Presented by slide
+              <select name="agent" id="adAgent">
+                <option value="0">None</option>
+                <?php foreach ($ad_agents as $a): ?>
+                <option value="<?= (int)$a['id'] ?>"><?= $e($a['name']) ?><?= isset($ad_phones[$a['id']]) ? ' · ' . $e($ad_phones[$a['id']]) : ' · no phone on the profile' ?></option>
+                <?php endforeach; ?>
+              </select>
+            </label>
+            <label class="sp-field">Second broker (optional)
+              <select name="agent2">
+                <option value="0">None</option>
+                <?php foreach ($ad_agents as $a): ?>
+                <option value="<?= (int)$a['id'] ?>"><?= $e($a['name']) ?><?= isset($ad_phones[$a['id']]) ? ' · ' . $e($ad_phones[$a['id']]) : ' · no phone on the profile' ?></option>
+                <?php endforeach; ?>
+              </select>
+            </label>
+          </div>
           <div class="sp-two">
             <label class="sp-field">File name prefix (the outlet)
               <input name="prefix" value="VD" maxlength="12" placeholder="VD, ADN">
@@ -77,7 +87,7 @@ $S = ads_size('970x250');
               <input name="price" maxlength="40" placeholder="Now $1,725,000">
             </label>
           </div>
-          <label class="sp-check"><input type="checkbox" name="frame_agent" value="1" checked> Slide 3: Presented by the broker (headshot, name, phone)</label>
+          <label class="sp-check"><input type="checkbox" name="frame_agent" value="1" checked> Slide 3: Presented by the broker(s) (headshot, name, phone)</label>
         </section>
       </div>
 
@@ -85,8 +95,14 @@ $S = ads_size('970x250');
         <section class="sp-step">
           <h2 class="sp-step-h">Photos</h2>
           <p class="sp-note">Click a slide above, then a photo to put it on that slide. Drag and zoom to frame it.</p>
-          <div class="sp-framing">
-            <div class="sp-framer empty ad-framer" id="adFramer" style="aspect-ratio:<?= (int)$S['photo_w'] ?> / <?= (int)$S['h'] ?>"><img id="adFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
+          <div class="sp-look">
+            <span class="sp-look-l">Photo width</span>
+            <?php foreach (ads_shares() as $k => $t): ?>
+            <label class="sp-pillopt"><input type="radio" name="share" value="<?= $e($k) ?>"<?= $k === ADS_SHARE_DEFAULT ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+            <?php endforeach; ?>
+          </div>
+          <div class="sp-framing" style="margin-top:14px">
+            <div class="sp-framer empty ad-framer" id="adFramer" style="aspect-ratio:<?= (int)round($S['w'] * (int)ADS_SHARE_DEFAULT / 100) ?> / <?= (int)$S['h'] ?>"><img id="adFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
             <label class="sp-zoom">Zoom <input type="range" id="adZoom" min="1" max="3" step="0.02" value="1"></label>
           </div>
           <div class="sp-photos ad-photos" id="adPhotos"><div class="sp-wait">Loading photos…</div></div>
@@ -127,7 +143,7 @@ $S = ads_size('970x250');
   let act = 'headline', tiles = [], agentTouched = false;
 
   // ── Which slides are on ──
-  const on = k => k === 'headline' || (k === 'price' ? f('frame_price').checked : (f('frame_agent').checked && f('agent').value !== '0'));
+  const on = k => k === 'headline' || (k === 'price' ? f('frame_price').checked : (f('frame_agent').checked && (f('agent').value !== '0' || f('agent2').value !== '0')));
   const visible = () => KINDS.filter(on);
   function syncSlides() {
     stages.forEach(s => { s.hidden = !on(s.dataset.kind); });
@@ -234,7 +250,8 @@ $S = ads_size('970x250');
     const n = e.target.name;
     if (n === 'listing') { syncAgent(); syncSlides(); loadPhotos(); return; }
     if (n === 'agent') agentTouched = true;
-    if (n === 'agent' || n === 'frame_price' || n === 'frame_agent') { syncSlides(); paintBadges(); }
+    if (n === 'share') { framer.style.aspectRatio = Math.round(W * (+e.target.value) / 100) + ' / ' + H; framerApply(); }
+    if (n === 'agent' || n === 'agent2' || n === 'frame_price' || n === 'frame_agent') { syncSlides(); paintBadges(); }
     update();
   });
   form.addEventListener('input', e => { if (['headline', 'headline2', 'price', 'prefix', 'hold'].includes(e.target.name)) update(); });
