@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-09 08:48 from git HEAD
+# Generated 2026-11-09 08:58 from git HEAD
 2d993b43632fe710477877826cf5e8d3  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -61,7 +61,7 @@ e2475866b1e99360f59246920a5eff56  inc/hs_helpers.php
 ea0157ed3088c193eaa5a6c26bc6ee88  inc/market_card_render.php
 8cbafc77cf112085f0ded498a8189db6  inc/market_data.php
 ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
-0aeac91bf91e6379d8ed88950c87c18a  inc/market_post_body.php
+98bfb54ff266c37eda27151a344c6479  inc/market_post_body.php
 5d461821bd57dfba63e198c4244d2eed  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
@@ -69,7 +69,7 @@ d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
 15b290cd7b548915e38d1c7b78340e11  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
-92722a515dbcd2c8b1db38564a08ae8d  inc/plan_store.php
+a1f520a21cfdd7a755cc1b55ab114e66  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
@@ -87,7 +87,7 @@ e55e413a4d83f451c678aee863fe6d05  intake.php
 1d44947a95310027842c984a8020ac42  login.php
 48345dd02111e4387cc3305d1c677d13  logout.php
 0d454e08548c8b15d51ac51bde3c5612  market_report.php
-655ea727bc386c5379fef05c6504c170  market_snapshot.php
+3a2c96eee9ee7bf8350c8eb1af15f433  market_snapshot.php
 6683f180b4529f9babd695a19ef51db7  oauth_callback.php
 b6b13d82e0f8adb87cc9ba58ce1f748d  oauth_start.php
 f8560bfe6f42693f0d165d7fc20a329d  order_split.php
@@ -96,7 +96,7 @@ b92d554425c9b2d084073d48776855f6  pipeline_review.php
 1c618f71243faf161dfccb32bd21a948  plan_export.php
 1504cd2f1620186695f6c7646f1098cb  plan_photos.php
 c62b17405d2e2388e5648ac84d061201  plan_render.php
-9b518342a15650b8981a069ea73dfa7b  plan_save.php
+d2a3d9e002168ddc06965b9c6c4bf2d4  plan_save.php
 dce6b022a8146453bb2054adcd6a5144  portal/advertising.php
 f69e92a4cc1632404c42761619aee4b4  portal/asset.php
 599716edc3a58f6759dc93e0e12fb5cb  portal/brand.php
@@ -139,7 +139,7 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 6bb66b4f65c95b33ea4ba685830fc867  social_media.php
-4b2341865cf2c83d9feb93fcccb946cd  social_plan.php
+f1f05f98bd8279345f9c6e3991e0e165  social_plan.php
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
 fb9ae30d6ee4855cec6fdf456b222c3e  template_branding.php
 730da2b94ec559bacd9b95b17eea4d0a  template_broker.php
