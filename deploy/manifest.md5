@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-09 09:14 from git HEAD
+# Generated 2026-11-09 09:40 from git HEAD
 2d993b43632fe710477877826cf5e8d3  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
@@ -65,11 +65,11 @@ ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
 5d461821bd57dfba63e198c4244d2eed  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-0f05a134a15d91c86814c5811b43f36d  inc/plan.php
+05d1ec2400b650aa2cb4f805f779bb39  inc/plan.php
 d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
 15b290cd7b548915e38d1c7b78340e11  inc/plan_body.php
 a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
-64e4699076842ffb3da9abb1e3c3437f  inc/plan_store.php
+f26121aa6d894d83d2a438070c12b466  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
@@ -139,7 +139,7 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 6bb66b4f65c95b33ea4ba685830fc867  social_media.php
-63b88362bd464adfb6bd06a8a7e60f68  social_plan.php
+118a687f545b3b4eea3e0f249f9b6a5b  social_plan.php
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
 fb9ae30d6ee4855cec6fdf456b222c3e  template_branding.php
 730da2b94ec559bacd9b95b17eea4d0a  template_broker.php
