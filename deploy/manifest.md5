@@ -17,7 +17,7 @@ a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 f76d4556e5309670d33806d0b4c71885  change_password.php
 2574ed722be2203d46373fd5d0e209e6  creative.php
 18f86e70bdc154a8cace266e54daff72  cron/activate_roster.php
-0f531881c0f5b716ad88a4073954b941  cron/check_health.php
+2dd738a9849855fb67f86b04dcdc4156  cron/check_health.php
 1873db09f7e742eb9209b9f665aa33fe  cron/import_dropbox_creatives.php
 efc4b5fd1029c3045894dc0c265855f0  cron/import_hot_sheets.php
 20594824bf509387c4d249a85cdcf293  cron/import_profiles.php

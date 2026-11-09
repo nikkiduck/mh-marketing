@@ -109,7 +109,11 @@ if ($bw) $issues['boards'] = "The board registry check found:\n  " . implode("\n
 // to do, but a ✗ (a parse failure, a failed check against CAR's tables) is
 // worth an email. Its own "NOT published" email goes to JB and Nikki too.
 $s = log_state(LOG_DIR . '/market_refresh.log', '/✓ Done/u');
-if ($b = bad_lines($s['text'])) {
+// Only the LATEST run counts: a failed run ends with no ✓ Done, so the text since the last
+// completed run still held the 7th's and 8th's ✗ after the 9th's run had published October,
+// and Nikki was emailed for three days (2026-11-09). Each run opens with a ── line.
+$runs = preg_split('/(?=^\[[0-9 :-]+\] ── refresh_market_data)/mu', $s['text']) ?: [$s['text']];
+if ($b = bad_lines((string)end($runs))) {
     $issues['market'] = "The Market Report refresh reported:\n  " . implode("\n  ", $b);
 }
 
