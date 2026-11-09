@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-09 14:18 from git HEAD
+# Generated 2026-11-09 14:44 from git HEAD
 2196e5d6ef26e6ccdb81432b1cf246ca  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
 2d993b43632fe710477877826cf5e8d3  agent.php
@@ -79,7 +79,7 @@ bcf5d188394d84a0f55f47e92698e7dc  inc/plan.php
 d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
 528550ed3d78d8c416d681fae353cc7e  inc/plan_body.php
 8134cab152babc2dd7901676f197f683  inc/plan_render.php
-f26121aa6d894d83d2a438070c12b466  inc/plan_store.php
+ebcc3e7d9b3813c881b6b18bd23e4c0b  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
@@ -103,10 +103,10 @@ b6b13d82e0f8adb87cc9ba58ce1f748d  oauth_start.php
 f8560bfe6f42693f0d165d7fc20a329d  order_split.php
 509653a4a42f0cb8c31ae75b9385d5e7  pipeline_events.php
 b92d554425c9b2d084073d48776855f6  pipeline_review.php
-1c618f71243faf161dfccb32bd21a948  plan_export.php
+7dd3f575c88e229bd9656e7c63509cf2  plan_export.php
 1504cd2f1620186695f6c7646f1098cb  plan_photos.php
 c62b17405d2e2388e5648ac84d061201  plan_render.php
-93ce43fab1bc1aff24cbce41d8395dc4  plan_save.php
+dc38f6ec275e6723f6822f3eca78523b  plan_save.php
 dce6b022a8146453bb2054adcd6a5144  portal/advertising.php
 f69e92a4cc1632404c42761619aee4b4  portal/asset.php
 599716edc3a58f6759dc93e0e12fb5cb  portal/brand.php
@@ -150,7 +150,7 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 bb450207a89479db56afa164a7f701bf  social_media.php
-118a687f545b3b4eea3e0f249f9b6a5b  social_plan.php
+c9c59f37b64ea45b4d2a6b1c07940c6b  social_plan.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
 6e7a49e64355ae64e66c673ef14f89c4  template_ad.php
