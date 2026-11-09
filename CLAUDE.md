@@ -3225,8 +3225,9 @@ sizes, InDesign for one-offs. The prototype, a card on social_media.php
   hold what a marquee holds). **Photo width is a choice (Nikki, same day:
   "more of the photo, don't just split in half"):** `ads_shares()` Half /
   More photo (58 %, the default) / Most photo (65 %), `share` on the form;
-  the photo's last 110 px melt into the panel colour (`.photo::after`) and
-  the words' column scales its type down as it narrows (`$k`). **Two
+  the words' column scales its type down as it narrows (`$k`). A fade of
+  the photo's edge into the panel was tried and dropped the same evening
+  (Nikki: "don't love the blur, hard line is fine"). **Two
   brokers (same day):** `agent2` on the form, `agents` (one or two) in the
   ad; two stack as rows (headshot 70 px, name, phone) under one Presented
   by line, and the logo becomes the small M mark upper right, because the

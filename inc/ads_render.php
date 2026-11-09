@@ -33,13 +33,13 @@ const ADS_GIF_MAX = 1000000;
 /** The ad sizes, each with its layout numbers: the photo's width, the panel padding, the type sizes. */
 function ads_sizes(): array {
     return [
-        '970x250' => ['w' => 970, 'h' => 250, 'name' => 'Marquee 970 x 250', 'pad' => 30, 'fade' => 110, 'logo_h' => 74, 'words_w' => 350,
+        '970x250' => ['w' => 970, 'h' => 250, 'name' => 'Marquee 970 x 250', 'pad' => 30, 'logo_h' => 74, 'words_w' => 350,
                       'h_size' => 31, 'h_steps' => [46 => 28, 62 => 25, 78 => 22], 'caps' => 12.5, 'head_px' => 100, 'head2_px' => 70],
     ];
 }
 function ads_size(string $k): array { return ads_sizes()[$k] ?? ads_sizes()['970x250']; }
 
-/** How much of the width the photo takes (Nikki, 2026-11-09: "more of the photo, don't just split in half"); its right edge fades into the panel. */
+/** How much of the width the photo takes (Nikki, 2026-11-09: "more of the photo, don't just split in half"). */
 function ads_shares(): array { return ['50' => 'Half', '58' => 'More photo', '65' => 'Most photo']; }
 const ADS_SHARE_DEFAULT = '58';
 
@@ -108,7 +108,7 @@ function ads_render_frame(array $ad, int $i, ?string $base = null, bool $export 
     $S    = ads_size((string)($ad['size'] ?? '970x250'));
     $W = $S['w']; $H = $S['h']; $pad = $S['pad'];
     $share = isset(ads_shares()[(string)($ad['share'] ?? '')]) ? (int)$ad['share'] : (int)ADS_SHARE_DEFAULT;
-    $PW   = (int)round($W * $share / 100);        // the photo's width; its last `fade` px melt into the panel colour
+    $PW   = (int)round($W * $share / 100);        // the photo's width
     $c    = ads_palette($base);
     $f    = $ad['frames'][$i] ?? ($ad['frames'][0] ?? []);
     $kind = isset(ads_frame_kinds()[(string)($f['kind'] ?? '')]) ? (string)$f['kind'] : 'headline';
@@ -168,8 +168,8 @@ function ads_render_frame(array $ad, int $i, ?string $base = null, bool $export 
     $css = "html,body{margin:0;padding:0;width:{$W}px;height:{$H}px;overflow:hidden;background:{$c['panel']}}\n{$fontCss}\n"
          . ".ad{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;font-family:'Jost','Helvetica Neue',Helvetica,Arial,sans-serif;color:{$c['text']};-webkit-font-smoothing:antialiased}\n"
          . ".photo{position:absolute;left:0;top:0;width:{$PW}px;height:{$H}px;overflow:hidden;background:{$c['photo_bg']}}\n"
-         // The photo's right edge melts into the panel (Nikki, 2026-11-09: more of the photo, no hard split).
-         . ".photo::after{content:'';position:absolute;right:0;top:0;bottom:0;width:{$S['fade']}px;background:linear-gradient(to right,rgba({$c['panel_rgb']},0) 0%,rgba({$c['panel_rgb']},.55) 55%,rgba({$c['panel_rgb']},1) 100%)}\n"
+         // A clean edge between photo and panel (Nikki, 2026-11-09: a fade into the panel was tried the same day; "don't love the blur, hard line is fine").
+
          . ".photo img.pic{display:block;width:{$zpct}%;height:{$zpct}%;object-fit:cover;object-position:{$fx}% {$fy}%;transform:translate({$tx}px,{$ty}px)}\n"
          . ".panel{position:absolute;left:{$PW}px;top:0;right:0;bottom:0;background:{$c['panel']};overflow:hidden}\n"
          . ".tex{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%;filter:grayscale(1) brightness(.78) contrast(1.05);opacity:.34}\n"
