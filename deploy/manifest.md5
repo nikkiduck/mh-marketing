@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-09 11:29 from git HEAD
+# Generated 2026-11-09 14:18 from git HEAD
 2196e5d6ef26e6ccdb81432b1cf246ca  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
 2d993b43632fe710477877826cf5e8d3  agent.php
@@ -75,10 +75,10 @@ dd828c19260e7fae118a7a8c281f2ec0  inc/market_flyer_render.php
 5d461821bd57dfba63e198c4244d2eed  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-05d1ec2400b650aa2cb4f805f779bb39  inc/plan.php
+bcf5d188394d84a0f55f47e92698e7dc  inc/plan.php
 d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
-15b290cd7b548915e38d1c7b78340e11  inc/plan_body.php
-a61c01ff74e34b71bf33e93fa3fa32ed  inc/plan_render.php
+528550ed3d78d8c416d681fae353cc7e  inc/plan_body.php
+8134cab152babc2dd7901676f197f683  inc/plan_render.php
 f26121aa6d894d83d2a438070c12b466  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
