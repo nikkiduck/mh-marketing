@@ -382,7 +382,7 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#1f242c;fo
 .eyebrow{font-size:7.5pt;letter-spacing:.22em;text-transform:uppercase;color:#4a5566;font-weight:500;margin:0 0 5pt}
 .title{font-family:'Cormorant Garamond',Georgia,serif;font-weight:500;font-size:30pt;line-height:1.02;margin:0;color:#1f242c}
 .sub{font-size:7.5pt;letter-spacing:.22em;text-transform:uppercase;color:#4a5566;font-weight:500;margin:7pt 0 0;line-height:1.4}
-.head .logo{height:46pt;width:auto;flex:none;margin-top:2pt}
+.head .logo{height:62pt;width:auto;flex:none;margin-top:0}
 .body{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column;gap:12pt;padding-top:12pt}
 .block{flex:none}
 .bhead{display:flex;align-items:baseline;justify-content:space-between;gap:12pt;margin:0 0 5pt}

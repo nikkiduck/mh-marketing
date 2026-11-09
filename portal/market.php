@@ -20,7 +20,7 @@ if (!$data) {
     echo '<div class="pt-flash err">No market data is on file yet. The report appears here once a month\'s figures are published.</div>';
 } else {
     $boot = market_boot($data, ['post' => portal_url($ctx, '/portal/market_post.php'), 'self' => portal_url($ctx, '/portal/market.php'),
-                                 'flyer' => MARKET_FLYER_LIVE ? portal_url($ctx, '/portal/market_flyer.php') : '']);   // the PDF flyer for a client, once Nikki has approved the style (2026-11-08)
+                                 'flyer' => MARKET_FLYER_LIVE ? portal_url($ctx, '/portal/market_flyer.php') : '']);   // the PDF flyer for a client (built 2026-11-08, live for agents 2026-11-09)
     include __DIR__ . '/../inc/market_report_body.php';
 }
 portal_footer();

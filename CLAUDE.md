@@ -2634,10 +2634,11 @@ an Aspen flyer?"). A place flyer shows both property types of the place
 (the chosen one first; a town whose PDF is not out yet comes from our
 feed), then the county it sits in (the county card's `place` names its
 towns) and the market's other counties while there is room. market-report.js
-keeps market, place, property type and month current. **Admin-only until Nikki approves the style:**
-`MARKET_FLYER_LIVE` in inc/market.php is false, so portal/market.php passes
-no flyer URL (no button for agents) and the endpoint turns agents away;
-flip it to true and both follow. `&html=1` shows an admin the HTML in the
+keeps market, place, property type and month current. **Live for agents
+since 2026-11-09** (Nikki approved the style after her markup and a larger
+logo): `MARKET_FLYER_LIVE` in inc/market.php; false hides the button on
+portal/market.php (no flyer URL) and makes the endpoint turn agents away,
+which is how it ran admin-only on 2026-11-08. `&html=1` shows an admin the HTML in the
 browser.
 
 **The month refreshes itself (2026-11-05, Nikki: "we need to make this

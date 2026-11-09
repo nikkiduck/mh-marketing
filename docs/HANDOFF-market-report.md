@@ -309,9 +309,9 @@ other property type's counties while there is room. The footer always
 carries an agent (Jonathan Boxer when an admin with no profile makes it;
 2026-11-09), square headshot, and the sources as one block of text; blocks
 about the flyer's own place are headed by the property type and no block
-names its source. Admin-only until Nikki approves the style
-(`MARKET_FLYER_LIVE` in inc/market.php). Details in CLAUDE.md > Market
-Report and Market Snapshot posts.
+names its source. Live for agents since 2026-11-09 (`MARKET_FLYER_LIVE`
+in inc/market.php; false makes it admin-only again). Details in CLAUDE.md >
+Market Report and Market Snapshot posts.
 
 ## Ideas not built
 

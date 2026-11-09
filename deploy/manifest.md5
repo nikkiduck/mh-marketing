@@ -57,7 +57,7 @@ e2475866b1e99360f59246920a5eff56  inc/hs_helpers.php
 06406477f9bc1bf6dc3ceaf577ba202d  inc/hs_template.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
 78c3a4e157cff752778a59810cd4aaaa  inc/mailer.php
-52389ed4688a3bdafe9127e3186332a7  inc/market.php
+62449008ee7a431533d43a6d08fc26d2  inc/market.php
 ea0157ed3088c193eaa5a6c26bc6ee88  inc/market_card_render.php
 8cbafc77cf112085f0ded498a8189db6  inc/market_data.php
 ae0713d20f54f9fa6736fac6f59bdba0  inc/market_feed.php
@@ -113,7 +113,7 @@ aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 03b2a77e2a597f13fc056728330747f0  portal/general.php
 1a848496d229059a6f0a0990bd565175  portal/hotsheets.php
 6bd2ee585e004b943476efe24c910016  portal/index.php
-066400904139b5d5cf302dad837819c7  portal/market.php
+7eb83c3fc68c3e762f9578680ff9f245  portal/market.php
 6e25e50cfac2e6689da36e4ead4aee68  portal/market_export.php
 d11b1b570b09764e3a760efe4c66ad9b  portal/market_post.php
 9a09ec5ad2d6fe7e47f548392f60550c  portal/market_render.php
@@ -156,5 +156,5 @@ df9c9acc1b520b4ccd5374a16a4a5b94  users.php
 6f6b2473b55a68a0e144ec9c163b2154  inc/accounting_mail.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
-eedcbbeabe7e006e5d0b078944a6fb87  inc/market_flyer_render.php
+dd828c19260e7fae118a7a8c281f2ec0  inc/market_flyer_render.php
 bab7ce78c6827745173aa89859f1ceae  portal/market_flyer.php

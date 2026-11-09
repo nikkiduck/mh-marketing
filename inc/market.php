@@ -22,7 +22,7 @@ require_once __DIR__ . '/boards.php';              // mk_areas(): the Communitie
  * exists either way (the admin pages set none of their own).
  */
 /** The Market Report PDF flyer (portal/market_flyer.php): false = admins only, no button for agents, until Nikki has reviewed the style (2026-11-08). */
-const MARKET_FLYER_LIVE = false;
+const MARKET_FLYER_LIVE = true;   // live for agents since 2026-11-09 (Nikki approved the style: "we're good")
 
 function market_gate(mysqli $conn): ?array {
     require_login();
