@@ -3196,6 +3196,67 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   aligned with `frames[]`; the tile's number badge reads "2 L" / "3 M" for
   what the frame will carry.
 
+### Digital Ads (PROTOTYPE, super admin only, 2026-11-09)
+
+Nikki's question: could the portal replace InDesign for the newspapers' web
+ads (Vail Daily, Aspen Daily News: property ads as 2 to 5 slide animated
+GIFs, corporate ads as single JPGs, every file under 1 MB; the current set
+is in `Mont Haus Master/Advertising/Nov Current Ads`)? Verdict: yes as a
+hybrid, the portal for the recurring property and RoS sets in the standard
+sizes, InDesign for one-offs. The prototype, a card on social_media.php
+("Digital Ads (prototype)"; `plan_gate()`, so super_admin):
+
+- `template_ad.php` + `inc/ads_body.php`: the slides previewed across the
+  top at the ad's proportions (click one to work on it), the controls under
+  them: the listing (plan_listings(), the whole feed), the broker (auto from
+  the listing's agent words until picked by hand, `ads_agent_for_listing()`),
+  a file-name prefix (the outlet: VD, ADN) and seconds per slide; the words
+  (headline slide 1, Enter = second line, blank = the short address leads;
+  slide 2 = a second headline + the price line, blank = the price leads; slide
+  3 = Presented by: headshot, name, phone from `cell_phone` else
+  `mls_phone`, monthaus.com); the photos (plan_photos.php?kind=property, a
+  click puts the photo on the ACTIVE slide, badges show which slide uses
+  which, one framer with drag + zoom per slide, posted BY KIND:
+  `photo[headline]`, `zoom[price]` …) and a panel texture (ads_textures(),
+  stock photos ghosted grayscale behind the words; the InDesign ads use a
+  mountain photo the same way).
+- `inc/ads_render.php` (standalone): ONE size, 970 x 250, `ads_sizes()` is
+  where the others go, each with its own layout numbers (a 320 x 50 cannot
+  hold what a marquee holds). Photo left half, charcoal panel right
+  (`ads_palette()`: the website's footer #2b3038, light slate #aebbcc for
+  the capitals, Jost), headline 300 weight fitted by length, address in the
+  short form + city in spaced capitals (`ads_address_caps()`), "5 BEDS | 6
+  BATHS | 3,074 SF" (`ads_specs_caps()`), the white stacked logo lower right.
+  The export reads the logo, the texture, an upload and the headshot from
+  disk (file://): the https logo came up as a broken image in the first
+  server render.
+- `inc/ads_export.php` (standalone): `ads_export_png()` is the Instagram
+  export's Chromium command with the ad's window size and a device scale
+  factor (same lock); `ads_build_gif()` is Imagick: each frame quantised
+  (dither), the hold in 1/100 s, iterations 0 (loops for ever),
+  optimizeImageLayers; `ads_export_gif()` tries 256, 192, 128, 96, 64
+  colours until the file is under ADS_GIF_MAX (1,000,000 bytes) and reports
+  what it landed on; `ads_export_slides_zip()` writes each slide at 2x
+  (1940 x 500) as a quality-92 JPG into a ZIP, for Photoshop (Nikki: "so if
+  I choose I can port into Photoshop for gif creation").
+- `ad_render.php` (one slide as HTML), `ad_export.php` (`export` = gif |
+  slides; `probe` = 1 → JSON with the bytes, colours and whether it fits,
+  for the Check GIF size button; copies kept under
+  CREATIVES_DIR/social/admin-<user id>/). Files are named
+  `{prefix}_{short-address-slug}_{size}.gif` / `_slides-2x.zip`.
+- Harness: `tests/render_ads_sample.php [outdir] [base] [--gif]`; with --gif
+  on the server it makes the PNG frames, the GIF and the ZIP (3 frames 4.5
+  s, GIF 5.5 s, ZIP 6 s on 2026-11-09; a 3-slide marquee is about 470 KB at
+  256 colours).
+- Not built yet (the plan, if Nikki goes on): the other six sizes (300x250,
+  728x90, 970x90, 320x100, 320x50, 1920x400 Impact) with per-size layouts and
+  frame rules, the RoS agents ad, the corporate single-image JPG ads with
+  saved taglines, saved ad sets with a Download All, attaching an export to
+  the agent's placement on the Advertising tab, the parallax units (left in
+  InDesign), and the mountain texture from the InDesign files (not in the
+  repo; a stock photo stands in).
+
+
 ## Upcoming projects (not started)
 
 - **Retire the frozen Spark-era roster views.** `office_roster` / `mh_brokers`
