@@ -704,6 +704,9 @@ function e($v): string { return htmlspecialchars((string)$v, ENT_QUOTES); }
         <?php if (is_super_admin()): // users.php admits super admins only; until 2026-10-08 nothing linked to it ?>
         <a class="btn btn-outline btn-sm" href="users.php" title="Portal logins: who may sign in, their role, and which marketing account they see"><i class="ti ti-key"></i> Users</a>
         <?php endif; ?>
+        <?php if (is_super_admin()): // Nikki, 2026-11-10: a way to MH Send (newsletters, B2B) from this screen. Super admins only, as its home page and Newsletters are; agents reach the B2B tool from their own portal menu. ?>
+        <a class="btn btn-outline btn-sm" href="https://send.monthaus.com/" target="_blank" rel="noopener" title="MH Send: newsletters, mailing lists and the B2B tool (opens in a new tab; same Microsoft sign-in)"><i class="ti ti-send"></i> MH Send</a>
+        <?php endif; ?>
         <?php // Anyprop Feed / Spark Feed buttons removed 2026-10-06 (Nikki); the
               // probe page anyprop_debug.php still answers by URL (spark_debug.php was
               // deleted 2026-10-19 with the rest of Spark). ?>
