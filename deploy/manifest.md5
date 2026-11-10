@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-09 14:44 from git HEAD
+# Generated 2026-11-10 15:44 from git HEAD
 2196e5d6ef26e6ccdb81432b1cf246ca  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
 2d993b43632fe710477877826cf5e8d3  agent.php
@@ -91,7 +91,7 @@ b61906846907a3ab02607008800f38ad  inc/social.php
 7848a7ea81a9e1ffec65fdae2e65073f  inc/social_body.php
 f43eceb0cdc1af2bb48fa6f48cf01549  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-dd3d8276c5c8aaafe7e466d7c1280e6f  index.php
+6edc0c431e2d1b548a80b104c15a2381  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php
 0f76181f22712da050ea376c236e2301  leadership.php
 1d44947a95310027842c984a8020ac42  login.php
