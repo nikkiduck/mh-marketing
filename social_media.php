@@ -18,7 +18,7 @@ $cards = [
     ['Broker Feature', 'template_broker.php', 'Spotlight a broker tied to their market with one of the plan\'s hooks, or a milestone: their cutout in front of a location photo under the slate veil.', 'Make a feature ›'],
     ['Location Feature', 'template_location.php', 'An office, an area or a town: the office or a view, the brokers based there with their faces in a row, or a local real estate angle.', 'Make a feature ›'],
     ['Branding Story', 'template_branding.php', 'The seasonal taglines on a mountain photo, centred, with the logo. Two a week in the plan.', 'Make a story ›'],
-    ['Digital Ads (prototype)', 'template_ad.php', 'A property ad for the Vail Daily and Aspen Daily News sites: 970 x 250, two or three slides as a looping GIF under 1 MB, or the slides as 2x JPGs for Photoshop. Prototype, 2026-11-09.', 'Make an ad ›'],   // not social media, but Nikki\'s area (super admin) is where the admin-only tools live
+    ['Digital Ads (prototype)', 'template_ad.php', 'A property ad for the Vail Daily and Aspen Daily News sites in seven sizes: two or three slides as a looping GIF under 1 MB, or the slides as 2x JPGs for Photoshop. Prototype, 2026-11-09.', 'Make an ad ›'],   // not social media, but Nikki\'s area (super admin) is where the admin-only tools live
 ];
 
 admin_tool_header([

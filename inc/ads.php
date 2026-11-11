@@ -94,13 +94,18 @@ function ads_from_request(mysqli $conn, array $ctx, array $in): array|string {
 
     // Each slide's photo and framing are posted BY KIND (photo[headline], zoom[price], …), so a slide keeps its photo
     // when another slide is switched off.
+    // The sizes with a photo either side of the panel (970 x 90, the Impact) take a second one per slide: photo2[kind] …
     $photos = (array)($in['photo'] ?? []); $zooms = (array)($in['zoom'] ?? []); $fxs = (array)($in['fx'] ?? []); $fys = (array)($in['fy'] ?? []);
+    $photos2 = (array)($in['photo2'] ?? []); $zooms2 = (array)($in['zoom2'] ?? []); $fxs2 = (array)($in['fx2'] ?? []); $fys2 = (array)($in['fy2'] ?? []);
     $frames = [];
     foreach ($kinds as $kind) {
         [$url, $file] = plan_photo($ctx, (string)($photos[$kind] ?? ''), $listing);
+        [$url2, $file2] = (string)($photos2[$kind] ?? '') !== '' ? plan_photo($ctx, (string)$photos2[$kind], $listing) : ['', null];   // blank = the first photo again
         $frames[] = [
             'kind' => $kind, 'photo_url' => $url, 'photo_file' => $file,
             'zoom' => max(1.0, min(3.0, (float)($zooms[$kind] ?? 1))), 'fx' => max(0, min(100, (int)($fxs[$kind] ?? 50))), 'fy' => max(0, min(100, (int)($fys[$kind] ?? 50))),
+            'photo2_url' => $url2, 'photo2_file' => $file2,
+            'zoom2' => max(1.0, min(3.0, (float)($zooms2[$kind] ?? 1))), 'fx2' => max(0, min(100, (int)($fxs2[$kind] ?? 50))), 'fy2' => max(0, min(100, (int)($fys2[$kind] ?? 50))),
             'headline' => $kind === 'price' ? $h2 : ($kind === 'headline' ? $h1 : ''),
             'price' => $kind === 'price' ? $price : '',
         ];
@@ -118,6 +123,7 @@ function ads_from_request(mysqli $conn, array $ctx, array $in): array|string {
     return [
         'size' => $size, 'share' => $share, 'texture' => $texture, 'hold' => $hold, 'prefix' => $prefix,
         'listing' => $listing, 'agents' => $ags, 'frames' => $frames, 'preview' => $preview,
+        'name_base' => $prefix . '_' . ads_slug((string)$listing['address']),
         'name' => $prefix . '_' . ads_slug((string)$listing['address']) . '_' . $size,
     ];
 }

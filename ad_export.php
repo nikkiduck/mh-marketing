@@ -1,9 +1,10 @@
 <?php
 /**
  * ad_export.php — a digital ad as a download. POST (the builder form, with
- * csrf_token): `export` = gif → the animated GIF (Chromium frame by frame,
- * Imagick; under 1 MB where it can, see inc/ads.php); `export` = slides →
- * a ZIP of the slides as 2x JPGs for Photoshop. `probe` = 1 → JSON {bytes,
+ * csrf_token, `size` = which ad size): `export` = gif → the animated GIF
+ * (Chromium frame by frame, Imagick; under 1 MB where it can, see
+ * inc/ads_export.php); `export` = slides → a ZIP of the slides as 2x JPGs
+ * for Photoshop; `export` = all → every size's GIF in one ZIP with sizes.txt. `probe` = 1 → JSON {bytes,
  * colors, frames, fits, text} with what the GIF would weigh, for the size
  * readout, nothing downloaded. A copy of each download is kept under
  * CREATIVES_DIR/social/admin-<user id>/. Super admin only.
@@ -28,8 +29,8 @@ if ($probe) {
     $g = ads_export_gif($ad);
     if ($g === null) { echo json_encode(['error' => 'The GIF could not be made. Try again in a minute.']); exit; }
     unset($g['gif']);
-    $g['text'] = ads_bytes_text($g['bytes']) . ' at ' . $g['colors'] . ' colours, ' . $g['frames'] . ' slide' . ($g['frames'] === 1 ? '' : 's') . ' x ' . rtrim(rtrim(number_format($ad['hold'], 1), '0'), '.') . ' s'
-               . ($g['fits'] ? '' : ' (over the 1 MB cap even at ' . $g['colors'] . ' colours: drop a slide or try a plainer texture)');
+    $g['text'] = str_replace('x', ' x ', $ad['size']) . ': ' . ads_bytes_text($g['bytes']) . ' at ' . $g['how'] . ', ' . $g['frames'] . ' slide' . ($g['frames'] === 1 ? '' : 's') . ' x ' . rtrim(rtrim(number_format($ad['hold'], 1), '0'), '.') . ' s'
+               . ($g['fits'] ? '' : ' (over the 1 MB cap even so: drop a slide)');
     echo json_encode($g);
     exit;
 }
@@ -49,6 +50,20 @@ if ($what === 'slides') {
     exit;
 }
 
+if ($what === 'all') {
+    $zip = ads_export_all_zip($ad);
+    if ($zip === null) portal_stop('The set could not be made', 'Something went wrong making the GIFs. Please try again in a minute.');
+    $name = $ad['name_base'] . '_all-sizes.zip';
+    social_keep_copy($ctx, $name, $zip);
+    header('Content-Type: application/zip');
+    header('Content-Length: ' . strlen($zip));
+    header('Content-Disposition: attachment; filename="' . $name . '"');
+    header('Cache-Control: no-store');
+    header('X-Robots-Tag: noindex');
+    echo $zip;
+    exit;
+}
+
 $g = ads_export_gif($ad);
 if ($g === null) portal_stop('The GIF could not be made', 'Something went wrong making the frames. Please try again in a minute.');
 $name = ads_filename($ad, 'gif');
@@ -58,5 +73,5 @@ header('Content-Length: ' . strlen($g['gif']));
 header('Content-Disposition: attachment; filename="' . $name . '"');
 header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex');
-header('X-Ad-Gif: ' . $g['bytes'] . ' bytes, ' . $g['colors'] . ' colors' . ($g['fits'] ? '' : ', over cap'));
+header('X-Ad-Gif: ' . $g['bytes'] . ' bytes, ' . $g['how'] . ($g['fits'] ? '' : ', over cap'));
 echo $g['gif'];

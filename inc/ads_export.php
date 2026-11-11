@@ -13,8 +13,22 @@ require_once __DIR__ . '/ads_render.php';
 if (!defined('SOCIAL_CHROMIUM')) define('SOCIAL_CHROMIUM', '/usr/bin/chromium');
 const ADS_SLIDE_SCALE = 2;   // the Photoshop slides: 2x (1940 x 500 for the marquee)
 
-/** The GIF colour steps tried, in order, until the file fits ADS_GIF_MAX. */
-function ads_color_steps(): array { return [256, 192, 128, 96, 64]; }
+/**
+ * The GIF settings tried, in order, until the file fits ADS_GIF_MAX: [colours,
+ * dither]. Fewer colours first, then the same without dither, which packs far
+ * smaller (flat areas compress) at the cost of banding in skies; the big
+ * Impact unit is the only size that gets that far.
+ */
+function ads_gif_steps(): array {
+    return [[256, true], [192, true], [128, true], [96, true], [64, true], [128, false], [64, false], [32, false]];
+}
+
+/** The ad as it is for another size: the size and the file name follow. */
+function ads_for_size(array $ad, string $size): array {
+    $ad['size'] = isset(ads_sizes()[$size]) ? $size : '970x250';
+    $ad['name'] = ($ad['name_base'] ?? 'MH_ad') . '_' . $ad['size'];
+    return $ad;
+}
 
 /**
  * One slide screenshotted by headless Chromium at $scale device pixels per
@@ -29,13 +43,16 @@ function ads_export_png(string $html, int $w, int $h, int $scale = 1): ?string {
     $in  = "{$dir}/{$id}.html";
     $out = "{$dir}/{$id}.png";
     if (file_put_contents($in, $html) === false) { error_log('ads_export: cannot write ' . $in); return null; }
+    // A short window comes back wrong from headless Chromium (the 90- and 100-high strips were blank but for a sliver,
+    // 2026-11-11), so the window is never smaller than 600 x 400 and the picture is cut back to the ad afterwards.
+    $ww = max((int)$w, 600); $wh = max((int)$h, 400);
     $lock = fopen("{$dir}/.lock", 'c');
     if ($lock) flock($lock, LOCK_EX);
     set_time_limit(120);
     $cmd = 'HOME=' . escapeshellarg($dir) . ' /usr/bin/timeout 60 ' . escapeshellarg(SOCIAL_CHROMIUM)
          . ' --headless=new --no-sandbox --disable-gpu --disable-dev-shm-usage --hide-scrollbars --no-first-run'
          . ' --disable-extensions --mute-audio --force-device-scale-factor=' . (int)$scale
-         . ' --window-size=' . (int)$w . ',' . (int)$h . ' --virtual-time-budget=10000'
+         . ' --window-size=' . $ww . ',' . $wh . ' --virtual-time-budget=10000'
          . ' --user-data-dir=' . escapeshellarg("{$dir}/profile")
          . ' --screenshot=' . escapeshellarg($out) . ' ' . escapeshellarg('file://' . $in) . ' 2>&1';
     exec($cmd, $lines, $rc);
@@ -46,6 +63,17 @@ function ads_export_png(string $html, int $w, int $h, int $scale = 1): ?string {
     if ($png === false || $png === '') {
         error_log('ads_export: chromium rc=' . $rc . ' ' . implode(' | ', array_slice($lines, -3)));
         return null;
+    }
+    if ($ww !== (int)$w || $wh !== (int)$h) {
+        try {
+            $im = new Imagick();
+            $im->readImageBlob($png);
+            $im->cropImage((int)$w * (int)$scale, (int)$h * (int)$scale, 0, 0);
+            $im->setImagePage(0, 0, 0, 0);
+            $im->setImageFormat('png');
+            $png = $im->getImageBlob();
+            $im->clear();
+        } catch (Throwable $e) { error_log('ads_export: crop ' . $e->getMessage()); return null; }
     }
     return $png;
 }
@@ -65,10 +93,10 @@ function ads_frame_pngs(array $ad, int $scale = 1): ?array {
 
 /**
  * The PNG frames as one animated GIF: each frame quantised to $colors (with
- * dither), held $hold seconds, the loop endless, the frames trimmed to what
+ * dither or without), held $hold seconds, the loop endless, the frames trimmed to what
  * changed. Null when Imagick is missing or fails.
  */
-function ads_build_gif(array $pngs, float $hold, int $colors): ?string {
+function ads_build_gif(array $pngs, float $hold, int $colors, bool $dither = true): ?string {
     if (!class_exists('Imagick')) { error_log('ads_export: Imagick is not available'); return null; }
     try {
         $gif = new Imagick();
@@ -77,7 +105,7 @@ function ads_build_gif(array $pngs, float $hold, int $colors): ?string {
             $f = new Imagick();
             $f->readImageBlob($png);
             $f->setImageFormat('gif');
-            $f->quantizeImage(max(8, min(256, $colors)), Imagick::COLORSPACE_RGB, 0, true, false);
+            $f->quantizeImage(max(8, min(256, $colors)), Imagick::COLORSPACE_RGB, 0, $dither, false);
             $f->setImageDelay($delay);
             $f->setImageIterations(0);
             $gif->addImage($f);
@@ -99,20 +127,49 @@ function ads_build_gif(array $pngs, float $hold, int $colors): ?string {
 
 /**
  * The ad as a GIF under ADS_GIF_MAX where possible: the frames once, then
- * each colour step until it fits. ['gif' => bytes, 'bytes' => n, 'colors' =>
- * n, 'fits' => bool, 'frames' => n], or null when the frames could not be made.
+ * each step of ads_gif_steps() until it fits. ['gif' => bytes, 'bytes' => n,
+ * 'colors' => n, 'dither' => bool, 'how' => "128 colours" | "64 colours, no
+ * dither", 'fits' => bool, 'frames' => n], or null when the frames could not
+ * be made.
  */
 function ads_export_gif(array $ad): ?array {
     $pngs = ads_frame_pngs($ad, 1);
     if ($pngs === null) return null;
     $best = null;
-    foreach (ads_color_steps() as $colors) {
-        $gif = ads_build_gif($pngs, (float)$ad['hold'], $colors);
+    foreach (ads_gif_steps() as [$colors, $dither]) {
+        $gif = ads_build_gif($pngs, (float)$ad['hold'], $colors, $dither);
         if ($gif === null) return null;
-        $best = ['gif' => $gif, 'bytes' => strlen($gif), 'colors' => $colors, 'fits' => strlen($gif) <= ADS_GIF_MAX, 'frames' => count($pngs)];
+        $best = ['gif' => $gif, 'bytes' => strlen($gif), 'colors' => $colors, 'dither' => $dither, 'how' => $colors . ' colours' . ($dither ? '' : ', no dither'),
+                 'fits' => strlen($gif) <= ADS_GIF_MAX, 'frames' => count($pngs)];
         if ($best['fits']) break;
     }
     return $best;
+}
+
+/**
+ * Every size's GIF in one ZIP, with sizes.txt listing what each weighs and
+ * how it was made to fit. About 5 s a size, longer for the Impact. Null when
+ * any size failed or ZipArchive is missing.
+ */
+function ads_export_all_zip(array $ad): ?string {
+    if (!class_exists('ZipArchive')) { error_log('ads_export: ZipArchive is not available'); return null; }
+    $tmp = tempnam(sys_get_temp_dir(), 'mh-ads-');
+    $zip = new ZipArchive();
+    if ($zip->open($tmp, ZipArchive::OVERWRITE) !== true) { @unlink($tmp); return null; }
+    set_time_limit(600);
+    $list = [];
+    foreach (ads_sizes() as $size => $S) {
+        $a = ads_for_size($ad, $size);
+        $g = ads_export_gif($a);
+        if ($g === null) { $zip->close(); @unlink($tmp); return null; }
+        $zip->addFromString(ads_filename($a, 'gif'), $g['gif']);
+        $list[] = sprintf('%-48s %10s  %s%s', ads_filename($a, 'gif'), ads_bytes_text($g['bytes']), $g['how'], $g['fits'] ? '' : '  OVER 1 MB');
+    }
+    $zip->addFromString('sizes.txt', implode("\n", $list) . "\n");
+    $zip->close();
+    $bytes = (string)file_get_contents($tmp);
+    @unlink($tmp);
+    return $bytes !== '' ? $bytes : null;
 }
 
 /**

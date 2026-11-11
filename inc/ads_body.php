@@ -1,9 +1,11 @@
 <?php
 /**
- * inc/ads_body.php — the Digital Ads builder (prototype, 2026-11-09): the
- * slides previewed across the top at the ad's own proportions, the controls
- * under them. Nothing is drawn here but the controls: each preview is
- * ad_render.php's HTML in an iframe, scaled to fit.
+ * inc/ads_body.php — the Digital Ads builder (prototype, 2026-11-09; seven
+ * sizes since 2026-11-11): the size switch, then the previews at the ad's
+ * own proportions (All sizes: one slide in every size; a single size: its
+ * slides one under another), then the controls. Nothing is drawn here but
+ * the controls: each preview is ad_render.php's HTML in an iframe, never
+ * shown larger than life.
  *
  * Expects: $ctx (the admin's social context), $csrf, $ad_listings
  * (plan_listings()), $ad_agents (plan_agents()), $ad_phones
@@ -12,23 +14,30 @@
  */
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $kinds = ads_frame_kinds();
-$S = ads_size('970x250');
+$boxes = ads_size_boxes();
 ?>
   <form id="adForm" class="ad-form" method="post" action="<?= $e($export_url) ?>" autocomplete="off">
     <input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>">
     <input type="hidden" name="size" value="970x250">
-    <?php foreach ($kinds as $k => $t): ?>
-    <input type="hidden" name="photo[<?= $e($k) ?>]" value=""><input type="hidden" name="zoom[<?= $e($k) ?>]" value="1"><input type="hidden" name="fx[<?= $e($k) ?>]" value="50"><input type="hidden" name="fy[<?= $e($k) ?>]" value="50">
-    <?php endforeach; ?>
+    <?php foreach ($kinds as $k => $t): foreach (['', '2'] as $sfx): ?>
+    <input type="hidden" name="photo<?= $sfx ?>[<?= $e($k) ?>]" value=""><input type="hidden" name="zoom<?= $sfx ?>[<?= $e($k) ?>]" value="1"><input type="hidden" name="fx<?= $sfx ?>[<?= $e($k) ?>]" value="50"><input type="hidden" name="fy<?= $sfx ?>[<?= $e($k) ?>]" value="50">
+    <?php endforeach; endforeach; ?>
 
-    <div class="ad-stages" id="adStages">
-      <?php $n = 1; foreach ($kinds as $k => $t): ?>
-      <div class="ad-stage<?= $k === 'headline' ? ' act' : '' ?>" data-kind="<?= $e($k) ?>" title="Click to work on this slide">
-        <div class="ad-stage-l"><b><?= $n++ ?></b> <?= $e($t) ?></div>
-        <div class="ad-stage-box"><iframe title="<?= $e($t) ?>" width="<?= (int)$S['w'] ?>" height="<?= (int)$S['h'] ?>" scrolling="no"></iframe><div class="ad-busy"></div></div>
+    <div class="ad-bar">
+      <div class="ad-pills" id="adSizes">
+        <button type="button" class="ad-pill on" data-size="all">All sizes</button>
+        <?php foreach ($boxes as $k => $b): ?>
+        <button type="button" class="ad-pill" data-size="<?= $e($k) ?>" title="<?= $e($b['name']) ?>"><?= $e(str_replace('x', ' × ', $k)) ?></button>
+        <?php endforeach; ?>
       </div>
-      <?php endforeach; ?>
+      <div class="ad-pills" id="adSlides">
+        <span class="ad-pills-l">Slide</span>
+        <?php $n = 1; foreach ($kinds as $k => $t): ?>
+        <button type="button" class="ad-pill<?= $k === 'headline' ? ' on' : '' ?>" data-kind="<?= $e($k) ?>"><b><?= $n++ ?></b> <?= $e($t) ?></button>
+        <?php endforeach; ?>
+      </div>
     </div>
+    <div class="ad-stages" id="adStages"></div>
 
     <div class="ad-grid">
       <div class="ad-col">
@@ -88,21 +97,27 @@ $S = ads_size('970x250');
             </label>
           </div>
           <label class="sp-check"><input type="checkbox" name="frame_agent" value="1" checked> Slide 3: Presented by the broker(s) (headshot, name, phone)</label>
+          <p class="sp-note" style="margin-top:12px">The strips set the headline on one line. The 320 × 50 has room for two lines only: its second slide always leads with the price.</p>
         </section>
       </div>
 
       <div class="ad-col">
         <section class="sp-step">
           <h2 class="sp-step-h">Photos</h2>
-          <p class="sp-note">Click a slide above, then a photo to put it on that slide. Drag and zoom to frame it.</p>
+          <p class="sp-note">Pick a slide, then a photo to put it on that slide. Drag and zoom to frame it; the framing carries to every size.</p>
+          <div class="sp-look" id="adSide">
+            <span class="sp-look-l">Which photo</span>
+            <label class="sp-pillopt"><input type="radio" name="_side" value="" checked><span>Left</span></label>
+            <label class="sp-pillopt"><input type="radio" name="_side" value="2"><span>Right (970 × 90 and Impact)</span></label>
+          </div>
           <div class="sp-look">
-            <span class="sp-look-l">Photo width</span>
+            <span class="sp-look-l">Photo width, Marquee</span>
             <?php foreach (ads_shares() as $k => $t): ?>
             <label class="sp-pillopt"><input type="radio" name="share" value="<?= $e($k) ?>"<?= $k === ADS_SHARE_DEFAULT ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
             <?php endforeach; ?>
           </div>
           <div class="sp-framing" style="margin-top:14px">
-            <div class="sp-framer empty ad-framer" id="adFramer" style="aspect-ratio:<?= (int)round($S['w'] * (int)ADS_SHARE_DEFAULT / 100) ?> / <?= (int)$S['h'] ?>"><img id="adFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
+            <div class="sp-framer empty ad-framer" id="adFramer"><img id="adFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
             <label class="sp-zoom">Zoom <input type="range" id="adZoom" min="1" max="3" step="0.02" value="1"></label>
           </div>
           <div class="sp-photos ad-photos" id="adPhotos"><div class="sp-wait">Loading photos…</div></div>
@@ -118,11 +133,12 @@ $S = ads_size('970x250');
         <section class="sp-step">
           <h2 class="sp-step-h">Download</h2>
           <div class="sp-actions">
-            <button type="submit" class="sp-btn" name="export" value="gif" id="adDlGif">Download GIF</button>
-            <button type="submit" class="sp-btn sp-btn-soft" name="export" value="slides">Download slides (JPG, 2x)</button>
-            <button type="button" class="sp-btn sp-btn-soft" id="adProbe">Check GIF size</button>
+            <button type="submit" class="sp-btn" name="export" value="all">Download all sizes (ZIP)</button>
+            <button type="submit" class="sp-btn sp-btn-soft ad-one" name="export" value="gif">Download GIF</button>
+            <button type="submit" class="sp-btn sp-btn-soft ad-one" name="export" value="slides">Download slides (JPG, 2x)</button>
+            <button type="button" class="sp-btn sp-btn-soft ad-one" id="adProbe">Check GIF size</button>
           </div>
-          <p class="sp-help" id="adSize">The GIF is 970 × 250, looping, each slide held the seconds above; it is kept under 1 MB by dropping colours. The slides ZIP holds each slide as a 1940 × 500 JPG for Photoshop. Each takes about ten seconds to make.</p>
+          <p class="sp-help" id="adSize"></p>
         </section>
       </div>
     </div>
@@ -134,108 +150,147 @@ $S = ads_size('970x250');
   const f = n => form.querySelector('[name="' + n + '"]');
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>;
-  const KINDS = <?= json_encode(array_keys($kinds)) ?>;
-  const W = <?= (int)$S['w'] ?>, H = <?= (int)$S['h'] ?>;
-  const stages = Array.from(document.querySelectorAll('.ad-stage'));
-  const photos = document.getElementById('adPhotos');
+  const KINDS = <?= json_encode(array_keys($kinds)) ?>, KIND_NAMES = <?= json_encode($kinds) ?>;
+  const SIZES = <?= json_encode($boxes) ?>;   // key → {name, w, h, layout, pw (0 = from the Photo width choice), ph}
+  const stagesEl = document.getElementById('adStages'), sizePills = document.getElementById('adSizes'), slidePills = document.getElementById('adSlides');
+  const photos = document.getElementById('adPhotos'), sideRow = document.getElementById('adSide');
   const framer = document.getElementById('adFramer'), fimg = document.getElementById('adFramerImg'), zoomCtl = document.getElementById('adZoom');
   const sizeOut = document.getElementById('adSize');
-  let act = 'headline', tiles = [], agentTouched = false;
+  let mode = 'all', act = 'headline', tiles = [], agentTouched = false;
+  const HELP = {
+    all: 'All sizes: one ZIP with the seven GIFs, each kept under 1 MB, and a list of what each weighs. It takes about a minute. Pick one size above to download it alone, as a GIF or as 2x JPG slides for Photoshop.',
+    one: 'The GIF loops, each slide held the seconds above, and is kept under 1 MB by dropping colours. The slides ZIP holds each slide at twice the size as a JPG, for Photoshop. Each takes about ten seconds.',
+  };
 
-  // ── Which slides are on ──
+  // ── Which slides are on; which photo (left or right) the tiles and the framer work on ──
   const on = k => k === 'headline' || (k === 'price' ? f('frame_price').checked : (f('frame_agent').checked && (f('agent').value !== '0' || f('agent2').value !== '0')));
   const visible = () => KINDS.filter(on);
-  function syncSlides() {
-    stages.forEach(s => { s.hidden = !on(s.dataset.kind); });
-    form.querySelectorAll('.ad-only-price').forEach(el => el.hidden = !f('frame_price').checked);
-    if (!on(act)) setActive('headline');
-    stages.filter(s => !s.hidden).forEach((s, i) => { s.querySelector('.ad-stage-l b').textContent = i + 1; });
-  }
+  const cur = () => mode === 'all' ? '970x250' : mode;                      // the size the framer is shaped for
+  const twoSided = () => mode === 'all' || SIZES[mode].layout === 'tri';
+  const side = () => twoSided() ? (form.querySelector('input[name="_side"]:checked') || {}).value || '' : '';
+  const fld = (n, k) => f(n + side() + '[' + (k || act) + ']');
 
-  // ── Previews: one fetch per visible slide, the same form plus its position ──
+  // ── The previews ──
+  function buildStages() {
+    const list = mode === 'all' ? Object.keys(SIZES).map(s => ({ size: s, kind: act, label: SIZES[s].name + '  ·  ' + s.replace('x', ' × ') }))
+                                : visible().map((k, i) => ({ size: mode, kind: k, label: '<b>' + (i + 1) + '</b> ' + esc(KIND_NAMES[k]) }));
+    stagesEl.innerHTML = list.map(s => {
+      const b = SIZES[s.size];
+      return '<div class="ad-stage' + (mode !== 'all' && s.kind === act ? ' act' : '') + '" data-size="' + s.size + '" data-kind="' + s.kind + '" title="' + (mode === 'all' ? 'Click to work on this size' : 'Click to work on this slide') + '">'
+           + '<div class="ad-stage-l">' + s.label + '</div>'
+           + '<div class="ad-stage-box" style="max-width:' + b.w + 'px"><iframe title="Preview" width="' + b.w + '" height="' + b.h + '" style="width:' + b.w + 'px;height:' + b.h + 'px" scrolling="no"></iframe><div class="ad-busy"></div></div></div>';
+    }).join('');
+    scale(); render();
+  }
   let timer, seq = 0;
   function update() { clearTimeout(timer); timer = setTimeout(render, 250); }
   async function render() {
     const n = ++seq, vis = visible();
-    await Promise.all(stages.filter(s => !s.hidden).map(async s => {
+    await Promise.all(Array.from(stagesEl.children).map(async s => {
       const i = vis.indexOf(s.dataset.kind); if (i < 0) return;
       const busy = s.querySelector('.ad-busy'); busy.classList.add('on');
       try {
-        const fd = new FormData(form); fd.set('frame', String(i));
+        const fd = new FormData(form); fd.set('size', s.dataset.size); fd.set('frame', String(i));
         const r = await fetch(RENDER, { method: 'POST', body: fd, credentials: 'same-origin' });
         const html = await r.text();
-        if (n === seq) s.querySelector('iframe').srcdoc = html;
+        if (n === seq && s.isConnected) s.querySelector('iframe').srcdoc = html;
       } catch (e) { /* the previous preview stays */ }
       finally { if (n === seq) busy.classList.remove('on'); }
     }));
   }
   function scale() {
-    stages.forEach(s => {
-      const box = s.querySelector('.ad-stage-box'), w = box.clientWidth; if (!w) return;
-      s.querySelector('iframe').style.transform = 'scale(' + (w / W) + ')';
-      box.style.height = Math.round(H * w / W) + 'px';
+    Array.from(stagesEl.children).forEach(s => {
+      const b = SIZES[s.dataset.size], box = s.querySelector('.ad-stage-box'), w = box.clientWidth; if (!w) return;
+      s.querySelector('iframe').style.transform = 'scale(' + (w / b.w) + ')';
+      box.style.height = Math.round(b.h * w / b.w) + 'px';
     });
   }
-  new ResizeObserver(scale).observe(document.getElementById('adStages')); scale();
+  new ResizeObserver(scale).observe(stagesEl);
 
-  // ── The active slide ──
-  function setActive(k) {
-    act = k;
-    stages.forEach(s => s.classList.toggle('act', s.dataset.kind === k));
-    const id = f('photo[' + k + ']').value, t = tiles.find(p => p.id === id);
-    framerShow(t ? t.large : '');
-    photos.querySelectorAll('.sp-photo').forEach(el => el.classList.toggle('on', el.dataset.id === id));
+  // ── Size and slide ──
+  function setMode(m) {
+    mode = m;
+    sizePills.querySelectorAll('.ad-pill').forEach(p => p.classList.toggle('on', p.dataset.size === m));
+    f('size').value = cur();
+    form.querySelectorAll('.ad-one').forEach(b => b.disabled = m === 'all');
+    sideRow.hidden = !twoSided();
+    sizeOut.textContent = m === 'all' ? HELP.all : HELP.one; sizeOut.classList.remove('bad');
+    shapeFramer(); setActive(act, true);
   }
-  stages.forEach(s => s.addEventListener('click', () => setActive(s.dataset.kind)));
+  function setActive(k, rebuild) {
+    if (!on(k)) k = 'headline';
+    act = k;
+    slidePills.querySelectorAll('.ad-pill').forEach(p => { p.classList.toggle('on', p.dataset.kind === k); p.hidden = !on(p.dataset.kind); });
+    visible().forEach((v, i) => { const p = slidePills.querySelector('[data-kind="' + v + '"] b'); if (p) p.textContent = i + 1; });
+    if (rebuild || mode === 'all') buildStages();
+    else Array.from(stagesEl.children).forEach(s => s.classList.toggle('act', s.dataset.kind === k));
+    framerLoad(); paintBadges();
+  }
+  sizePills.addEventListener('click', e => { const p = e.target.closest('.ad-pill'); if (p) setMode(p.dataset.size); });
+  slidePills.addEventListener('click', e => { const p = e.target.closest('.ad-pill'); if (p) setActive(p.dataset.kind); });
+  stagesEl.addEventListener('click', e => {
+    const s = e.target.closest('.ad-stage'); if (!s) return;
+    if (mode === 'all') setMode(s.dataset.size); else setActive(s.dataset.kind);
+  });
 
   // ── Photos ──
-  function badges(id) { return KINDS.filter(k => on(k) && f('photo[' + k + ']').value === id).map(k => visible().indexOf(k) + 1); }
+  function badges(id) {
+    const vis = visible(), out = [];
+    vis.forEach((k, i) => { if (f('photo[' + k + ']').value === id) out.push(String(i + 1)); if (twoSided() && f('photo2[' + k + ']').value === id) out.push((i + 1) + 'R'); });
+    return out;
+  }
   function paintBadges() {
+    const mine = fld('photo').value;
     photos.querySelectorAll('.sp-photo').forEach(el => {
-      const b = badges(el.dataset.id); el.querySelector('.ad-badge').textContent = b.join(' '); el.classList.toggle('used', b.length > 0);
-      el.classList.toggle('on', el.dataset.id === f('photo[' + act + ']').value);
+      el.querySelector('.ad-badge').textContent = badges(el.dataset.id).join(' ');
+      el.classList.toggle('on', el.dataset.id === mine);
     });
   }
+  function setPhoto(k, sfx, id) { f('photo' + sfx + '[' + k + ']').value = id; f('zoom' + sfx + '[' + k + ']').value = 1; f('fx' + sfx + '[' + k + ']').value = 50; f('fy' + sfx + '[' + k + ']').value = 50; }
   async function loadPhotos() {
     photos.innerHTML = '<div class="sp-wait">Loading photos…</div>';
     const u = new URL(PHOTOS, location.origin); u.searchParams.set('kind', 'property'); u.searchParams.set('subject', f('listing').value);
     let j = { photos: [] };
     try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
     tiles = (j.photos || []).filter(p => !p.own);
-    if (!tiles.length) { photos.innerHTML = '<div class="sp-wait">No photos for this listing.</div>'; KINDS.forEach(k => f('photo[' + k + ']').value = ''); framerShow(''); update(); return; }
-    // A fresh listing: the first three photos on the three slides, in feed order.
-    KINDS.forEach((k, i) => { setPhoto(k, (tiles[i] || tiles[0]).id); });
+    if (!tiles.length) { photos.innerHTML = '<div class="sp-wait">No photos for this listing.</div>'; KINDS.forEach(k => { setPhoto(k, '', ''); setPhoto(k, '2', ''); }); framerLoad(); update(); return; }
+    // A fresh listing: the first three photos on the three slides, in feed order, and the next three on their right-hand sides.
+    KINDS.forEach((k, i) => { setPhoto(k, '', (tiles[i] || tiles[0]).id); setPhoto(k, '2', (tiles[i + KINDS.length] || tiles[(i + 1) % tiles.length]).id); });
     photos.innerHTML = tiles.map(p => '<label class="sp-photo" data-id="' + esc(p.id) + '"' + (p.caption ? ' title="' + esc(p.caption) + '"' : '') + '><img src="' + esc(p.thumb) + '" alt="" loading="lazy"><span class="ad-badge"></span></label>').join('');
-    setActive(act); paintBadges(); update();
+    framerLoad(); paintBadges(); update();
   }
-  function setPhoto(k, id) { f('photo[' + k + ']').value = id; f('zoom[' + k + ']').value = 1; f('fx[' + k + ']').value = 50; f('fy[' + k + ']').value = 50; }
   photos.addEventListener('click', e => {
     const tile = e.target.closest('.sp-photo'); if (!tile) return;
     e.preventDefault();
-    setPhoto(act, tile.dataset.id); setActive(act); paintBadges(); update();
+    setPhoto(act, side(), tile.dataset.id); framerLoad(); paintBadges(); update();
   });
 
   // ── Framing: the same CSS the slide uses, as a control; drag and zoom write the active slide's fields ──
-  function framerShow(src) {
-    framer.classList.toggle('empty', !src); fimg.src = src || '';
-    zoomCtl.value = f('zoom[' + act + ']').value; framerApply();
+  function shapeFramer() {
+    const b = SIZES[cur()], pw = b.pw || Math.round(b.w * (+(form.querySelector('input[name="share"]:checked') || {}).value || 58) / 100);
+    framer.style.aspectRatio = pw + ' / ' + b.ph;
+  }
+  function framerLoad() {
+    const t = tiles.find(p => p.id === fld('photo').value), src = t ? t.large : '';
+    framer.classList.toggle('empty', !src); if (fimg.getAttribute('src') !== src) fimg.src = src || '';
+    zoomCtl.value = fld('zoom').value; framerApply();
   }
   function framerApply() {
-    const Z = parseFloat(f('zoom[' + act + ']').value), fx = +f('fx[' + act + ']').value, fy = +f('fy[' + act + ']').value, bw = framer.clientWidth, bh = framer.clientHeight;
+    const Z = parseFloat(fld('zoom').value), fx = +fld('fx').value, fy = +fld('fy').value, bw = framer.clientWidth, bh = framer.clientHeight;
     fimg.style.width = (Z * 100) + '%'; fimg.style.height = (Z * 100) + '%';
     fimg.style.objectPosition = fx + '% ' + fy + '%';
     fimg.style.transform = 'translate(' + (-(Z - 1) * fx / 100 * bw) + 'px,' + (-(Z - 1) * fy / 100 * bh) + 'px)';
   }
-  zoomCtl.addEventListener('input', () => { f('zoom[' + act + ']').value = zoomCtl.value; framerApply(); update(); });
+  zoomCtl.addEventListener('input', () => { fld('zoom').value = zoomCtl.value; framerApply(); update(); });
   let drag = null;
-  framer.addEventListener('pointerdown', e => { if (!fimg.getAttribute('src')) return; framer.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, fx: +f('fx[' + act + ']').value, fy: +f('fy[' + act + ']').value }; framer.classList.add('dragging'); });
+  framer.addEventListener('pointerdown', e => { if (!fimg.getAttribute('src')) return; framer.setPointerCapture(e.pointerId); drag = { x: e.clientX, y: e.clientY, fx: +fld('fx').value, fy: +fld('fy').value }; framer.classList.add('dragging'); });
   framer.addEventListener('pointermove', e => {
     if (!drag) return;
-    const Z = parseFloat(f('zoom[' + act + ']').value), bw = framer.clientWidth, bh = framer.clientHeight;
+    const Z = parseFloat(fld('zoom').value), bw = framer.clientWidth, bh = framer.clientHeight;
     const nat = (fimg.naturalWidth && fimg.naturalHeight) ? fimg.naturalWidth / fimg.naturalHeight : bw / bh;
     const ox = Math.max(1, Math.max(bw, bh * nat) * Z - bw), oy = Math.max(1, Math.max(bh, bw / nat) * Z - bh);
-    f('fx[' + act + ']').value = Math.round(Math.max(0, Math.min(100, drag.fx - (e.clientX - drag.x) / ox * 100)));
-    f('fy[' + act + ']').value = Math.round(Math.max(0, Math.min(100, drag.fy - (e.clientY - drag.y) / oy * 100)));
+    fld('fx').value = Math.round(Math.max(0, Math.min(100, drag.fx - (e.clientX - drag.x) / ox * 100)));
+    fld('fy').value = Math.round(Math.max(0, Math.min(100, drag.fy - (e.clientY - drag.y) / oy * 100)));
     framerApply(); update();
   });
   ['pointerup', 'pointercancel'].forEach(ev => framer.addEventListener(ev, () => { drag = null; framer.classList.remove('dragging'); }));
@@ -246,28 +301,38 @@ $S = ads_size('970x250');
     const want = (f('listing').selectedOptions[0] || {}).dataset.agent || '0';
     f('agent').value = f('agent').querySelector('option[value="' + want + '"]') ? want : '0';
   }
+  function syncSlides() { form.querySelectorAll('.ad-only-price').forEach(el => el.hidden = !f('frame_price').checked); setActive(act, true); }
   form.addEventListener('change', e => {
     const n = e.target.name;
     if (n === 'listing') { syncAgent(); syncSlides(); loadPhotos(); return; }
     if (n === 'agent') agentTouched = true;
-    if (n === 'share') { framer.style.aspectRatio = Math.round(W * (+e.target.value) / 100) + ' / ' + H; framerApply(); }
-    if (n === 'agent' || n === 'agent2' || n === 'frame_price' || n === 'frame_agent') { syncSlides(); paintBadges(); }
+    if (n === '_side') { framerLoad(); paintBadges(); return; }
+    if (n === 'share') { shapeFramer(); framerApply(); }
+    if (n === 'agent' || n === 'agent2' || n === 'frame_price' || n === 'frame_agent') { syncSlides(); return; }
     update();
   });
   form.addEventListener('input', e => { if (['headline', 'headline2', 'price', 'prefix', 'hold'].includes(e.target.name)) update(); });
 
   // ── The size readout: the GIF made once on the server, nothing downloaded ──
   document.getElementById('adProbe').addEventListener('click', async () => {
-    sizeOut.textContent = 'Making the GIF to weigh it (about ten seconds)…';
+    sizeOut.classList.remove('bad');
+    sizeOut.textContent = 'Making the GIF to weigh it (about ten seconds, longer for the Impact)…';
     try {
       const fd = new FormData(form); fd.set('probe', '1');
       const j = await (await fetch(EXPORT, { method: 'POST', body: fd, credentials: 'same-origin' })).json();
-      sizeOut.textContent = j.error ? j.error : ('GIF: ' + j.text + (j.fits ? '. Under the 1 MB cap.' : ''));
+      sizeOut.textContent = j.error ? j.error : (j.text + (j.fits ? '. Under the 1 MB cap.' : ''));
       sizeOut.classList.toggle('bad', !j.error && !j.fits);
     } catch (e) { sizeOut.textContent = 'The size check did not come back. Try again.'; }
   });
-  form.addEventListener('submit', e => { const b = e.submitter; if (b && b.name === 'export') sizeOut.textContent = (b.value === 'gif' ? 'Making the GIF' : 'Making the slides') + ' (about ten seconds)… the download starts when it is ready.'; });
+  form.addEventListener('submit', e => {
+    const b = e.submitter; if (!b || b.name !== 'export') return;
+    sizeOut.classList.remove('bad');
+    sizeOut.textContent = b.value === 'all' ? 'Making all seven GIFs (about a minute)… the download starts when they are ready.'
+                        : (b.value === 'gif' ? 'Making the GIF' : 'Making the slides') + ' (about ten seconds)… the download starts when it is ready.';
+  });
 
-  syncAgent(); syncSlides(); loadPhotos();
+  syncAgent();
+  form.querySelectorAll('.ad-only-price').forEach(el => el.hidden = !f('frame_price').checked);
+  setMode('all'); loadPhotos();
 })();
 </script>

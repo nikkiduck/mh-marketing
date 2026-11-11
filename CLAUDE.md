@@ -3232,9 +3232,8 @@ sizes, InDesign for one-offs. The prototype, a card on social_media.php
   `photo[headline]`, `zoom[price]` …) and a panel texture (ads_textures(),
   stock photos ghosted grayscale behind the words; the InDesign ads use a
   mountain photo the same way).
-- `inc/ads_render.php` (standalone): ONE size, 970 x 250, `ads_sizes()` is
-  where the others go, each with its own layout numbers (a 320 x 50 cannot
-  hold what a marquee holds). **Photo width is a choice (Nikki, same day:
+- `inc/ads_render.php` (standalone): the marquee first (the other six sizes
+  came on 2026-11-11, see below). **Photo width is a choice (Nikki, same day:
   "more of the photo, don't just split in half"):** `ads_shares()` Half /
   More photo (58 %, the default) / Most photo (65 %), `share` on the form;
   the words' column scales its type down as it narrows (`$k`). A fade of
@@ -3270,13 +3269,51 @@ sizes, InDesign for one-offs. The prototype, a card on social_media.php
   on the server it makes the PNG frames, the GIF and the ZIP (3 frames 4.5
   s, GIF 5.5 s, ZIP 6 s on 2026-11-09; a 3-slide marquee is about 470 KB at
   256 colours).
-- Not built yet (the plan, if Nikki goes on): the other six sizes (300x250,
-  728x90, 970x90, 320x100, 320x50, 1920x400 Impact) with per-size layouts and
-  frame rules, the RoS agents ad, the corporate single-image JPG ads with
-  saved taglines, saved ad sets with a Download All, attaching an export to
-  the agent's placement on the Advertising tab, the parallax units (left in
-  InDesign), and the mountain texture from the InDesign files (not in the
-  repo; a stock photo stands in).
+- **Seven sizes (2026-11-11, Nikki: "let's see the other sizes before I make
+  any more design decisions").** `ads_sizes()` in inc/ads_render.php is the
+  whole design per size, arranged as her InDesign set arranges each: three
+  layouts, `side` (photo left, panel right: 970x250 Marquee, 728x90, 320x100,
+  320x50), `top` (the panel across the top, the photo under it: 300x250) and
+  `tri` (a photo either side of the panel: 970x90, 1920x400 Impact); then
+  the type sizes, which lines each slide carries (the strips set the
+  headline on ONE line; the 320x100 drops the address; the 320x50 carries
+  two lines only, so its price slide always leads with the price,
+  `price_leads`), where the logo sits, and the Presented by slide for one
+  broker and for two (on the 320x50 the headshot(s) take the photo's place,
+  `head_photo`; the marquee alone swaps the stack for the M mark with two
+  brokers). The headline config key is `hl`, because `h` is the height (the
+  clash blanked every size once). Type that has no steps of its own is
+  fitted to its column by estimate (`ads_fit()`: characters x size x a
+  per-weight width measured on the marquee). The Photo width choice applies
+  to the marquee only. The two-sided sizes take a second photo per slide
+  (`photo2[kind]`, `zoom2`, `fx2`, `fy2`; blank = the first again; a fresh
+  listing puts photos 4 to 6 there). One framing per photo carries to every
+  size.
+  - **Chromium and short windows:** a headless window under about 100 px
+    high comes back blank but for a sliver (728x90, 970x90, 320x100 did;
+    320x50 did not), so `ads_export_png()` never opens one smaller than
+    600 x 400 and crops the picture back with Imagick.
+  - **Fitting 1 MB:** `ads_gif_steps()` tries 256, 192, 128, 96, 64 colours
+    with dither, then 128, 64, 32 without (far smaller, banding in skies).
+    Only the Impact needs it: 904 KB at 192 colours for 221 Wrights Rd,
+    954 KB at 64 without dither for the harness's six stock aerials; every
+    other size is under 525 KB at 256.
+  - **The page** (inc/ads_body.php): size pills (All sizes + the seven) and
+    slide pills above the previews. All sizes shows the chosen slide in
+    every size, each at life size or smaller (click one to open that size);
+    a single size shows its slides one under another. Left / Right picks
+    which photo the tiles and the framer work on. Downloads: all sizes as
+    one ZIP of GIFs with sizes.txt (`ads_export_all_zip()`, about 50 s;
+    `export` = all), or one size's GIF, 2x JPG slides or weight check.
+  - Harness: `tests/render_ads_sample.php [outdir] [base] [--png] [--gif]
+    [--all] [--size=]`, every size and slide, the two-broker and
+    blank-headline variants.
+- Not built yet (the plan, if Nikki goes on): the RoS agents ad, the
+  corporate single-image JPG ads with saved taglines, saved ad sets,
+  attaching an export to the agent's placement on the Advertising tab, the
+  parallax units (left in InDesign), and the mountain texture from the
+  InDesign files (not in the repo; a stock photo stands in). Nikki has
+  design decisions pending now that she can see every size.
 
 
 ## Upcoming projects (not started)
