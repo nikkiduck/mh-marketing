@@ -1,4 +1,4 @@
-# Generated 2026-11-12 15:37 from git HEAD
+# Generated 2026-11-12 16:02 from git HEAD
 # marketing.monthaus.com deploy manifest
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
@@ -53,7 +53,7 @@ b97e836d5b0b6da31bc52ef3dab507a4  inc/ads_render.php
 dfbecd5baf8eb89a44ce4f33ea6cbbed  inc/boards.php
 5d342fa9a131350b281e46f52aa5480c  inc/brand_embed.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
-7ab37a7609cdfe51bb6a591b2a536977  inc/captions.php
+ed63e93008d91724efd27d9a7df2b035  inc/captions.php
 0251f0102735a0aa9182fb5aae25615c  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
 754564325f3942d3d6f1b5bd0fec37b0  inc/cutout.php
@@ -81,7 +81,7 @@ d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
 9bbfc498ff08c38bea59a677a4a57450  inc/plan.php
 d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
-bde568bb1c301598c3ffbdcb2e3848e9  inc/plan_body.php
+a2a2781fa0b3d73dc052ac9071ceb111  inc/plan_body.php
 a2299b1b7c24795c470eac1d77a03df7  inc/plan_render.php
 4d5eeb45c6786eead7726f6398ecd6d2  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
@@ -156,7 +156,7 @@ a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 9f3409ddf90983d0274162d1ad62d639  social_captions.php
 211745ae77cce6a3e467f4215dda1df2  social_linkinbio.php
 b06f90015e8f3edc466afd31f15ae8c1  social_media.php
-dc4a05d22b2a7f6c072a2972e236ab17  social_plan.php
+db3c6783a793f0ed6f623477b90695ae  social_plan.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php
 f4d127b0ae8724dbedb1bde8a2060524  template_ad.php
