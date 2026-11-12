@@ -5,9 +5,12 @@
  * Instagram tool (inc/social_body.php), whose CSS (assets/css/social.css)
  * and patterns it reuses. One body for the four kinds; $pk says which:
  *
- *   property  a listing from the whole feed (the Listing dropdown), the
- *             variant (New Listing, Featured, Just Sold, Rental), and on a
- *             story the SET: pick the photos in order, an end card, a ZIP
+ *   property  a listing from the whole feed (the Listing dropdown) and the
+ *             SET: pick the photos in order, an end card, a ZIP. The slot's
+ *             variant (New Listing, Featured, Just Sold, Rental) only sets
+ *             the badge the page opens with: its pills went on 2026-11-12
+ *             (Nikki: the badge label says it, and a click on a pill
+ *             refilled the words she had typed)
  *   broker    the broker, their market, a hook (or a milestone); their
  *             headshot, a lifestyle shot (an upload) or a stock photo
  *   location  an office, an area or a town; the angle (office, team, local);
@@ -22,7 +25,7 @@
  * loc, listing, variant, hook, season, size); $pk_plan (plan_item_context(),
  * the week and slot the page was opened for, or null) and $pk_saved (the
  * saved piece: its form restores into the controls, its caption into the
- * Text step; Save to the week posts to plan_save.php). Nothing is drawn here
+ * Caption section, the last one; Save to the week posts to plan_save.php). Nothing is drawn here
  * but the controls: the picture is plan_render.php's HTML in the iframe.
  */
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
@@ -42,7 +45,9 @@ foreach ($agent_styles as $sk => $sn) foreach (['post', 'square', 'story'] as $f
 $default_size = isset(social_formats()[(string)($pk_preset['size'] ?? '')]) ? (string)$pk_preset['size'] : ($pk === 'property' ? 'post' : 'story');
 // Where the logo starts: upper right over the photo on the split layout (its only place besides none), centred above
 // centred words, else the Instagram tool's defaults (upper right on a post, lower left on a story); the badge likewise.
-$default_logo  = $pk === 'property' ? 'none' : ($default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' && $pk !== 'broker') ? 'bottom' : 'top')));   // the Broker Feature: with the words at every size (2026-11-05, the stack); the property cover: no logo, the M mark comes on the set's third slide (2026-11-09)
+// None is one of the Logo pills since 2026-11-12 (it was a logo place): the property cover starts on it.
+$default_logo_kind = $pk === 'property' ? 'none' : 'full';   // the property cover: no logo, the M mark comes on the set's third slide (2026-11-09)
+$default_logo  = $default_layout === 'split' ? 'top' : ($default_layout === 'center' ? 'center' : (($default_size === 'story' && $pk !== 'broker') ? 'bottom' : 'top'));   // the Broker Feature: with the words at every size (2026-11-05, the stack)
 $default_badge = $pk === 'property' ? 'body' : (($default_size === 'story' && $default_logo !== 'top') ? 'right' : 'left');
 $themes = plan_themes($pk); $labels = plan_labels(); $styles = social_line_styles(); $defaults = social_line_defaults();
 $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature draws none (2026-11-05 evening)
@@ -79,12 +84,8 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
             <?php endforeach; ?>
           </select>
         </label>
-        <div class="sp-look">
-          <span class="sp-look-l">Post type</span>
-          <?php $pv = (string)($pk_preset['variant'] ?? 'featured'); foreach (plan_property_variants() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="variant" value="<?= $e($k) ?>"<?= $k === $pv ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
+        <?php $pv = (string)($pk_preset['variant'] ?? 'featured'); /* the slot's content kind: it sets the badge the page opens with, nothing else */ ?>
+        <input type="hidden" name="variant" value="<?= $e(isset(plan_property_variants()[$pv]) ? $pv : 'featured') ?>">
         <div class="sp-set">
           <label class="sp-check"><input type="checkbox" name="set" value="1"<?= $default_size === 'story' ? ' checked' : '' ?>> Make a set (several photos as one story or carousel)</label>
           <label class="sp-check sp-only-set"><input type="checkbox" name="endcard" value="1"> Add a closing card (the logo, the address, who listed it)</label>
@@ -176,7 +177,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
           <span class="sp-look-l">Size</span>
           <?php $size_opts = social_formats(); if ($pk === 'broker') $size_opts = ['story' => $size_opts['story']] + $size_opts;   // a Broker Feature is a story (Nikki, 2026-11-05): Story first, and the default
           foreach ($size_opts as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="size" value="<?= $e($k) ?>"<?= $k === $default_size ? ' checked' : '' ?>><span><?= $e($t) ?> · <?= $k === 'post' ? '4:5' : ($k === 'square' ? '1:1' : '9:16') ?></span></label>
+          <label class="sp-pillopt"><input type="radio" name="size" value="<?= $e($k) ?>"<?= $k === $default_size ? ' checked' : '' ?>><span><?= $e($k === 'square' ? 'Square Post' : $t) ?> · <?= $k === 'post' ? '4:5' : ($k === 'square' ? '1:1' : '9:16') ?></span></label>
           <?php endforeach; ?>
         </div>
         <?php if ($agent_styles): ?>
@@ -220,9 +221,6 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
             </label>
           </div>
           <?php endforeach; ?>
-          <?php if ($pk_plan && $pk !== 'property'): ?>
-          <label class="sp-field">Caption (saved with the week, not drawn) <textarea name="caption" maxlength="2200" rows="3"><?= $e($pk_saved['caption'] ?? '') ?></textarea></label>
-          <?php endif; ?>
         </div>
         <?php if ($pk === 'broker'): ?>
         <div class="sp-look">
@@ -248,36 +246,47 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
         </div>
       </section>
 
-      <?php if ($pk === 'property'): /* The Suggested Caption (Nikki, 2026-11-12): the listing's caption from inc/captions.php, to edit, copy and keep. Not drawn. */ ?>
-      <section class="sp-step" id="spCapStep">
-        <h2 class="sp-step-h">Suggested Caption</h2>
-        <label class="sp-field"><span id="spCapHint">Prefilled for the listing. Not drawn on the picture.</span>
-          <textarea name="caption" id="spCaption" maxlength="2200" rows="14" data-saved="<?= $e($pk_saved['caption'] ?? '') ?>"></textarea></label>
-        <div class="sp-capbar">
-          <button type="button" class="sp-capbtn" id="spCapCopy">Copy Caption</button>
-          <button type="button" class="sp-capbtn" id="spCapKeep">Save Changes</button>
-          <span class="sp-capcount" id="spCapCount"></span>
-          <a class="sp-link" href="social_captions.php">All captions</a>
-        </div>
-      </section>
-      <?php endif; ?>
-
       <section class="sp-step">
         <h2 class="sp-step-h">Elements</h2>
+        <?php // The badge first, what it says and where it sits together (Nikki, 2026-11-12: "Label on the photo" did not say it was the badge). ?>
         <div class="sp-look">
-          <span class="sp-look-l">Logo</span>
-          <?php foreach (social_logo_kinds() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="logo_kind" value="<?= $e($k) ?>"<?= $k === 'full' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <span class="sp-look-l">Badge label</span>
+          <label class="sp-field sp-inline"><select name="label" id="spLabel" aria-label="Badge label">
+            <option value="__none">No badge</option>
+            <?php foreach ($labels as $lb): ?><option value="<?= $e($lb) ?>"><?= $e($lb) ?></option><?php endforeach; ?>
+            <option value="__custom">Custom…</option>
+          </select></label>
+          <label class="sp-field sp-inline" id="spCustomWrap" hidden><input name="label_custom" maxlength="28" placeholder="Your words" aria-label="Your badge label"></label>
+        </div>
+        <div class="sp-look" id="spBadgePlace">
+          <span class="sp-look-l">Badge position</span>
+          <?php foreach (plan_badge_places() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="badge" value="<?= $e($k) ?>"<?= $k === $default_badge ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
+        <?php if ($pk === 'broker'): ?>
         <div class="sp-look">
-          <span class="sp-look-l">Logo place</span>
-          <?php foreach (social_logo_places() as $k => $t): ?>
+          <span class="sp-look-l">Badge color</span>
+          <?php $wt = in_array($pk_preset['badge_tone'] ?? '', ['slate', 'glass'], true) ? $pk_preset['badge_tone'] : 'white'; foreach (['white' => 'White', 'slate' => 'Slate', 'glass' => 'Glass'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="badge_tone" value="<?= $e($k) ?>"<?= $k === $wt ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+        <?php // The logo: None is one of its pills (it was a logo place until 2026-11-12); the position row hides on None. ?>
+        <div class="sp-look sp-look-rule">
+          <span class="sp-look-l">Logo</span>
+          <?php foreach (social_logo_kinds() + ['none' => 'None'] as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="logo_kind" value="<?= $e($k) ?>"<?= $k === $default_logo_kind ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look" id="spLogoPlace">
+          <span class="sp-look-l">Logo position</span>
+          <?php foreach (social_logo_places() as $k => $t): if ($k === 'none') continue; ?>
           <label class="sp-pillopt" data-logo="<?= $e($k) ?>"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === $default_logo ? ' checked' : '' ?>><span><?= $e($pk === 'broker' ? ['top' => 'With the words', 'bottom' => 'Lower right'][$k] ?? $t : $t) ?></span></label>
           <?php endforeach; ?>
         </div>
         <div class="sp-look">
-          <span class="sp-look-l">Logo colour</span>
+          <span class="sp-look-l">Logo color</span>
           <?php foreach (plan_logo_colors() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="logo_color" value="<?= $e($k) ?>"<?= $k === 'auto' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
@@ -285,40 +294,14 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
         <div class="sp-ranges">
           <label class="sp-range">Logo size <input type="range" name="logo_scale" min="50" max="200" step="2" value="130"><output>130%</output></label>
           <label class="sp-range">Nudge across <input type="range" name="logo_dx" min="-200" max="200" step="2" value="0"><output>0</output></label>
-          <label class="sp-range">Nudge down <input type="range" name="logo_dy" min="-200" max="200" step="2" value="0"><output>0</output></label>
           <label class="sp-range">Logo shadow <input type="range" name="logo_shadow" min="0" max="100" step="5" value="0"><output>0</output></label>
+          <label class="sp-range">Nudge down <input type="range" name="logo_dy" min="-200" max="200" step="2" value="0"><output>0</output></label>
           <button type="button" class="sp-link sp-reset" id="spResetLogo">Reset logo and shadows</button>
         </div>
-        <div class="sp-look">
+        <div class="sp-look sp-look-rule">
           <span class="sp-look-l">Watermark</span>
           <?php foreach (social_marks() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="mark" value="<?= $e($k) ?>"<?= $k === 'triangle' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-fields">
-          <div class="sp-two">
-            <label class="sp-field">Label on the photo
-              <select name="label" id="spLabel">
-                <option value="__none">No label</option>
-                <?php foreach ($labels as $lb): ?><option value="<?= $e($lb) ?>"><?= $e($lb) ?></option><?php endforeach; ?>
-                <option value="__custom">Custom…</option>
-              </select>
-            </label>
-            <label class="sp-field" id="spCustomWrap" hidden>Your label <input name="label_custom" maxlength="28" placeholder="Now Open"></label>
-          </div>
-        </div>
-        <?php if ($pk === 'broker'): ?>
-        <div class="sp-look">
-          <span class="sp-look-l">Badge</span>
-          <?php $wt = in_array($pk_preset['badge_tone'] ?? '', ['slate', 'glass'], true) ? $pk_preset['badge_tone'] : 'white'; foreach (['white' => 'White', 'slate' => 'Slate', 'glass' => 'Glass'] as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="badge_tone" value="<?= $e($k) ?>"<?= $k === $wt ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
-        <div class="sp-look" id="spBadgePlace">
-          <span class="sp-look-l"><?= $pk === 'broker' ? 'Badge place' : 'Badge' ?></span>
-          <?php foreach (plan_badge_places() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="badge" value="<?= $e($k) ?>"<?= $k === $default_badge ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
       </section>
@@ -344,10 +327,31 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
         <?php endif; ?>
       </section>
 
+      <?php // The caption is the last section, under the photo (Nikki, 2026-11-12).
+      if ($pk === 'property'): /* The Suggested Caption (Nikki, 2026-11-12): the listing's caption from inc/captions.php, to edit, copy and keep. Not drawn. A set's ZIP carries it as caption.txt. */ ?>
+      <section class="sp-step" id="spCapStep">
+        <h2 class="sp-step-h">Suggested Caption</h2>
+        <label class="sp-field"><span id="spCapHint">Prefilled for the listing. Not drawn on the picture.</span>
+          <textarea name="caption" id="spCaption" maxlength="2200" rows="14" data-saved="<?= $e($pk_saved['caption'] ?? '') ?>"></textarea></label>
+        <div class="sp-capbar">
+          <button type="button" class="sp-capbtn" id="spCapCopy">Copy Caption</button>
+          <button type="button" class="sp-capbtn" id="spCapKeep">Save Changes</button>
+          <span class="sp-capcount" id="spCapCount"></span>
+          <a class="sp-link" href="social_captions.php">All captions</a>
+        </div>
+      </section>
+      <?php elseif ($pk_plan): ?>
+      <section class="sp-step">
+        <h2 class="sp-step-h">Caption</h2>
+        <label class="sp-field">Saved with the week. Not drawn on the picture.
+          <textarea name="caption" maxlength="2200" rows="5"><?= $e($pk_saved['caption'] ?? '') ?></textarea></label>
+      </section>
+      <?php endif; ?>
+
       <div class="sp-actions">
         <?php if ($pk_plan): ?><button type="submit" class="sp-btn" formaction="plan_save.php" id="spSave">Save to the week</button><?php endif; ?>
         <button type="submit" class="sp-btn<?= $pk_plan ? ' sp-btn-soft' : '' ?>" id="spDownload">Download PNG</button>
-        <p class="sp-help" id="spHelp">The download is a 1080 × 1440 PNG for a post, 1080 × 1080 for a square, or 1080 × 1920 for a story.</p>
+        <p class="sp-help" id="spHelp">The download is a 1080 × 1440 PNG for a post, 1080 × 1080 for a square post, or 1080 × 1920 for a story.</p>
       </div>
     </form>
 
@@ -408,7 +412,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
   const lineText = i => form.querySelectorAll('[name="line_text[]"]')[i];   // Text 1 is a textarea since 2026-11-11
   const lineStyle = i => form.querySelectorAll('select[name="line_style[]"]')[i];
   const subject = () => document.getElementById('spSubject') ? document.getElementById('spSubject').value : '';
-  const LOGO_DEFAULT = s => KIND === 'property' ? 'none' : ((s === 'story' && KIND !== 'broker') ? 'bottom' : 'top');   // the Broker Feature's logo sits with the words at every size (2026-11-05); the property cover carries none (2026-11-09)
+  const LOGO_DEFAULT = s => (s === 'story' && KIND !== 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits with the words at every size (2026-11-05); None is a Logo pill, not a place (2026-11-12)
   const BADGE_DEFAULT = s => KIND === 'property' ? 'body' : (s === 'story' ? 'right' : 'left');
   let prevSize = fmt();
   let frames = [];          // the set's photo ids, in order (property only)
@@ -486,7 +490,8 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
     } else { f('frame').value = 0; frameLogoBox.hidden = true; pills.innerHTML = ''; }
     dl.textContent = dl2.textContent = on ? 'Download the set (ZIP)' : 'Download PNG';
     help.textContent = on ? 'The download is a ZIP of ' + n + ' PNGs at 1080 × ' + fmtH() + ', numbered in play order: post them as one ' + (fmt() === 'story' ? 'story' : 'carousel') + '.'
-                          : 'The download is a 1080 × 1440 PNG for a post, 1080 × 1080 for a square, or 1080 × 1920 for a story.';
+                            + (fmt() === 'story' ? '' : ' The caption comes with them as caption.txt.')
+                          : 'The download is a 1080 × 1440 PNG for a post, 1080 × 1080 for a square post, or 1080 × 1920 for a story.';
   }
   pills.addEventListener('input', e => { if (e.target.name === '_pill') { tabShow(+e.target.value); syncSet(); update(); } });
   pills.addEventListener('click', e => {
@@ -520,6 +525,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
     if (agent && logo.value === 'center') logo.value = 'bottom';
     if (L === 'split' && (logo.value === 'bottom' || logo.value === 'center')) logo.value = 'top';
     if (L !== 'center' && logo.value === 'center') logo.value = 'top';
+    document.getElementById('spLogoPlace').hidden = f('logo_kind').value === 'none';   // no logo: no position to pick
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = agent ? true : L !== 'split');
     form.querySelectorAll('.sp-only-3').forEach(el => el.hidden = !agent);
     if (agent) { const w = (AGENT_WINDOWS[f('style').value] || {})[fmt()] || [1080, 1440]; framer.style.aspectRatio = w[0] + ' / ' + w[1]; }
@@ -849,6 +855,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
   // ── Wiring ──
   form.addEventListener('input', e => {
     const n = e.target.name;
+    if (n === 'caption') return;   // the caption is not drawn: no new preview
     if (n === 'listing') capFill(true);
     if (n === 'listing' || n === 'agent' || n === 'loc') {
       if (n === 'agent') { const o = e.target.selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncLayout(); }
@@ -856,11 +863,11 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
       fill(); loadPhotos(); return;
     }
     if (n === 'season') { fillTaglines(); fill(); loadPhotos(); return; }
-    if (n === 'variant' || n === 'hook' || n === 'market' || n === 'tagline') fill();
+    if (n === 'hook' || n === 'market' || n === 'tagline') fill();
     if (n === 'angle') { if (e.target.value === 'team') f('layout').value = 'split'; fillTeam(true); fill(); syncLayout(); }
     if (n === 'size') { syncLayout(); scale(); syncSet(); syncTextSizes(); capShow(); }
     if (n === 'hook_size') { const c = f('call_size'); if (!c.dataset.touched) { c.value = Math.round(+e.target.value * 0.9); showRange(c); } }
-    if (n === 'layout' || n === 'style' || n === 'arrange') { syncLayout(); framerApply(); }
+    if (n === 'layout' || n === 'style' || n === 'arrange' || n === 'logo_kind') { syncLayout(); framerApply(); }
     if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
     if (n === 'label') customWrap.hidden = labelSel.value !== '__custom';
     if (n === 'photo') { if (setOn()) { frames = [e.target.value].concat(frames.filter(id => id !== e.target.value)).slice(0, MAX_FRAMES); syncSet(); } if (KIND !== 'broker') framerSet(e.target.dataset.large, e.target.value); else bdSet(e.target.value === 'none' ? '' : e.target.dataset.large); }
@@ -888,6 +895,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
       else list[0].value = val;
     };
     for (const [k, v] of Object.entries(SAVED)) { if (skip.has(k) || Array.isArray(v)) continue; setField(k, v); }
+    if (SAVED.logo === 'none') setField('logo_kind', 'none');   // a piece saved before 2026-11-12 kept None as the logo's place
     ['set', 'endcard'].forEach(n => { if (f(n)) f(n).checked = !!SAVED[n]; });   // unticked boxes are absent from a post
     (SAVED.line_text || []).forEach((t, i) => { if (lineText(i)) lineText(i).value = t; });
     (SAVED.line_style || []).forEach((t, i) => { if (lineStyle(i)) lineStyle(i).value = t; });

@@ -472,6 +472,45 @@ ability to add line breaks."
   Text 1 runs out of room and the last rows are cut. The preview shows it.
 - The Broker Feature draws no lines and its hook kept its breaks already.
 
+## The builder form, tidied (2026-11-12)
+
+Nikki, after building a Wrights Road set: ten small things, all in
+`inc/plan_body.php` unless said.
+
+- **Post type pills removed** (Property). She changes the badge label
+  herself, and a click on a pill ran `fill()`, which put the listing's own
+  words back over everything she had typed. `variant` is now a hidden field
+  holding the slot's kind; it picks the badge the page opens with and
+  nothing else. `plan_item_summary()` (inc/plan_store.php) leads with the
+  badge label, the variant only when there is no badge.
+- **Elements in three groups**, a rule between them: the badge ("Badge
+  label", "Badge position", and on the Broker Feature "Badge color"), the
+  logo ("Logo" with None as its third pill, "Logo position", "Logo color",
+  the sliders with Logo shadow and Nudge down swapped), the watermark.
+  "Label on the photo" did not say it was the badge.
+- **None is a Logo pill.** The form posts `logo_kind=none`;
+  `plan_post_from_request()` (inc/plan.php) turns that into `logo = none`,
+  so the renderers are unchanged. A piece saved before holds `logo: none`
+  with a real `logo_kind`: it draws the same, and `restoreSaved()` ticks
+  None for it. The position row hides while the logo is None.
+- **Lower left is lower left.** On the Centered layout the Lower left logo
+  sat in the middle above the words. The plan tools now send
+  `'logo_corner' => true` and `social_render()` (inc/social_render.php)
+  puts the logo in the picture's lower left corner (`.logo.ll`). The
+  agents' General Social sends no such flag and draws as before (the 38
+  social and 51 plan sample pictures are byte-identical before and after).
+- **Wording:** Layout "Full photo" is "Lower Left" (`plan_layouts()`), the
+  Square size is "Square Post", "colour" is "color".
+- **The Caption is the last section**, under the photo: the Suggested
+  Caption on the Property builder, a plain Caption box on the other three
+  when the page was opened from a week.
+- **The caption in the ZIP:** `plan_export_zip($r, $caption)` adds
+  `caption.txt` when there is a caption: plain text (it pastes into
+  Instagram with nothing attached), UTF-8 with a byte order mark so
+  TextEdit and Notepad read dashes and accents right. From the builder it
+  is the Caption box (not sent on a story); from the week page the saved
+  piece's caption. A single picture is still a PNG, with no caption file.
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the

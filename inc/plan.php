@@ -66,7 +66,12 @@ function plan_admin_css(): string {
     .sp-step-h span { color:#d6dee8; }
     .sp-pillopt span { padding:4px 11px; font-size:12.5px; border-width:1.5px; }
     .sp-look { margin-top:9px; gap:6px; }
-    .sp-look-l { font-size:13px; min-width:84px; }
+    .sp-look-l { font-size:13px; min-width:98px; }
+    /* Elements (2026-11-12): the badge, the logo and the watermark as three groups, a rule between them; the dropdown of the badge label sits in its row. */
+    .sp-look-rule { margin-top:16px; padding-top:14px; border-top:1px solid #e6e9ee; }
+    .sp-inline { flex:0 1 230px; margin:0; }
+    .sp-inline select, .sp-inline input { margin-top:0; }
+    .sp-look[hidden] { display:none; }
     .sp-field + .sp-look, .sp-two + .sp-look, .sp-field + .sp-hint, .sp-two + .sp-hint, .sp-look + .sp-team { margin-top:18px; }
     .sp-set { margin-top:18px; }
     .sp-ranges { display:grid; grid-template-columns:1fr; gap:4px 18px; margin-top:12px; padding:10px 12px 8px; background:#f6f7f9; border-radius:10px; }
@@ -616,8 +621,8 @@ function plan_photo(array $ctx, string $photo, ?array $listing = null, ?array $a
 /** The plan tools' kinds. */
 function plan_kinds(): array { return ['property' => 'Property', 'broker' => 'Broker Feature', 'location' => 'Location Feature', 'branding' => 'Branding']; }
 
-/** The layouts: the full photo with the words lower left (the Instagram look), the framed photo (a band, the photo window, the words; inc/plan_render.php), or centred words. */
-function plan_layouts(): array { return ['photo' => 'Full photo', 'split' => 'Framed', 'center' => 'Centered']; }
+/** The layouts: the full photo with the words lower left (the Instagram look), the framed photo (a band, the photo window, the words; inc/plan_render.php), or centred words. The full photo's pill reads "Lower Left" since 2026-11-12 (Nikki: it says where the words sit, as Centered does); it read "Full photo". */
+function plan_layouts(): array { return ['photo' => 'Lower Left', 'split' => 'Framed', 'center' => 'Centered']; }
 
 /** Where the label badge may sit in the plan tools: the Instagram tool's two corners, or above the headline (2026-11-02: a badge in the corner covered a broker's face). */
 function plan_badge_places(): array { return social_badge_places() + ['body' => 'Above headline']; }
@@ -661,6 +666,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     if (!isset(social_logo_places()[$logo])) $logo = ($format === 'story' && $kind !== 'broker') ? 'bottom' : 'top';   // the Broker Feature's logo sits with the words by default (2026-11-05)
     if ($layout === 'split' && !in_array($logo, ['top', 'none'], true)) $logo = 'top';
     if ($logo === 'center' && $layout !== 'center') $logo = 'top';
+    if (($in['logo_kind'] ?? '') === 'none') $logo = 'none';   // None is one of the Logo pills since 2026-11-12; a piece saved before posts it as the place, which still reads
     $badge  = isset(plan_badge_places()[(string)($in['badge'] ?? '')]) ? (string)$in['badge'] : ($format === 'story' && $logo !== 'top' ? 'right' : 'left');
     // The logo's colour, size, nudge and the shadows (2026-11-02): checked by social_logo_options() in the renderers; carried as posted.
     $logoOpts = ['logo_color' => (string)($in['logo_color'] ?? 'auto'), 'logo_scale' => round((int)($in['logo_scale'] ?? 130) / 100, 2),   // 130 since 2026-11-05 (Nikki: the starting size was too small)
@@ -738,7 +744,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         ? ['renderer' => 'agent', 'post' => $common + $backdrop + $sizes + $agentLook + ['style' => $style, 'hook2' => $hook2, 'headline' => $headline, 'lines' => []]]
         : ($layout === 'split'
         ? ['renderer' => 'split', 'post' => $common + ['headline' => $headline, 'lines' => $lines, 'team' => plan_team_for_render($team), 'kind' => $kind]]
-        : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner', 'multiline' => true,
+        : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner', 'multiline' => true, 'logo_corner' => true,
                                                          'headline' => $headline, 'lines' => $lines, 'date_text' => '', 'time_text' => '', 'when_text' => '']]);
     $main['name'] = $slug($headline !== '' ? $headline : ($label ?: $kind));
 
@@ -840,8 +846,12 @@ function plan_filename(array $r, array $frame): string {
  * The set as a ZIP of PNGs (01-cover.png, 02.png, …, 0N-end.png), each
  * frame screenshotted by Chromium in turn (social_export_png(); one at a
  * time, about 3 s each). Null when any frame failed or ZipArchive is missing.
+ * $caption (Nikki, 2026-11-12: "the Caption ... in the zip along with the
+ * images"): the post's caption as caption.txt, plain text so it pastes into
+ * Instagram with nothing attached; UTF-8 with a mark at the start, so
+ * TextEdit and Notepad read its dashes and accents right.
  */
-function plan_export_zip(array $r): ?string {
+function plan_export_zip(array $r, string $caption = ''): ?string {
     if (!class_exists('ZipArchive')) { error_log('plan_export: ZipArchive is not available'); return null; }
     $tmp = tempnam(sys_get_temp_dir(), 'mh-set-');
     $zip = new ZipArchive();
@@ -852,6 +862,8 @@ function plan_export_zip(array $r): ?string {
         if ($png === null) { $zip->close(); @unlink($tmp); return null; }
         $zip->addFromString($frame['name'] . '.png', $png);
     }
+    $caption = trim(str_replace("\r", '', $caption));
+    if ($caption !== '') $zip->addFromString('caption.txt', "\xEF\xBB\xBF" . str_replace("\n", "\r\n", $caption) . "\r\n");
     $zip->close();
     $bytes = (string)file_get_contents($tmp);
     @unlink($tmp);

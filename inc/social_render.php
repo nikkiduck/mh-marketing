@@ -386,6 +386,10 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
     $logoKind = ($p['logo_kind'] ?? 'full') === 'mark' ? 'mark' : 'full';
     $badge = (string)($p['badge'] ?? '');
     if (!isset(social_badge_places()[$badge]) && $badge !== 'body') $badge = ($format === 'story' && $logo !== 'top') ? 'right' : 'left';   // 'body': above the headline (the plan tools, 2026-11-02)
+    // The admin plan tools (logo_corner, 2026-11-12, Nikki: "selecting Lower Left for logo position should always place it
+    // lower left, even if the general layout selected is Center"): on the centred layout the Lower left logo sits in the
+    // picture's lower left corner. Without the flag (the agents' General Social) it stays above the centred words.
+    $logoLL = $layout === 'center' && $logo === 'bottom' && !empty($p['logo_corner']);
     $opt = social_logo_options($p);   // the admin tools' logo colour, size, nudge and shadows (2026-11-02); defaults leave every agent post as it was
 
     // The photo frame: zoom 1 to 3, focus 0 to 100 on each axis (see the header).
@@ -431,6 +435,7 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
             . ".photo::after{height:100%;background:{$c['veil']}}"
             . ".rule{margin:0 auto 30px}.addr{text-wrap:balance}.lines{padding:0}.ln{white-space:normal}"
             . ".slogo{margin:0 0 36px}.clogo{display:block;height:200px;margin:0 auto 40px}"
+            . ($logoLL ? ".logo.ll{top:auto;right:auto;left:64px;bottom:" . (64 + $bot) . "px}" : '')
             . (($logo !== 'top' && (trim((string)($p['label'] ?? '')) === '' || $badge === 'body')) ? ".photo::before{display:none}" : '')   // nothing up top: no top fade either
             : '')
         // The M mark is one glyph, nearly square: a touch shorter than the stack in each place.
@@ -482,7 +487,7 @@ CSS;
 
     $body = '';
     $logoSrc = $logoKind === 'mark' ? $c['mark'] : $c['logo'];
-    if ($full && $logo === 'bottom') {        // the logo above the rule, lower left (Nikki, 2026-10-15; any full template since 2026-10-28)
+    if ($full && $logo === 'bottom' && !$logoLL) {        // the logo above the rule, lower left (Nikki, 2026-10-15; any full template since 2026-10-28)
         $body .= '<img class="slogo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">';
     } elseif ($full && $logo === 'center') {  // centred above the rule and the centred words
         $body .= '<img class="clogo" src="' . $e($logoSrc) . '" alt="Mont Haus International Realty">';
@@ -551,7 +556,7 @@ CSS;
         };
     }
     // Top-right logo over the photo, when the logo is set there.
-    $topLogo = ($full && $logo === 'top') ? $logoHtml : '';
+    $topLogo = ($full && $logo === 'top') ? $logoHtml : (($full && $logoLL) ? str_replace('class="logo"', 'class="logo ll"', $logoHtml) : '');
     if (!$full) $body .= $logoHtml;
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'

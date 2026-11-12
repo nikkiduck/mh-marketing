@@ -416,11 +416,13 @@ function plan_item_context(array $get, string $kind): ?array {
 /** One line for the week table: what the saved piece is. */
 function plan_item_summary(mysqli $conn, string $kind, array $form): string {
     $e = fn($s) => trim((string)$s);
-    $size = ['post' => 'Post', 'square' => 'Square', 'story' => 'Story'][(string)($form['size'] ?? '')] ?? 'Post';
+    $size = ['post' => 'Post', 'square' => 'Square Post', 'story' => 'Story'][(string)($form['size'] ?? '')] ?? 'Post';
     $words = '';
     if ($kind === 'property') {
         $l = plan_listing($conn, (string)($form['listing'] ?? ''));
-        $v = plan_property_variants()[(string)($form['variant'] ?? '')] ?? '';
+        // What the badge says (2026-11-12: the Post type pills went, the badge label is the piece's kind); with no badge, the slot's variant.
+        $lab = (string)($form['label'] ?? '');
+        $v = $lab === '__custom' ? trim((string)($form['label_custom'] ?? '')) : (($lab === '' || $lab === '__none') ? (plan_property_variants()[(string)($form['variant'] ?? '')] ?? '') : $lab);
         $words = $l ? (($l['address'] !== '' ? $l['address'] : 'Address withheld') . ', ' . $l['city'] . ($l['agent'] !== '' ? ' · ' . $l['agent'] : '')) : 'A listing no longer in the feed';   // the broker, not the price (Nikki, 2026-11-09)
         if ($v !== '') $words = $v . ': ' . $words;
         if (!empty($form['set'])) $size .= ' set of ' . count((array)($form['frames'] ?? [])) . (!empty($form['endcard']) ? ' + end card' : '');

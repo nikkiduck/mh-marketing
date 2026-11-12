@@ -3055,6 +3055,18 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   are one line. `social_render()` breaks lines only for a post carrying
   `'multiline' => true`, which the plan tools alone set: the agents' tools
   draw exactly as before. Rows become `<br>` in `social_line_html()`.
+- **The form, tidied (2026-11-12):** no Post type pills on the Property
+  builder (`variant` is a hidden field from the slot, it only picks the
+  badge the page opens with; the week table's summary reads the badge
+  label). Elements is three groups: the badge (label, position), the logo
+  (None is a Logo pill, posted as `logo_kind=none`, which
+  `plan_post_from_request()` turns into `logo = none`; a piece saved before
+  holds `logo: none` and still reads), the watermark. The Caption is the
+  last section, under the photo. Layout `photo` reads "Lower Left", Square
+  reads "Square Post". On the Centered layout the Lower left logo sits in
+  the picture's lower left corner: `social_render()` does that only for a
+  post carrying `'logo_corner' => true`, which the plan tools alone set. A
+  set's ZIP carries the caption as `caption.txt` (`plan_export_zip()`).
 - One builder body, `inc/plan_body.php` (`$pk` = kind), the endpoints
   `plan_render.php`, `plan_export.php`, `plan_photos.php`, all
   `plan_gate()` (require_role admin + social_context() with
