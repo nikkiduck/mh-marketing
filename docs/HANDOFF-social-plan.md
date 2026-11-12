@@ -449,6 +449,29 @@ market item with only `done: true` reads as the suggestion, all ticked.
 Not built: a Download all for the slides (the Snapshot does not render
 from a saved form yet).
 
+## Line breaks in the Headline and Text 1 (2026-11-11)
+
+Nikki: "can you make both Text 1 and Headline multiline? As in give me the
+ability to add line breaks."
+
+- The Headline was already a textarea; Enter was honoured on the Centered and
+  Framed layouts and folded into a space on Full photo. It is now a new line
+  on every layout.
+- Text 1 is a textarea (`line_text[]`, the first of the four): Enter is a new
+  line, up to four rows and `PLAN_TEXT1_MAX` (160) characters. Text 2 to 4
+  stay one line of 90.
+- `plan_post_from_request()` keeps the rows (blank rows dropped, each
+  trimmed). The centred and full-photo pictures come from the shared
+  `social_render()`, which breaks lines only when the post carries
+  `'multiline' => true`; the plan tools alone set it, so the agents' Listing
+  and General Social pictures are byte for byte what they were (both sample
+  test folders compared before and after). `social_line_html()` turns a
+  line's rows into `<br>`s; `plan_render_split()` uses it too and counts each
+  row of Text 1 against the block's room (the first line is always drawn).
+- The Framed block has a fixed height: a three-row headline with a three-row
+  Text 1 runs out of room and the last rows are cut. The preview shows it.
+- The Broker Feature draws no lines and its hook kept its breaks already.
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the

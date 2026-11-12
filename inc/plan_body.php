@@ -207,10 +207,14 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
       <section class="sp-step">
         <h2 class="sp-step-h">Text</h2>
         <div class="sp-fields">
-          <label class="sp-field">Headline <span class="sp-only-multi">(Enter for a new line)</span> <textarea name="headline" maxlength="140" rows="2"></textarea></label>
+          <label class="sp-field">Headline (Enter for a new line) <textarea name="headline" maxlength="140" rows="2"></textarea></label>
           <?php foreach ($pk === 'broker' ? [] : $line_names as $i => $nm): ?>
           <div class="sp-line<?= $i === 2 ? ' sp-only-long sp-only-3' : ($i === 3 ? ' sp-only-long' : '') ?>">
+            <?php if ($i === 0): /* Text 1 takes line breaks (2026-11-11); the other lines stay one line */ ?>
+            <label class="sp-field"><?= $e($nm) ?> (Enter for a new line) <textarea name="line_text[]" maxlength="<?= PLAN_TEXT1_MAX ?>" rows="2"></textarea></label>
+            <?php else: ?>
             <label class="sp-field"><?= $e($nm) ?> <input name="line_text[]" maxlength="90"></label>
+            <?php endif; ?>
             <label class="sp-field sp-style"><?= $e($nm) ?> style
               <select name="line_style[]"><?php foreach ($styles as $k => $w): ?><option value="<?= $e($k) ?>"<?= $k === $defaults[$i] ? ' selected' : '' ?>><?= $e($w) ?></option><?php endforeach; ?></select>
             </label>
@@ -386,7 +390,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   const fmt = () => f('size').value, fmtH = () => SIZES[fmt()] || 1440;
   const layout = () => f('layout').value;
-  const lineText = i => form.querySelectorAll('input[name="line_text[]"]')[i];
+  const lineText = i => form.querySelectorAll('[name="line_text[]"]')[i];   // Text 1 is a textarea since 2026-11-11
   const lineStyle = i => form.querySelectorAll('select[name="line_style[]"]')[i];
   const subject = () => document.getElementById('spSubject') ? document.getElementById('spSubject').value : '';
   const LOGO_DEFAULT = s => KIND === 'property' ? 'none' : ((s === 'story' && KIND !== 'broker') ? 'bottom' : 'top');   // the Broker Feature's logo sits with the words at every size (2026-11-05); the property cover carries none (2026-11-09)
@@ -503,7 +507,6 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
     if (L !== 'center' && logo.value === 'center') logo.value = 'top';
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = agent ? true : L !== 'split');
     form.querySelectorAll('.sp-only-3').forEach(el => el.hidden = !agent);
-    form.querySelectorAll('.sp-only-multi').forEach(el => el.hidden = !agent && L === 'photo');
     if (agent) { const w = (AGENT_WINDOWS[f('style').value] || {})[fmt()] || [1080, 1440]; framer.style.aspectRatio = w[0] + ' / ' + w[1]; }
     if (agent) document.getElementById('spBadgePlace').hidden = f('arrange').value !== 'left';   // the stack places the badge itself
     if (agent && bdFramer) bdFramer.style.aspectRatio = framer.style.aspectRatio;

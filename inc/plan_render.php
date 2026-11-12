@@ -159,7 +159,14 @@ function plan_render_split(array $p, ?string $base = null, bool $export = false)
     $headRows = max(1, count($hlines));
     $max = $hasTeam ? ($headRows > 1 ? 1 : 2) : ($square ? 3 : 4);
     if ($badge === 'body') $max = max(1, $max - 1);
-    $lines = array_slice($lines, 0, $max);
+    // A line with Enter in it (Text 1, 2026-11-11) takes one row of the room per row; the first line is always drawn.
+    $kept = []; $rows = 0;
+    foreach ($lines as $ln) {
+        $n = substr_count($ln['text'], "\n") + 1;
+        if ($kept && $rows + $n > $max) break;
+        $kept[] = $ln; $rows += $n;
+    }
+    $lines = $kept;
 
     // The band: the badge at one side, the logo at the other (the logo gives way when the badge wants its corner).
     $logoSide = $badge === 'right' ? 'left' : 'right';
@@ -226,7 +233,7 @@ CSS;
     if ($label !== '' && $badge === 'body') $block .= '<div class="pill inbody">' . $e($label) . '</div>';
     $block .= '<div class="rule"></div>';
     if ($hlines) $block .= '<h1 class="addr">' . str_replace(' #', '&nbsp;#', implode('<br>', array_map($e, $hlines))) . '</h1>';
-    foreach ($lines as $ln) $block .= '<p class="ln ln-' . $ln['style'] . '">' . $e($ln['text']) . '</p>';
+    foreach ($lines as $ln) $block .= '<p class="ln ln-' . $ln['style'] . '">' . social_line_html($ln['text'], true) . '</p>';
 
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex">'
          . '<title>' . $e($headline !== '' ? $hlines[0] : 'Post') . '</title><style>' . $css . '</style></head><body>'

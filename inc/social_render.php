@@ -273,6 +273,17 @@ function social_fit_size(string $text, int $size, array $steps): int {
 }
 
 /**
+ * A sub line's words as HTML. $multi (the admin plan tools, 2026-11-11: Nikki, "give me the ability to add
+ * line breaks") breaks the line where Enter was pressed; without it the words are one line, as ever.
+ */
+function social_line_html(string $text, bool $multi = false): string {
+    $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
+    if (!$multi) return $e($text);
+    $rows = array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $text)), fn($x) => $x !== ''));
+    return implode('<br>', array_map($e, $rows));
+}
+
+/**
  * The three @font-face rules (Cormorant Garamond roman and italic, Jost), by
  * URL for the preview; EMBEDDED as data URIs for the export. The export page
  * is a local file and web fonts are the one resource a browser fetches under
@@ -498,6 +509,7 @@ CSS;
             if ($time !== '') $body .= '<p class="time">' . $e($time) . '</p>';
         }
     }
+    $multi = !empty($p['multiline']);   // set by the admin plan tools only (2026-11-11): Enter breaks the headline in every layout, and a sub line too
     $headline = (string)($p['headline'] ?? '');
     if ($headline !== '') {
         // The headline has the full width on the full-photo family (the logo is top-right)
@@ -505,7 +517,7 @@ CSS;
         // When it wraps the two lines are balanced (text-wrap) and the unit number stays
         // with the word before it, so "#1513" is never a line by itself (Nikki, 2026-10-13).
         // Centred, the headline may run several lines (Enter in the form): sized by its longest line.
-        $hlines = $layout === 'center' ? array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $headline)), fn($x) => $x !== '')) : [$headline];
+        $hlines = ($layout === 'center' || $multi) ? array_values(array_filter(array_map('trim', preg_split('/\r?\n/', $headline)), fn($x) => $x !== '')) : [$headline];
         $longest = array_reduce($hlines, fn($m, $x) => mb_strlen($x) > mb_strlen($m) ? $x : $m, '');
         $size = ($oh && !$full) ? social_fit_size($headline, 46, [34 => 40, 42 => 34, 52 => 28])
                                 : social_fit_size($longest, $layout === 'center' ? 84 : 76, $layout === 'center' ? [16 => 76, 22 => 66, 28 => 56, 36 => 48] : [20 => 68, 27 => 60, 36 => 52]);
@@ -519,7 +531,7 @@ CSS;
         $t = trim((string)($ln['text'] ?? ''));
         if ($t === '') continue;                                   // a blank line takes no room
         $s = isset($styles[$ln['style'] ?? '']) ? $ln['style'] : 'plain';
-        $lines .= '<p class="ln ln-' . $s . '">' . $e($t) . '</p>';
+        $lines .= '<p class="ln ln-' . $s . '">' . ($multi ? social_line_html($t, true) : $e($t)) . '</p>';
     }
     if ($lines !== '') $body .= '<div class="lines">' . $lines . '</div>';
     // The full-photo family carries the logo at page level (top-right over the photo);

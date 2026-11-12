@@ -48,6 +48,7 @@ require_once __DIR__ . '/cutout.php';          // the broker cutouts: found by t
 const PLAN_NEW_DAYS    = 21;   // a listing is "new" this long after the feed first saw it (or its new_listing change)
 const PLAN_CLOSED_DAYS = 30;   // a closing stays in the Just Sold list this long (the agents' tools keep 7)
 const PLAN_MAX_FRAMES  = 9;    // photos in a set: the cover plus up to 8 more (Nikki, 2026-11-02); the end card is extra
+const PLAN_TEXT1_MAX   = 160;  // Text 1 takes line breaks since 2026-11-11 (up to four rows); the other lines stay one line of 90
 
 // ── Access ───────────────────────────────────────────────────────────────────
 
@@ -686,17 +687,24 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
     elseif (in_array($pick, plan_labels(), true)) $label = $pick;
     else                                          $label = '';
 
-    // The words: a headline (Enter = a new line on the centred and split layouts) and up to four lines, each in a style.
+    // The words: a headline and up to four lines, each in a style. Enter is a new line in the headline on every
+    // layout and in Text 1 (2026-11-11, Nikki: "give me the ability to add line breaks"); Text 1 runs to four rows.
     $styles = social_line_styles(); $defaults = social_line_defaults();
     $texts = (array)($in['line_text'] ?? []); $kinds = (array)($in['line_style'] ?? []);
     $nlines = $kind === 'broker' ? 0 : ($layout === 'split' ? 4 : 2);   // the Broker Feature draws no lines (2026-11-05 evening)
     $lines = [];
     for ($i = 0; $i < $nlines; $i++) {
         $s = (string)($kinds[$i] ?? $defaults[$i]);
-        $lines[] = ['text' => mb_substr(trim((string)($texts[$i] ?? '')), 0, 90), 'style' => isset($styles[$s]) ? $s : $defaults[$i]];
+        $t = trim(str_replace("\r", '', (string)($texts[$i] ?? '')));
+        if ($i === 0) {
+            $rows = array_slice(array_values(array_filter(array_map('trim', explode("\n", $t)), fn($x) => $x !== '')), 0, 4);
+            $t = mb_substr(implode("\n", $rows), 0, PLAN_TEXT1_MAX);
+        } else {
+            $t = mb_substr(trim(preg_replace('/\s*\n\s*/', ' ', $t)), 0, 90);
+        }
+        $lines[] = ['text' => $t, 'style' => isset($styles[$s]) ? $s : $defaults[$i]];
     }
     $headline = mb_substr(trim(str_replace("\r", '', (string)($in['headline'] ?? ''))), 0, 140);
-    if ($layout === 'photo') $headline = trim(preg_replace('/\s*\n\s*/', ' ', $headline));   // one line of words over the fade
 
     $photoIn = (string)($in['photo'] ?? '');
     // The Broker tool (2026-11-02, Nikki): the picked photo is the BACKDROP; the figure is always the broker's cutout (the headshot when none exists).
@@ -728,7 +736,7 @@ function plan_post_from_request(mysqli $conn, array $ctx, array $in): array|stri
         ? ['renderer' => 'agent', 'post' => $common + $backdrop + $sizes + $agentLook + ['style' => $style, 'hook2' => $hook2, 'headline' => $headline, 'lines' => []]]
         : ($layout === 'split'
         ? ['renderer' => 'split', 'post' => $common + ['headline' => $headline, 'lines' => $lines, 'team' => plan_team_for_render($team), 'kind' => $kind]]
-        : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner',
+        : ['renderer' => 'social', 'post' => $common + ['type' => plan_social_type($format), 'layout' => $layout === 'center' ? 'center' : 'corner', 'multiline' => true,
                                                          'headline' => $headline, 'lines' => $lines, 'date_text' => '', 'time_text' => '', 'when_text' => '']]);
     $main['name'] = $slug($headline !== '' ? $headline : ($label ?: $kind));
 

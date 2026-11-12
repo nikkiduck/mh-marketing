@@ -2964,6 +2964,11 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   were extracted from social_render() so both share one look (renders
   byte-identical before and after). Sizes as the Instagram tools; the split
   photo takes 900 / 640 / 1230 px of post / square / story.
+- **Line breaks (2026-11-11):** Enter is a new line in the Headline on every
+  layout and in Text 1 (a textarea, four rows, `PLAN_TEXT1_MAX`); Text 2 to 4
+  are one line. `social_render()` breaks lines only for a post carrying
+  `'multiline' => true`, which the plan tools alone set: the agents' tools
+  draw exactly as before. Rows become `<br>` in `social_line_html()`.
 - One builder body, `inc/plan_body.php` (`$pk` = kind), the endpoints
   `plan_render.php`, `plan_export.php`, `plan_photos.php`, all
   `plan_gate()` (require_role admin + social_context() with
