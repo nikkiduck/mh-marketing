@@ -2856,7 +2856,9 @@ RENTAL tags Sara Perkowski alone (`CAPTION_TEAM_*`). Rentals show no rate.
 caption to edit, save, copy or put back; `caption_save.php` is its endpoint.
 The Property tool (inc/plan_body.php) has a Suggested Caption section that
 fills from the listing, is never drawn (typing in it starts no preview), and
-is what Save to the week keeps as the piece's caption.
+is what Save to the week keeps as the piece's caption. A Story has no
+caption: the section is hidden and its box disabled (so nothing is saved
+with a story piece) whenever the size is Story.
 
 ### The Social Media Plan templates (super admin only, 2026-11-02)
 

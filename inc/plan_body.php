@@ -823,7 +823,10 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
     capBox.value = (typeof CAPTIONS !== 'undefined' && CAPTIONS[f('listing').value]) || '';
     capTouched = false; capCount();
   }
+  // A story carries no caption: the section shows on Post and Square only, and a hidden caption is not sent (Nikki, 2026-11-12).
+  function capShow() { if (!capBox) return; const story = fmt() === 'story'; document.getElementById('spCapStep').hidden = story; capBox.disabled = story; }
   if (capBox) {
+    capShow(); setTimeout(capShow, 0);   // again once a saved piece's size is restored
     if (capBox.dataset.saved) { capBox.value = capBox.dataset.saved; capTouched = true; capCount(); } else capFill(true);
     capBox.addEventListener('input', e => { capTouched = true; capCount(); e.stopPropagation(); });   // the caption is not drawn: no new preview
     document.getElementById('spCapCopy').addEventListener('click', async e => {
@@ -855,7 +858,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
     if (n === 'season') { fillTaglines(); fill(); loadPhotos(); return; }
     if (n === 'variant' || n === 'hook' || n === 'market' || n === 'tagline') fill();
     if (n === 'angle') { if (e.target.value === 'team') f('layout').value = 'split'; fillTeam(true); fill(); syncLayout(); }
-    if (n === 'size') { syncLayout(); scale(); syncSet(); syncTextSizes(); }
+    if (n === 'size') { syncLayout(); scale(); syncSet(); syncTextSizes(); capShow(); }
     if (n === 'hook_size') { const c = f('call_size'); if (!c.dataset.touched) { c.value = Math.round(+e.target.value * 0.9); showRange(c); } }
     if (n === 'layout' || n === 'style' || n === 'arrange') { syncLayout(); framerApply(); }
     if (n === 'set' || n === 'endcard' || n === 'logo' || n === 'logo_kind') syncSet();
