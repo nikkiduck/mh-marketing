@@ -2913,11 +2913,24 @@ for a sale, "Now Booking: <name>" for a rental. Tags: our agents on the
 listing through agent_mls_ids (a team id tags every member, never an outside
 co-list agent); no Instagram on the profile = the name; a Weber Boxer Group
 RENTAL tags Sara Perkowski alone (`CAPTION_TEAM_*`). Rentals show no rate.
+**Five hashtags, by one rule (Nikki, 2026-11-12: Instagram now limits a
+caption to five):** `caption_tags()` makes them from the listing's facts
+(town, town + realestate or rental, then coloradorealestate /
+vacationrental, landforsale / luxuryrealestate from `CAPTION_LUXURY_FROM` /
+homeforsale, justlisted while new / skihome in `CAPTION_SKI_TOWNS` /
+mountainlife; the list is in its header). `caption_retag()` swaps a
+caption's closing hashtag lines for them; `caption_for()` does that on every
+read of a draft or a built caption, so the drafts file holds no hashtags and
+#justlisted comes and goes with the feed. A SAVED caption is hers as she
+left it (the seven saved before the rule, and the week pieces' captions,
+were retagged once on 2026-11-12). No #sellersrep, no per-listing tags. The
+builder's count line reads "N of 5 hashtags" and turns red past five.
 `social_captions.php` (Social Media > Captions) lists every live listing's
 caption to edit, save, copy or put back; `caption_save.php` is its endpoint.
 The Property tool (inc/plan_body.php) has a Suggested Caption section that
 fills from the listing, is never drawn (typing in it starts no preview), and
-is what Save to the week keeps as the piece's caption. A Story has no
+is what Save to the week keeps as the piece's caption (the week page shows
+no caption text, only a Copy caption button per piece). A Story has no
 caption: the section is hidden and its box disabled (so nothing is saved
 with a story piece) whenever the size is Story.
 

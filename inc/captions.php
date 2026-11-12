@@ -18,14 +18,15 @@
  *   ➡️ Get in touch with @handle or @handle for more information and to
  *   arrange your private showing.                 (a rental: … to book your stay.)
  *
- *   #hashtags
+ *   #five #hashtags                              (caption_tags(): one rule)
  *
  * One caption per listing, keyed "market|listing_key" like plan_listings():
  *   saved   what Nikki saved, in CREATIVES_DIR/social/captions.json (one
  *           JSON file, no table, like the Weekly Plans store)
  *   draft   the hand-written first drafts of 2026-11-12, inc/caption_drafts.json
- *           (the catchy names and hashtags were written per listing; `notes`
- *           say what Nikki should look at)
+ *           (the catchy names were written per listing; `notes` say what
+ *           Nikki should look at; the file holds no hashtags since they
+ *           became five by rule)
  *   built   anything else: caption_build() from the feed's fields, the site's
  *           description and the agents' Instagram handles on their profiles.
  *           Its headline is the short address until someone writes the name.
@@ -154,17 +155,49 @@ function caption_remarks(string $market, string $key): string {
     return trim(preg_replace('/\s+/', ' ', (string)($j['remarks'] ?? '')));
 }
 
-/** The town's hashtags, by board. */
-function caption_area_tags(array $l): string {
+/**
+ * The caption's hashtags: FIVE, always (Nikki, 2026-11-12: Instagram now
+ * limits a caption to five; "focus on the town name and relevant tags").
+ * One rule for every caption, from the listing's own facts:
+ *   a sale    #town #townrealestate #coloradorealestate
+ *             + #landforsale (land) | #luxuryrealestate (CAPTION_LUXURY_FROM
+ *               and up) | #homeforsale
+ *             + #justlisted (while the feed calls it new) | #skihome (a ski
+ *               town, not land) | #mountainlife
+ *   a closing #town #townrealestate #coloradorealestate #justsold #mountainlife
+ *   a rental  #town #townrental #vacationrental
+ *             + #skihome (a ski town) | #coloradorental, then #mountainlife
+ * The town is the listing's city, letters only (Snowmass Village reads
+ * #snowmass). No #sellersrep, no per-listing tags: five leaves no room.
+ */
+const CAPTION_LUXURY_FROM = 2000000;
+const CAPTION_TOWN_TAGS = ['snowmassvillage' => 'snowmass'];
+const CAPTION_SKI_TOWNS = ['aspen', 'snowmass', 'vail', 'avon', 'beavercreek', 'edwards', 'minturn', 'telluride', 'mountainvillage', 'breckenridge', 'frisco',
+                           'silverthorne', 'dillon', 'keystone', 'coppermountain', 'steamboatsprings', 'crestedbutte', 'mtcrestedbutte', 'winterpark'];
+function caption_tags(array $l): string {
     $rental = (int)($l['is_rental'] ?? 0) === 1;
-    $town = strtolower(preg_replace('/[^A-Za-z]/', '', (string)($l['city'] ?? '')));
-    switch ((string)$l['market']) {
-        case 'aspen': return $rental ? '#aspenrental #aspenvacationrental #aspenluxury #mountainliving #roaringforkvalley #aspen'
-                                     : '#aspenrealestate #coloradorealestate #luxuryrealestate #aspenluxury #mountainliving #exclusiveproperty #roaringforkvalley #aspen';
-        case 'vail':  return $rental ? '#vailvalleyrental #vailrental #vailvalley #mountainliving #vail'
-                                     : '#vailrealestate #coloradorealestate #luxuryrealestate #vailvalley #mountainliving #exclusiveproperty #vail';
-    }
-    return ($town !== '' ? '#' . $town . ($rental ? 'rental ' : 'realestate ') : '') . '#coloradorealestate #mountainliving #exclusiveproperty #coloradohomes #coloradoliving';
+    $closed = !empty($l['closed']);
+    $land   = stripos((string)($l['property_type'] ?? ''), 'land') !== false;
+    $new    = !$closed && (!empty($l['new']) || (int)($l['is_new'] ?? 0) === 1);
+    $town   = strtolower(preg_replace('/[^A-Za-z]/', '', (string)($l['city'] ?? '')));
+    $town   = CAPTION_TOWN_TAGS[$town] ?? $town;
+    if ($town === '') $town = 'colorado';
+    $ski    = in_array($town, CAPTION_SKI_TOWNS, true);
+    if ($rental)     $tags = [$town, $town . 'rental', 'vacationrental', $ski ? 'skihome' : 'coloradorental', 'mountainlife'];
+    elseif ($closed) $tags = [$town, $town . 'realestate', 'coloradorealestate', 'justsold', 'mountainlife'];
+    else             $tags = [$town, $town . 'realestate', 'coloradorealestate',
+                              $land ? 'landforsale' : ((float)($l['list_price'] ?? 0) >= CAPTION_LUXURY_FROM ? 'luxuryrealestate' : 'homeforsale'),
+                              $new ? 'justlisted' : (($ski && !$land) ? 'skihome' : 'mountainlife')];
+    $tags = array_values(array_unique($tags));   // a listing with no city: #colorado, and the pair it would repeat
+    if (count($tags) < 5) $tags[] = 'coloradohomes';
+    return '#' . implode(' #', $tags);
+}
+
+/** The caption with its closing hashtag lines (if any) replaced by the listing's five. Hashtags inside the words ("Unit #4") are left alone. */
+function caption_retag(string $caption, array $l): string {
+    $lines = explode("\n", rtrim(str_replace("\r", '', $caption)));
+    while ($lines && (trim(end($lines)) === '' || preg_match('/^(#[\p{L}\p{N}_]+\s*)+$/u', trim(end($lines))))) array_pop($lines);
+    return ($lines ? implode("\n", $lines) . "\n\n" : '') . caption_tags($l);
 }
 
 /** A caption from the feed's fields. $remarks: the description ('' = none). The headline's name is the short address until someone writes one. */
@@ -185,7 +218,7 @@ function caption_build(mysqli $conn, array $l, string $remarks = ''): string {
     if (!$who && trim((string)($l['agent'] ?? '')) !== '') $who = [trim((string)$l['agent'])];
     $cta = "\u{27A1}\u{FE0F} Get in touch with " . ($who ? implode(' or ', $who) : 'Mont Haus International Realty')
          . ($rental ? ' for availability and to book your stay.' : ' for more information and to arrange your private showing.');
-    $tags = ($rental ? '' : '#sellersrep ') . caption_area_tags($l);
+    $tags = caption_tags($l);
     $top = $head . "\n\n" . implode("\n", $lines) . "\n\n";
     $end = $cta . "\n\n" . $tags;
     $room = CAPTION_MAX - mb_strlen($top) - mb_strlen($end) - 2;
@@ -208,8 +241,9 @@ function caption_for(mysqli $conn, array $l, bool $fetch = true, ?array $store =
     if (isset($store['saved'][$id]['caption'])) {
         return ['caption' => (string)$store['saved'][$id]['caption'], 'source' => 'saved', 'notes' => $notes, 'saved_at' => (string)($store['saved'][$id]['saved_at'] ?? '')];
     }
-    if ($draft && empty($l['closed'])) return ['caption' => (string)$draft['caption'], 'source' => 'draft', 'notes' => $notes, 'saved_at' => ''];
-    if (isset($store['built'][$id]['caption']) && empty($l['closed'])) return ['caption' => (string)$store['built'][$id]['caption'], 'source' => 'built', 'notes' => ['Built from the feed: the headline needs its catchy name'], 'saved_at' => ''];
+    // A draft's and a built caption's hashtags are the rule's, read now (#justlisted comes and goes with the feed); a saved caption is Nikki's, as she left it.
+    if ($draft && empty($l['closed'])) return ['caption' => caption_retag((string)$draft['caption'], $l), 'source' => 'draft', 'notes' => $notes, 'saved_at' => ''];
+    if (isset($store['built'][$id]['caption']) && empty($l['closed'])) return ['caption' => caption_retag((string)$store['built'][$id]['caption'], $l), 'source' => 'built', 'notes' => ['Built from the feed: the headline needs its catchy name'], 'saved_at' => ''];
     $remarks = $fetch ? caption_remarks((string)$l['market'], (string)$l['listing_key']) : '';
     $cap = caption_build($conn, $l, $remarks);
     if ($remarks !== '' && empty($l['closed'])) captions_update(function (array &$s) use ($id, $cap) { $s['built'][$id] = ['caption' => $cap, 'built_at' => gmdate('c')]; });

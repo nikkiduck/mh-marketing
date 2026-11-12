@@ -511,6 +511,19 @@ Nikki, after building a Wrights Road set: ten small things, all in
   is the Caption box (not sent on a story); from the week page the saved
   piece's caption. A single picture is still a PNG, with no caption file.
 
+## Copy caption on the week page, five hashtags (2026-11-12)
+
+- **Week page:** a saved piece's caption is no longer printed under its
+  line (Nikki: "it is taking up too much space"). A Copy caption button
+  sits on the line instead and copies the whole caption; `plCopyLink()`
+  (social_plan.php) now copies any text in `data-link`, line breaks kept.
+- **Five hashtags:** Instagram limits a caption to five. `caption_tags()`
+  in inc/captions.php is the one rule (see its header and marketing
+  CLAUDE.md > Suggested Captions); it also feeds the agents' Suggested
+  Caption, which Nikki's "update all the captions" covers. The saved
+  captions and the week pieces' captions were retagged once on the server
+  (backups beside each file, `*.bak-20261112-tags`).
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the

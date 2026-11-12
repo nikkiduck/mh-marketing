@@ -145,7 +145,6 @@ admin_tool_header([
     .pl-table td.pick { color:#1f242c; }
     .pl-table td.pick .sug { color:#6b7a8f; }
     .pl-table td.pick .sug b { color:#434b57; font-weight:600; }
-    .pl-table td.pick .cap { display:block; margin-top:4px; color:#6b7a8f; font-size:13px; white-space:pre-line; }
     .pl-table td.st { white-space:nowrap; width:120px; }
     .pl-st { display:inline-block; font-size:11.5px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; border-radius:999px; padding:3px 9px; }
     .pl-st.saved { background:#e9f3ec; color:#1f5a35; }
@@ -180,7 +179,7 @@ admin_tool_header([
     .pl-go-row a, .pl-go-row button { margin-left:0 !important; }
     .pl-table td.pick .pl-piece + .pl-piece { margin-top:6px; }
     .pl-table td.pick .pl-piece b { color:#434b57; font-weight:600; }
-    .pl-table td.pick .pl-piece + .sug, .pl-table td.pick .pl-piece .cap + .sug { display:block; margin-top:6px; }
+    .pl-table td.pick .pl-piece + .sug { display:block; margin-top:6px; }
     .pl-table td.go a.pl-inbio { color:#1f5a35; border-color:#bfe0c9; background:#e9f3ec; }
     .pl-table td.pick .pl-stk { display:block; margin-top:4px; font-size:13px; color:#6b7a8f; word-break:break-all; }
     .pl-table td.pick .pl-stk a { color:#4a5569; }
@@ -217,9 +216,17 @@ function plBrandDay(box) {
   box.form.submit();
 }
 function plCopyLink(btn) {
+  // A sticker link or a whole caption (2026-11-12): data-link is the text. Without the clipboard, a hidden box is selected and copied (a caption has line breaks, which prompt() would drop).
+  var text = btn.dataset.link;
   var done = function () { var w = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = w; }, 1400); };
-  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(btn.dataset.link).then(done, function () { prompt('Copy the link:', btn.dataset.link); });
-  else prompt('Copy the link:', btn.dataset.link);
+  var byHand = function () {
+    var t = document.createElement('textarea'); t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(t); t.select();
+    try { if (document.execCommand('copy')) done(); else prompt('Copy this:', text); } catch (e) { prompt('Copy this:', text); }
+    t.remove();
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, byHand);
+  else byHand();
 }
 function plKind(sel) {
   var other = sel.form.querySelector('.pl-other');
@@ -305,7 +312,9 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
             <?php elseif ($saved): ?>
               <?php foreach ($pieces as $b => $pc): ?>
               <div class="pl-piece"><b><?= $b === 'story' ? 'Story' : 'Post' ?>:</b> <?= $e($pc['summary'] ?? '') ?>
-                <?php if (trim((string)($pc['caption'] ?? '')) !== ''): ?><span class="cap"><?= $e(mb_strimwidth(trim((string)$pc['caption']), 0, 160, '…')) ?></span><?php endif; ?>
+                <?php if (trim((string)($pc['caption'] ?? '')) !== ''): // the caption is not shown (Nikki, 2026-11-12: "it is taking up too much space"): a button copies all of it ?>
+                <button type="button" class="pl-stk-copy" data-link="<?= $e(trim((string)$pc['caption'])) ?>" onclick="plCopyLink(this)">Copy caption</button>
+                <?php endif; ?>
                 <?php if ($b === 'story' && ($stk = bio_plan_dest($conn, (string)($item['kind'] ?? ''), (array)$pc['form'])) !== ''): // a story carries its own link sticker (2026-11-12): the address to paste into it ?>
                 <span class="pl-stk">Sticker link: <a href="<?= $e($stk) ?>" target="_blank" rel="noopener"><?= $e(preg_replace('~^https://~', '', $stk)) ?></a> <button type="button" class="pl-stk-copy" data-link="<?= $e($stk) ?>" onclick="plCopyLink(this)">Copy</button></span>
                 <?php endif; ?></div>
