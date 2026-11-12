@@ -2835,6 +2835,29 @@ and inc/flyer.php. Uploads made from the admin pages are the admin's own
 page under a simulated admin session on the server (Jonathan's 16 listings
 in both dropdowns, 26 agents in the picker).
 
+### Suggested Captions (super admin only, 2026-11-12)
+
+Nikki, 2026-11-12: a prefilled "Suggested Caption" for the Instagram listing
+posts, in the admin tools first; the agents' templates get it when she says
+so (NOT built there yet: portal/social.php has no caption box). One caption
+per listing, keyed "market|listing_key": `inc/captions.php` (the shape, from
+her 633 W Main St sample, is in its header). `caption_for()` returns what she
+saved (CREATIVES_DIR/social/captions.json, one JSON file, no table), else the
+hand-written first draft of 2026-11-12 (`inc/caption_drafts.json`, 43 live
+Mont Haus listings, with `notes` on what to check), else `caption_build()`
+from the feed, the site's description (photos scope) and the Instagram
+handles on the profiles; a built caption's headline is the short address
+until someone writes the catchy name. Headline: "Featured Listing: <name>"
+for a sale, "Now Booking: <name>" for a rental. Tags: our agents on the
+listing through agent_mls_ids (a team id tags every member, never an outside
+co-list agent); no Instagram on the profile = the name; a Weber Boxer Group
+RENTAL tags Sara Perkowski alone (`CAPTION_TEAM_*`). Rentals show no rate.
+`social_captions.php` (Social Media > Captions) lists every live listing's
+caption to edit, save, copy or put back; `caption_save.php` is its endpoint.
+The Property tool (inc/plan_body.php) has a Suggested Caption section that
+fills from the listing, is never drawn (typing in it starts no preview), and
+is what Save to the week keeps as the piece's caption.
+
 ### The Social Media Plan templates (super admin only, 2026-11-02)
 
 Nikki's "Mont Haus Social Media Plan" (a docx; its words are in

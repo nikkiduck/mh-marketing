@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-11 21:09 from git HEAD
+# Generated 2026-11-12 from the working folder (captions)
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
 2d993b43632fe710477877826cf5e8d3  agent.php
@@ -17,6 +17,7 @@ ba73445937a812afe57c74e4349fe887  assets/css/social.css
 e539e5bb247a1ef82888690dd966de01  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
 2d85cea4712b33eb75b1bb384e92e261  billing.php
+7605617b1ef8bbae04057924ab75c01d  caption_save.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
 2574ed722be2203d46373fd5d0e209e6  creative.php
 18f86e70bdc154a8cace266e54daff72  cron/activate_roster.php
@@ -51,6 +52,7 @@ b97e836d5b0b6da31bc52ef3dab507a4  inc/ads_render.php
 dfbecd5baf8eb89a44ce4f33ea6cbbed  inc/boards.php
 5d342fa9a131350b281e46f52aa5480c  inc/brand_embed.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
+7ab37a7609cdfe51bb6a591b2a536977  inc/captions.php
 0251f0102735a0aa9182fb5aae25615c  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
 754564325f3942d3d6f1b5bd0fec37b0  inc/cutout.php
@@ -75,9 +77,9 @@ dd828c19260e7fae118a7a8c281f2ec0  inc/market_flyer_render.php
 5d461821bd57dfba63e198c4244d2eed  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-d675921647c873c9898117c1e20e552a  inc/plan.php
+08dca461514e33670f6674bdd0e3ea08  inc/plan.php
 d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
-62292541b628ede5d966fc8d207e0e92  inc/plan_body.php
+eaa6965c39319a7568b358eddf3d1272  inc/plan_body.php
 a2299b1b7c24795c470eac1d77a03df7  inc/plan_render.php
 ebcc3e7d9b3813c881b6b18bd23e4c0b  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
@@ -149,7 +151,8 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 433c74fae7846a5d72927080970946b5  reset-password.php
 ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
-f5b41af21b0d3c18a2ca8f2f4df1da25  social_media.php
+9f3409ddf90983d0274162d1ad62d639  social_captions.php
+762ad0f1d3e0eb39a130f50dc4c5eabb  social_media.php
 c9c59f37b64ea45b4d2a6b1c07940c6b  social_plan.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 cf49756a8d1d50ec56165d3d9644123e  subscribers.php

@@ -220,7 +220,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
             </label>
           </div>
           <?php endforeach; ?>
-          <?php if ($pk_plan): ?>
+          <?php if ($pk_plan && $pk !== 'property'): ?>
           <label class="sp-field">Caption (saved with the week, not drawn) <textarea name="caption" maxlength="2200" rows="3"><?= $e($pk_saved['caption'] ?? '') ?></textarea></label>
           <?php endif; ?>
         </div>
@@ -247,6 +247,20 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
           <label class="sp-range">Text shadow <input type="range" name="text_shadow" min="0" max="100" step="5" value="35"><output>35</output></label>
         </div>
       </section>
+
+      <?php if ($pk === 'property'): /* The Suggested Caption (Nikki, 2026-11-12): the listing's caption from inc/captions.php, to edit, copy and keep. Not drawn. */ ?>
+      <section class="sp-step" id="spCapStep">
+        <h2 class="sp-step-h">Suggested Caption</h2>
+        <label class="sp-field"><span id="spCapHint">Prefilled for the listing. Not drawn on the picture.</span>
+          <textarea name="caption" id="spCaption" maxlength="2200" rows="14" data-saved="<?= $e($pk_saved['caption'] ?? '') ?>"></textarea></label>
+        <div class="sp-capbar">
+          <button type="button" class="sp-btn sp-btn-sm sp-btn-soft" id="spCapCopy">Copy caption</button>
+          <button type="button" class="sp-btn sp-btn-sm sp-btn-soft" id="spCapKeep">Save as this listing's caption</button>
+          <span class="sp-capcount" id="spCapCount"></span>
+          <a class="sp-link" href="social_captions.php">All captions</a>
+        </div>
+      </section>
+      <?php endif; ?>
 
       <section class="sp-step">
         <h2 class="sp-step-h">Elements</h2>
@@ -368,6 +382,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
   <?php if ($pk === 'property'): ?>
   const LISTINGS = <?= json_encode(array_values(array_map(fn($l) => ['id' => $l['id'], 'headline' => $l['headline'], 'town' => $l['town'], 'price_text' => $l['price_text'], 'specs_text' => $l['specs_text'],
       'is_rental' => (int)$l['is_rental'], 'closed' => (bool)$l['closed'], 'new' => (bool)$l['new'], 'agent' => $l['agent'], 'city' => trim((string)$l['city'])], $pk_listings)), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
+  const CAPTIONS = <?php $cap_store = captions_store(); echo json_encode(array_map(fn($l) => caption_for($conn, $l, false, $cap_store)['caption'], $pk_listings), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;   // by listing id (2026-11-12)
   <?php elseif ($pk === 'broker'): ?>
   const AGENTS = <?= json_encode(array_values(array_map(fn($a) => ['id' => $a['id'], 'name' => $a['name'], 'first' => $a['first'], 'title' => $a['title'], 'market' => $a['market'], 'region' => $a['region']], $pk_agents)), JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
   <?php elseif ($pk === 'location'): ?>
@@ -799,9 +814,39 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
   fimg.addEventListener('load', framerApply);
   new ResizeObserver(framerApply).observe(framer);
 
+  // ── The Suggested Caption (2026-11-12): the listing's caption until it is typed in; never part of the picture ──
+  const capBox = document.getElementById('spCaption');
+  let capTouched = false;
+  function capCount() { const c = document.getElementById('spCapCount'); if (c) { c.textContent = capBox.value.length.toLocaleString() + ' / 2,200'; c.classList.toggle('over', capBox.value.length > 2200); } }
+  function capFill(force) {
+    if (!capBox || (capTouched && !force)) return;
+    capBox.value = (typeof CAPTIONS !== 'undefined' && CAPTIONS[f('listing').value]) || '';
+    capTouched = false; capCount();
+  }
+  if (capBox) {
+    if (capBox.dataset.saved) { capBox.value = capBox.dataset.saved; capTouched = true; capCount(); } else capFill(true);
+    capBox.addEventListener('input', e => { capTouched = true; capCount(); e.stopPropagation(); });   // the caption is not drawn: no new preview
+    document.getElementById('spCapCopy').addEventListener('click', async e => {
+      try { await navigator.clipboard.writeText(capBox.value); } catch (_) { capBox.select(); document.execCommand('copy'); }
+      const b = e.currentTarget, t = b.textContent; b.textContent = 'Copied'; setTimeout(() => { b.textContent = t; }, 1400);
+    });
+    document.getElementById('spCapKeep').addEventListener('click', async e => {
+      const b = e.currentTarget, t = b.textContent, fd = new FormData();
+      fd.append('csrf_token', f('csrf_token').value); fd.append('id', f('listing').value); fd.append('caption', capBox.value);
+      b.disabled = true;
+      try {
+        const r = await fetch('caption_save.php', { method: 'POST', body: fd, credentials: 'same-origin' }); const j = await r.json();
+        if (!j.ok) throw new Error(j.error || 'Not saved');
+        CAPTIONS[f('listing').value] = j.caption; b.textContent = 'Saved';
+      } catch (err) { b.textContent = 'Not saved, try again'; }
+      setTimeout(() => { b.textContent = t; b.disabled = false; }, 1600);
+    });
+  }
+
   // ── Wiring ──
   form.addEventListener('input', e => {
     const n = e.target.name;
+    if (n === 'listing') capFill(true);
     if (n === 'listing' || n === 'agent' || n === 'loc') {
       if (n === 'agent') { const o = e.target.selectedOptions[0]; f('market').value = o ? o.dataset.market : ''; syncLayout(); }
       if (n === 'loc') fillTeam(true);

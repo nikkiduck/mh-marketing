@@ -15,6 +15,7 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $cards = [
     ['Weekly Plans', 'social_plan.php', 'This week and the four ahead, Monday to Saturday: eight pieces a week, each day\'s suggestion from the rotations. Make or change each piece, save it to the week, mark the week planned and go on to the next.', 'Open the weeks ›'],
     ['Property Post + Set', 'template_property.php', 'Any Mont Haus listing in the feed: New Listing, Featured, Just Sold or Rental. One picture, or a set: the photos in order as one story or carousel, downloaded as a ZIP.', 'Make a post or set ›'],
+    ['Captions', 'social_captions.php', 'The Suggested Caption of every Mont Haus listing on one page: the headline, the details, the description, who to tag and the hashtags. Read them, edit them, save them; the Property tool shows the saved one.', 'Review the captions ›'],   // 2026-11-12
     ['Broker Feature', 'template_broker.php', 'Spotlight a broker tied to their market with one of the plan\'s hooks, or a milestone: their cutout in front of a location photo under the slate veil.', 'Make a feature ›'],
     ['Location Feature', 'template_location.php', 'An office, an area or a town: the office or a view, the brokers based there with their faces in a row, or a local real estate angle.', 'Make a feature ›'],
     ['Branding Story', 'template_branding.php', 'The seasonal taglines on a mountain photo, centred, with the logo. Two a week in the plan.', 'Make a story ›'],
