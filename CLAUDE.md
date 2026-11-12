@@ -1941,8 +1941,9 @@ lookup and overwrites photo and link. Deals waiting for review show as a red
 count (`.hdr-badge`, mh-theme.css) on the roster's Hot Sheets button and on
 the Hot Sheets page's Pipeline Review button, as well as the roster chip and
 the email (Nikki, 2026-10-29: the email alone was missed one week).
-pipeline_review.php carries the shared header (inc/_nav.php) since 2026-11-12;
-its own rules sit under `.pl-page` and its clashing class names were renamed
+pipeline_review.php and pipeline_events.php carry the shared header
+(inc/_nav.php) since 2026-11-12; the review page's own rules sit under
+`.pl-page` (the payloads page's under `.pe-page`) and its clashing class names were renamed
 (.frow, .pl-card, .pbtn) so the framework's .row / .card / .btn leave it alone.
 Until go-live the hub's review queue is mirrored here by the import. Hot Sheets moves here from the hub. Listings come
 from site.monthaus.com's `api/listings.php` (the site is the only Anyprop
