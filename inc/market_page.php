@@ -185,7 +185,7 @@ function market_page_feed_section(?array $p, string $pt, array $w): ?array {
     $lead = $sold < MARKET_PAGE_THIN && $ytdN > 0;
     $ly = $w['ly']; $ya = $w['lyYr'] . ' YTD'; $mon = $w['mon'];
     $has = fn($a, $k) => market_page_has($a[$k] ?? null);
-    $dom = (($mo['dom_basis'] ?? ($y['dom_basis'] ?? '')) === 'close') ? 'Days from listing to closing' : 'Days on market';   // CREN, elevateMLS and REcolorado send no contract date
+    $dom = (($mo['dom_basis'] ?? ($y['dom_basis'] ?? '')) === 'close') ? 'Days to closing' : 'Days on market';   // CREN, elevateMLS and REcolorado send no contract date
     $t = [];
     if ($lead) {
         $t[] = market_page_tile('Closed sales', market_int($ytdN), market_change($ytdN, $yl['sold'] ?? null), $ya, $mon . ': ' . market_int($sold), 'Year to date');
