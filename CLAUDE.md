@@ -1930,7 +1930,13 @@ Promoting asks the site's `api/listings.php?scope=lookup` for the photo, city,
 MLS number and listing page (`pl_enrich_address()`); since 2026-10-29 the
 site requires only the street number and the first street word, because
 CREN stored "10528 Bostwick" for Paperless's "10528 Bostwick Park Road" and
-the buyer-rep card went out with no photo or link. Re-review re-runs the
+the buyer-rep card went out with no photo or link. Tightened 2026-11-12: the
+first word of the street NAME (never a direction, suffix or unit) as a whole
+word, and the two names must agree, after "1601 W Beaver Creek Blvd" (a
+Paperless typo for 1061) matched on the letter W and a pocket-listing card
+got a Fort Collins house's photo, city and zip. A deal whose Paperless
+address is mistyped cannot match its MLS listing, so it is queued as a pocket
+listing: Dismiss it and fix the address in Paperless. Re-review re-runs the
 lookup and overwrites photo and link. Deals waiting for review show as a red
 count (`.hdr-badge`, mh-theme.css) on the roster's Hot Sheets button and on
 the Hot Sheets page's Pipeline Review button, as well as the roster chip and
