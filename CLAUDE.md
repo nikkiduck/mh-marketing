@@ -2616,6 +2616,24 @@ retired the same day and 301s here.
 
 ### Market Report and Market Snapshot posts (2026-10-18)
 
+**Public pages on monthaus.com (2026-11-12, Nikki: "every location has a
+webpage that lives at monthaus.com/market-reports/{month}/{location}").**
+The site draws them; every figure, tile, slug and credit line is built here.
+`inc/market_page.php` (pure): `market_page_places()` issues each place's
+public slug (a town's Communities key, a county's name with `-county`,
+`denver-metro`: never derive them anywhere else), `market_page_month()`
+returns a month's page model for every place (sections of tiles per property
+type, a summary row, the month by month series, credits).
+`api/market_reports.php` serves it (`?index=1`, `?m=YYYY-MM`; Bearer
+ROSTER_FEED_TOKEN, the token the site already holds). Rules: under
+`MARKET_PAGE_THIN` (5) closed sales the sales tiles lead with year to date;
+`MARKET_PUBLIC_SOURCES` says which sources are public (all four: Anyprop
+cleared the feed-derived figures, Nikki 2026-11-12), and a figure we compile
+from the feed carries the notice the boards require (source MLS and period;
+MLS Grid's wording for REcolorado). A change to a tile's wording or to a
+place is made here and reaches the site within the hour. Rules check and
+plan: site docs/HANDOFF-public-market-reports.md.
+
 **PDF flyer for a client (2026-11-08, Nikki: "so agents can download and
 share with a client").** `portal/market_flyer.php?market=&pt=SF|TC&m=` prints
 one US Letter page for the market tab and property type the report shows:
