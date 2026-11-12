@@ -1,5 +1,5 @@
+# Generated 2026-11-12 15:37 from git HEAD
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-12 from the working folder (link in bio)
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
 2d993b43632fe710477877826cf5e8d3  agent.php
@@ -79,11 +79,11 @@ dd828c19260e7fae118a7a8c281f2ec0  inc/market_flyer_render.php
 5d461821bd57dfba63e198c4244d2eed  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
-b6efdc6da3e77549d0c1f6f2d09d984f  inc/plan.php
+9bbfc498ff08c38bea59a677a4a57450  inc/plan.php
 d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
-f7909482718a15b8bac89be8e8b718ba  inc/plan_body.php
+bde568bb1c301598c3ffbdcb2e3848e9  inc/plan_body.php
 a2299b1b7c24795c470eac1d77a03df7  inc/plan_render.php
-ebcc3e7d9b3813c881b6b18bd23e4c0b  inc/plan_store.php
+4d5eeb45c6786eead7726f6398ecd6d2  inc/plan_store.php
 e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
@@ -93,7 +93,7 @@ eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
 16244494c99adcb1bdf4d46e5740bdc4  inc/social.php
 65634ddcb51f94c9846aa43f2efa824a  inc/social_body.php
-5c2b83005f6e59ec979b5ae82678e6c9  inc/social_render.php
+2160a73d3b85020a9cc5fa3a5d408995  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 6edc0c431e2d1b548a80b104c15a2381  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php
@@ -107,7 +107,7 @@ b6b13d82e0f8adb87cc9ba58ce1f748d  oauth_start.php
 f8560bfe6f42693f0d165d7fc20a329d  order_split.php
 c991929d767872f6285f96c4f0629ab4  pipeline_events.php
 a45212569ee95f92e7c8401028aeb1c0  pipeline_review.php
-7dd3f575c88e229bd9656e7c63509cf2  plan_export.php
+c0c2d5fba1f237e95deb562dbd88d936  plan_export.php
 1504cd2f1620186695f6c7646f1098cb  plan_photos.php
 c62b17405d2e2388e5648ac84d061201  plan_render.php
 dc38f6ec275e6723f6822f3eca78523b  plan_save.php
