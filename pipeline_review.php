@@ -368,67 +368,74 @@ function money0(?string $v): string {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pipeline Review | Mont Haus Hot Sheet</title>
+<title>Pipeline Review | Mont Haus Marketing</title>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/fonts/tabler-icons.min.css">
+<link rel="stylesheet" href="/assets/css/style.css" id="main-style-link">
+<link rel="stylesheet" href="/assets/css/style-preset.css">
 <style>
-  *,*::before,*::after { box-sizing:border-box; }
-  body { margin:0; background:#f6f7f9; font-family:'Public Sans',system-ui,sans-serif; color:#111; }
-  .wrap { max-width:1000px; margin:0 auto; padding:28px 20px 60px; }
-  h1 { font-size:22px; margin:0 0 4px; }
-  .sub { font-size:13px; color:#6b7280; margin:0 0 22px; }
-  .flash { padding:10px 14px; border-radius:6px; font-size:13px; margin-bottom:16px; }
-  .flash.ok  { background:#d1fae5; color:#065f46; }
-  .flash.err { background:#fee2e2; color:#991b1b; }
-  .card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px 18px; margin-bottom:14px; }
-  .top { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
-  .addr { font-size:16px; font-weight:700; flex:1; min-width:0; }
-  .chip { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
+  /* The shared header (inc/_nav.php), as on every admin page: Nikki, 2026-11-12, so Pipeline
+     Review has the way back to the marketing home. The page had its own black bar before. */
+  .layout-extended .pc-container { margin-top:70px; padding-top:24px; top:0; }
+  .pc-header    { padding:0; left:0; top:0; min-height:70px; }
+  .mh-header-inner { width:100%; padding:0 15px; display:flex; align-items:center; justify-content:space-between; height:70px; }
+  .mh-logo img { height:50px; display:block; }
+  .mh-nav { display:flex; align-items:center; gap:4px; }
+  .mh-nav-link { display:inline-flex; align-items:center; gap:5px; padding:5px 12px; font-size:.8rem; font-weight:500;
+                 color:#eef1f5; text-decoration:none; border-radius:6px; white-space:nowrap; transition:color .2s, background .2s; }
+  .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
+  .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
+  .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
+  /* The page's own rules sit under .pl-page so they neither leak into the shared
+     header nor lose to the framework's .row / .card / .btn (hence .frow, .pl-card, .pbtn). */
+  .hdr-actions { display:flex; gap:8px; flex-wrap:wrap; }
+  .wrap { max-width:1000px; margin:32px auto 60px; padding:0 20px; }
+  .mk-page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
+  .pl-page, .pl-page *, .pl-page *::before, .pl-page *::after { box-sizing:border-box; }
+  .pl-page { font-family:'Public Sans',system-ui,sans-serif; color:#111; }
+  .pl-page .hint { font-size:13px; color:#6b7280; }
+  .pl-page .flash { padding:10px 14px; border-radius:6px; font-size:13px; margin-bottom:16px; }
+  .pl-page .flash.ok  { background:#d1fae5; color:#065f46; }
+  .pl-page .flash.err { background:#fee2e2; color:#991b1b; }
+  .pl-page .pl-card { background:#fff; border:1px solid #e5e7eb; border-radius:8px; padding:16px 18px; margin-bottom:14px; }
+  .pl-page .top { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+  .pl-page .addr { font-size:16px; font-weight:700; flex:1; min-width:0; }
+  .pl-page .chip { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px;
           padding:3px 8px; border-radius:10px; white-space:nowrap; }
-  .chip.buyer  { background:#dbeafe; color:#1d4ed8; }
-  .chip.pocket { background:#dcfce7; color:#166534; }
-  .chip.status { background:#f3f4f6; color:#4b5563; }
+  .pl-page .chip.buyer  { background:#dbeafe; color:#1d4ed8; }
+  .pl-page .chip.pocket { background:#dcfce7; color:#166534; }
+  .pl-page .chip.status { background:#f3f4f6; color:#4b5563; }
   /* Listing-side deal the MLS feed already carries — not off-market */
-  .chip.onmls  { background:#fef3c7; color:#92400e; }
-  .grid { display:grid; grid-template-columns:auto 1fr; gap:5px 14px; font-size:13px; margin-bottom:12px; }
-  .k { color:#6b7280; }
-  .v { color:#111; }
-  .warn { background:#fff7ed; border:1px solid #fed7aa; color:#9a3412;
+  .pl-page .chip.onmls  { background:#fef3c7; color:#92400e; }
+  .pl-page .pl-grid { display:grid; grid-template-columns:auto 1fr; gap:5px 14px; font-size:13px; margin-bottom:12px; }
+  .pl-page .k { color:#6b7280; }
+  .pl-page .v { color:#111; }
+  .pl-page .warn { background:#fff7ed; border:1px solid #fed7aa; color:#9a3412;
           font-size:12px; padding:8px 10px; border-radius:6px; margin-bottom:12px; }
-  .info { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af;
+  .pl-page .info { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af;
           font-size:12px; padding:8px 10px; border-radius:6px; margin-bottom:12px; }
-  form.promote { border-top:1px solid #f3f4f6; padding-top:12px; }
-  .row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-  label { font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase;
+  .pl-page form.promote { border-top:1px solid #f3f4f6; padding-top:12px; }
+  .pl-page .frow { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+  .pl-page label { font-size:11px; font-weight:600; color:#6b7280; text-transform:uppercase;
           letter-spacing:.3px; display:block; margin-bottom:3px; }
-  input,select,textarea { font-family:inherit; font-size:13px; padding:7px 9px;
+  .pl-page input, .pl-page select, .pl-page textarea { font-family:inherit; font-size:13px; padding:7px 9px;
           border:1px solid #d1d5db; border-radius:5px; width:100%; }
-  .f1 { flex:1; min-width:150px; }
-  .btn { font-size:13px; font-weight:600; padding:8px 14px; border-radius:5px;
+  .pl-page .f1 { flex:1; min-width:150px; }
+  .pl-page .pbtn { font-family:inherit; font-size:13px; font-weight:600; padding:8px 14px; border-radius:5px;
          border:1px solid transparent; cursor:pointer; }
-  .btn-go { background:#55637a; color:#fff; }
-  .btn-no { background:#fff; color:#6b7280; border-color:#d1d5db; }
-  .empty { text-align:center; color:#9ca3af; font-size:14px; padding:40px 0; }
-  .topbar { background:#1a1a1a; color:#fff; padding:12px 20px; display:flex;
-            align-items:center; gap:18px; flex-wrap:wrap; }
-  .topbar .title { font-weight:700; font-size:14px; margin-right:auto; }
-  .topbar a { color:#d1d5db; text-decoration:none; font-size:13px; }
-  .topbar a:hover { color:#fff; }
-  h2 { font-size:13px; text-transform:uppercase; letter-spacing:.5px; color:#9ca3af; margin:30px 0 10px; }
-  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid #e5e7eb; border-radius:8px; }
-  td,th { padding:8px 12px; font-size:12px; text-align:left; border-bottom:1px solid #f3f4f6; }
-  th { color:#6b7280; font-weight:600; }
-  a { color:#55637a; }
+  .pl-page .btn-go { background:#55637a; color:#fff; }
+  .pl-page .btn-no { background:#fff; color:#6b7280; border-color:#d1d5db; }
+  .pl-page .empty { text-align:center; color:#9ca3af; font-size:14px; padding:40px 0; }
+  .pl-page h2 { font-family:inherit; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#9ca3af; margin:30px 0 10px; }
+  .pl-page table { width:100%; border-collapse:collapse; background:#fff; border:1px solid #e5e7eb; border-radius:8px; }
+  .pl-page td, .pl-page th { padding:8px 12px; font-size:12px; text-align:left; border-bottom:1px solid #f3f4f6; }
+  .pl-page th { color:#6b7280; font-weight:600; }
+  .pl-page a:not(.btn) { color:#55637a; }
 </style>
 </head>
-<body>
+<body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<div class="topbar">
-  <span class="title">Mont Haus Hot Sheet: Pipeline Review</span>
-  <a href="index.php">Roster</a>
-  <a href="hot_sheet_preview.php">Preview the Hot Sheets</a>
-  <a href="pipeline_events.php">Raw payloads</a>
-  <a href="logout.php">Log out</a>
-</div>
+<?php $mh_active = 'marketing'; include __DIR__ . '/inc/_nav.php'; ?>
 
 <?php
 // Town list for the City picker. Keys are lowercase; display in title case.
@@ -440,10 +447,20 @@ sort($mh_cities);
   <?php foreach ($mh_cities as $c): ?><option value="<?= h($c) ?>"><?php endforeach; ?>
 </datalist>
 
-<div class="wrap">
+<div class="pc-container">
+<div class="wrap pl-page">
 
-  <h1>Pipeline Review</h1>
-  <p class="sub">Transactions from Paperless Pipeline. Nothing here reaches a hot sheet until you promote it.</p>
+  <div class="mk-page-header">
+    <div>
+      <h1>Pipeline Review</h1>
+      <p class="hint" style="margin:4px 0 0;">Transactions from Paperless Pipeline. Nothing here reaches a hot sheet until you promote it.</p>
+    </div>
+    <div class="hdr-actions">
+      <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>
+      <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Hot Sheets</a>
+      <a class="btn btn-outline btn-sm" href="pipeline_events.php"><i class="ti ti-code"></i> Raw payloads</a>
+    </div>
+  </div>
 
   <?php if ($success): ?><div class="flash ok"><?= h($success) ?></div><?php endif; ?>
   <?php if ($error):   ?><div class="flash err"><?= h($error) ?></div><?php endif; ?>
@@ -458,7 +475,7 @@ sort($mh_cities);
       $onmls   = $t['match_confidence'] !== 'none';
       $is_repromote = !empty($t['manual_listing_id']);
   ?>
-  <div class="card">
+  <div class="pl-card">
     <?php
       // suggested_entry_type comes from the transaction side alone — a
       // listing-side deal is suggested as a pocket listing whether or not it
@@ -488,7 +505,7 @@ sort($mh_cities);
       <span class="chip status"><?= h($status ?? ($t['status_label'] ?: 'Unknown status')) ?></span>
     </div>
 
-    <div class="grid">
+    <div class="pl-grid">
       <div class="k">Side</div>          <div class="v"><?= h($t['side']) ?></div>
       <div class="k">Property type</div> <div class="v"><?= h($t['property_type'] ?: '—') ?></div>
       <div class="k">Agents</div>        <div class="v"><?= h($t['agent_names'] ?: 'none matched') ?></div>
@@ -541,7 +558,7 @@ sort($mh_cities);
     <form class="promote" method="POST">
       <input type="hidden" name="_action" value="promote">
       <input type="hidden" name="txn_row_id" value="<?= (int)$t['id'] ?>">
-      <div class="row">
+      <div class="frow">
         <div class="f1"><label>Address</label>
           <input type="text" name="address" value="<?= h($t['address']) ?>" required></div>
         <div class="f1"><label>City</label>
@@ -569,7 +586,7 @@ sort($mh_cities);
           </div></div>
         <?php endif; ?>
       </div>
-      <div class="row">
+      <div class="frow">
         <div class="f1"><label>Agents</label>
           <input type="text" name="agent_names" id="agents-<?= (int)$t['id'] ?>" value="<?= h($t['agent_names']) ?>">
           <?php $hint = pr_conditional_hint($t['payload'] ?? null, $conditional);
@@ -591,7 +608,7 @@ sort($mh_cities);
           <input type="text" name="notes" placeholder="Internal note"></div>
       </div>
       <?php if ($type === 'buyer_rep'): ?>
-      <div class="row">
+      <div class="frow">
         <div class="f1"><label>Listing URL (optional — overrides auto-lookup)</label>
           <input type="url" name="listing_url"
                  placeholder="https://site.monthaus.com/listing.php?src=ap&amp;m=aspen&amp;k=...">
@@ -602,15 +619,15 @@ sort($mh_cities);
         </div>
       </div>
       <?php endif; ?>
-      <div class="row">
+      <div class="frow">
         <?php if ($status !== null): ?>
-        <button class="btn btn-go" type="submit">
+        <button class="pbtn btn-go" type="submit">
           <?= $is_repromote ? 'Update hot sheet entry' : 'Add to hot sheet' ?>
         </button>
         <?php endif; ?>
         <?php // Say which of the two things Dismiss will do — a promoted entry
               // is coming off the hot sheet, which is not obvious from "Dismiss" ?>
-        <button class="btn btn-no" type="submit" name="_action" value="reject" formnovalidate
+        <button class="pbtn btn-no" type="submit" name="_action" value="reject" formnovalidate
                 onclick="return confirm(<?= $is_repromote
                     ? json_encode('Dismiss this transaction and remove it from the hot sheet? Restore puts it back.')
                     : json_encode('Dismiss this transaction?') ?>)">
@@ -653,7 +670,7 @@ sort($mh_cities);
           <form method="POST" style="margin:0;">
             <input type="hidden" name="_action" value="unreject">
             <input type="hidden" name="txn_row_id" value="<?= (int)$d['id'] ?>">
-            <button class="btn btn-no" style="padding:3px 8px;font-size:11px;"
+            <button class="pbtn btn-no" style="padding:3px 8px;font-size:11px;"
                     title="<?= $d['review_status'] === 'promoted'
                         ? 'Send back to the queue. Re-promoting updates the existing hot sheet entry rather than creating a second one.'
                         : 'Put this back in the queue.' ?>">
@@ -667,6 +684,7 @@ sort($mh_cities);
   <?php endif; ?>
 
 </div>
+</div><!-- /.pc-container -->
 <script>
 // Append a suggested agent to that card's Agents field, avoiding duplicates.
 function addAgent(rowId, name) {
