@@ -2915,10 +2915,10 @@ co-list agent); no Instagram on the profile = the name; a Weber Boxer Group
 RENTAL tags Sara Perkowski alone (`CAPTION_TEAM_*`). Rentals show no rate.
 **Five hashtags, by one rule (Nikki, 2026-11-12: Instagram now limits a
 caption to five):** `caption_tags()` makes them from the listing's facts
-(town, town + realestate or rental, then coloradorealestate /
-vacationrental, landforsale / luxuryrealestate from `CAPTION_LUXURY_FROM` /
-homeforsale, justlisted while new / skihome in `CAPTION_SKI_TOWNS` /
-mountainlife; the list is in its header). `caption_retag()` swaps a
+(town, town + realestate or rental, coloradorealestate or vacationrental,
+then for a sale the first two that apply of landforsale, luxuryrealestate
+from `CAPTION_LUXURY_FROM`, homeforsale, justlisted while new, skihome in
+`CAPTION_SKI_TOWNS`, mountainlife; the list is in its header). `caption_retag()` swaps a
 caption's closing hashtag lines for them; `caption_for()` does that on every
 read of a draft or a built caption, so the drafts file holds no hashtags and
 #justlisted comes and goes with the feed. A SAVED caption is hers as she

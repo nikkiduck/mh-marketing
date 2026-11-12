@@ -159,11 +159,11 @@ function caption_remarks(string $market, string $key): string {
  * The caption's hashtags: FIVE, always (Nikki, 2026-11-12: Instagram now
  * limits a caption to five; "focus on the town name and relevant tags").
  * One rule for every caption, from the listing's own facts:
- *   a sale    #town #townrealestate #coloradorealestate
- *             + #landforsale (land) | #luxuryrealestate (CAPTION_LUXURY_FROM
- *               and up) | #homeforsale
- *             + #justlisted (while the feed calls it new) | #skihome (a ski
- *               town, not land) | #mountainlife
+ *   a sale    #town #townrealestate #coloradorealestate, then the first two
+ *             that apply of: #landforsale (land), #luxuryrealestate
+ *             (CAPTION_LUXURY_FROM and up), #homeforsale (a home under it),
+ *             #justlisted (while the feed calls it new), #skihome (a home in
+ *             a ski town), #mountainlife
  *   a closing #town #townrealestate #coloradorealestate #justsold #mountainlife
  *   a rental  #town #townrental #vacationrental
  *             + #skihome (a ski town) | #coloradorental, then #mountainlife
@@ -185,9 +185,12 @@ function caption_tags(array $l): string {
     $ski    = in_array($town, CAPTION_SKI_TOWNS, true);
     if ($rental)     $tags = [$town, $town . 'rental', 'vacationrental', $ski ? 'skihome' : 'coloradorental', 'mountainlife'];
     elseif ($closed) $tags = [$town, $town . 'realestate', 'coloradorealestate', 'justsold', 'mountainlife'];
-    else             $tags = [$town, $town . 'realestate', 'coloradorealestate',
-                              $land ? 'landforsale' : ((float)($l['list_price'] ?? 0) >= CAPTION_LUXURY_FROM ? 'luxuryrealestate' : 'homeforsale'),
-                              $new ? 'justlisted' : (($ski && !$land) ? 'skihome' : 'mountainlife')];
+    else {
+        // Two places left, taken in this order: a $22M lot is #landforsale #luxuryrealestate, a new $5M home #luxuryrealestate #justlisted.
+        $lux  = (float)($l['list_price'] ?? 0) >= CAPTION_LUXURY_FROM;
+        $more = array_keys(array_filter(['landforsale' => $land, 'luxuryrealestate' => $lux, 'homeforsale' => !$land && !$lux, 'justlisted' => $new, 'skihome' => $ski && !$land, 'mountainlife' => true]));
+        $tags = array_merge([$town, $town . 'realestate', 'coloradorealestate'], array_slice($more, 0, 2));
+    }
     $tags = array_values(array_unique($tags));   // a listing with no city: #colorado, and the pair it would repeat
     if (count($tags) < 5) $tags[] = 'coloradohomes';
     return '#' . implode(' #', $tags);
