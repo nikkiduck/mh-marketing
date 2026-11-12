@@ -196,11 +196,19 @@ function caption_tags(array $l): string {
     return '#' . implode(' #', $tags);
 }
 
-/** The caption with its closing hashtag lines (if any) replaced by the listing's five. Hashtags inside the words ("Unit #4") are left alone. */
+/**
+ * A unit written "#E" or "#2A" is a hashtag to Instagram (anything after # with a letter in it), and would
+ * make a sixth: it reads "Unit E". "#404" is not one (digits only) and stays.
+ */
+function caption_units(string $text): string {
+    return (string)preg_replace('/(?<!\S)#(?=\w*[A-Za-z])(\w+)/u', 'Unit $1', $text);
+}
+
+/** The caption with its closing hashtag lines (if any) replaced by the listing's five, and no other hashtag in its words (caption_units()). */
 function caption_retag(string $caption, array $l): string {
     $lines = explode("\n", rtrim(str_replace("\r", '', $caption)));
     while ($lines && (trim(end($lines)) === '' || preg_match('/^(#[\p{L}\p{N}_]+\s*)+$/u', trim(end($lines))))) array_pop($lines);
-    return ($lines ? implode("\n", $lines) . "\n\n" : '') . caption_tags($l);
+    return ($lines ? caption_units(implode("\n", $lines)) . "\n\n" : '') . caption_tags($l);
 }
 
 /** A caption from the feed's fields. $remarks: the description ('' = none). The headline's name is the short address until someone writes one. */
@@ -222,7 +230,8 @@ function caption_build(mysqli $conn, array $l, string $remarks = ''): string {
     $cta = "\u{27A1}\u{FE0F} Get in touch with " . ($who ? implode(' or ', $who) : 'Mont Haus International Realty')
          . ($rental ? ' for availability and to book your stay.' : ' for more information and to arrange your private showing.');
     $tags = caption_tags($l);
-    $top = $head . "\n\n" . implode("\n", $lines) . "\n\n";
+    $top = caption_units($head . "\n\n" . implode("\n", $lines) . "\n\n");
+    $remarks = caption_units($remarks);
     $end = $cta . "\n\n" . $tags;
     $room = CAPTION_MAX - mb_strlen($top) - mb_strlen($end) - 2;
     if (mb_strlen($remarks) > $room) {   // keep whole sentences

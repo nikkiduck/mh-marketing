@@ -823,10 +823,10 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
   // ── The Suggested Caption (2026-11-12): the listing's caption until it is typed in; never part of the picture ──
   const capBox = document.getElementById('spCaption');
   let capTouched = false;
-  // The count line: the characters, and the hashtags against Instagram's five (2026-11-12); "#4" in an address is not one.
+  // The count line: the characters, and the hashtags against Instagram's five (2026-11-12). As Instagram counts: "#2A" is one, "#404" is not.
   function capCount() {
     const c = document.getElementById('spCapCount'); if (!c) return;
-    const tags = (capBox.value.match(/(^|\s)#[A-Za-z_][\w]*/g) || []).length;
+    const tags = (capBox.value.match(/(^|\s)#(?=\w*[A-Za-z_])\w+/g) || []).length;
     c.textContent = capBox.value.length.toLocaleString() + ' / 2,200 · ' + tags + ' of 5 hashtags';
     c.classList.toggle('over', capBox.value.length > 2200 || tags > 5);
   }
