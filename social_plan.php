@@ -24,7 +24,10 @@
  * thing and next week moves on by one; ?week=YYYY-Www looks ahead or back.
  * The listing suggestions are the feed's newest new listing, the highest
  * priced live one and the latest closing. The plan's words and notes sit
- * under the table. Admins only; the tools are in inc/plan.php.
+ * under the table. Since 2026-11-12 a saved post has a Link in bio button
+ * (social_linkinbio.php: its cover on monthaus.com/linkinbio) and a saved
+ * story shows its sticker link (bio_plan_dest()). Admins only; the tools are
+ * in inc/plan.php.
  */
 require_once __DIR__ . '/inc/plan.php';
 require_once __DIR__ . '/inc/admin_tool_shell.php';
@@ -98,6 +101,7 @@ foreach ($slots as $i => $slot) {
     $rows[$i] = [$slot['day'], $slot['words'], $pick, $buttons, $n];
 }
 $slotOpts = plan_slot_options();
+$bioItems = bio_items();   // the Link in Bio covers (inc/linkinbio.php, 2026-11-12): a saved post's row says whether it is in the bio
 
 admin_tool_header([
     'title'   => 'Weekly Plans',
@@ -177,6 +181,11 @@ admin_tool_header([
     .pl-table td.pick .pl-piece + .pl-piece { margin-top:6px; }
     .pl-table td.pick .pl-piece b { color:#434b57; font-weight:600; }
     .pl-table td.pick .pl-piece + .sug, .pl-table td.pick .pl-piece .cap + .sug { display:block; margin-top:6px; }
+    .pl-table td.go a.pl-inbio { color:#1f5a35; border-color:#bfe0c9; background:#e9f3ec; }
+    .pl-table td.pick .pl-stk { display:block; margin-top:4px; font-size:13px; color:#6b7a8f; word-break:break-all; }
+    .pl-table td.pick .pl-stk a { color:#4a5569; }
+    .pl-stk-copy { font:inherit; font-size:12px; font-weight:600; color:#4a5569; background:#fff; border:1px solid #dfe3e8; border-radius:999px; padding:2px 9px; margin-left:4px; cursor:pointer; }
+    .pl-stk-copy:hover { border-color:#4a5566; }
     .pl-table td.go label.tick { font-size:13px; color:#434b57; margin-left:6px; cursor:pointer; }
     .pl-table tr.alt td { border-top-style:dashed; }
     .pl-foot { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin:16px 0 0; font-size:14px; color:#434b57; }
@@ -206,6 +215,11 @@ admin_tool_header([
 function plBrandDay(box) {
   if (!box.checked && box.dataset.saved === '1' && !confirm('That day has a Branding story saved. Drop it and take the day out?')) { box.checked = true; return; }
   box.form.submit();
+}
+function plCopyLink(btn) {
+  var done = function () { var w = btn.textContent; btn.textContent = 'Copied'; setTimeout(function () { btn.textContent = w; }, 1400); };
+  if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(btn.dataset.link).then(done, function () { prompt('Copy the link:', btn.dataset.link); });
+  else prompt('Copy the link:', btn.dataset.link);
 }
 function plKind(sel) {
   var other = sel.form.querySelector('.pl-other');
@@ -291,7 +305,10 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
             <?php elseif ($saved): ?>
               <?php foreach ($pieces as $b => $pc): ?>
               <div class="pl-piece"><b><?= $b === 'story' ? 'Story' : 'Post' ?>:</b> <?= $e($pc['summary'] ?? '') ?>
-                <?php if (trim((string)($pc['caption'] ?? '')) !== ''): ?><span class="cap"><?= $e(mb_strimwidth(trim((string)$pc['caption']), 0, 160, '…')) ?></span><?php endif; ?></div>
+                <?php if (trim((string)($pc['caption'] ?? '')) !== ''): ?><span class="cap"><?= $e(mb_strimwidth(trim((string)$pc['caption']), 0, 160, '…')) ?></span><?php endif; ?>
+                <?php if ($b === 'story' && ($stk = bio_plan_dest($conn, (string)($item['kind'] ?? ''), (array)$pc['form'])) !== ''): // a story carries its own link sticker (2026-11-12): the address to paste into it ?>
+                <span class="pl-stk">Sticker link: <a href="<?= $e($stk) ?>" target="_blank" rel="noopener"><?= $e(preg_replace('~^https://~', '', $stk)) ?></a> <button type="button" class="pl-stk-copy" data-link="<?= $e($stk) ?>" onclick="plCopyLink(this)">Copy</button></span>
+                <?php endif; ?></div>
               <?php endforeach; ?>
               <span class="sug"><b>Suggestion was:</b> <?= $e($pick) ?></span>
             <?php else: ?>
@@ -322,6 +339,9 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
                   <form method="post" action="plan_export.php"><?= $hid ?><input type="hidden" name="plan_piece" value="<?= $b ?>"><button type="submit" class="soft"><?= (int)($pc['frames'] ?? 1) > 1 ? 'ZIP' : 'PNG' ?></button></form>
                   <form method="post" action="plan_save.php" onsubmit="return confirm('Drop the saved <?= $b ?> for this day?')"><?= $hid ?><input type="hidden" name="plan_action" value="clear"><input type="hidden" name="plan_piece" value="<?= $b ?>"><button type="submit" class="soft">Reset</button></form>
                 </div>
+                <?php if ($b === 'post'): $inBio = bio_find_plan($week['key'], $i, $bioItems); // the post's cover on monthaus.com/linkinbio (2026-11-12); stories have their sticker ?>
+                <div class="pl-go-row"><a class="soft<?= $inBio ? ' pl-inbio' : '' ?>" href="social_linkinbio.php?week=<?= $e(rawurlencode($week['key'])) ?>&amp;slot=<?= $i ?>"><?= $inBio ? 'In bio ✓' : 'Link in bio ›' ?></a></div>
+                <?php endif; ?>
                 <?php elseif (isset($byBucket[$b])): ?>
                 <div class="pl-go-row"><a href="<?= $e($byBucket[$b][1] . $wq . $i) ?>"><?= $e($byBucket[$b][0]) ?> ›</a></div>
                 <?php endif; ?>

@@ -2845,6 +2845,34 @@ and inc/flyer.php. Uploads made from the admin pages are the admin's own
 page under a simulated admin session on the server (Jonathan's 16 listings
 in both dropdowns, 26 agents in the picker).
 
+### Link in Bio (2026-11-12, super admin only)
+
+Nikki: "a linkinbio page for our Instagram account ... the post covers
+appear in a grid and I specify where they link to", so a caption can say
+"visit our link in bio" for a listing whose agent has no social account.
+The page is the WEBSITE's (monthaus.com/linkinbio, site
+webroot/linkinbio.php); the list behind it lives here.
+- Store: `inc/linkinbio.php`, CREATIVES_DIR/social/linkinbio.json (the
+  covers in page order: id, url, title, source plan | manual, week + slot
+  for a plan post, v) and one 600 px JPEG per cover in
+  CREATIVES_DIR/social/linkinbio/. No table. A cover is a COPY of the
+  post: changing or resetting the post leaves it until Remake cover.
+- `social_linkinbio.php` (Social Media > Link in Bio): Add this post (from
+  a saved Weekly Plans POST piece's "Link in bio ›" button, ?week=&slot=;
+  the cover is the post's first picture, made like Download; the
+  destination is prefilled by `bio_plan_dest()`: a Property piece's
+  listing page, a Broker Feature's agent page, an office's /offices, else
+  blank), Add one by hand (any picture + address), and the list (words,
+  address, order, Remake cover, Remove). Addresses must be https
+  (`bio_clean_url()`). The site shows the first `BIO_MAX` (30).
+- Stories are never covers (gone in a day): a saved Story piece on the
+  week page shows its sticker link with Copy instead.
+- To the site: `api/roster.php` sends `bio_feed()` as the feed's
+  `linkinbio` key (present = the site replaces its list), each picture
+  served by `api/linkinbio_cover.php` (public on purpose, 16-hex ids
+  only). Every change on the page calls `mk_site_sync()`, so it is live
+  in about a second; the hourly sync is the backstop.
+
 ### Suggested Captions (admin tools 2026-11-12, agents the same evening)
 
 Nikki, 2026-11-12: a prefilled "Suggested Caption" for the Instagram listing

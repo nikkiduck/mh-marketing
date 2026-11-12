@@ -45,6 +45,7 @@ require_once __DIR__ . '/boards.php';          // mk_areas(): the website's Comm
 require_once __DIR__ . '/market_data.php';     // market_card_defs(): the Market Snapshot's places, for the stats rotation
 require_once __DIR__ . '/plan_store.php';      // the Weekly Plans store: saved pieces per week (2026-11-03)
 require_once __DIR__ . '/cutout.php';          // the broker cutouts: found by the headshot's name, made by remove.bg on upload (2026-11-05)
+require_once __DIR__ . '/linkinbio.php';       // the Link in Bio store: the covers on monthaus.com/linkinbio (2026-11-12)
 
 const PLAN_NEW_DAYS    = 21;   // a listing is "new" this long after the feed first saw it (or its new_listing change)
 const PLAN_CLOSED_DAYS = 30;   // a closing stays in the Just Sold list this long (the agents' tools keep 7)

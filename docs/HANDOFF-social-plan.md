@@ -493,6 +493,19 @@ team row one or two lines fit, without one three or four;
 `plan_render_split()` trims to what fits. Palette: Slate, deeper buttons (the website's scheme), through
 `social_palette()`.
 
+## Link in Bio (2026-11-12)
+
+Nikki: "when I create a post, it should ask me if I want to add to the
+linkinbio and where that cover links to (ie, agent page or listing page on
+Monthaus.com)". A saved POST piece's row on the week page has Link in bio ›
+(In bio ✓ once added), which opens social_linkinbio.php with the week and
+slot: the destination is prefilled from the piece (`bio_plan_dest()`), the
+cover is the piece's first picture rendered as plan_export.php renders it,
+and the list goes to the website in the roster feed (`linkinbio`), shown at
+monthaus.com/linkinbio. A saved Story piece shows its sticker link (the same
+destination) with a Copy button; stories are not covers. The store, the
+feed and the rules: inc/linkinbio.php and CLAUDE.md > Link in Bio.
+
 ## Not done / ideas
 
 - The seasonal taglines are drafts in `plan_seasons()`; Nikki's branding

@@ -22,6 +22,7 @@
 
 require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/agent_roster.php';
+require_once __DIR__ . '/../inc/linkinbio.php';   // bio_feed(): the Link in Bio covers (2026-11-12)
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -199,6 +200,9 @@ foreach ($rows as $a) {
 $out = ['generated_at' => gmdate('Y-m-d\TH:i:s\Z'), 'count' => count($agents), 'agents' => $agents];
 
 if ($listing_photos_out !== null) $out['listing_photos'] = $listing_photos_out;   // read above, before the connection closed (2026-11-05)
+// Link in Bio (inc/linkinbio.php, 2026-11-12): the covers on monthaus.com/linkinbio in page order, each { id, url, title,
+// image }. Key present = the site replaces its list (an empty list empties the page); absent = older marketing, the site keeps its own.
+$out['linkinbio'] = bio_feed();
 if ($leaders !== null) {
     $out['leadership'] = [];
     foreach ($leaders as $l) {
