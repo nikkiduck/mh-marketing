@@ -185,7 +185,15 @@ function bio_feed(): array {
 function bio_plan_dest(mysqli $conn, string $kind, array $form): string {
     $site = rtrim(PUBLIC_SITE_URL, '/');
     if ($kind === 'property') {
-        $l = plan_listing($conn, (string)($form['listing'] ?? ''));
+        $lid = (string)($form['listing'] ?? '');
+        $l = plan_listing($conn, $lid);
+        if (!$l && substr_count($lid, '|') === 1) {
+            // plan_listings() holds the live and just-closed only; a post saved weeks ago may be for a listing that has since
+            // left it (221 Wrights Road, Removed, 2026-11-12). Its page on the website is still there: read the address direct.
+            [$mk, $lk] = explode('|', $lid);
+            $q = $conn->prepare("SELECT url, mls_id FROM hs_listing_state WHERE market = ? AND listing_key = ? LIMIT 1");
+            if ($q) { $q->bind_param('ss', $mk, $lk); $q->execute(); $l = $q->get_result()->fetch_assoc() ?: null; $q->close(); }
+        }
         if (!$l) return '';
         $u = bio_clean_url((string)($l['url'] ?? ''));
         return $u !== '' ? $u : (trim((string)$l['mls_id']) !== '' ? $site . '/listing/mls/' . rawurlencode(trim((string)$l['mls_id'])) : '');

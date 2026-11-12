@@ -45,9 +45,14 @@ $plan_piece = function (string $week, int $slot) use ($conn): array|string {
 /** The piece's first picture as PNG bytes (the cover of a set), or words saying why not. */
 $plan_png = function (array $p) use ($conn, $ctx): string|array {
     $form = $p['piece']['form'];
-    if ($p['kind'] === 'property' && ($l = plan_listing($conn, (string)($form['listing'] ?? '')))) plan_listing_tiles($l);   // the listing's photos into the session, so the saved ids pass plan_photo() (as plan_export.php)
+    if ($p['kind'] === 'property') {
+        $l = plan_listing($conn, (string)($form['listing'] ?? ''));
+        // The tools draw from the live feed (and closings of the last PLAN_CLOSED_DAYS days); a listing that has left it cannot be drawn again.
+        if (!$l) return ['error' => 'That post\'s listing is no longer in the feed, so its picture cannot be made here. Use Add one by hand below with the picture you posted.'];
+        plan_listing_tiles($l);   // the listing's photos into the session, so the saved ids pass plan_photo() (as plan_export.php)
+    }
     $r = plan_post_from_request($conn, $ctx, $form);
-    if (is_string($r)) return ['error' => $r];
+    if (is_string($r)) return ['error' => 'The post could not be drawn from what is saved. Open it from Weekly Plans, save it again, and come back. (' . $r . ')'];
     $frame = $r['frames'][0];
     $png = social_export_png(plan_render_frame($frame, null, true), plan_frame_height($frame));
     return $png === null ? ['error' => 'The picture could not be made. Please try again in a minute.'] : $png;
@@ -184,7 +189,7 @@ admin_tool_header([
     <form method="post" action="social_linkinbio.php" class="lb-box offer" onsubmit="var b=this.querySelector('button[type=submit]');b.disabled=true;b.textContent='Making the cover…';">
       <?= $hid ?><input type="hidden" name="bio_action" value="add_plan"><input type="hidden" name="week" value="<?= $e($offer['week']) ?>"><input type="hidden" name="slot" value="<?= (int)$offer['slot'] ?>">
       <h2>Add this post</h2>
-      <p class="sub"><?= $e($offer['day']) ?>'s <?= $e($offer['words']) ?>: <?= $e($offer['piece']['summary'] ?? '') ?>. The cover is the post's first picture, as saved to the week.</p>
+      <p class="sub"><?= $e($offer['day']) ?>: <?= $e($offer['piece']['summary'] ?? '') ?>. The cover is the post's first picture, as saved to the week.</p>
       <div class="lb-fields two">
         <div><label for="lbOfferUrl">Where the cover goes</label>
           <input type="text" id="lbOfferUrl" name="url" maxlength="<?= BIO_URL_MAX ?>" value="<?= $e($offer['dest']) ?>" placeholder="https://monthaus.com/…" required>

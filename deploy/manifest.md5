@@ -68,7 +68,7 @@ e2475866b1e99360f59246920a5eff56  inc/hs_helpers.php
 98ca55f6491ad80b3d49d1c6ad78a9a5  inc/hs_mail.php
 06406477f9bc1bf6dc3ceaf577ba202d  inc/hs_template.php
 1a9f68e4d4b5b6382912e7748666e26a  inc/invoice_split.php
-d408fd184faa971242c6acc786464aed  inc/linkinbio.php
+8ede136adcbd63f8e58faebc5d28deff  inc/linkinbio.php
 78c3a4e157cff752778a59810cd4aaaa  inc/mailer.php
 62449008ee7a431533d43a6d08fc26d2  inc/market.php
 ea0157ed3088c193eaa5a6c26bc6ee88  inc/market_card_render.php
@@ -154,7 +154,7 @@ e154338096723d27e76e2b7dc979fe70  receipt.php
 ac4fccd87e175f5a6b702cecd537d7e5  roster.php
 a6006bb26d9e73578f7b6858d32eea8f  set_password.php
 9f3409ddf90983d0274162d1ad62d639  social_captions.php
-e2a0999738ab3738815257b612cb8321  social_linkinbio.php
+211745ae77cce6a3e467f4215dda1df2  social_linkinbio.php
 b06f90015e8f3edc466afd31f15ae8c1  social_media.php
 dc4a05d22b2a7f6c072a2972e236ab17  social_plan.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
