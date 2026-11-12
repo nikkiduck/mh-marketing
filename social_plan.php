@@ -17,7 +17,10 @@
  * Story link into the Market Snapshot and its own Done tick; + Add slide,
  * x to remove), suggested two places a week (plan_market_pairs()). The
  * Branding Story bar above the table ticks the days that get a Branding
- * slot this week (plan_branding_days(); Tuesday and Friday until changed). The picks step through rotations by the ISO week
+ * slot this week (plan_branding_days(); Tuesday and Friday until changed).
+ * Since 2026-11-12 the Day column is a picker too: a piece can sit under
+ * another day of the week, with everything saved for it
+ * (plan_slot_set_day()). The picks step through rotations by the ISO week
  * (plan_week(): markets through the Market Snapshot's places, brokers
  * through the approved roster, locations through the offices and areas,
  * hooks through the plan's six), so the same week always suggests the same
@@ -94,9 +97,15 @@ $suggest = function (array $slot, int $n) use ($idx, $cards, $pickOf, $lwords, $
     }
     return ['Made outside the plan tools; tick Done when it is up.', []];   // other
 };
-$rows = []; $seen = [];
+// The nth of a kind is counted in the plan's own order (each slot's usual day), not the order on screen: moving a
+// piece to another day (the Day picker, 2026-11-12) must not change what the other days suggest.
+$homeOrder = array_keys($slots);
+usort($homeOrder, fn($a, $b) => [array_search(plan_slot_base($a)['day'], PLAN_DAYS, true), $a >= PLAN_BRANDING_BASE ? 1 : 0, $a] <=> [array_search(plan_slot_base($b)['day'], PLAN_DAYS, true), $b >= PLAN_BRANDING_BASE ? 1 : 0, $b]);
+$nthOf = []; $seen = [];
+foreach ($homeOrder as $i) { $t = $slots[$i]['type']; $nthOf[$i] = $seen[$t] ?? 0; $seen[$t] = $nthOf[$i] + 1; }
+$rows = [];
 foreach ($slots as $i => $slot) {
-    $n = $seen[$slot['type']] ?? 0; $seen[$slot['type']] = $n + 1;
+    $n = $nthOf[$i];
     [$pick, $buttons] = $suggest($slot, $n);
     $rows[$i] = [$slot['day'], $slot['words'], $pick, $buttons, $n];
 }
@@ -133,7 +142,13 @@ admin_tool_header([
     .pl-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid #dfe3e8; border-radius:14px; overflow:hidden; }
     .pl-table th, .pl-table td { text-align:left; padding:12px 14px; border-top:1px solid #dfe3e8; vertical-align:top; font-size:14px; }
     .pl-table th { font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#6b7a8f; font-weight:600; border-top:0; background:#eceff3; }
-    .pl-table td.day { font-weight:600; color:#1f242c; white-space:nowrap; width:100px; }
+    .pl-table td.day { font-weight:600; color:#1f242c; white-space:nowrap; width:128px; }
+    /* The Day picker (2026-11-12): the day reads as before, a quiet dropdown on every row; the second row of a day repeats it in grey. */
+    .pl-day { margin:0; }
+    .pl-day select { font:inherit; font-weight:600; color:#1f242c; -webkit-appearance:none; appearance:none; border:1px solid transparent; border-radius:8px; padding:4px 24px 4px 7px; margin:-5px 0 0 -8px; cursor:pointer;
+      background:transparent url("data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 width=%2711%27 height=%2711%27 viewBox=%270 0 14 14%27><path d=%27M2.5 5l4.5 4.5L11.5 5%27 fill=%27none%27 stroke=%27%239aa5b5%27 stroke-width=%271.8%27/></svg>") no-repeat right 7px center; }
+    .pl-day select:hover, .pl-day select:focus { border-color:#4a5566; background-color:#fff; outline:0; }
+    .pl-day select.rep { font-weight:400; color:#9aa5b5; }
     .pl-table td.piece { color:#434b57; white-space:nowrap; width:230px; }
     .pl-kind select { font:inherit; font-size:13.5px; color:#434b57; background:#fff; border:1px solid #dfe3e8; border-radius:8px; padding:5px 8px; max-width:100%; cursor:pointer; }
     .pl-kind select:hover, .pl-kind select:focus { border-color:#4a5566; outline:0; }
@@ -238,8 +253,8 @@ function plKind(sel) {
 }
 </script>
 <?php
-$sv = (string)($_GET['saved'] ?? ''); $cl = (string)($_GET['cleared'] ?? '');
-$flashSlot = $sv !== '' ? (int)$sv : ($cl !== '' ? (int)$cl : -1);
+$sv = (string)($_GET['saved'] ?? ''); $cl = (string)($_GET['cleared'] ?? ''); $mv = (string)($_GET['moved'] ?? '');
+$flashSlot = $sv !== '' ? (int)$sv : ($cl !== '' ? (int)$cl : ($mv !== '' ? (int)$mv : -1));
 $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slots[$i]['words'] : '';
 ?>
     <div class="pl-strip">
@@ -266,7 +281,7 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
       <span class="pl-brand-n"><?= count($bdays) ?> <?= count($bdays) === 1 ? 'story' : 'stories' ?> this week</span>
     </form>
     <?php if ($flashSlot >= 0 && isset($slots[$flashSlot])): ?>
-    <p class="pl-flash"><?= $sv !== '' ? 'Saved to the week: ' . $e($dayWords($flashSlot)) . '.' : 'Back to the suggestion: ' . $e($dayWords($flashSlot)) . '.' ?></p>
+    <p class="pl-flash"><?= $sv !== '' ? 'Saved to the week: ' . $e($dayWords($flashSlot)) . '.' : ($mv !== '' ? 'Moved to ' . $e($slots[$flashSlot]['day']) . ': ' . $e($slots[$flashSlot]['words']) . '.' : 'Back to the suggestion: ' . $e($dayWords($flashSlot)) . '.') ?></p>
     <?php endif; ?>
     <table class="pl-table">
       <thead><tr><th>Day</th><th>Content</th><th>Suggestion, or what is saved</th><th>Status</th><th></th></tr></thead>
@@ -280,7 +295,15 @@ $dayWords = fn(int $i) => isset($slots[$i]) ? $slots[$i]['day'] . '\'s ' . $slot
         if ($isMarket) { $done = $mslides && $mdone === count($mslides); }
         $hid = '<input type="hidden" name="csrf_token" value="' . $e($csrf) . '"><input type="hidden" name="plan_week" value="' . $e($week['key']) . '"><input type="hidden" name="plan_slot" value="' . $i . '">'; ?>
         <tr<?= $day === $prevDay ? ' class="alt"' : '' ?>>
-          <td class="day"><?= $day === $prevDay ? '' : $e($day) ?></td>
+          <td class="day">
+            <form method="post" action="plan_save.php" class="pl-day"><?= $hid ?><input type="hidden" name="plan_action" value="day">
+              <select name="day" class="<?= $day === $prevDay ? 'rep' : '' ?>" onchange="this.form.submit()" aria-label="Day for <?= $e($piece) ?>" title="Move this piece to another day">
+                <?php foreach (PLAN_DAYS as $d): $taken = $i >= PLAN_BRANDING_BASE && $d !== $day && isset($slots[plan_branding_slot_id($d)]);   // one Branding story a day ?>
+                <option value="<?= $e($d) ?>"<?= $d === $day ? ' selected' : '' ?><?= $taken ? ' disabled' : '' ?>><?= $e($d) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </form>
+          </td>
           <td class="piece">
             <form method="post" action="plan_save.php" class="pl-kind"><input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>"><input type="hidden" name="plan_week" value="<?= $e($week['key']) ?>"><input type="hidden" name="plan_slot" value="<?= $i ?>"><input type="hidden" name="plan_action" value="kind">
               <?php $cur = plan_slot_option_key($slot); $usual = plan_slot_option_key(plan_slot_base($i)); ?>

@@ -524,6 +524,29 @@ Nikki, after building a Wrights Road set: ten small things, all in
   captions and the week pieces' captions were retagged once on the server
   (backups beside each file, `*.bak-20261112-tags`).
 
+## A piece's day is adjustable (2026-11-12)
+
+Nikki: "this week I posted a New Listing today but I set it on Monday
+because that's when I had started working on it. So Monday has all the
+right data but it should be today." The Day column of the week table is a
+dropdown on every row; choosing a day posts `plan_action=day` to
+plan_save.php, which calls `plan_slot_set_day()` (inc/plan_store.php).
+
+- A regular slot (ids 0, 1, 3, 4, 5, 7) keeps its id; the week's JSON
+  records `"days": { "0": "Thursday" }` and `plan_week_slots()` shows the
+  slot under that day. Back on its usual day, the record goes. Nothing
+  saved moves, so Edit, ZIP, Copy caption and In bio work as before.
+- A Branding story's id is its day (100 + the day's index), so its item
+  and content choice move to the new day's id, `branding_days` changes
+  with it, and a Link in Bio cover made from it is re-pointed
+  (`bio_update()`). A day that already has a Branding story is disabled
+  in its dropdown.
+- The week table counts "the nth property, the nth broker" in the plan's
+  own order, not the order on screen, so moving one piece leaves every
+  other day's suggestion as it was.
+- Moving a piece does not swap: Monday is left empty and the new day has
+  two rows until the other piece is moved or changed.
+
 ## The set, second pass (2026-11-02, evening)
 
 Nikki: "Love this make a set option." Changes: the set is offered at the

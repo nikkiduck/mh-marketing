@@ -17,6 +17,9 @@
  *   kind    give the slot another content kind for this week (the Content
  *           dropdown, 2026-11-09): slot_kind (a plan_slot_options() key),
  *           slot_words for Other; a piece saved under another kind is dropped
+ *   day     show the slot's piece under another day of the week (the Day
+ *           picker, 2026-11-12): day (a PLAN_DAYS name); nothing saved is
+ *           lost; a Branding story cannot go to a day that has one
  *   branding_days  the week's Branding Story days (2026-11-09): days[] of
  *           PLAN_DAYS names; an unticked day's Branding slot goes, with
  *           anything saved in it
@@ -53,6 +56,11 @@ if ($action === 'kind') {
         portal_stop('That content is not one of the plan\'s', 'Go back to Weekly Plans and choose again.');
     }
     header('Location: ' . $back); exit;
+}
+if ($action === 'day') {
+    $to = plan_slot_set_day($week, $slot, (string)($_POST['day'] ?? ''));
+    if ($to < 0) portal_stop('That day cannot take it', 'A Branding story is already on that day. Go back to Weekly Plans and choose another day.');
+    header('Location: ' . $back . '&moved=' . $to); exit;
 }
 if ($action === 'clear') {
     $pc = (string)($_POST['plan_piece'] ?? '');

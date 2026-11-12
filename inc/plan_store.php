@@ -40,7 +40,11 @@
  * a slot another content kind: "slots": { "<slot>": { "type", "variant",
  * "words" } }, chosen from plan_slot_options() in the week table's Content
  * dropdown (plan_week_slots() applies them; Other = words typed by Nikki
- * for a piece made outside the tools). An Other slot is not a plan
+ * for a piece made outside the tools). Since 2026-11-12 a week may also
+ * show a piece under another DAY (Nikki: a post planned for Monday went up
+ * on Thursday): "days": { "<slot>": "Thursday" } for the six regular slots
+ * (the id stays, so everything saved stays with it); a Branding story's day
+ * is its id, so moving one moves its record (plan_slot_set_day()). An Other slot is not a plan
  * builder's, so it only carries a Done tick. The market slot is a LIST OF
  * SLIDES since 2026-11-09 (Nikki: "today I'm going to do 4 story slides,
  * 2 for Aspen and 2 for Snowmass Village; next week Basalt and
@@ -128,6 +132,9 @@ function plan_week_slots(array $plan): array {
         if (!isset($slots[$i])) continue;
         $slots[$i] = ['day' => $slots[$i]['day'], 'type' => $c['type'], 'words' => $c['words'], 'custom' => true] + ($c['type'] === 'property' ? ['variant' => $c['variant']] : []);
     }
+    // The week's own day for a piece (the Day picker, 2026-11-12): a regular slot keeps its id and shows under the day chosen.
+    // (A Branding story's day is its id; moving one moves its record: plan_slot_set_day().)
+    foreach ((array)($plan['days'] ?? []) as $i => $d) if (isset($slots[$i]) && $i < PLAN_BRANDING_BASE && in_array($d, PLAN_DAYS, true)) $slots[$i]['day'] = $d;
     // Week order: by day, a day's regular piece before its Branding story (ids under PLAN_BRANDING_BASE first)
     uksort($slots, fn($a, $b) => [array_search($slots[$a]['day'], PLAN_DAYS, true), $a >= PLAN_BRANDING_BASE ? 1 : 0, $a] <=> [array_search($slots[$b]['day'], PLAN_DAYS, true), $b >= PLAN_BRANDING_BASE ? 1 : 0, $b]);
     return $slots;
@@ -239,6 +246,7 @@ function plan_week_load(string $key): array {
     }
     $out = ['week' => $key, 'status' => ($j['status'] ?? '') === 'planned' ? 'planned' : 'open', 'updated_at' => (string)($j['updated_at'] ?? ''), 'items' => $items, 'slots' => $slots];
     if (array_key_exists('branding_days', $j) && is_array($j['branding_days'])) $out['branding_days'] = array_values(array_intersect(PLAN_DAYS, array_map('strval', $j['branding_days'])));
+    foreach ((array)($j['days'] ?? []) as $k => $d) if ((int)$k < PLAN_BRANDING_BASE && in_array($d, PLAN_DAYS, true)) $out['days'][(int)$k] = (string)$d;   // a piece moved to another day (2026-11-12)
     return $out;
 }
 
@@ -247,6 +255,7 @@ function plan_week_store(array $plan): bool {
     $plan['updated_at'] = date('c');
     ksort($plan['items']);
     if (empty($plan['slots'])) unset($plan['slots']); else ksort($plan['slots']);
+    if (empty($plan['days'])) unset($plan['days']); else ksort($plan['days']);
     $f = plan_store_dir() . '/' . $plan['week'] . '.json';
     $ok = @file_put_contents($f, json_encode($plan, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE), LOCK_EX) !== false;
     if ($ok) @chmod($f, 0664);
@@ -319,6 +328,37 @@ function plan_slot_set_kind(string $key, int $slot, string $option, string $word
     $after = plan_week_slots($p)[$slot];
     if (plan_slot_option_key($after) !== plan_slot_option_key($before) && isset($p['items'][$slot])) unset($p['items'][$slot]);
     return plan_week_store($p);
+}
+
+/**
+ * Move a piece to another day of the week (the Day picker, Nikki,
+ * 2026-11-12: a post planned for Monday went up on Thursday). Nothing saved
+ * is lost. A regular slot keeps its id and records the day in the week's
+ * `days` (its usual day = no record). A Branding story's id IS its day, so
+ * its record (the saved piece, a content choice) moves to the new day's id,
+ * the week's Branding days change with it, and a Link in Bio cover made from
+ * it follows; a day that already has a Branding story cannot take another.
+ * Returns the slot's id after the move, or -1 when it cannot be done.
+ */
+function plan_slot_set_day(string $key, int $slot, string $day): int {
+    if (!in_array($day, PLAN_DAYS, true)) return -1;
+    $p = plan_week_load($key);
+    $slots = plan_week_slots($p);
+    if (!isset($slots[$slot])) return -1;
+    if ($slots[$slot]['day'] === $day) return $slot;
+    if ($slot < PLAN_BRANDING_BASE) {
+        if ($day === plan_slot_base($slot)['day']) unset($p['days'][$slot]); else $p['days'][$slot] = $day;
+        return plan_week_store($p) ? $slot : -1;
+    }
+    $to = plan_branding_slot_id($day);
+    if ($to < 0 || isset($slots[$to])) return -1;
+    $p['branding_days'] = array_values(array_diff(array_merge(plan_branding_days($p), [$day]), [PLAN_DAYS[$slot - PLAN_BRANDING_BASE]]));
+    foreach (['items', 'slots'] as $part) if (isset($p[$part][$slot])) { $p[$part][$to] = $p[$part][$slot]; unset($p[$part][$slot]); }
+    if (!plan_week_store($p)) return -1;
+    if (function_exists('bio_update')) bio_update(function (array &$items) use ($key, $slot, $to) {
+        foreach ($items as &$x) if (($x['source'] ?? '') === 'plan' && ($x['week'] ?? '') === $key && (int)($x['slot'] ?? -1) === $slot) $x['slot'] = $to;
+    });
+    return $to;
 }
 
 /**

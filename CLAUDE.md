@@ -3002,6 +3002,17 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   5, 7 and a Branding story 100 + the day index (Mon 100 … Sun 106), the
   old 2 and 6 read as 101 and 104 on load. Unticking a day drops its
   saved story (confirm first); "n of N ready" is the week's own count.
+- **A piece's day is adjustable (Nikki, 2026-11-12: a post planned for
+  Monday went up on Thursday):** the Day column is a dropdown on every
+  row (`plan_action=day`, `plan_slot_set_day()`). A regular slot keeps
+  its id and the week records `days: { slot: day }` (its usual day = no
+  record), so the saved pieces, captions and the Link in Bio cover stay
+  with it. A Branding story's id is its day, so moving one moves its
+  record to the new id, updates `branding_days` and re-points its bio
+  cover; a day that already has a Branding story is greyed out. The
+  suggestions count "the nth of a kind" in the plan's own order
+  (`$nthOf` in social_plan.php), so moving a piece changes no other
+  day's suggestion.
 - **A post and a story per slot (Nikki, 2026-11-09: "one save cannot
   overwrite the other"):** a builder slot's item holds `post` and `story`
   pieces (each form, caption, summary, frames, saved_at), filed by the
