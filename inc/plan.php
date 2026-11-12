@@ -63,8 +63,6 @@ const PLAN_TEXT1_MAX   = 160;  // Text 1 takes line breaks since 2026-11-11 (up 
 function plan_admin_css(): string {
     return '
     .sp-step-h span { color:#d6dee8; }
-    .sp-capbar { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px; } .sp-capcount { font-size:12.5px; color:#6b7280; margin-right:auto; } .sp-capcount.over { color:#b3261e; font-weight:600; }
-    #spCaption { font-size:13.5px; line-height:1.5; }
     .sp-pillopt span { padding:4px 11px; font-size:12.5px; border-width:1.5px; }
     .sp-look { margin-top:9px; gap:6px; }
     .sp-look-l { font-size:13px; min-width:84px; }

@@ -136,3 +136,12 @@
 /* The Cutout style's backdrop picker (2026-11-02): a None tile beside the stock thumbnails. */
 .sp-none { display: flex; align-items: center; justify-content: center; aspect-ratio: 1; border-radius: 8px; border: 3px solid transparent; background: linear-gradient(135deg, #1f242c 50%, #f6f7f9 50%); color: #fff; font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
 .sp-photo input:checked + .sp-none { border-color: var(--gold-deep); }
+
+/* The Suggested Caption (2026-11-12): its bar of small buttons and the count. */
+.sp-capbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.sp-capbtn { font: inherit; font-size: 13px; font-weight: 500; line-height: 1.2; padding: 6px 14px; color: var(--text, #1f242c); background: #fff; border: 1px solid #c9d0d9; border-radius: 999px; cursor: pointer; }
+.sp-capbtn:hover { border-color: #4a5566; }
+.sp-capbtn:disabled { opacity: .6; cursor: default; }
+.sp-capcount { font-size: 12.5px; color: var(--muted, #6b7280); margin-right: auto; }
+.sp-capcount.over { color: #b3261e; font-weight: 600; }
+#spCaption { font-size: 13.5px; line-height: 1.5; }

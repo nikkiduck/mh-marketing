@@ -254,8 +254,8 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];   // the Broker Feature 
         <label class="sp-field"><span id="spCapHint">Prefilled for the listing. Not drawn on the picture.</span>
           <textarea name="caption" id="spCaption" maxlength="2200" rows="14" data-saved="<?= $e($pk_saved['caption'] ?? '') ?>"></textarea></label>
         <div class="sp-capbar">
-          <button type="button" class="sp-btn sp-btn-sm sp-btn-soft" id="spCapCopy">Copy caption</button>
-          <button type="button" class="sp-btn sp-btn-sm sp-btn-soft" id="spCapKeep">Save Changes</button>
+          <button type="button" class="sp-capbtn" id="spCapCopy">Copy Caption</button>
+          <button type="button" class="sp-capbtn" id="spCapKeep">Save Changes</button>
           <span class="sp-capcount" id="spCapCount"></span>
           <a class="sp-link" href="social_captions.php">All captions</a>
         </div>

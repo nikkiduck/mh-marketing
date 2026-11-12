@@ -15,6 +15,13 @@
  * Open House, with the logo upper right, lower left or none.
  */
 $sp_general = !empty($sp_general);
+// The Suggested Caption (Nikki, 2026-11-12; agents since that evening): each listing's caption from inc/captions.php
+// (what Nikki saved, else the first draft, else built from the feed), to edit in the box and copy. Agents save nothing.
+if (!$sp_general && $listings) {
+    require_once __DIR__ . '/captions.php';
+    $sp_cap_store = captions_store();
+    foreach ($listings as $i => $l) $listings[$i]['caption'] = caption_for($conn, $l, true, $sp_cap_store)['caption'];
+}
 ?>
 <?php if (!$listings && !$sp_general): ?>
   <div class="pt-flash err"><?= $tp_no_listings ?? 'We do not see any live listings under your name yet. If that is wrong, email <a href="mailto:' . PORTAL_MARKETING_EMAIL . '">' . PORTAL_MARKETING_EMAIL . '</a>.' ?></div>
@@ -153,6 +160,18 @@ $sp_general = !empty($sp_general);
           <?php endforeach; ?>
         </div>
       </section>
+
+      <?php if (!$sp_general): ?>
+      <section class="sp-step" id="spCapStep">
+        <h2 class="sp-step-h"><span>5</span>Suggested Caption</h2>
+        <label class="sp-field">A caption to paste under your post. Edit it here, then copy it.
+          <textarea id="spCaption" maxlength="2200" rows="12"></textarea></label>
+        <div class="sp-capbar">
+          <span class="sp-capcount" id="spCapCount"></span>
+          <button type="button" class="sp-capbtn" id="spCapCopy">Copy Caption</button>
+        </div>
+      </section>
+      <?php endif; ?>
 
       <div class="sp-actions">
         <button type="submit" class="sp-btn">Download PNG</button>
@@ -388,10 +407,23 @@ $sp_general = !empty($sp_general);
     const wasSelected = (form.querySelector('input[name="photo"]:checked') || {}).value === b.dataset.id;
     loadPhotos(wasSelected ? undefined : (form.querySelector('input[name="photo"]:checked') || {}).value);
   });
+  // ── The Suggested Caption (2026-11-12): the listing's, until the agent types in it; a story has none; never drawn or sent ──
+  const capBox = document.getElementById('spCaption'), capStep = document.getElementById('spCapStep');
+  function capCount() { const c = document.getElementById('spCapCount'); c.textContent = capBox.value.length.toLocaleString() + ' / 2,200'; c.classList.toggle('over', capBox.value.length > 2200); }
+  function capFill() { if (!capBox) return; const l = listing(); capBox.value = (l && l.caption) || ''; capCount(); }
+  function capShow() { if (capStep) capStep.hidden = fmt() === 'story'; }
+  if (capBox) {
+    capFill(); capShow();
+    capBox.addEventListener('input', e => { capCount(); e.stopPropagation(); });   // not part of the picture: no new preview
+    document.getElementById('spCapCopy').addEventListener('click', async e => {
+      try { await navigator.clipboard.writeText(capBox.value); } catch (_) { capBox.select(); document.execCommand('copy'); }
+      const b = e.currentTarget, t = b.textContent; b.textContent = 'Copied'; setTimeout(() => { b.textContent = t; }, 1400);
+    });
+  }
   form.addEventListener('input', e => {
     const n = e.target.name;
-    if (n === 'listing') { fill(listing()); labelForType(); loadPhotos(); return; }
-    if (n === 'size') { setType(); syncLogo(); showGroups(); scale(); syncWhen(); }
+    if (n === 'listing') { capFill(); fill(listing()); labelForType(); loadPhotos(); return; }
+    if (n === 'size') { capShow(); setType(); syncLogo(); showGroups(); scale(); syncWhen(); }
     if (n === 'layout') syncLogo();
     if (n === 'kind') { setType(); showGroups(); labelForType(); fill(listing()); scale(); loadPhotos(); return; }
     if (n === 'oh_when') f('oh_when').dataset.touched = '1';

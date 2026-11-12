@@ -173,7 +173,8 @@ function social_listings(mysqli $conn, array $ctx): array {
     if (!$conds) return $cache;
 
     $st = $conn->prepare("SELECT market, listing_key, mls_id, status, is_rental, property_type, address, city,
-                                 list_price, close_price, close_date, beds, baths, sqft, primary_photo, url
+                                 list_price, close_price, close_date, beds, baths, sqft, primary_photo, url,
+                                 list_agent_mls_id, colist_agent_mls_id
                             FROM hs_listing_state st
                            WHERE " . social_live_sql('st.') . "
                              AND (" . implode(' OR ', $conds) . ")

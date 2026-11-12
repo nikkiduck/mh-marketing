@@ -2841,11 +2841,16 @@ and inc/flyer.php. Uploads made from the admin pages are the admin's own
 page under a simulated admin session on the server (Jonathan's 16 listings
 in both dropdowns, 26 agents in the picker).
 
-### Suggested Captions (super admin only, 2026-11-12)
+### Suggested Captions (admin tools 2026-11-12, agents the same evening)
 
 Nikki, 2026-11-12: a prefilled "Suggested Caption" for the Instagram listing
-posts, in the admin tools first; the agents' templates get it when she says
-so (NOT built there yet: portal/social.php has no caption box). One caption
+posts, in the admin tools first, then "make it live to agents" the same day:
+the agents' Listing Post/Story (inc/social_body.php, not General Social) has
+a step 5, Suggested Caption, for each of THEIR listings: the same caption
+(`caption_for()`, so Nikki's saved one when there is one), editable in the
+box, a Copy Caption button, hidden on Story, never sent with the form.
+Agents save nothing: saving is the admin pages' alone. social_listings()
+selects list_agent_mls_id / colist_agent_mls_id for the tags. One caption
 per listing, keyed "market|listing_key": `inc/captions.php` (the shape, from
 her 633 W Main St sample, is in its header). `caption_for()` returns what she
 saved (CREATIVES_DIR/social/captions.json, one JSON file, no table), else the
