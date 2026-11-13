@@ -17,7 +17,8 @@
  * county's name with -county (`pitkin-county`: Eagle, Ouray and Montrose are
  * each both a county and a town), `denver-metro`.
  *
- * A place carries: `sections` (one per property type: tiles), `summary` (the
+ * A place carries: `sections` (one per property type: `tiles`, and `ytd`, the
+ * year to date as tiles of its own, for Send's Market Report block), `summary` (the
  * row other pages' town tables print), `series` (month by month, for the
  * charts: 24 months for a county, from the months on file for a town) and
  * `credits` (the boards' lines; the notice NAR's model rule 13 and the MLS
@@ -167,7 +168,22 @@ function market_page_car_section(array $r, string $pt, array $w, string $source,
     $t[] = market_page_tile('Months of supply', market_dec1($r['months_supply']), market_change($r['months_supply'], $r['months_supply_ly']), $ly);
     $t[] = market_page_tile('New listings', market_int($r['new_listings']), market_change($r['new_listings'], $r['new_listings_ly']), $ly,
                             market_page_has($r['ytd_new_listings'] ?? null) ? 'YTD ' . market_int($r['ytd_new_listings']) : '');
-    return ['pt' => $pt, 'heading' => market_ptype_words($pt), 'source' => $source, 'sold' => $sold, 'thin' => $lead, 'tiles' => $t,
+    // The year to date as tiles of its own (Nikki, 2026-11-13: figures to pick in Send's Market Report block). The same
+    // labels as the month's tiles, tagged; a thin section has none, its tiles above are the year to date already.
+    $y = [];
+    if (!$lead && $ytdOk) {
+        $y[] = market_page_tile('Closed sales', market_int($r['ytd_sold']), market_change($r['ytd_sold'], $r['ytd_sold_ly'] ?? null), $ya, '', 'Year to date');
+        if (market_page_has($r['ytd_median'] ?? null))  $y[] = market_page_tile('Median price', market_money($r['ytd_median']), market_change($r['ytd_median'], $r['ytd_median_ly'] ?? null), $ya, '', 'Year to date');
+        if (market_page_has($r['ytd_average'] ?? null)) $y[] = market_page_tile('Average price', market_money($r['ytd_average']), market_change($r['ytd_average'], $r['ytd_average_ly'] ?? null), $ya, '', 'Year to date');
+        if (market_page_has($r['ytd_days_on_market'] ?? null)) $y[] = market_page_tile('Days on market', market_int($r['ytd_days_on_market']), market_change($r['ytd_days_on_market'], $r['ytd_days_on_market_ly'] ?? null), $ya, '', 'Year to date');
+        if (market_page_has($r['ytd_pct_of_list'] ?? null)) $y[] = market_page_tile('% of list received', market_page_pct($r['ytd_pct_of_list']), null, '', '', 'Year to date',
+                                                                                     market_page_pts($r['ytd_pct_of_list'], $r['ytd_pct_of_list_ly'] ?? null, $ya));
+        if ($feed && in_array('feed', MARKET_PUBLIC_SOURCES, true) && market_page_has($feed['ytd']['price_per_sqft'] ?? null)) {
+            $y[] = market_page_tile('Median price per sq ft', '$' . market_int($feed['ytd']['price_per_sqft']), market_change($feed['ytd']['price_per_sqft'], $feed['ytd_ly']['price_per_sqft'] ?? null), $ya, '', 'Year to date') + ['source' => 'feed'];
+        }
+        if (market_page_has($r['ytd_new_listings'] ?? null)) $y[] = market_page_tile('New listings', market_int($r['ytd_new_listings']), market_change($r['ytd_new_listings'], $r['ytd_new_listings_ly'] ?? null), $ya, '', 'Year to date');
+    }
+    return ['pt' => $pt, 'heading' => market_ptype_words($pt), 'source' => $source, 'sold' => $sold, 'thin' => $lead, 'tiles' => $t, 'ytd' => $y,
             'summary' => ['sold' => market_int($sold), 'sold_chg' => $lead ? '' : market_flyer_signed(market_change($r['sold'], $r['sold_ly'])),
                           'median' => $sold ? market_money($r['median']) : '–', 'median_chg' => ($lead || !$sold) ? '' : market_flyer_signed(market_change($r['median'], $r['median_ly'])),
                           'ytd_sold' => market_int($r['ytd_sold'] ?? null), 'ytd_median' => market_money($r['ytd_median'] ?? null),
@@ -210,7 +226,16 @@ function market_page_feed_section(?array $p, string $pt, array $w): ?array {
     $active = is_array($inv) && market_page_has($inv['active'] ?? null) ? $inv['active'] : null;
     if ($active !== null) $t[] = market_page_tile('Homes for sale', market_int($active), null, '', 'At month end');
     if (is_array($inv) && market_page_has($inv['months_supply'] ?? null)) $t[] = market_page_tile('Months of supply', market_dec1($inv['months_supply']));
-    return ['pt' => $pt, 'heading' => market_ptype_words($pt), 'source' => 'feed', 'sold' => $sold, 'thin' => $lead, 'tiles' => $t,
+    $yt = [];   // the year to date as tiles of its own, as in market_page_car_section()
+    if (!$lead && $ytdN > 0) {
+        $yt[] = market_page_tile('Closed sales', market_int($ytdN), market_change($ytdN, $yl['sold'] ?? null), $ya, '', 'Year to date');
+        if ($has($y, 'median'))  $yt[] = market_page_tile('Median price', market_money($y['median']), market_change($y['median'], $yl['median'] ?? null), $ya, '', 'Year to date');
+        if ($has($y, 'average')) $yt[] = market_page_tile('Average price', market_money($y['average']), market_change($y['average'], $yl['average'] ?? null), $ya, '', 'Year to date');
+        if ($has($y, 'price_per_sqft')) $yt[] = market_page_tile('Median price per sq ft', '$' . market_int($y['price_per_sqft']), market_change($y['price_per_sqft'], $yl['price_per_sqft'] ?? null), $ya, '', 'Year to date');
+        if ($has($y, 'avg_dom')) $yt[] = market_page_tile($dom, market_int($y['avg_dom']), market_change($y['avg_dom'], $yl['avg_dom'] ?? null), $ya, '', 'Year to date');
+        if ($has($y, 'pct_of_list')) $yt[] = market_page_tile('% of list price', market_page_pct($y['pct_of_list']), null, '', '', 'Year to date', market_page_pts($y['pct_of_list'], $yl['pct_of_list'] ?? null, $ya));
+    }
+    return ['pt' => $pt, 'heading' => market_ptype_words($pt), 'source' => 'feed', 'sold' => $sold, 'thin' => $lead, 'tiles' => $t, 'ytd' => $yt,
             'summary' => ['sold' => market_int($sold), 'sold_chg' => $lead ? '' : market_flyer_signed(market_change($sold, $l['sold'] ?? null)),
                           'median' => $sold ? market_money($mo['median'] ?? null) : '–', 'median_chg' => ($lead || !$sold) ? '' : market_flyer_signed(market_change($mo['median'] ?? null, $l['median'] ?? null)),
                           'ytd_sold' => market_int($ytdN), 'ytd_median' => market_money($y['median'] ?? null),
@@ -364,7 +389,7 @@ function market_page_month(array $data, array $history): array {
         foreach ($sections as $s) {
             $pl['summary'][$s['pt']] = $s['summary'] + ['source' => $s['source']];
             $pl['sections'][] = ['pt' => $s['pt'], 'heading' => $s['heading'], 'source' => $s['source'], 'source_label' => market_page_source_label($data, $p, $s['source']),
-                                 'thin' => $s['thin'], 'sold' => $s['sold'], 'tiles' => $s['tiles']];
+                                 'thin' => $s['thin'], 'sold' => $s['sold'], 'tiles' => $s['tiles'], 'ytd' => $s['ytd'] ?? []];
             // A county's 24 months come from CAR's trend; everything else from the months on file.
             if ($p['kind'] === 'county') {
                 $ptype = $s['pt'] === 'TC' ? 'Townhouse-condo' : 'Single family';

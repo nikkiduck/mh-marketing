@@ -11,7 +11,7 @@
  *   GET ?m=2026-10    one month (also ?m=october-2026): market_page_month():
  *                     { month, slug, label, ly, generated, as_of, late, thin, areas: [ { name, places: [slug] } ],
  *                       places: { slug: { slug, title, kind, area, market, county, county_slug,
- *                                         sections: [ { pt, heading, source, source_label, thin, sold, tiles: [ { label, value, vs, dir, small, tag } ] } ],
+ *                                         sections: [ { pt, heading, source, source_label, thin, sold, tiles: [ { label, value, vs, dir, small, tag } ], ytd: [ the same shape, tag 'Year to date' ] } ],
  *                                         summary: { SF|TC|ALL: { sold, sold_chg, median, median_chg, ytd_sold, ytd_median, ytd_chg, inv, source } },
  *                                         series:  { SF|TC|ALL: [ { m, sold, median, inventory } ] },
  *                                         credits: [ ... ] } } }

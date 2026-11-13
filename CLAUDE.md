@@ -2636,7 +2636,13 @@ from the feed carries the notice the boards require (source MLS and period;
 MLS Grid's wording for REcolorado). A change to a tile's wording or to a
 place is made here and reaches the site and Send within the hour. **Renaming
 a tile's label un-picks that figure in every saved email that chose it**
-(the block then shows its defaults), so treat the labels as keys. Rules check and
+(the block then shows its defaults), so treat the labels as keys. Each
+section also carries `ytd` (2026-11-13, Nikki: year-to-date figures to pick
+in that block, wanted on the Instagram snapshot too, not built there): the
+year to date as tiles of its own, same labels, tag "Year to date", change
+against last year's YTD; empty for a thin section, whose tiles are the year
+to date already. The site ignores it; every value equals the "YTD ..." a
+month tile prints in its small line. Rules check and
 plan: site docs/HANDOFF-public-market-reports.md.
 
 **PDF flyer for a client (2026-11-08, Nikki: "so agents can download and
