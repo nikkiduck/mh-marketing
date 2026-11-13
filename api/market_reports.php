@@ -17,7 +17,10 @@
  *                                         credits: [ ... ] } } }
  *
  * Auth: Authorization: Bearer <ROSTER_FEED_TOKEN> (inc/db.php), the token the
- * site already holds for the roster feed (its MARKETING_FEED_TOKEN).
+ * site already holds for the roster feed (its MARKETING_FEED_TOKEN); or
+ * Bearer <SEND_ROSTER_TOKEN>, the one send.monthaus.com holds for the roster
+ * feed (2026-11-13: the Market Report block in its Client Emails draws from
+ * this same answer, send inc/market.php, so its figures are the website's).
  *
  *   curl -s -H "Authorization: Bearer $TOKEN" 'https://marketing.monthaus.com/api/market_reports.php?index=1' | head -c 600
  */
@@ -42,7 +45,11 @@ require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/db.php';   // defines ROSTER_FEED_TOKEN
 
 if (!defined('ROSTER_FEED_TOKEN') || strlen((string)ROSTER_FEED_TOKEN) < 24) feed_fail(503, 'feed not configured');
-if ($bearer === '' || !hash_equals((string)ROSTER_FEED_TOKEN, $bearer)) feed_fail(401, 'unauthorized');
+$ok = $bearer !== '' && hash_equals((string)ROSTER_FEED_TOKEN, $bearer);
+if (!$ok && $bearer !== '' && defined('SEND_ROSTER_TOKEN') && strlen((string)SEND_ROSTER_TOKEN) >= 24) {
+    $ok = hash_equals((string)SEND_ROSTER_TOKEN, $bearer);   // send.monthaus.com, as api/roster.php admits it
+}
+if (!$ok) feed_fail(401, 'unauthorized');
 
 require_once __DIR__ . '/../inc/market.php';        // market_load(), market_attach_feed()
 require_once __DIR__ . '/../inc/market_page.php';   // the page model

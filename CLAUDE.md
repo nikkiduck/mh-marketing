@@ -2625,13 +2625,18 @@ public slug (a town's Communities key, a county's name with `-county`,
 returns a month's page model for every place (sections of tiles per property
 type, a summary row, the month by month series, credits).
 `api/market_reports.php` serves it (`?index=1`, `?m=YYYY-MM`; Bearer
-ROSTER_FEED_TOKEN, the token the site already holds). Rules: under
+ROSTER_FEED_TOKEN, the token the site already holds, or SEND_ROSTER_TOKEN,
+send.monthaus.com's: since 2026-11-13 the Market Report block in its Client
+Emails draws from this same answer, send inc/market.php, so a tile's label
+is also what that block's figure picker stores). Rules: under
 `MARKET_PAGE_THIN` (5) closed sales the sales tiles lead with year to date;
 `MARKET_PUBLIC_SOURCES` says which sources are public (all four: Anyprop
 cleared the feed-derived figures, Nikki 2026-11-12), and a figure we compile
 from the feed carries the notice the boards require (source MLS and period;
 MLS Grid's wording for REcolorado). A change to a tile's wording or to a
-place is made here and reaches the site within the hour. Rules check and
+place is made here and reaches the site and Send within the hour. **Renaming
+a tile's label un-picks that figure in every saved email that chose it**
+(the block then shows its defaults), so treat the labels as keys. Rules check and
 plan: site docs/HANDOFF-public-market-reports.md.
 
 **PDF flyer for a client (2026-11-08, Nikki: "so agents can download and
