@@ -250,6 +250,25 @@ average closed price; add it at the monthly refresh) and with the median
 until then, labelled as such. The report page is unchanged (medians in
 its tables, the average on the county tiles).
 
+**Year-to-date rows (2026-11-13, Nikki: "that's not in Insta templates yet
+but we want it to be").** The three rows can be the year to date's as well
+as the month's: catalog keys ending in `_ytd` (`market_stat_is_ytd()`):
+average sale price, median sale price, price per sq ft, closed sales, days
+on market, % of list, new listings. `market_pool_ytd()` writes them for a
+CAR card (CAR's `ytd_*` fields, the feed's price per sq ft) and for a feed
+town; Denver Metro has none. On the card the label is short and leads with
+YTD ("YTD closed sales", "YTD price/SqFt": a row's label must stay on one
+line, about 19 capitals) and the note sets it against the same period a
+year earlier ("−16.3% vs 2025 YTD", "152 in 2025 YTD"). The builder's row
+pickers list the month's figures and the year to date's as two groups. **A
+year-to-date row is drawn only when it was picked:** the defaults and the
+fill of a short pool stay with the month's figures, so a card nobody chose
+figures for comes out as it always has (`market_pick_stats()`; one feed
+town's default card would have changed otherwise). Measured: 396 cards
+(every place, both property types, three mixes of rows, post and story)
+with no label or note wrapping and nothing past the height budget, the
+smallest gap 54 px. The old whole-card YTD switch (`$thin`) is still off.
+
 ## Town figures from our own feed (2026-10-18, late)
 
 The site computes town statistics from the MLS feeds it receives (site

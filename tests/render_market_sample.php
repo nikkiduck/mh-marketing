@@ -59,6 +59,13 @@ foreach (array_keys(market_cards($data)) as $market) {
             $name = "{$market}-picked-light.html";
             file_put_contents("$out/$name", market_card_render($picked, ['format' => 'post', 'theme' => 'light', 'mark' => 'mmark', 'backdrop' => '/assets/images/social-placeholder.jpg'], ''));
             $files[] = [$name, 1350];
+            // Year-to-date rows (2026-11-13): the longest labels and notes, to measure with the rest.
+            $ytd = market_card_model($data, $market, ['ptype' => 'SF', 'stats' => ['average_ytd', 'sold_ytd', 'dom_ytd']]);
+            if (array_filter($ytd['stat_keys'], 'market_stat_is_ytd')) {
+                $name = "{$market}-ytd-dark.html";
+                file_put_contents("$out/$name", market_card_render($ytd, ['format' => 'post', 'theme' => 'dark', 'mark' => 'triangle'], ''));
+                $files[] = [$name, 1350];
+            }
             if ($pt === 'SF' && $market === 'pitkin') echo '  pitkin offers: ' . implode(', ', $card['pool_keys']) . "; picked: " . implode(', ', $picked['stat_keys']) . "\n";
         }
     }

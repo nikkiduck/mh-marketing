@@ -352,7 +352,40 @@ function market_stat_catalog(): array {
         'pct'       => '% of list price',
         'median'    => 'Median sale price',   // a row since 2026-10-20: the average leads the card (Jon's decision, via Nikki)
         'new'       => 'New listings',
+        // The year to date, as rows of their own (Nikki, 2026-11-13: "we want it to be" on the snapshot; the Market Report
+        // block in Client Emails got the same picks that day). Keys end in _ytd; market_stat_is_ytd() tells them apart.
+        'average_ytd' => 'Average sale price',
+        'median_ytd'  => 'Median sale price',
+        'ppsf_ytd'    => 'Median price/SqFt',
+        'sold_ytd'    => 'Closed sales',
+        'dom_ytd'     => 'Avg days on market',
+        'pct_ytd'     => '% of list price',
+        'new_ytd'     => 'New listings',
     ];
+}
+
+/** True for a catalog key that is a year-to-date figure. */
+function market_stat_is_ytd(string $key): bool { return str_ends_with($key, '_ytd'); }
+
+/**
+ * The year-to-date rows a place offers beside its month's: key => [label, value, note]. The card's label is short
+ * ("YTD closed sales": a row's label must stay on one line, about 19 capitals), and the note sets it against the same
+ * period a year earlier. $y / $yl: the year to date and last year's, by the names below (CAR's row and our feed's place
+ * name them differently, so the callers pass them over). A figure the source lacks is left out.
+ */
+function market_pool_ytd(array $y, array $yl, array $w): array {
+    $n = fn($v) => $v !== null && $v !== '';
+    $when = $w['lyYr'] . ' YTD';
+    $ppsf = fn($v) => '$' . number_format((float)$v);
+    $pool = [];
+    if ($n($y['average'] ?? null)) $pool['average_ytd'] = ['YTD average price', market_money($y['average']), market_vs(market_change($y['average'], $yl['average'] ?? null), $when)];
+    if ($n($y['median'] ?? null))  $pool['median_ytd']  = ['YTD median price', market_money($y['median']), market_vs(market_change($y['median'], $yl['median'] ?? null), $when)];
+    if ($n($y['ppsf'] ?? null))    $pool['ppsf_ytd']    = ['YTD price/SqFt', $ppsf($y['ppsf']), $n($yl['ppsf'] ?? null) ? $ppsf($yl['ppsf']) . " in {$when}" : ''];
+    if ($n($y['sold'] ?? null) && (int)$y['sold'] > 0) $pool['sold_ytd'] = ['YTD closed sales', market_int($y['sold']), market_vs(market_change($y['sold'], $yl['sold'] ?? null), $when)];
+    if ($n($y['dom'] ?? null))     $pool['dom_ytd']     = ['YTD days on market', market_int($y['dom']), $n($yl['dom'] ?? null) ? market_int($yl['dom']) . " in {$when}" : ''];
+    if ($n($y['pct'] ?? null))     $pool['pct_ytd']     = ['YTD % of list', market_dec1($y['pct']) . '%', $n($yl['pct'] ?? null) ? market_dec1($yl['pct']) . "% in {$when}" : ''];
+    if ($n($y['new'] ?? null))     $pool['new_ytd']     = ['YTD new listings', market_int($y['new']), market_vs(market_change($y['new'], $yl['new'] ?? null), $when)];
+    return $pool;
 }
 
 /** "+19% vs September 2025", "Even with …", '' for none. */
@@ -405,12 +438,16 @@ function market_pool_metro(array $f, array $w): array {
     return $pool;
 }
 
-/** Three keys from the pool: the agent's picks that the pool has, then the source's defaults, then whatever is left. */
+/**
+ * Three keys from the pool: the agent's picks that the pool has, then the source's defaults, then whatever is left
+ * of the month's figures. A year-to-date row is drawn only when it was picked (2026-11-13): a card nobody chose
+ * figures for comes out as it always has.
+ */
 function market_pick_stats(array $pool, array $want, array $defaults): array {
     $out = [];
     foreach ($want as $k) if (isset($pool[$k]) && !in_array($k, $out, true)) $out[] = $k;
     foreach ($defaults as $k) if (count($out) < 3 && isset($pool[$k]) && !in_array($k, $out, true)) $out[] = $k;
-    foreach (array_keys($pool) as $k) if (count($out) < 3 && !in_array($k, $out, true)) $out[] = $k;
+    foreach (array_keys($pool) as $k) if (count($out) < 3 && !market_stat_is_ytd((string)$k) && !in_array($k, $out, true)) $out[] = $k;
     return array_slice($out, 0, 3);
 }
 
@@ -420,7 +457,8 @@ function market_pick_stats(array $pool, array $want, array $defaults): array {
  * three figures under it, which the agent picks from the source's pool
  * (Nikki, 2026-10-18; defaults: closed sales, avg days on market, homes for
  * sale, or price per sq ft where no inventory exists yet). Nothing else on
- * the card. $opts: ptype SF|TC, stats [up to three catalog keys].
+ * the card. $opts: ptype SF|TC, stats [up to three catalog keys; a key ending
+ * in _ytd is that figure for the year to date, 2026-11-13].
  * Null when the month has no row.
  *
  * ['key', 'eyebrow' (short: the month is in sub), 'title', 'sub',
@@ -482,13 +520,20 @@ function market_card_model(array $data, string $key, array $opts = []): ?array {
         }
         $pool = market_pool_car($r, $w, $thin);
         // Price per sq ft is not in CAR's reports: it comes from our own feed for the county or town (Nikki, 2026-10-19).
-        $fp = function_exists('market_feed_ppsf_stat') ? market_feed_ppsf_stat(market_feed_place_for_card($data, $d), $pt, $w, $thin) : null;
+        $fplace = function_exists('market_feed_place_for_card') ? market_feed_place_for_card($data, $d) : null;
+        $fp = function_exists('market_feed_ppsf_stat') ? market_feed_ppsf_stat($fplace, $pt, $w, $thin) : null;
         if ($fp) $pool['ppsf'] = $fp;
+        // The year to date, to pick beside the month's rows (2026-11-13): CAR's own, and the feed's price per sq ft.
+        $pool += market_pool_ytd(
+            ['average' => $r['ytd_average'] ?? null, 'median' => $r['ytd_median'] ?? null, 'ppsf' => $fplace[$pt]['ytd']['price_per_sqft'] ?? null, 'sold' => $r['ytd_sold'] ?? null,
+             'dom' => $r['ytd_days_on_market'] ?? null, 'pct' => $r['ytd_pct_of_list'] ?? null, 'new' => $r['ytd_new_listings'] ?? null],
+            ['average' => $r['ytd_average_ly'] ?? null, 'median' => $r['ytd_median_ly'] ?? null, 'ppsf' => $fplace[$pt]['ytd_ly']['price_per_sqft'] ?? null, 'sold' => $r['ytd_sold_ly'] ?? null,
+             'dom' => $r['ytd_days_on_market_ly'] ?? null, 'pct' => $r['ytd_pct_of_list_ly'] ?? null, 'new' => $r['ytd_new_listings_ly'] ?? null], $w);
         $defaults = ['sold', 'dom', 'inventory'];
         $card['credit'] = !empty($d['town'])
             ? "Source: Aspen/Glenwood Springs MLS Inc. Local Market Update, {$d['town']}, {$w['month']}. Report © {$yr} ShowingTime Plus, LLC."
             : "Source: Colorado Association of REALTORS® Local Market Update, {$d['county']}, {$w['month']}. Report © {$yr} ShowingTime Plus, LLC.";
-        if ($fp) $card['credit'] .= ' Price per sq ft from the MLS feeds Mont Haus receives (IDX data).';
+        if ($fp || isset($pool['ppsf_ytd'])) $card['credit'] .= ' Price per sq ft from the MLS feeds Mont Haus receives (IDX data).';
     }
     $keys = market_pick_stats($pool, $want, $defaults);
     $card['stat_keys'] = $keys;

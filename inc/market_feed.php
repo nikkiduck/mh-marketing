@@ -219,5 +219,11 @@ function market_feed_pool(array $town, string $pt, array $w): ?array {
     }
     if ($inv && $n($inv['active'] ?? null))        $pool['inventory'] = ['Homes for sale', market_int($inv['active']), ''];
     if ($inv && $n($inv['months_supply'] ?? null)) $pool['supply']    = ['Months of supply', market_dec1($inv['months_supply']), ''];
+    // The year to date, to pick beside the month's rows (Nikki, 2026-11-13); not when the whole card is year to date already.
+    if (!$thin && function_exists('market_pool_ytd')) {
+        $pool += market_pool_ytd(
+            ['average' => $ytd['average'] ?? null, 'median' => $ytd['median'] ?? null, 'ppsf' => $ytd['price_per_sqft'] ?? null, 'sold' => $ytd['sold'] ?? null, 'dom' => $ytd['avg_dom'] ?? null, 'pct' => $ytd['pct_of_list'] ?? null],
+            ['average' => $ytdly['average'] ?? null, 'median' => $ytdly['median'] ?? null, 'ppsf' => $ytdly['price_per_sqft'] ?? null, 'sold' => $ytdly['sold'] ?? null, 'dom' => $ytdly['avg_dom'] ?? null, 'pct' => $ytdly['pct_of_list'] ?? null], $w);
+    }
     return ['eyebrow' => $thin ? 'Market snapshot · Year to date' : 'Market snapshot', 'hero' => $hero, 'pool' => $pool];
 }

@@ -2642,7 +2642,11 @@ in that block, wanted on the Instagram snapshot too, not built there): the
 year to date as tiles of its own, same labels, tag "Year to date", change
 against last year's YTD; empty for a thin section, whose tiles are the year
 to date already. The site ignores it; every value equals the "YTD ..." a
-month tile prints in its small line. Rules check and
+month tile prints in its small line. The Instagram Market Snapshot got its
+own year-to-date rows the same day (catalog keys ending `_ytd`,
+`market_pool_ytd()` in inc/market_data.php; drawn only when picked; labels
+lead with "YTD" and stay under about 19 capitals):
+docs/HANDOFF-market-report.md > The cards. Rules check and
 plan: site docs/HANDOFF-public-market-reports.md.
 
 **PDF flyer for a client (2026-11-08, Nikki: "so agents can download and

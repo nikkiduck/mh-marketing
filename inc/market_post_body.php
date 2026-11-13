@@ -114,13 +114,17 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
 
       <section class="sp-step">
         <h2 class="sp-step-h"><span>2</span>Figures</h2>
-        <p class="sp-hint">The average sale price leads every card. Choose the three figures under it.</p>
+        <p class="sp-hint">The average sale price leads every card. Choose the three figures under it: <?= $e(market_month_name($month)) ?>'s, the year to date's, or a mix.</p>
         <div class="mp-rows">
           <?php $start = $defaults($avail[$market]['SF'] ?? []); foreach ([0, 1, 2] as $i): ?>
           <label class="sp-field">Row <?= $i + 1 ?>
             <select name="stats[]" class="mp-stat">
-              <?php foreach ($catalog as $k => $name): ?>
+              <?php foreach ([false, true] as $ytd_group): /* the month's figures, then the year to date's (2026-11-13) */ ?>
+              <optgroup label="<?= $ytd_group ? 'Year to date' : $e(market_month_label($month)) ?>">
+              <?php foreach ($catalog as $k => $name): if (market_stat_is_ytd($k) !== $ytd_group) continue; ?>
               <option value="<?= $e($k) ?>"<?= ($start[$i] ?? '') === $k ? ' selected' : '' ?>><?= $e($name) ?></option>
+              <?php endforeach; ?>
+              </optgroup>
               <?php endforeach; ?>
             </select>
           </label>
@@ -226,7 +230,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
     picks.forEach((sel, i) => {
       [...sel.options].forEach(o => { o.disabled = !offered.includes(o.value); });
       if (!offered.includes(sel.value) || used.includes(sel.value)) {
-        const next = [defaults[i]].concat(defaults, offered).find(k => k && offered.includes(k) && !used.includes(k));
+        const next = [defaults[i]].concat(defaults, offered.filter(k => !k.endsWith('_ytd'))).find(k => k && offered.includes(k) && !used.includes(k));   // never falls back to a year-to-date row: those are picked
         if (next) sel.value = next;
       }
       used.push(sel.value);
