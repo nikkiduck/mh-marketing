@@ -21,6 +21,7 @@ require_once __DIR__ . '/auth.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/schema.php';
+require_once __DIR__ . '/whats_new.php';   // What's New: the bell and the banner in the header (2026-11-14)
 
 /** Where agents' questions and requests go (Nikki, 2026-10-01: the team inbox, not a person). */
 if (!defined('PORTAL_MARKETING_EMAIL')) define('PORTAL_MARKETING_EMAIL', 'marketing@monthaus.com');
@@ -321,8 +322,12 @@ function portal_context(mysqli $conn): array {
     $in = implode(',', array_map('intval', array_values(array_unique($ids))));
     $r  = $conn->query("SELECT DISTINCT market FROM agent_mls_ids WHERE intake_id IN ({$in}) AND mls_agent_id <> ''");
     while ($r && ($m = $r->fetch_row())) $markets[] = (string)$m[0];
-    return ['user' => $user, 'acct' => $acct, 'ids' => array_values(array_unique($ids)), 'preview' => $preview,
+    $ctx = ['user' => $user, 'acct' => $acct, 'ids' => array_values(array_unique($ids)), 'preview' => $preview,
             'teams' => $teams, 'scopes' => $scopes, 'markets' => $markets];
+    // What's New (2026-11-14): worked out here, while the connection is open; portal_header() only draws it.
+    try { $ctx['whats_new'] = wn_portal_state($conn, $ctx); }
+    catch (Throwable $e) { error_log('whats_new: ' . $e->getMessage()); $ctx['whats_new'] = ['items' => [], 'new' => null, 'latest' => 0, 'can_mark' => false]; }
+    return $ctx;
 }
 
 /** The account ids whose items this portal may show (the person and their teams), as a SQL IN list. Ints from the context only. */
@@ -601,20 +606,35 @@ function portal_nav_group(string $active): string {
  * (Nikki, 2026-11-03: "I want to make it obvious"). Both open in a new window;
  * other boards see neither.
  */
+/**
+ * Which parts of MH Send this portal's menu gives the agent, and their addresses: ['b2b' => bool, 'emails' => bool,
+ * 'b2b_url', 'emails_url']. One test for the menu (portal_send_item()) and for What's New (wn_portal_areas()), so a
+ * notice about B2Bs or Client Emails reaches exactly the people whose menu has it.
+ */
+function portal_send_access(array $ctx): array {
+    $on     = defined('MH_SEND_LINK') && MH_SEND_LINK;
+    $boards = defined('MH_SEND_BOARDS') ? MH_SEND_BOARDS : ['aspen', 'vail'];
+    return [
+        'b2b'        => $on && (bool)array_intersect($boards, $ctx['markets'] ?? []),
+        'emails'     => $on && defined('MH_SEND_CLIENT_EMAILS') && MH_SEND_CLIENT_EMAILS,
+        'b2b_url'    => defined('MH_SEND_URL') ? MH_SEND_URL : 'https://send.monthaus.com/b2b/',
+        'emails_url' => defined('MH_SEND_EMAILS_URL') ? MH_SEND_EMAILS_URL : 'https://send.monthaus.com/newsletters.php',
+    ];
+}
+
 function portal_send_item(array $ctx): array {
     // Off until MH Send goes live (Nikki, 2026-10-27: it showed on agents' portals before the
     // cutover). To switch on: define('MH_SEND_LINK', true) in inc/config.php on the server.
     if (!defined('MH_SEND_LINK') || !MH_SEND_LINK) return [];
-    $boards  = defined('MH_SEND_BOARDS') ? MH_SEND_BOARDS : ['aspen', 'vail'];
-    $b2b     = (bool)array_intersect($boards, $ctx['markets'] ?? []);
-    $b2b_url = defined('MH_SEND_URL') ? MH_SEND_URL : 'https://send.monthaus.com/b2b/';
+    $a = portal_send_access($ctx);
+    $b2b = $a['b2b']; $b2b_url = $a['b2b_url'];
     // Once Client Emails is open to agents (MH_SEND_CLIENT_EMAILS in inc/config.php, switched on with
     // NEWSLETTER_AGENTS_OPEN on send.monthaus.com), EVERY agent has one menu, "MH Send" (Nikki, 2026-11-14):
     // "B2Bs" and "Client Emails" for Aspen and Vail members, "Client Emails" alone for everyone else. B2B is
     // for those two boards; the email system is for agents on every board. It replaces both B2B Portal links.
-    if (defined('MH_SEND_CLIENT_EMAILS') && MH_SEND_CLIENT_EMAILS) {
+    if ($a['emails']) {
         $subs = $b2b ? ['send_b2b' => ['B2Bs', $b2b_url]] : [];
-        $subs['send_emails'] = ['Client Emails', defined('MH_SEND_EMAILS_URL') ? MH_SEND_EMAILS_URL : 'https://send.monthaus.com/newsletters.php'];
+        $subs['send_emails'] = ['Client Emails', $a['emails_url']];
         return ['send' => ['MH Send', null, $subs]];
     }
     if (!$b2b) return [];
@@ -628,6 +648,12 @@ function portal_header(array $ctx, string $title, string $active, array $jump = 
         $nav += $send;                                                              // and after My Tools: that link, or the MH Send menu
     }
     $group = portal_nav_group($active);
+    // What's New (2026-11-14): the bell is in the bar on every page; a notice the person has not seen is also a
+    // banner at the top of the page until they close it. Worked out by portal_context() (wn_portal_state()).
+    $wn = $ctx['whats_new'] ?? ['items' => [], 'new' => null, 'latest' => 0, 'can_mark' => false];
+    $wn_send = portal_send_access($ctx);
+    $wn_tag = fn(array $it): string => $it['area'] === 'portal' ? '' : '<span class="pt-wn-tag">' . ph(WN_AREAS[$it['area']][0]) . '</span>';
+    $wn_link = fn(array $it): string => $it['area'] === 'portal' ? '' : '<a class="pt-wn-go" href="' . ph($wn_send[$it['area'] . '_url']) . '" target="_blank" rel="noopener">Open ' . ph(WN_AREAS[$it['area']][0]) . ' <span aria-hidden="true">&#8599;</span></a>';
     ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -653,10 +679,27 @@ function portal_header(array $ctx, string $title, string $active, array $jump = 
   <div class="pt-top-in">
     <a class="pt-logo" href="<?= ph(portal_url($ctx, '/portal/')) ?>"><img src="/assets/images/logo-white.svg" alt="Mont Haus"></a>
     <div class="pt-top-right">
+      <button class="pt-bell" type="button" id="ptBell" aria-expanded="false" aria-controls="ptBellPanel" title="What's new" aria-label="What's new<?= $wn['new'] ? ' (there is something new)' : '' ?>">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3H4a4 4 0 0 0 2-3v-3a7 7 0 0 1 4-6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/></svg>
+        <?php if ($wn['new']): ?><span class="pt-bell-dot" id="ptBellDot"></span><?php endif; ?>
+      </button>
       <a class="pt-signout" href="/logout.php">Sign out</a>
       <button class="pt-menu-btn" type="button" aria-expanded="false" aria-controls="ptNav" onclick="document.body.classList.toggle('pt-nav-open');this.setAttribute('aria-expanded',document.body.classList.contains('pt-nav-open'))">
         <span></span><span></span><span></span><b>Menu</b>
       </button>
+    </div>
+    <div class="pt-bell-panel" id="ptBellPanel" hidden data-latest="<?= (int)$wn['latest'] ?>" data-mark="<?= $wn['can_mark'] ? '1' : '0' ?>" data-csrf="<?= ph($_SESSION['csrf_token'] ?? '') ?>">
+      <p class="pt-bell-h">What's New</p>
+      <?php if (!$wn['items']): ?><p class="pt-bell-none">No updates yet.</p><?php else: ?>
+      <ul class="pt-bell-list">
+        <?php foreach ($wn['items'] as $it): ?>
+        <li><span class="pt-wn-ic" aria-hidden="true"><?= ph($it['icon']) ?></span>
+          <div><p class="pt-wn-t"><?= ph($it['title']) ?> <?= $wn_tag($it) ?></p>
+            <p class="pt-wn-m"><?= nl2br(ph($it['message'])) ?></p>
+            <p class="pt-wn-d"><?= ph(wn_date($it['created'])) ?><?= $wn_link($it) !== '' ? ' &middot; ' . $wn_link($it) : '' ?></p></div></li>
+        <?php endforeach; ?>
+      </ul>
+      <?php endif; ?>
     </div>
   </div>
   <nav class="pt-nav" id="ptNav" aria-label="Portal">
@@ -701,8 +744,40 @@ document.addEventListener('click', function (e) {
   document.querySelectorAll('.pt-group.open').forEach(function (g) { if (!g.contains(e.target)) { g.classList.remove('open'); g.querySelector('.pt-group-btn').setAttribute('aria-expanded', 'false'); } });
 });
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { document.body.classList.remove('pt-nav-open'); document.querySelectorAll('.pt-group.open').forEach(function (g) { g.classList.remove('open'); }); } });
+// What's New: the bell opens its list; opening it, or closing the banner, records that the person has seen what is there.
+(function () {
+  var bell = document.getElementById('ptBell'), panel = document.getElementById('ptBellPanel');
+  if (!bell || !panel) return;
+  function seen(id) {
+    var dot = document.getElementById('ptBellDot'); if (dot) dot.remove();
+    if (panel.dataset.mark !== '1' || !id) return;
+    var fd = new FormData(); fd.append('csrf_token', panel.dataset.csrf); fd.append('id', id);
+    fetch('/portal/whats_new_seen.php', { method: 'POST', body: fd, credentials: 'same-origin' }).catch(function () {});
+  }
+  function open(on) { panel.hidden = !on; bell.setAttribute('aria-expanded', on ? 'true' : 'false'); }
+  bell.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var on = panel.hidden; open(on);
+    if (on && document.getElementById('ptBellDot')) seen(panel.dataset.latest);
+  });
+  document.addEventListener('click', function (e) { if (!panel.hidden && !panel.contains(e.target)) open(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) { open(false); bell.focus(); } });
+  document.addEventListener('click', function (e) {
+    var x = e.target.closest('.pt-new-x'); if (!x) return;
+    var b = x.closest('.pt-new'); seen(b.dataset.id); b.remove();
+  });
+})();
 </script>
 <main class="pt-main">
+<?php if ($wn['new']): $it = $wn['new']; ?>
+  <div class="pt-new" data-id="<?= (int)$it['id'] ?>" role="status">
+    <span class="pt-wn-ic" aria-hidden="true"><?= ph($it['icon']) ?></span>
+    <div><p class="pt-wn-t">What's new: <?= ph($it['title']) ?> <?= $wn_tag($it) ?></p>
+      <p class="pt-wn-m"><?= nl2br(ph($it['message'])) ?></p>
+      <?php if ($wn_link($it) !== ''): ?><p class="pt-wn-d"><?= $wn_link($it) ?></p><?php endif; ?></div>
+    <button type="button" class="pt-new-x" title="Got it, close" aria-label="Got it, close">&times;</button>
+  </div>
+<?php endif; ?>
     <?php
 }
 

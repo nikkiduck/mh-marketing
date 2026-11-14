@@ -3472,6 +3472,45 @@ sizes, InDesign for one-offs. The prototype, a card on social_media.php
   design decisions pending now that she can see every size.
 
 
+## What's New (2026-11-14)
+
+Nikki: "B2B has a What's New notification system. I'd like to create
+something similar for the Client Emails and for the Marketing Portal as a
+whole", typed in "an area in my Admin portal", with the portal one pulling
+"from the B2B and Client Email notifications so I don't have to type them
+twice".
+
+- **One list, kept here.** `inc/whats_new.php`, store
+  CREATIVES_DIR/whats_new/whats_new.json (the Link in Bio pattern: no table,
+  changed under a lock; `{ next_id, items }`). Each notice has an AREA:
+  `portal` (every agent, in the portal), `b2b` (Aspen and Vail agents: MH
+  Send's B2B pages and their portal), `emails` (agents with Client Emails:
+  Client Emails in MH Send and their portal).
+- **Ids only go up and are never reused**: a person's "seen" marker is the
+  highest id they have seen. They continue from MH Send's old table (1 and
+  14074 are the seed, `wn_seed()`; the first id made here is 14075).
+- **The editor** is `whats_new.php` (super admin only), reached from the
+  bell beside the gear in the admin header (`inc/_nav.php`): post, change
+  (never re-announces), hide, delete.
+- **The agent portal** (`portal_header()`): the bell in the bar on every
+  page, and the newest notice the person has not seen as a banner at the top
+  of the page. It shows its own notices plus the B2B and Client Emails ones
+  the agent's MENU gives them: `portal_send_access()` is the one test for
+  the MH Send menu and for `wn_portal_areas()`, so Client Emails notices
+  reach the portal when `MH_SEND_CLIENT_EMAILS` goes on. Those carry a tag
+  and an "Open B2Bs / Open Client Emails" link.
+- **Seen** = `users.last_seen_announcement_id` (on the table since the hub;
+  nothing else uses it). `portal/whats_new_seen.php` records it when the
+  bell's list is opened or the banner closed. Notices that existed before
+  the portal had its bell never show as new there (`WN_PORTAL_BASELINE`). In
+  an admin's preview the marker read is the agent's and nothing is recorded.
+  The state is worked out in `portal_context()` (`$ctx['whats_new']`), while
+  the connection is open.
+- **To MH Send:** `api/whats_new.php` (Bearer `SEND_ROSTER_TOKEN`), the b2b
+  and emails notices that are showing. Send caches it five minutes, so a
+  change is on the portal at once and on MH Send within about five minutes.
+- Never delete CREATIVES_DIR/whats_new/ in a deploy or cleanup.
+
 ## Upcoming projects (not started)
 
 - **Retire the frozen Spark-era roster views.** `office_roster` / `mh_brokers`

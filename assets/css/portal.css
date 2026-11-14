@@ -50,6 +50,34 @@ img { max-width: 100%; }
    down. Phone (< 720px): a Menu button opens a stacked list with every
    group's pages shown under its name, so nothing is two taps deep. ────── */
 .pt-top-right { display: flex; align-items: center; gap: 14px; }
+/* ── What's New (2026-11-14): the bell in the bar on every page, its list, and the banner for a notice the person
+   has not seen. The list hangs from the bar's right edge, so on a phone it is the width of the screen less the
+   gutters whatever sits beside the bell. ─────────────────────────────────────────────────────────────────── */
+.pt-top-in { position: relative; }
+.pt-bell { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0;
+           background: transparent; border: 0; border-radius: 10px; color: var(--ink-text); cursor: pointer; }
+.pt-bell:hover, .pt-bell[aria-expanded="true"] { color: #fff; background: #3b414c; }
+.pt-bell-dot { position: absolute; top: 8px; right: 9px; width: 9px; height: 9px; border-radius: 50%; background: #e0a43a; box-shadow: 0 0 0 2px var(--ink); }
+.pt-bell-panel { position: absolute; z-index: 60; top: calc(100% - 4px); right: 16px; width: min(380px, calc(100% - 32px)); max-height: min(70vh, 520px); overflow: auto;
+                 background: #fff; border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 14px 40px rgba(0,0,0,.18); padding: 16px 18px; }
+.pt-bell-panel[hidden] { display: none; }
+.pt-bell-h { font-family: var(--serif); font-size: 22px; font-weight: 500; margin: 0 0 8px; color: var(--text); }
+.pt-bell-none { color: var(--muted); font-size: 15px; margin: 0; }
+.pt-bell-list { list-style: none; margin: 0; padding: 0; }
+.pt-bell-list li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line); }
+.pt-bell-list li:first-child { border-top: 0; padding-top: 2px; }
+.pt-wn-ic { font-size: 22px; line-height: 1.2; text-align: center; }
+.pt-wn-t { font-size: 15px; font-weight: 600; color: var(--text); margin: 0 0 2px; line-height: 1.35; }
+.pt-wn-m { font-size: 14.5px; color: var(--text-2); margin: 0; line-height: 1.5; }
+.pt-wn-d { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+.pt-wn-tag { display: inline-block; vertical-align: 1px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
+             border-radius: 999px; padding: 1px 8px; background: #e7edf5; color: #3c4f6b; margin-left: 4px; white-space: nowrap; }
+.pt-wn-go { font-weight: 500; white-space: nowrap; }
+.pt-new { display: grid; grid-template-columns: 34px 1fr 32px; gap: 12px; align-items: start; background: #fff; border: 1px solid var(--line);
+          border-left: 4px solid var(--gold); border-radius: 12px; padding: 14px 14px 14px 16px; margin: 0 0 22px; }
+.pt-new .pt-wn-ic { font-size: 26px; }
+.pt-new-x { width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; padding: 0; }
+.pt-new-x:hover { background: var(--paper); color: var(--text); }
 .pt-menu-btn { display: none; background: transparent; border: 1px solid #4a5160; border-radius: 10px; color: #fff; padding: 8px 12px;
                font: 500 14px var(--sans); cursor: pointer; align-items: center; gap: 4px; }
 .pt-menu-btn span { display: block; width: 18px; height: 2px; background: #fff; margin: 0; }

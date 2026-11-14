@@ -100,6 +100,7 @@ $mh_bp = $mh_social ? 960 : 820;
   }
   .mh-user-cog:hover        { color:#fff; background:rgba(174,187,204,.25); }
   .mh-user-cog.active       { color:#fff; background:rgba(174,187,204,.45); }
+  .mh-user-cog + .mh-user-cog { margin-left:2px; }   /* the bell, then the gear: side by side, in the menu panel too */
 
   /* ── Mobile: the nav collapses into a hamburger panel ──────────────────────
      Above the breakpoint nothing below applies and the desktop header is
@@ -205,6 +206,9 @@ $mh_portal = function_exists('is_elevated_admin') && is_elevated_admin()
                 // change where the bar runs out of room. super_admin only, so it
                 // is one person's header that grows at all.
                 if (function_exists('is_super_admin') && is_super_admin()): ?>
+            <?php // What's New (2026-11-14): the notifications agents see under their bell, typed on whats_new.php. Icon-only for the same reason as the gear. ?>
+            <a class="mh-user-cog<?= ($mh_active === 'whatsnew') ? ' active' : '' ?>"
+               href="/whats_new.php" title="What's New: post a notification" aria-label="What's New"><i class="ti ti-bell" aria-hidden="true"></i></a>
             <a class="mh-user-cog<?= ($mh_active === 'users') ? ' active' : '' ?>"
                href="/users.php" title="Users" aria-label="Users"><i class="ti ti-settings" aria-hidden="true"></i></a>
           <?php endif; ?>
