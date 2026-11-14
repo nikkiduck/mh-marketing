@@ -102,6 +102,23 @@ $res = $conn->query("
 if (!$res) feed_fail(500, 'query failed');
 $rows = $res->fetch_all(MYSQLI_ASSOC);
 
+// The addresses each agent used to have (inc/former_slugs.php), an address anybody holds today
+// left out: sent as `former_keys`, which the site 301s and matches by. Read HERE, while the
+// connection is open (it is closed before the agents are assembled below). If the live addresses
+// cannot be read the key is left out altogether, which the site reads as "keep what you have":
+// this must never be the reason the feed fails.
+$former_by = null;
+try {
+    $ls = $conn->query("SELECT slug FROM marketing_intakes WHERE slug IS NOT NULL AND slug <> ''");
+    if ($ls) {
+        $live_slugs = array_map(fn($x) => (string)$x[0], $ls->fetch_all());
+        $former_by = fs_for_feed($live_slugs);
+    }
+} catch (Throwable $e) {
+    error_log('roster feed: former_keys left out: ' . $e->getMessage());
+    $former_by = null;
+}
+
 // ── Leadership (leadership_v1.sql) ───────────────────────────────────────────
 // docs/HANDOFF-leadership-and-staff.md, Phase 3. Agents and staff marked for
 // the Leadership page, in its order. Agents only while they are on the website;
@@ -160,13 +177,6 @@ function feed_photo(?string $url): string {
     return '';
 }
 
-// The addresses each agent used to have (inc/former_slugs.php), an address anybody holds today left
-// out. Sent for every agent, empty or not: key present = the site replaces its list of redirects.
-$live_slugs = [];
-$ls = $conn->query("SELECT slug FROM marketing_intakes WHERE slug IS NOT NULL AND slug <> ''");
-while ($ls && ($x = $ls->fetch_row())) $live_slugs[] = (string)$x[0];
-$former_by = fs_for_feed($live_slugs);
-
 $agents = [];
 foreach ($rows as $a) {
     $status = (int)$a['is_active'] === 0 ? 'inactive' : $a['web_status'];   // archived in marketing = off the site
@@ -195,7 +205,6 @@ foreach ($rows as $a) {
         'offices'            => [],   // dropped 2026-10-05: the site derives region and office address from service_area
         'service_area'       => (string)$a['service_area'],
         'identities'         => $idents[(int)$a['id']] ?? [],
-        'former_keys'        => $former_by[(int)$a['id']] ?? [],   // old web addresses: the site matches by them and 301s them here
         'updated_at'         => $a['updated_at'] ? gmdate('Y-m-d\TH:i:s\Z', strtotime($a['updated_at'] . ' UTC')) : null,
     ];
     if ($has_fub_areas) {   // the Communities town keys ticked under Follow Up Boss > Service areas
@@ -203,6 +212,7 @@ foreach ($rows as $a) {
         $entry['fub_areas'] = is_array($fa) ? array_values(array_map('strval', $fa)) : [];
     }
     if ($has_credits) $entry['listing_credits'] = $credits_by[(int)$a['id']] ?? [];   // 2026-11-05
+    if ($former_by !== null) $entry['former_keys'] = $former_by[(int)$a['id']] ?? [];   // old web addresses (2026-11-14): present, even empty = the site replaces its list
     $agents[] = $entry;
 }
 
