@@ -54,7 +54,7 @@ dfbecd5baf8eb89a44ce4f33ea6cbbed  inc/boards.php
 5d342fa9a131350b281e46f52aa5480c  inc/brand_embed.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 ed63e93008d91724efd27d9a7df2b035  inc/captions.php
-0251f0102735a0aa9182fb5aae25615c  inc/config.php
+64f6d428e1b0b8f5895e5687e02060c1  inc/config.php
 42f96ef23c73d8f4258d2a1c072e94e7  inc/creatives.php
 754564325f3942d3d6f1b5bd0fec37b0  inc/cutout.php
 5f5893a7287969d02e3f8217ace72853  inc/elevation.php
@@ -84,7 +84,7 @@ d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
 a2a2781fa0b3d73dc052ac9071ceb111  inc/plan_body.php
 a2299b1b7c24795c470eac1d77a03df7  inc/plan_render.php
 6906c7e7906d185e23cc994df8881471  inc/plan_store.php
-e7b75d46d596b5959c68328d8a567ca2  inc/portal.php
+16dc90c38bcec57ec5c2f80ada3fafd9  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
