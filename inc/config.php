@@ -163,3 +163,7 @@ define('QR_ADD_UTM',        true);
 
 // MH Send live (2026-11-02): My Tools shows the B2B Portal link to Aspen and Vail members (inc/portal.php portal_send_item).
 define('MH_SEND_LINK', true);
+// Client Emails open to agents: every agent's menu gets "MH Send" (B2Bs + Client Emails for Aspen and Vail members,
+// Client Emails for everyone else) in place of the B2B Portal links. Switch it on in the same breath as
+// NEWSLETTER_AGENTS_OPEN in send.monthaus.com's inc/config.php: before that the link lands agents on a refusal.
+define('MH_SEND_CLIENT_EMAILS', false);

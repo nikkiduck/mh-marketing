@@ -2118,6 +2118,20 @@ with `http` renders as a new-window link, never "on"), still only for the
 same Aspen and Vail members. On a phone it is the last entry of the stacked
 menu. The home page's My Tools cards do not carry it.
 
+**One "MH Send" menu for every agent once Client Emails opens (Nikki,
+2026-11-14):** "B2Bs are only for Aspen and Vail. The email system is for
+all our agents on every board." With `MH_SEND_CLIENT_EMAILS` true in
+inc/config.php, `portal_send_item()` returns a GROUP instead of the single
+link: a top-level **MH Send** dropdown after My Tools holding **B2Bs**
+(Aspen and Vail members only, `MH_SEND_URL`) and **Client Emails** (every
+agent, `MH_SEND_EMAILS_URL`, default
+https://send.monthaus.com/newsletters.php), both in a new window. It
+replaces BOTH B2B Portal links (the one under My Tools and the top-level
+one). The switch is off until Nikki opens Client Emails: it goes on in the
+same breath as `NEWSLETTER_AGENTS_OPEN` in send.monthaus.com's server
+config, never before (the link would land agents on a refusal). While it is
+off the menu is exactly as before.
+
 Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 (creative uploads, 2026-10-06) and the Advertising / Print orders pages.
 - `inc/portal.php` `portal_context()` is the ONLY way a portal page learns

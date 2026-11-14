@@ -605,14 +605,28 @@ function portal_send_item(array $ctx): array {
     // Off until MH Send goes live (Nikki, 2026-10-27: it showed on agents' portals before the
     // cutover). To switch on: define('MH_SEND_LINK', true) in inc/config.php on the server.
     if (!defined('MH_SEND_LINK') || !MH_SEND_LINK) return [];
-    $boards = defined('MH_SEND_BOARDS') ? MH_SEND_BOARDS : ['aspen', 'vail'];
-    if (!array_intersect($boards, $ctx['markets'] ?? [])) return [];
-    return ['send' => ['B2B Portal', defined('MH_SEND_URL') ? MH_SEND_URL : 'https://send.monthaus.com/b2b/']];
+    $boards  = defined('MH_SEND_BOARDS') ? MH_SEND_BOARDS : ['aspen', 'vail'];
+    $b2b     = (bool)array_intersect($boards, $ctx['markets'] ?? []);
+    $b2b_url = defined('MH_SEND_URL') ? MH_SEND_URL : 'https://send.monthaus.com/b2b/';
+    // Once Client Emails is open to agents (MH_SEND_CLIENT_EMAILS in inc/config.php, switched on with
+    // NEWSLETTER_AGENTS_OPEN on send.monthaus.com), EVERY agent has one menu, "MH Send" (Nikki, 2026-11-14):
+    // "B2Bs" and "Client Emails" for Aspen and Vail members, "Client Emails" alone for everyone else. B2B is
+    // for those two boards; the email system is for agents on every board. It replaces both B2B Portal links.
+    if (defined('MH_SEND_CLIENT_EMAILS') && MH_SEND_CLIENT_EMAILS) {
+        $subs = $b2b ? ['send_b2b' => ['B2Bs', $b2b_url]] : [];
+        $subs['send_emails'] = ['Client Emails', defined('MH_SEND_EMAILS_URL') ? MH_SEND_EMAILS_URL : 'https://send.monthaus.com/newsletters.php'];
+        return ['send' => ['MH Send', null, $subs]];
+    }
+    if (!$b2b) return [];
+    return ['send' => ['B2B Portal', $b2b_url]];
 }
 
 function portal_header(array $ctx, string $title, string $active, array $jump = []): void {
     $nav   = portal_nav();
-    if ($send = portal_send_item($ctx)) { $nav['tools'][2] = $send + $nav['tools'][2]; $nav += $send; }   // in My Tools and after it
+    if ($send = portal_send_item($ctx)) {
+        if (empty($send['send'][2])) $nav['tools'][2] = $send + $nav['tools'][2];   // the single B2B Portal link: in My Tools too
+        $nav += $send;                                                              // and after My Tools: that link, or the MH Send menu
+    }
     $group = portal_nav_group($active);
     ?>
 <!DOCTYPE html>
