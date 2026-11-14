@@ -2127,7 +2127,7 @@ link: a top-level **MH Send** dropdown after My Tools holding **B2Bs**
 agent, `MH_SEND_EMAILS_URL`, default
 https://send.monthaus.com/newsletters.php), both in a new window. It
 replaces BOTH B2B Portal links (the one under My Tools and the top-level
-one). The switch is off until Nikki opens Client Emails: it goes on in the
+one). **On since 2026-11-14** (Nikki: "Let's make the client emails system live"). It went on in the
 same breath as `NEWSLETTER_AGENTS_OPEN` in send.monthaus.com's server
 config, never before (the link would land agents on a refusal). While it is
 off the menu is exactly as before.

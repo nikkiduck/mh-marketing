@@ -166,4 +166,4 @@ define('MH_SEND_LINK', true);
 // Client Emails open to agents: every agent's menu gets "MH Send" (B2Bs + Client Emails for Aspen and Vail members,
 // Client Emails for everyone else) in place of the B2B Portal links. Switch it on in the same breath as
 // NEWSLETTER_AGENTS_OPEN in send.monthaus.com's inc/config.php: before that the link lands agents on a refusal.
-define('MH_SEND_CLIENT_EMAILS', false);
+define('MH_SEND_CLIENT_EMAILS', true);    // on since 2026-11-14 (Nikki: "Let's make the client emails system live")
