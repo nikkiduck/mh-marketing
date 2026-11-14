@@ -608,6 +608,21 @@ send's outbound email templates). Change those only if Nikki asks.
   address a profile shows (first region named; boards when blank). The
   `marketing_intakes.office` column and the roster sync's default-office
   write remain, unused.
+- **Changing an agent's Web address is safe (2026-11-14, Nikki: "can I
+  change their agent url without messing anything up?").** The moment the
+  profile's Web address form changes a slug (agent.php, `update_web`), the
+  address it had is written down by `fs_note_change()` in
+  `inc/former_slugs.php` (a JSON store, CREATIVES_DIR/roster/former_slugs.json:
+  intake id => old slugs; no table). The roster feed sends each agent's list
+  as `former_keys` (an address anybody holds today left out), and the site
+  301s every former address to the current one and uses it to recognise an
+  agent it knows by nothing else (one with no MLS id yet). An address in use
+  is nobody's former address: claiming one, or going back to an old one,
+  drops it from every list. Only that form changes an existing slug; any new
+  code that does must call `fs_note_change()`. The profile lists the old
+  addresses under the field. Printed QR codes were never affected
+  (qr.monthaus.com looks the current address up) and MH Send relinks by
+  itself.
 - agent.php has a Profile tab: website status/slug/sort/service area/FUB,
   headshot upload (inc/photos.php writes agent-photos/<slug>-<id>.jpg and
   <slug>-<id>-square.jpg since 2026-11-04, Nikki: every photo carries a

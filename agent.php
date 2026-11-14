@@ -11,6 +11,7 @@ require_once __DIR__ . '/inc/schema.php';
 require_once __DIR__ . '/inc/financials.php';
 require_once __DIR__ . '/inc/agent_lifecycle.php';   // Hot Sheets checklist item
 require_once __DIR__ . '/inc/agent_roster.php';     // mk_slug_base() for the web address
+require_once __DIR__ . '/inc/former_slugs.php';     // the addresses an agent used to have: the site redirects them (2026-11-14)
 require_once __DIR__ . '/inc/photos.php';           // headshots, and PHP's upload limits
 require_once __DIR__ . '/inc/qr.php';               // QR codes card on the Profile tab
 require_once __DIR__ . '/inc/receipts.php';         // receipt files: collateral orders and advertising placements
@@ -1164,12 +1165,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // confused. Service area alone decides the website's regional pages and
             // which office address the public profile shows. The column stays.
             // The FUB opt-in moved to its own section (update_fub, 2026-10-06).
+            // The address it had, read before the change: it goes on the agent's list of former
+            // addresses, which the website keeps working as redirects (inc/former_slugs.php).
+            $slug_was = $slug !== '' ? trim((string)($conn->query("SELECT slug FROM marketing_intakes WHERE id = {$id}")->fetch_row()[0] ?? '')) : '';
             $sql = "UPDATE marketing_intakes SET sort_order = ?, service_area = ?"
                  . ($slug !== '' ? ', slug = ?' : '') . " WHERE id = ?";
             $st = $conn->prepare($sql);
             if ($slug !== '') { $st->bind_param('issi', $sort, $area, $slug, $id); }
             else              { $st->bind_param('isi', $sort, $area, $id); }
-            $st->execute(); $st->close();
+            $ok = $st->execute(); $st->close();
+            if ($ok && $slug !== '' && $slug !== $slug_was) fs_note_change($id, $slug_was, $slug);
         }
         header("Location: agent.php?id={$id}&tab=profile" . ($err ? '&err=' . urlencode($err) : '&saved=1')); exit;
     }
@@ -3087,6 +3092,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                 <input type="number" name="sort_order" class="form-input" value="<?= (int)($agent['sort_order'] ?? 0) ?>">
               </label>
             </div>
+            <?php $former_slugs = fs_for((int)$id); $site_host = preg_replace('#^https?://#', '', rtrim(defined('PUBLIC_SITE_URL') ? PUBLIC_SITE_URL : 'https://monthaus.com', '/')); ?>
+            <p class="hint" style="margin:-4px 0 10px;">The page is <?= htmlspecialchars($site_host) ?>/<?= htmlspecialchars($agent_slug !== '' ? $agent_slug : 'firstname-lastname') ?>. Changing the address is safe: the old one keeps working and sends people to the new one.<?php if ($former_slugs): ?>
+              Old addresses that still open this page: <?= htmlspecialchars(implode(', ', array_map(fn($s) => $site_host . '/' . $s, array_reverse($former_slugs)))) ?>.<?php endif; ?></p>
             <div class="form-row">
               <label class="grow">Service area
                 <input type="text" name="service_area" class="form-input" value="<?= val($agent,'service_area') ?>" placeholder="Aspen and the Roaring Fork Valley">

@@ -23,6 +23,7 @@
 require_once __DIR__ . '/../inc/config.php';
 require_once __DIR__ . '/../inc/agent_roster.php';
 require_once __DIR__ . '/../inc/linkinbio.php';   // bio_feed(): the Link in Bio covers (2026-11-12)
+require_once __DIR__ . '/../inc/former_slugs.php';   // former_keys: the addresses an agent used to have (2026-11-14)
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
@@ -159,6 +160,13 @@ function feed_photo(?string $url): string {
     return '';
 }
 
+// The addresses each agent used to have (inc/former_slugs.php), an address anybody holds today left
+// out. Sent for every agent, empty or not: key present = the site replaces its list of redirects.
+$live_slugs = [];
+$ls = $conn->query("SELECT slug FROM marketing_intakes WHERE slug IS NOT NULL AND slug <> ''");
+while ($ls && ($x = $ls->fetch_row())) $live_slugs[] = (string)$x[0];
+$former_by = fs_for_feed($live_slugs);
+
 $agents = [];
 foreach ($rows as $a) {
     $status = (int)$a['is_active'] === 0 ? 'inactive' : $a['web_status'];   // archived in marketing = off the site
@@ -187,6 +195,7 @@ foreach ($rows as $a) {
         'offices'            => [],   // dropped 2026-10-05: the site derives region and office address from service_area
         'service_area'       => (string)$a['service_area'],
         'identities'         => $idents[(int)$a['id']] ?? [],
+        'former_keys'        => $former_by[(int)$a['id']] ?? [],   // old web addresses: the site matches by them and 301s them here
         'updated_at'         => $a['updated_at'] ? gmdate('Y-m-d\TH:i:s\Z', strtotime($a['updated_at'] . ' UTC')) : null,
     ];
     if ($has_fub_areas) {   // the Communities town keys ticked under Follow Up Boss > Service areas

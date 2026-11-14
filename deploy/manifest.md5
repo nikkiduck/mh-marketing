@@ -2,12 +2,12 @@
 # marketing.monthaus.com deploy manifest
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
-2d993b43632fe710477877826cf5e8d3  agent.php
+be74e2065b422c3a54bce1c59f46ecee  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 94b5609c7ce17d8b602b6ae9f8c6d2fd  api/linkinbio_cover.php
 8db68990509a90ff2039183370a3f36c  api/market_reports.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
-27bf8f2e85263a0eeb19e0442daf16f4  api/roster.php
+0e6ad9f0fa37ff9b1591f7480b1325d4  api/roster.php
 e7696b4c0f1fc78d519667c874f05858  api/whats_new.php
 24ba7edcace4e458d8ea5b50303f629e  assets/css/elevation-print.css
 e21f7ff6086fdea2b3fec475c3bf1a73  assets/css/elevation.css
@@ -177,3 +177,4 @@ e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 df9c9acc1b520b4ccd5374a16a4a5b94  users.php
 36bd7478b390b9af57fcad085903aab5  website_order.php
 6674199438250eea94e2ddcac5939dc6  whats_new.php
+fa61dffd5307596dc49fca1ae494e32c  inc/former_slugs.php
