@@ -5,14 +5,16 @@
 2d993b43632fe710477877826cf5e8d3  agent.php
 ecb24bc30530465af1cc2122bdea0382  anyprop_debug.php
 94b5609c7ce17d8b602b6ae9f8c6d2fd  api/linkinbio_cover.php
+8db68990509a90ff2039183370a3f36c  api/market_reports.php
 ff7f6a7531ce72989e7644e90d1e0e87  api/pipeline_webhook.php
 27bf8f2e85263a0eeb19e0442daf16f4  api/roster.php
+e7696b4c0f1fc78d519667c874f05858  api/whats_new.php
 24ba7edcace4e458d8ea5b50303f629e  assets/css/elevation-print.css
 e21f7ff6086fdea2b3fec475c3bf1a73  assets/css/elevation.css
 ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
 bc3a09f0c1d9434b199705a14369bc95  assets/css/market.css
 480bf38c8914ca4843d92b88280d01f7  assets/css/mh-theme.css
-d8e21639f326d564c3a52b9ee09fd7fa  assets/css/portal.css
+cfbf1d8f468d748c21ff8df8a466de79  assets/css/portal.css
 c6cc7da57a568b53f1235798324b811d  assets/css/social.css
 95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
 e539e5bb247a1ef82888690dd966de01  assets/js/market-report.js
@@ -39,7 +41,7 @@ da62007ac84d4e02444e4aa252bb3ca3  cron/send_hot_sheet.php
 f32e288def93742e583d55fb02ab9b18  forgot-password.php
 fc6cfdd48ce10ba555f7975efbd009fe  hot_sheet_preview.php
 4ba218c544f473278a06edf382693d3e  inc/_footer.php
-bc1adc1e5a305cd79e9ee6a60cd6b09f  inc/_nav.php
+cb0ae0319e32cee3f19e38533c09fdb1  inc/_nav.php
 8cf7fab783d903989871994744bd76a0  inc/_onboarding.php
 6f6b2473b55a68a0e144ec9c163b2154  inc/accounting_mail.php
 7ac52e40bb97473f02c05d730733a565  inc/admin_tool_shell.php
@@ -75,6 +77,7 @@ ea0157ed3088c193eaa5a6c26bc6ee88  inc/market_card_render.php
 cd150c0f63e16e48d683bc55d6779d13  inc/market_data.php
 b83c819a5863ec1048f88c857ed3675e  inc/market_feed.php
 dd828c19260e7fae118a7a8c281f2ec0  inc/market_flyer_render.php
+a0bb1b42388bd0a60acd9eb694130b0a  inc/market_page.php
 a8a9e020b0a4a7401e97f3261efdd89c  inc/market_post_body.php
 5d461821bd57dfba63e198c4244d2eed  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
@@ -84,7 +87,7 @@ d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
 a2a2781fa0b3d73dc052ac9071ceb111  inc/plan_body.php
 a2299b1b7c24795c470eac1d77a03df7  inc/plan_render.php
 6906c7e7906d185e23cc994df8881471  inc/plan_store.php
-16dc90c38bcec57ec5c2f80ada3fafd9  inc/portal.php
+7f4b2f26a737eb6d155fa7de29294ff7  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
@@ -95,6 +98,7 @@ eec69a07696f12cd4e960af62b9c5282  inc/qr.php
 65634ddcb51f94c9846aa43f2efa824a  inc/social_body.php
 2160a73d3b85020a9cc5fa3a5d408995  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
+87edb89e0b3bdf0d66cf22a3abda22ed  inc/whats_new.php
 6edc0c431e2d1b548a80b104c15a2381  index.php
 e55e413a4d83f451c678aee863fe6d05  intake.php
 0f76181f22712da050ea376c236e2301  leadership.php
@@ -146,6 +150,7 @@ cf21690bfc2043680d8e3b0c6deb1bc0  portal/social_photos.php
 6639aad2bfc0f75d2efb6d2e6f80285d  portal/social_upload.php
 2f6f6b397081287ed0190cebbd0b1bca  portal/spend.php
 9f8e42a25f32ce5cc74d5d5db6334751  portal/templates.php
+26ebd53c47dbdabfef40a7ee34d1abf1  portal/whats_new_seen.php
 a4c0f0b3bbc4ef07b0d8382636a69652  portal/yard_signs.php
 ede9546aa4b73e5b24454d3d3b45a455  qr.php
 2889713697051192134ca68aa3c03b3e  qr_codes.php
@@ -171,5 +176,4 @@ fb9ae30d6ee4855cec6fdf456b222c3e  template_branding.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 df9c9acc1b520b4ccd5374a16a4a5b94  users.php
 36bd7478b390b9af57fcad085903aab5  website_order.php
-a0bb1b42388bd0a60acd9eb694130b0a  inc/market_page.php
-8db68990509a90ff2039183370a3f36c  api/market_reports.php
+6674199438250eea94e2ddcac5939dc6  whats_new.php
