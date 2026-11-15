@@ -21,10 +21,10 @@ Nikki: "Agent Roster page should be just for agent management."
 
 - **`index.php` is Admin Home**, the landing page after sign-in: one card per
   area (Agent Roster, Social Media, MH Send, Market Reports, Hot Sheets,
-  Templates, QR Codes, Agent Billing, Brand Guidelines, Portal Users: her
-  order, set the same day), from the
+  Templates, QR Codes, Agent Billing, Brand Guidelines, Portal Users, What's
+  New: her order, set the same day), from the
   `$cards` list in that file. A card whose page a role cannot open is not
-  drawn (Social Media, MH Send, Portal Users: super admin). The Pipeline
+  drawn (Social Media, MH Send, Portal Users, What's New: super admin). The Pipeline
   count that sat on the roster's Hot Sheets button is on the Hot Sheets card.
 - **The Agent Roster is `agents.php`** (it was `index.php` until that day; an
   older note or a commit message that says `index.php` for the roster means

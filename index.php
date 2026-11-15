@@ -5,10 +5,10 @@
  *
  * One card per area, in the order she gave: Agent Roster, Social Media, MH
  * Send, Market Reports, Hot Sheets, Templates, QR Codes, Agent Billing, Brand
- * Guidelines, Portal Users. These used to be the row of buttons in the
+ * Guidelines, Portal Users, What's New. These used to be the row of buttons in the
  * roster's header; the roster is agents.php now and keeps only the agent
  * management ones. A card a role cannot open is not drawn (Social Media, MH
- * Send and Portal Users are super admin only, as their pages are).
+ * Send, Portal Users and What's New are super admin only, as their pages are).
  *
  * This file was the roster until 2026-11-14. Its forms posted here, so a POST
  * from a page somebody still had open is passed on to agents.php as it is
@@ -52,6 +52,7 @@ $cards = [
     ['Agent Billing',    'billing.php',                'receipt-2',       'What each agent owes, month by month, and the invoices to split.', false, true],
     ['Brand Guidelines', '/brand-guidelines/',         'palette',         'The public brand guidelines page.', true, true],
     ['Portal Users',     'users.php',                  'key',             'Who may sign in, their role and which marketing account they see.', false, $super],
+    ['What\'s New',      'whats_new.php',              'bell',            'The notices agents see under their bell, on the portal and in MH Send.', false, $super],
 ];
 
 admin_tool_header([
