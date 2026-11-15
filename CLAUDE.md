@@ -20,8 +20,9 @@ made there does not reach here.
 Nikki: "Agent Roster page should be just for agent management."
 
 - **`index.php` is Admin Home**, the landing page after sign-in: one card per
-  area (Agent Roster, Hot Sheets, Market Reports, Social Media, Templates, QR
-  Codes, Brand Guidelines, MH Send, Agent Billing, Portal Users), from the
+  area (Agent Roster, Social Media, MH Send, Market Reports, Hot Sheets,
+  Templates, QR Codes, Agent Billing, Brand Guidelines, Portal Users: her
+  order, set the same day), from the
   `$cards` list in that file. A card whose page a role cannot open is not
   drawn (Social Media, MH Send, Portal Users: super admin). The Pipeline
   count that sat on the roster's Hot Sheets button is on the Hot Sheets card.
@@ -33,20 +34,19 @@ Nikki: "Agent Roster page should be just for agent management."
   here. `index.php` passes a POST on to `agents.php` with a 307, for a roster
   page somebody still had open.
 - **The main nav (`inc/_nav.php`) is the same on every admin page:** Admin
-  Home, Agent Roster, Billing, MH Send (new tab), Social Media. MH Send and
-  Social Media are super admin only, as their pages are; an admin whose login
-  is linked to a marketing account also has My Portal. The Users gear is gone;
-  the What's New bell stays beside the name. Do not add a link without Nikki
-  asking: everything else is reached from Admin Home.
+  Home, Agent Roster, Billing. MH Send and Social Media were in it for an
+  hour and came out again at her word (they are cards on Admin Home). An
+  admin whose login is linked to a marketing account also has My Portal. The
+  Users gear is gone; the What's New bell stays beside the name. Do not add a
+  link without Nikki asking: everything else is reached from Admin Home.
 - A page marks its link with `$nav_active` before the include (through
   `'active'` in `admin_tool_header()`): `home`, `roster` (the roster, an agent,
-  an intake, Leadership & Staff, Portal Users), `billing`, `social`;
-  `whatsnew` marks the bell. Unset = no link marked (Hot Sheets, Market
-  Report, Templates, QR Codes).
+  an intake, Leadership & Staff, Portal Users), `billing`; `whatsnew` marks
+  the bell. Unset, or any other value = no link marked (Hot Sheets, Market
+  Report, Templates, QR Codes; the Social Media pages still pass `social`).
 - **The collapse point is computed per person** (`$mh_bp` in `_nav.php`): the
-  width their links need, measured in a browser (825px for an admin, +295px
-  for the super admin's two links and bell, +115px with My Portal, +122px with
-  a crumb). Measure again before adding or renaming a link.
+  width their links need, measured in a browser (825px for an admin, +35px
+  for the super admin's bell, +115px with My Portal, +122px with a crumb). Measure again before adding or renaming a link.
 
 ## Broker page links (2026-10-13)
 

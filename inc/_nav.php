@@ -3,15 +3,17 @@
  * _nav.php — the site header, shared by every page in the app.
  *
  * The main nav is the same quick links on every admin page (Nikki,
- * 2026-11-14): Admin Home, Agent Roster, Billing, MH Send, Social Media.
- * MH Send and Social Media are super admin only, as their pages are; an admin
- * whose login is linked to a marketing account also has My Portal. Everything
- * else is reached from Admin Home (index.php), which lists it.
+ * 2026-11-14): Admin Home, Agent Roster, Billing. MH Send and Social Media
+ * were in it for an hour that day and came out again at her word: they are
+ * cards on Admin Home. An admin whose login is linked to a marketing account
+ * also has My Portal. Everything else is reached from Admin Home (index.php),
+ * which lists it.
  *
  * Set these before including, both optional:
  *   $nav_active — which link is current: 'home', 'roster' (the roster and the
  *                 pages under it: an agent, Leadership & Staff, Portal Users),
- *                 'billing', 'social'; 'whatsnew' marks the bell. Unset on a
+ *                 'billing'; 'whatsnew' marks the bell. Unset, or any other
+ *                 value (the Social Media pages still pass 'social'), on a
  *                 page that is none of these, and no link is marked.
  *   $nav_extra  — a trailing crumb, e.g. 'Edit Intake'
  *
@@ -38,9 +40,8 @@ foreach (preg_split('/\s+/', $mh_name) as $mh_part) {
 $mh_initials = substr($mh_initials, 0, 2) ?: '?';
 
 $mh_active = $nav_active ?? '';
-// MH Send and Social Media are super_admin only, so it is one person's header that carries
-// five labelled links.
-$mh_social = function_exists('is_super_admin') && is_super_admin();
+// The super admin's header also carries the What's New bell.
+$mh_super = function_exists('is_super_admin') && is_super_admin();
 // My Portal (Nikki, 2026-10-08; a labelled nav link since 2026-10-10): an admin
 // whose login is linked to a marketing account on users.php has the agent
 // portal too. The account comes from the session (mh_session_intake_id(),
@@ -50,9 +51,9 @@ $mh_portal = function_exists('is_elevated_admin') && is_elevated_admin()
           && function_exists('mh_session_intake_id') && mh_session_intake_id() > 0;
 // Where the bar collapses to the menu: the width this person's header needs, measured in a
 // browser on 2026-11-14 (logo, Admin Home, Agent Roster, Billing, a name at its 150px cap, Sign
-// out = 814px; MH Send + Social Media + the bell = 295px; My Portal = 113px; a crumb such as
-// "Edit Intake" = 118px). Measure again before adding a link.
-$mh_bp = 825 + ($mh_social ? 295 : 0) + ($mh_portal ? 115 : 0) + (!empty($nav_extra) ? 122 : 0);
+// out = 814px; the bell = 34px; My Portal = 113px; a crumb such as "Edit Intake" = 118px).
+// Measure again before adding a link.
+$mh_bp = 825 + ($mh_super ? 35 : 0) + ($mh_portal ? 115 : 0) + (!empty($nav_extra) ? 122 : 0);
 ?>
 <!-- One look across the portal and the website's admin (Nikki, 2026-09-23).
      Loaded here, in the body, so it lands after each page's own <style> block
@@ -131,8 +132,8 @@ $mh_bp = 825 + ($mh_social ? 295 : 0) + ($mh_portal ? 115 : 0) + (!empty($nav_ex
 
      The breakpoint is $mh_bp above: the width this person's links need, so the
      bar never clips "Sign out" (a small tablet in portrait used to). 825px for
-     an admin, 1120px for the super admin's five links, more with My Portal or
-     a trailing crumb. */
+     an admin, 860px with the super admin's bell, more with My Portal or a
+     trailing crumb. */
   .mh-nav-toggle { display:none; }
 
   @media (max-width: <?= $mh_bp ?>px) {
@@ -194,10 +195,6 @@ $mh_bp = 825 + ($mh_social ? 295 : 0) + ($mh_portal ? 115 : 0) + (!empty($nav_ex
       <a class="mh-nav-link<?= $mh_active === 'home' ? ' active' : '' ?>" href="/"><i class="ti ti-home"></i> Admin Home</a>
       <a class="mh-nav-link<?= $mh_active === 'roster' ? ' active' : '' ?>" href="/agents.php"><i class="ti ti-users"></i> Agent Roster</a>
       <a class="mh-nav-link<?= $mh_active === 'billing' ? ' active' : '' ?>" href="/billing.php"><i class="ti ti-receipt-2"></i> Billing</a>
-      <?php if ($mh_social): ?>
-        <a class="mh-nav-link" href="https://send.monthaus.com/" target="_blank" rel="noopener" title="MH Send: B2Bs, Client Emails and mailing lists (opens in a new tab; same Microsoft sign-in)"><i class="ti ti-send"></i> MH Send</a>
-        <a class="mh-nav-link<?= $mh_active === 'social' ? ' active' : '' ?>" href="/social_media.php" title="The Social Media Plan and its tools"><i class="ti ti-brand-instagram"></i> Social Media</a>
-      <?php endif; ?>
       <?php if ($mh_portal): ?>
         <a class="mh-nav-link" href="/portal/" title="Your own agent portal"><i class="ti ti-user-circle"></i> My Portal</a>
       <?php endif; ?>

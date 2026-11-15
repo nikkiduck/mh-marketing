@@ -3,9 +3,9 @@
  * index.php — Admin Home: the landing page of the admin side (Nikki,
  * 2026-11-14: "Agent Roster page should be just for agent management").
  *
- * One card per area, in the order she gave: Agent Roster, Hot Sheets, Market
- * Reports, Social Media, Templates, QR Codes, Brand Guidelines, MH Send,
- * Agent Billing, Portal Users. These used to be the row of buttons in the
+ * One card per area, in the order she gave: Agent Roster, Social Media, MH
+ * Send, Market Reports, Hot Sheets, Templates, QR Codes, Agent Billing, Brand
+ * Guidelines, Portal Users. These used to be the row of buttons in the
  * roster's header; the roster is agents.php now and keeps only the agent
  * management ones. A card a role cannot open is not drawn (Social Media, MH
  * Send and Portal Users are super admin only, as their pages are).
@@ -43,14 +43,14 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 // title, href, icon, what it is, opens a new tab, shown
 $cards = [
     ['Agent Roster',     'agents.php',                 'users',           'Every agent: profiles, onboarding, website approval, leadership and staff.', false, true],
-    ['Hot Sheets',       'hot_sheet_preview.php',      'mail',            'This week\'s Hot Sheets by area, the subscribers and the Pipeline deals to review.', false, true],
-    ['Market Reports',   'market_report.php',          'chart-bar',       'The monthly market report and the snapshot cards.', false, true],
     ['Social Media',     'social_media.php',           'brand-instagram', 'The Social Media Plan, the weekly plans and the tools that make each piece.', false, $super],
+    ['MH Send',          'https://send.monthaus.com/', 'send',            'B2Bs, Client Emails and mailing lists. Same Microsoft sign-in.', true, $super],
+    ['Market Reports',   'market_report.php',          'chart-bar',       'The monthly market report and the snapshot cards.', false, true],
+    ['Hot Sheets',       'hot_sheet_preview.php',      'mail',            'This week\'s Hot Sheets by area, the subscribers and the Pipeline deals to review.', false, true],
     ['Templates',        'templates.php',              'layout-grid',     'The agents\' template tools for any agent: posts, stories, snapshots and flyers.', false, true],
     ['QR Codes',         'qr_codes.php',               'qrcode',          'Make a code, change where it points and see its scans.', false, true],
-    ['Brand Guidelines', '/brand-guidelines/',         'palette',         'The public brand guidelines page.', true, true],
-    ['MH Send',          'https://send.monthaus.com/', 'send',            'B2Bs, Client Emails and mailing lists. Same Microsoft sign-in.', true, $super],
     ['Agent Billing',    'billing.php',                'receipt-2',       'What each agent owes, month by month, and the invoices to split.', false, true],
+    ['Brand Guidelines', '/brand-guidelines/',         'palette',         'The public brand guidelines page.', true, true],
     ['Portal Users',     'users.php',                  'key',             'Who may sign in, their role and which marketing account they see.', false, $super],
 ];
 

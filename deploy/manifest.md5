@@ -1,4 +1,4 @@
-# Generated 2026-11-14 17:28 from git HEAD
+# Generated 2026-11-14 17:42 from git HEAD
 # marketing.monthaus.com deploy manifest
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
@@ -42,7 +42,7 @@ da62007ac84d4e02444e4aa252bb3ca3  cron/send_hot_sheet.php
 f32e288def93742e583d55fb02ab9b18  forgot-password.php
 b1fa95c4caeb473dd37442585b7be32b  hot_sheet_preview.php
 4ba218c544f473278a06edf382693d3e  inc/_footer.php
-1942af4a4f263e6de2f5b467359b0e3a  inc/_nav.php
+06b229a9fd714a79871e19e8aa630c3c  inc/_nav.php
 8cf7fab783d903989871994744bd76a0  inc/_onboarding.php
 6f6b2473b55a68a0e144ec9c163b2154  inc/accounting_mail.php
 2abf6795b6c6e935c631d9671264f252  inc/admin_tool_shell.php
@@ -101,7 +101,7 @@ a3981c4f73d7aeeb99f132002f3ab4a5  inc/roster_alerts.php
 a037778198f202bc9ff663d58f95b245  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 87edb89e0b3bdf0d66cf22a3abda22ed  inc/whats_new.php
-9986ccdc12bb1369eb231d2e903cd742  index.php
+cc3bc108bb89436a369847eebdb33277  index.php
 7252208e5e47725327561af1db631a51  intake.php
 337aca408835f52d92c2345df7eaa9d9  leadership.php
 1d44947a95310027842c984a8020ac42  login.php
