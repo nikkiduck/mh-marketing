@@ -195,7 +195,7 @@ $conn->close();
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<?php $mh_active = 'marketing'; include __DIR__ . '/inc/_nav.php'; ?>
+<?php $nav_active = 'roster'; include __DIR__ . '/inc/_nav.php'; ?>
 
 <div class="pc-container">
   <div class="wrap">
@@ -205,7 +205,7 @@ $conn->close();
         <h1>Anyprop Feed</h1>
         <p class="hint" style="margin:4px 0 0;">What the MLS feed says about a member or an office, as the API returns it. Reads only.</p>
       </div>
-      <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-arrow-left"></i> Roster</a>
+      <a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-arrow-left"></i> Roster</a>
     </div>
 
     <div class="card">

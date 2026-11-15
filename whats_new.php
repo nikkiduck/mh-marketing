@@ -86,7 +86,7 @@ admin_tool_header([
     'hint'    => 'The notifications agents see under the bell and as a banner the first time. Type each one once and choose where it shows: the portal picks up the B2B and Client Emails ones by itself.',
     'actions' => '<a class="btn btn-outline btn-sm" href="/portal/"><i class="ti ti-user-circle"></i> My Portal</a>'
                . '<a class="btn btn-outline btn-sm" href="https://send.monthaus.com/" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> MH Send</a>'
-               . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
+               . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'active'  => 'whatsnew',
     'css'     => '
     .wn-flash { border-radius:10px; padding:10px 14px; font-size:14px; margin:0 0 16px; background:#e9f3ec; border:1px solid #bfe0c9; color:#1f5a35; }

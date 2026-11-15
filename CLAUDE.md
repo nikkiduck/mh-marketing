@@ -15,6 +15,39 @@ Its own code, its own database, its own cron. Nothing is shared with the hub
 2026-10-19) — so a fix made here does not reach monthausint.com, and a fix
 made there does not reach here.
 
+## Admin Home and the main nav (2026-11-14)
+
+Nikki: "Agent Roster page should be just for agent management."
+
+- **`index.php` is Admin Home**, the landing page after sign-in: one card per
+  area (Agent Roster, Hot Sheets, Market Reports, Social Media, Templates, QR
+  Codes, Brand Guidelines, MH Send, Agent Billing, Portal Users), from the
+  `$cards` list in that file. A card whose page a role cannot open is not
+  drawn (Social Media, MH Send, Portal Users: super admin). The Pipeline
+  count that sat on the roster's Hot Sheets button is on the Hot Sheets card.
+- **The Agent Roster is `agents.php`** (it was `index.php` until that day; an
+  older note or a commit message that says `index.php` for the roster means
+  this file). Its header buttons are agent management only: Agent Billing,
+  Leadership & Staff, Portal Users (super admin), Sync to Website, New Agent.
+  A tool that is not about agents gets a card on Admin Home, not a button
+  here. `index.php` passes a POST on to `agents.php` with a 307, for a roster
+  page somebody still had open.
+- **The main nav (`inc/_nav.php`) is the same on every admin page:** Admin
+  Home, Agent Roster, Billing, MH Send (new tab), Social Media. MH Send and
+  Social Media are super admin only, as their pages are; an admin whose login
+  is linked to a marketing account also has My Portal. The Users gear is gone;
+  the What's New bell stays beside the name. Do not add a link without Nikki
+  asking: everything else is reached from Admin Home.
+- A page marks its link with `$nav_active` before the include (through
+  `'active'` in `admin_tool_header()`): `home`, `roster` (the roster, an agent,
+  an intake, Leadership & Staff, Portal Users), `billing`, `social`;
+  `whatsnew` marks the bell. Unset = no link marked (Hot Sheets, Market
+  Report, Templates, QR Codes).
+- **The collapse point is computed per person** (`$mh_bp` in `_nav.php`): the
+  width their links need, measured in a browser (825px for an admin, +295px
+  for the super admin's two links and bell, +115px with My Portal, +122px with
+  a crumb). Measure again before adding or renaming a link.
+
 ## Broker page links (2026-10-13)
 
 The public site's broker pages live at `/{slug}` (monthaus.com/bryan-cournoyer).
@@ -153,12 +186,12 @@ With auto-redirect on (2026-10-20), reach the password form at
 
 ## Accounts and roles — users.php
 
-Reached from the roster page's header buttons ("Users", super admins only,
-2026-10-08); before that it answered only by URL.
+Called **Portal Users** on screen since 2026-11-14. Reached from the Agent
+Roster's header buttons and from its card on Admin Home (super admins only).
 
 The only surface that creates a `users` row or writes `users.role`.
-`require_role('super_admin')`, and reachable from the gear beside your name in
-the header.
+`require_role('super_admin')`. The gear that linked to it from the header was
+removed 2026-11-14 (Nikki).
 
 **Accounts are created without a password.** A new user gets a name, an email
 and a role; `sso_resolve_user()` matches that address at their first Microsoft
@@ -227,13 +260,12 @@ worth a decision of its own — or a web page with write access to its own confi
 While the list is short and temporary, saying plainly who is on it is worth more
 than a checkbox.
 
-### The gear is in the user block, not the nav run
+### The bell is in the user block, not the nav run
 
-`inc/_nav.php` renders it inside `.mh-user`, icon-only, `is_super_admin()` only.
-The 820px breakpoint was measured against the labelled `.mh-nav-link` anchors
-and a fifth would need re-measuring first — see the `order_split.php` note below
-for the same reasoning. A 26px icon beside the avatar does not move where the
-bar runs out of room, and it grows exactly one person's header.
+`inc/_nav.php` renders the What's New bell inside `.mh-user`, icon-only,
+`is_super_admin()` only: a 26px icon beside the avatar does not move where the
+bar runs out of room. The Users gear that sat beside it was removed
+2026-11-14; see "Admin Home and the main nav".
 
 **Print advertising lives on the Advertising tab (2026-10-05).** A print ad
 is a placement (publication, run, recurring cost, creative, who pays), not a
@@ -522,7 +554,7 @@ then read the Financials table and the grid's input values out of the HTML.
 Check the October case specifically: `value=""` with the budget only as
 `placeholder`. Reasoning about the arithmetic is not the same as seeing it.
 
-## The agent roster (index.php, rebuilt 2026-09-21)
+## The agent roster (agents.php, rebuilt 2026-09-21)
 
 A table by default, cards as an option (per-browser, localStorage, wrapped in
 try/catch). Every row is shaped once in PHP (`$rows`) and both views render
@@ -711,7 +743,7 @@ send's outbound email templates). Change those only if Nikki asks.
 
 ## The agent roster card
 
-`index.php` cards carry: avatar, name (the link to the profile), MLS badges,
+`agents.php` cards carry: avatar, name (the link to the profile), MLS badges,
 then one bottom row — open-tasks badge and balance marker on the left, Archive
 floated right.
 
@@ -766,7 +798,7 @@ Derived as first-letter-of-first-word plus first-letter-of-last-word, unless
 for anything else — "Weber Boxer Group" gives WG — so the override exists to be
 typed into the Initials box on the Overview tab. Blank means keep deriving.
 
-`initials()` is defined identically in `index.php` and `agent.php`. They must
+`initials()` is defined identically in `agents.php` and `agent.php`. They must
 stay in step: the roster card and the profile show the same avatar for the same
 person, so a divergence is immediately visible and reads as a data bug.
 
@@ -780,9 +812,9 @@ the Leadership card checked a column while rendering and every agent page was
 truncated for about 4 minutes. Compute flags like `$has_leadership` above the
 close.
 
-## index.php closes its connection early
+## agents.php closes its connection early
 
-`index.php` calls `$conn->close()` right after loading the roster, well before
+`agents.php` calls `$conn->close()` right after loading the roster, well before
 the page renders. **Anything added below that line which touches the database is
 a fatal**, and the message is a good one:
 
@@ -814,7 +846,7 @@ than no stub, because it converts a crash into a pass. Make stubs strict.
 
 ## Deploying a page before its migration
 
-`inc/schema.php` provides `mk_column_exists()`, and both `index.php` and
+`inc/schema.php` provides `mk_column_exists()`, and both `agents.php` and
 `agent.php` use it to guard the `initials` column. This is not defensive
 programming for its own sake — both failure modes are **silent**:
 
@@ -822,7 +854,7 @@ programming for its own sake — both failure modes are **silent**:
   `if ($s) { ...execute... }`. An unknown column makes `prepare()` fail, so the
   write is skipped entirely and the page still redirects saying "saved". Every
   edit on that form quietly stops working.
-- `index.php` names the column in its roster query. A failed query leaves
+- `agents.php` names the column in its roster query. A failed query leaves
   `$agents` empty, so the page renders perfectly with no agents on it.
 
 Neither shows an error to anyone. Guarding costs one `information_schema`
@@ -1156,9 +1188,9 @@ story above. It runs the page under `php -n` so that ext/mysqli is absent and th
 stub class is the only one defined.
 
 The entry points are the top of the Collateral tab in `agent.php` and the header
-of `billing.php`. Deliberately **not** the top nav: the 820px breakpoint in
-`inc/_nav.php` was measured against the links already there, and a fourth would
-need re-measuring first.
+of `billing.php`. Deliberately **not** the top nav: the main nav is five fixed
+quick links (see "Admin Home and the main nav") and its breakpoint is measured
+against them.
 
 ## Spark MLS API — v1 vs RESO OData
 
@@ -1316,7 +1348,7 @@ SET SESSION sql_mode = 'STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,
                         ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION'
 ```
 
-Not cosmetic. The roster queries in `index.php` (line ~59) and `roster.php`
+Not cosmetic. The roster queries in `agents.php` (line ~59) and `roster.php`
 (line ~83) select non-aggregated columns alongside a `GROUP BY`. SiteGround
 had the flag off, so they ran there for months; stock MySQL 8 turns it on and
 **both pages 500 on the first request.** Verified by importing the schema into
@@ -1363,7 +1395,7 @@ with the log under `/var/log/mh-marketing/`; shortened here.)
   (backup `deploy-backups/20261001/crontab.before-spark-retire`), so
   `office_roster` and `mh_brokers` are frozen as of the 2026-09-30 03:00 run
   and `marketing_intakes.roster_id` is no longer re-linked. Anything that
-  still reads those tables (index.php's UNION arm, roster.php) sees that
+  still reads those tables (agents.php's UNION arm, roster.php) sees that
   snapshot. The scripts were deleted 2026-10-19 (see "Spark MLS API" above);
   the tables stay until nothing reads them.
 - Removed 2026-09-30 at Nikki's request: `activate_roster.php` (nightly
@@ -1611,15 +1643,15 @@ The same rule then carries `padding-top: 20px` for actual breathing room.
 its height; `padding-top` is the gap you see. Merging them into one number loses
 which half is structural.
 
-That padding is also what stops margin collapsing. `index.php`'s `.wrap` asks
+That padding is also what stops margin collapsing. `agents.php`'s `.wrap` asks
 for `margin: 32px auto`, and with nothing between it and `.pc-container` the
 32px collapsed straight out through the container and did nothing — which is
 why that page sat flush against the nav while others looked fine. Remove the
 padding and it goes flush again.
 
-The site header is `inc/_nav.php`, included by `index.php`, `agent.php`,
-`intake.php` and `billing.php`. Its links are Marketing and Billing; the Hub
-link was removed at Nikki's request, and `HUB_URL` was removed from
+The site header is `inc/_nav.php`, included by every admin page (directly, or
+through `inc/admin_tool_shell.php`). Its links are in "Admin Home and the main
+nav"; the Hub link was removed at Nikki's request, and `HUB_URL` was removed from
 `inc/config.php` on 2026-10-19 (nothing had read it since). It relies on `.mh-header-inner`, `.mh-logo`, `.mh-nav`,
 `.mh-nav-link` and `.mh-nav-divider`, which those pages define in their own
 inline `<style>` blocks; only the user-menu rules live in the partial. Set
@@ -1644,10 +1676,10 @@ actually runs out of room, not from a device table:
 
 | Where | Breakpoint | What runs out |
 |---|---|---|
-| `inc/_nav.php` | 820px | Marketing, Billing, the user chip, Sign out, plus a crumb |
+| `inc/_nav.php` | 825px and up, per person (`$mh_bp`) | the links that person has, the user chip, Sign out, plus a crumb |
 | `agent.php` tabs | 860px | seven tabs with icons and badges |
 | `agent.php` cards | 700px | Collateral / Advertising card internals |
-| `index.php` toolbar | 620px | search plus four sort buttons |
+| `agents.php` toolbar | 620px | search plus four sort buttons |
 | `billing.php` rows | 640px | month, amount, chip and two checkboxes |
 
 Four things worth knowing before touching any of it:
@@ -1702,7 +1734,7 @@ out on the right under 720px so it reads as scrollable. The Instagram tool's
 option rows (`.sp-look`) wrap and each pill keeps one line ("M mark" and
 "Upper right" broke mid-word). The Users and Split-an-Invoice tables scroll
 inside their wrapper on a phone (min-width), which is the intended
-behaviour. Later that day, signed in: the roster (index.php) and the agent
+behaviour. Later that day, signed in: the roster (agents.php) and the agent
 page (agent.php) were walked live. Roster under 620px: cards are the phone
 view (the script forces them; the toggle is hidden), the seven header
 buttons are a two-column block with New Agent on top (minmax columns,
@@ -2098,7 +2130,7 @@ the site). Migration `sql/leadership_v1.sql`.
   mk_team_sql, which is now an alias) appends `entity_type = 'agent'` to every
   agent query, so staff (and teams) never reach the roster feed's `agents`,
   MLS matching, Hot Sheets, Pipeline crediting, the agent stepper or Website
-  Order. Separately excluded: the roster (`index.php`, `$no_staff`), Billing,
+  Order. Separately excluded: the roster (`agents.php`, `$no_staff`), Billing,
   the invoice-split picker; QR codes treat staff like teams (no profile page);
   `users.php` never offers staff as a portal account; the portal refuses them.
 - `agent.php` for staff: Profile tab only (Contact, Headshots, QR codes,
@@ -2179,7 +2211,7 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   team's own section alone. **Admins have both** (Nikki, 2026-10-08): an
   admin whose login is linked to their own account opens `/portal/` for
   their portal (a banner links back to the admin pages) and `_nav.php`
-  shows a "My portal" icon beside the Users cog for them. `index.php` sends
+  shows a "My portal" icon beside the Users cog for them. `index.php` and `agents.php` send
   role `agent` to `/portal/`. `roster.php` now calls
   `require_role('admin')` (a blank role used to pass its own check).
 - `portal/qr.php`: agents change their codes' destination only (profile page
@@ -2282,7 +2314,7 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   intake id), never the admin's own row by sign-in address: until
   2026-10-08 the home card read the admin's row, so Bryan's preview said
   "You get ..." every area (Nikki's own six). The roster list
-  (index.php) has an eye icon per agent that opens their portal as an
+  (agents.php) has an eye icon per agent that opens their portal as an
   admin preview; the checklist count, Profile meter and Subs marks left
   the list the same day (the agent page has them).
 - **Menu and My Profile (Nikki, 2026-10-12).** The nav is main tabs with
@@ -3533,7 +3565,7 @@ twice".
 
 - **Retire the frozen Spark-era roster views.** `office_roster` / `mh_brokers`
   stopped updating 2026-10-01 (Spark syncs retired). Still reading them:
-  `index.php`'s first UNION arm and Onboard action, `roster.php` (whole page,
+  `agents.php`'s first UNION arm and Onboard action, `roster.php` (whole page,
   incl. an UPDATE), and `sync_anyprop_roster.php` (read-only, to link a new
   agent to an old row). Plan: roster rows from `marketing_intakes` only, then
   drop `roster.php` and the tables (the dead crons went 2026-10-19). `intake.php` no longer
@@ -3556,7 +3588,7 @@ twice".
 
 ## Marketing tool structure
 
-- `index.php` — agent roster. `office_roster` UNION ALL intake-only agents so newly
+- `agents.php` — agent roster. `office_roster` UNION ALL intake-only agents so newly
   added agents appear before they exist in the roster.
 - `agent.php` — the primary editing surface. All adding/editing happens here and in its
   tabs: Overview | Tasks | Collateral | Advertising | Assets & Docs | Notes.

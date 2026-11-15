@@ -406,7 +406,7 @@ function ago(?string $dt): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Users — Mont Haus Marketing</title>
+  <title>Portal Users | Mont Haus Marketing</title>
   <link rel="icon" href="/assets/images/favicon.svg" type="image/svg+xml" />
   <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/fonts/tabler-icons.min.css">
@@ -531,14 +531,14 @@ function ago(?string $dt): string {
   </style>
 </head>
 <body class="layout-extended">
-<?php $nav_active = 'users'; include __DIR__ . '/inc/_nav.php'; ?>
+<?php $nav_active = 'roster'; include __DIR__ . '/inc/_nav.php'; ?>
 
 <div class="pc-container">
 <div class="wrap">
 
   <div class="us-head">
     <div>
-      <h1>Users</h1>
+      <h1>Portal Users</h1>
       <p>Who has an account, and what each one can do. New accounts sign in with
          Microsoft — there is no password to send.</p>
     </div>

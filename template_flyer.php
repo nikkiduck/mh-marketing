@@ -39,7 +39,7 @@ admin_tool_header([
     'title'   => 'Listing Flyer',
     'hint'    => 'A printed Letter-size flyer of one of the agent\'s listings. Pick the listing and up to six photos, check the text, and download the PDF.',
     'actions' => '<a class="btn btn-outline btn-sm" href="templates.php' . ($agent_id ? '?agent=' . $agent_id : '') . '"><i class="ti ti-layout-grid"></i> Templates</a>'
-               . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
+               . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css', '/assets/css/flyer.css'],
 ]);
 admin_agent_picker($agents, $agent_id, 'template_flyer.php');

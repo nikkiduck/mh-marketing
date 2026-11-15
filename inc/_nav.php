@@ -2,8 +2,17 @@
 /**
  * _nav.php — the site header, shared by every page in the app.
  *
+ * The main nav is the same quick links on every admin page (Nikki,
+ * 2026-11-14): Admin Home, Agent Roster, Billing, MH Send, Social Media.
+ * MH Send and Social Media are super admin only, as their pages are; an admin
+ * whose login is linked to a marketing account also has My Portal. Everything
+ * else is reached from Admin Home (index.php), which lists it.
+ *
  * Set these before including, both optional:
- *   $nav_active — 'marketing' (default) marks the Marketing tab current
+ *   $nav_active — which link is current: 'home', 'roster' (the roster and the
+ *                 pages under it: an agent, Leadership & Staff, Portal Users),
+ *                 'billing', 'social'; 'whatsnew' marks the bell. Unset on a
+ *                 page that is none of these, and no link is marked.
  *   $nav_extra  — a trailing crumb, e.g. 'Edit Intake'
  *
  * The page-level <style> blocks already define .pc-header, .mh-header-inner,
@@ -28,12 +37,22 @@ foreach (preg_split('/\s+/', $mh_name) as $mh_part) {
 }
 $mh_initials = substr($mh_initials, 0, 2) ?: '?';
 
-$mh_active = $nav_active ?? 'marketing';
-// Social Media (Nikki, 2026-11-03): the Social Media Plan's own area, super_admin only, so it is
-// one person's header that carries a fifth labelled link. The bar collapses to the menu earlier
-// for her (960px, not 820px) because the 820px breakpoint was measured without it.
+$mh_active = $nav_active ?? '';
+// MH Send and Social Media are super_admin only, so it is one person's header that carries
+// five labelled links.
 $mh_social = function_exists('is_super_admin') && is_super_admin();
-$mh_bp = $mh_social ? 960 : 820;
+// My Portal (Nikki, 2026-10-08; a labelled nav link since 2026-10-10): an admin
+// whose login is linked to a marketing account on users.php has the agent
+// portal too. The account comes from the session (mh_session_intake_id(),
+// filled by require_login() while $conn is open: agents.php and agent.php
+// close it before this header renders, so no query here). Guarded for stubs.
+$mh_portal = function_exists('is_elevated_admin') && is_elevated_admin()
+          && function_exists('mh_session_intake_id') && mh_session_intake_id() > 0;
+// Where the bar collapses to the menu: the width this person's header needs, measured in a
+// browser on 2026-11-14 (logo, Admin Home, Agent Roster, Billing, a name at its 150px cap, Sign
+// out = 814px; MH Send + Social Media + the bell = 295px; My Portal = 113px; a crumb such as
+// "Edit Intake" = 118px). Measure again before adding a link.
+$mh_bp = 825 + ($mh_social ? 295 : 0) + ($mh_portal ? 115 : 0) + (!empty($nav_extra) ? 122 : 0);
 ?>
 <!-- One look across the portal and the website's admin (Nikki, 2026-09-23).
      Loaded here, in the body, so it lands after each page's own <style> block
@@ -65,10 +84,10 @@ $mh_bp = $mh_social ? 960 : 820;
      be merged into one number. margin-top clears the fixed header and must stay
      equal to its height; padding-top is the gap you actually see.
 
-     The padding also stops margin collapsing, which is what made index.php sit
+     The padding also stops margin collapsing, which is what made the roster sit
      flush against the nav even though its `.wrap` asks for `margin:32px auto`.
      With nothing between them, that 32px collapsed out through .pc-container
-     and vanished. Remove the padding and index.php goes flush again while the
+     and vanished. Remove the padding and agents.php goes flush again while the
      other pages look fine — which is a confusing bug to inherit. */
   .layout-extended .pc-container {
     top: 0;
@@ -91,7 +110,7 @@ $mh_bp = $mh_social ? 960 : 820;
   }
   @media (max-width: 720px) { .mh-user-name { display:none; } }
 
-  /* The Users link. Icon-only on purpose — see the note at its markup. */
+  /* The What's New bell. Icon-only on purpose — see the note at its markup. */
   .mh-user-cog {
     display:inline-flex; align-items:center; justify-content:center;
     width:26px; height:26px; flex:none; border-radius:6px;
@@ -100,7 +119,6 @@ $mh_bp = $mh_social ? 960 : 820;
   }
   .mh-user-cog:hover        { color:#fff; background:rgba(174,187,204,.25); }
   .mh-user-cog.active       { color:#fff; background:rgba(174,187,204,.45); }
-  .mh-user-cog + .mh-user-cog { margin-left:2px; }   /* the bell, then the gear: side by side, in the menu panel too */
 
   /* ── Mobile: the nav collapses into a hamburger panel ──────────────────────
      Above the breakpoint nothing below applies and the desktop header is
@@ -111,10 +129,10 @@ $mh_bp = $mh_social ? 960 : 820;
      There is no second copy of the markup, so a link added to the <nav> below
      appears in both without further work.
 
-     820px, not 720px: "Marketing | Billing | NB Nikki Boxer | Sign out" plus a
-     trailing crumb runs out of room well above phone width — a small tablet in
-     portrait was already clipping "Sign out". The super admin's header also
-     carries "Social Media", so hers collapses at 960px ($mh_bp above). */
+     The breakpoint is $mh_bp above: the width this person's links need, so the
+     bar never clips "Sign out" (a small tablet in portrait used to). 825px for
+     an admin, 1120px for the super admin's five links, more with My Portal or
+     a trailing crumb. */
   .mh-nav-toggle { display:none; }
 
   @media (max-width: <?= $mh_bp ?>px) {
@@ -166,25 +184,18 @@ $mh_bp = $mh_social ? 960 : 820;
 <header class="pc-header">
   <div class="mh-header-inner">
     <a class="mh-logo" href="/"><img src="/assets/images/logo-white.svg" alt="Mont Haus"></a>
-    <?php // Hidden above 820px. Placed before the <nav> so that the panel it
+    <?php // Hidden above the breakpoint. Placed before the <nav> so that the panel it
           // opens is the next thing in the tab order. ?>
     <button type="button" class="mh-nav-toggle" id="mhNavToggle"
             aria-label="Menu" aria-expanded="false" aria-controls="mhNav">
       <i class="ti ti-menu-2" aria-hidden="true"></i>
     </button>
-<?php
-// My Portal (Nikki, 2026-10-08; a labelled nav link since 2026-10-10): an admin
-// whose login is linked to a marketing account on users.php has the agent
-// portal too. The account comes from the session (mh_session_intake_id(),
-// filled by require_login() while $conn is open: index.php and agent.php
-// close it before this header renders, so no query here). Guarded for stubs.
-$mh_portal = function_exists('is_elevated_admin') && is_elevated_admin()
-          && function_exists('mh_session_intake_id') && mh_session_intake_id() > 0;
-?>
     <nav class="mh-nav" id="mhNav">
-      <a class="mh-nav-link<?= $mh_active === 'marketing' ? ' active' : '' ?>" href="/"><i class="ti ti-speakerphone"></i> Marketing</a>
+      <a class="mh-nav-link<?= $mh_active === 'home' ? ' active' : '' ?>" href="/"><i class="ti ti-home"></i> Admin Home</a>
+      <a class="mh-nav-link<?= $mh_active === 'roster' ? ' active' : '' ?>" href="/agents.php"><i class="ti ti-users"></i> Agent Roster</a>
       <a class="mh-nav-link<?= $mh_active === 'billing' ? ' active' : '' ?>" href="/billing.php"><i class="ti ti-receipt-2"></i> Billing</a>
       <?php if ($mh_social): ?>
+        <a class="mh-nav-link" href="https://send.monthaus.com/" target="_blank" rel="noopener" title="MH Send: B2Bs, Client Emails and mailing lists (opens in a new tab; same Microsoft sign-in)"><i class="ti ti-send"></i> MH Send</a>
         <a class="mh-nav-link<?= $mh_active === 'social' ? ' active' : '' ?>" href="/social_media.php" title="The Social Media Plan and its tools"><i class="ti ti-brand-instagram"></i> Social Media</a>
       <?php endif; ?>
       <?php if ($mh_portal): ?>
@@ -199,18 +210,15 @@ $mh_portal = function_exists('is_elevated_admin') && is_elevated_admin()
         <div class="mh-user">
           <span class="mh-user-avatar" aria-hidden="true"><?= htmlspecialchars($mh_initials) ?></span>
           <span class="mh-user-name" title="<?= htmlspecialchars($mh_user['email'] ?? '') ?>"><?= htmlspecialchars($mh_name) ?></span>
-          <?php // Users is icon-only, and inside .mh-user rather than in the run of
-                // .mh-nav-link anchors above. The 820px breakpoint was measured
-                // against those links and a fifth labelled one would need
-                // re-measuring first; a 26px icon next to the avatar does not
-                // change where the bar runs out of room. super_admin only, so it
-                // is one person's header that grows at all.
+          <?php // What's New (2026-11-14): the notifications agents see under their bell, typed on
+                // whats_new.php. Icon-only and inside .mh-user rather than in the run of
+                // .mh-nav-link anchors above: a 26px icon next to the avatar does not change where
+                // the bar runs out of room. super_admin only. The gear that sat beside it (Users)
+                // was removed 2026-11-14 (Nikki): Portal Users is a button on the Agent Roster and
+                // a card on Admin Home.
                 if (function_exists('is_super_admin') && is_super_admin()): ?>
-            <?php // What's New (2026-11-14): the notifications agents see under their bell, typed on whats_new.php. Icon-only for the same reason as the gear. ?>
             <a class="mh-user-cog<?= ($mh_active === 'whatsnew') ? ' active' : '' ?>"
                href="/whats_new.php" title="What's New: post a notification" aria-label="What's New"><i class="ti ti-bell" aria-hidden="true"></i></a>
-            <a class="mh-user-cog<?= ($mh_active === 'users') ? ' active' : '' ?>"
-               href="/users.php" title="Users" aria-label="Users"><i class="ti ti-settings" aria-hidden="true"></i></a>
           <?php endif; ?>
         </div>
         <a class="mh-nav-link" href="/logout.php" title="Sign out"><i class="ti ti-logout"></i> Sign out</a>

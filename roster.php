@@ -163,12 +163,12 @@ a { color: #4a5569; }
     <?php /* ── Nav ── */ ?>
     <div class="navbar navbar-expand-md navbar-light d-print-none" style="border-bottom:1px solid #e6ebf1; background:#fff;">
       <div class="container-xl">
-        <a class="navbar-brand" href="index.php">
+        <a class="navbar-brand" href="agents.php">
           <span style="font-weight:700; color:#4a5569;">Mont Haus</span>
           <span style="color:#6c757d; font-size:14px;"> / Marketing</span>
         </a>
         <div class="navbar-nav ms-auto">
-          <a class="nav-link" href="index.php">← All Agents</a>
+          <a class="nav-link" href="agents.php">← All Agents</a>
         </div>
       </div>
     </div>

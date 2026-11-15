@@ -116,7 +116,7 @@ admin_tool_header([
     'title'   => 'Weekly Plans',
     'hint'    => 'The Social Media Plan: six pieces a week (3 property, 1 market stats, 1 location, 1 broker) plus a Branding story on the days you tick. Open a day\'s piece, make it or change the suggestion, and save it to the week; mark the week planned and go on to the next.',
     'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
-               . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
+               . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'active'  => 'social',
     'css'     => '
     .pl-strip { display:flex; gap:8px; flex-wrap:wrap; margin:0 0 18px; }

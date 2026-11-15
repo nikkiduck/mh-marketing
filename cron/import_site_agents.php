@@ -147,7 +147,7 @@ foreach ($data['agents'] as $a) {
     } else {
         $stats['created']++;
         echo "+ {$label}: no roster row — creating (status roster, web {$web_status})\n";
-        // Link the Spark-era office_roster row nobody has claimed, so index.php
+        // Link the Spark-era office_roster row nobody has claimed, so agents.php
         // draws one card for this person rather than two.
         $roster_id = null;
         foreach (array_filter([strtolower(trim((string)($a['mls_email'] ?? ''))), strtolower(trim((string)($a['email'] ?? '')))]) as $em) {

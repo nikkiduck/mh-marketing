@@ -8,7 +8,7 @@
  *   · agent.php builds one UPDATE from every posted field and skips the write
  *     entirely when prepare() fails, then redirects saying "saved". One unknown
  *     column makes the whole form quietly stop working.
- *   · index.php selects the column in its roster query. A failed query leaves
+ *   · agents.php selects the column in its roster query. A failed query leaves
  *     $agents empty, so the page renders fine with no agents on it.
  *
  * Neither produces an error anyone would see. Guarding costs one

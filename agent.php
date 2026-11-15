@@ -42,7 +42,7 @@ if (!$id && !empty($_GET['slug'])) {
     $row = $st->get_result()->fetch_row(); $st->close();
     if ($row) $id = (int)$row[0];
 }
-if (!$id) { header('Location: index.php'); exit; }
+if (!$id) { header('Location: agents.php'); exit; }
 
 // ── POST actions ──────────────────────────────────────────────────────────────
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -1522,7 +1522,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ── Load agent ────────────────────────────────────────────────────────────────
 $r     = $conn->query("SELECT * FROM marketing_intakes WHERE id={$id} LIMIT 1");
 $agent = $r ? $r->fetch_assoc() : null;
-if (!$agent) { header('Location: index.php'); exit; }
+if (!$agent) { header('Location: agents.php'); exit; }
 
 // Staff (leadership_v1.sql): a person on the Leadership page who is not an
 // agent. The page shows only what applies to them: contact, headshots, QR
@@ -1822,7 +1822,7 @@ function mk_num($n): string {
     return $s === '' ? '0' : $s;
 }
 /**
- * Avatar initials. Kept identical to index.php's copy — the roster card and the
+ * Avatar initials. Kept identical to agents.php's copy — the roster card and the
  * profile show the same avatar for the same person, so if these two ever
  * disagree it is visible immediately and looks like a data bug.
  */
@@ -2745,14 +2745,14 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<?php include __DIR__ . '/inc/_nav.php'; ?>
+<?php $nav_active = 'roster'; include __DIR__ . '/inc/_nav.php'; ?>
 
 <div class="pc-container">
 <div class="wrap">
 
   <div class="crumb-row">
     <div class="breadcrumb">
-      <a href="index.php">Agent Roster</a>
+      <a href="agents.php">Agent Roster</a>
       <i class="ti ti-chevron-right" style="font-size:11px;"></i>
       <span><?= val($agent,'agent_name') ?></span>
     </div>

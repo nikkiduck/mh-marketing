@@ -5,7 +5,7 @@
  *
  * GET  ?id=X  → edit existing intake X
  * GET  (no id) → blank new intake form
- * POST         → save (insert or update), redirect to index.php
+ * POST         → save (insert or update), redirect to agents.php
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/_onboarding.php';
@@ -224,7 +224,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save
             }
             // No match: no link. office_roster is the frozen Spark-era roster
             // (its syncs were retired 2026-10-01), so nothing is added to it;
-            // an intake without roster_id is listed by index.php's intake-only
+            // an intake without roster_id is listed by agents.php's intake-only
             // arm, and the Anyprop sync attaches its board identities.
         }
 
@@ -354,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['_action'] ?? '') === 'save
 if ($intake_id && !$intake) {
     $r = $conn->query("SELECT * FROM marketing_intakes WHERE id = {$intake_id} LIMIT 1");
     $intake = $r ? $r->fetch_assoc() : null;
-    if (!$intake) { header('Location: index.php'); exit; }
+    if (!$intake) { header('Location: agents.php'); exit; }
 }
 
 $conn->close();
@@ -576,7 +576,7 @@ function fint(array|null $row, string $key): string|null {
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<?php $nav_extra = $is_new ? 'New Intake' : 'Edit Intake'; include __DIR__ . '/inc/_nav.php'; ?>
+<?php $nav_active = 'roster'; $nav_extra = $is_new ? 'New Intake' : 'Edit Intake'; include __DIR__ . '/inc/_nav.php'; ?>
 
 <div class="pc-container">
 <div class="wrap">
@@ -588,7 +588,7 @@ function fint(array|null $row, string $key): string|null {
   <div class="mk-page-header">
     <h1><?= $page_ttl ?></h1>
     <div style="display:flex; gap:8px; align-items:center;">
-      <a class="btn btn-outline" href="index.php"><i class="ti ti-arrow-left"></i> Back</a>
+      <a class="btn btn-outline" href="agents.php"><i class="ti ti-arrow-left"></i> Back</a>
       <button type="submit" form="intake-form" class="btn btn-primary"><i class="ti ti-device-floppy"></i> Save Intake</button>
     </div>
   </div>
@@ -1280,7 +1280,7 @@ function fint(array|null $row, string $key): string|null {
         <i class="ti ti-device-floppy"></i>
         <?= $is_new ? 'Save Intake' : 'Update Intake' ?>
       </button>
-      <a class="btn btn-outline" href="index.php">Cancel</a>
+      <a class="btn btn-outline" href="agents.php">Cancel</a>
       <?php if (!$is_new): ?>
         <span style="flex:1;"></span>
         <button type="button" class="btn btn-danger"
@@ -1293,7 +1293,7 @@ function fint(array|null $row, string $key): string|null {
   </form>
 
 <?php if (!$is_new): ?>
-<form id="delete-intake-form" method="POST" action="index.php" style="display:none;">
+<form id="delete-intake-form" method="POST" action="agents.php" style="display:none;">
   <input type="hidden" name="_action" value="delete">
   <input type="hidden" name="id" value="<?= $intake_id ?>">
 </form>

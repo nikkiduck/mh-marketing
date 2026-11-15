@@ -207,7 +207,7 @@ function wo_title(string $t): string {
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<?php $mh_active = 'marketing'; include __DIR__ . '/inc/_nav.php'; ?>
+<?php $nav_active = 'roster'; include __DIR__ . '/inc/_nav.php'; ?>
 
 <div class="pc-container">
   <div class="wrap">
@@ -236,7 +236,7 @@ function wo_title(string $t): string {
           <a class="btn btn-outline btn-sm" href="<?= e($public_url) ?>" target="_blank" rel="noopener">
             <i class="ti ti-external-link"></i> See the live page</a>
         <?php endif; ?>
-        <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-arrow-left"></i> Agent Roster</a>
+        <a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-arrow-left"></i> Agent Roster</a>
       </div>
     </div>
 

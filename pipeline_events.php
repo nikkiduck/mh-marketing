@@ -66,7 +66,7 @@ function h($v): string { return htmlspecialchars((string)$v); }
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<?php $mh_active = 'marketing'; include __DIR__ . '/inc/_nav.php'; ?>
+<?php include __DIR__ . '/inc/_nav.php'; ?>
 
 <div class="pc-container">
 <div class="wrap pe-page">
@@ -79,7 +79,7 @@ function h($v): string { return htmlspecialchars((string)$v); }
     <div class="hdr-actions">
       <a class="btn btn-outline btn-sm" href="pipeline_review.php"><i class="ti ti-list-check"></i> Pipeline Review</a>
       <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Hot Sheets</a>
-      <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>
+      <a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>
     </div>
   </div>
 

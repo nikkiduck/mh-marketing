@@ -383,7 +383,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<?php $mh_active = 'marketing'; include __DIR__ . '/inc/_nav.php'; ?>
+<?php include __DIR__ . '/inc/_nav.php'; ?>
 
 <div class="pc-container">
   <div class="wrap">
@@ -409,7 +409,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
         <?php if ($filter): ?>
           <a class="btn btn-outline btn-sm" href="agent.php?id=<?= $filter ?>&tab=profile"><i class="ti ti-user"></i> Their page</a>
         <?php endif; ?>
-        <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>
+        <a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>
       </div>
     </div>
 

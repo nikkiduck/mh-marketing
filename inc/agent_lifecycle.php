@@ -7,7 +7,7 @@
  * rotation), and one missed step is how a departed person stays on a mailing
  * list. Each function does every step, skips any whose tables do not exist yet
  * (migrations not run), and returns a plain-English list of what it did, which
- * the page shows back. Used by index.php and agent.php.
+ * the page shows back. Used by agents.php and agent.php.
  *
  * Neither deletes anything. Offboarding keeps billing history, notes and tasks,
  * exactly as archiving always has (see CLAUDE.md: deactivate, do not delete).

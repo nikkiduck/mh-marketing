@@ -34,7 +34,7 @@ admin_tool_header([
     'hint'    => "One place's month on an Instagram card, from the Market Report's figures. Agents have the same tool under Templates on their portal.",
     'actions' => '<a class="btn btn-outline btn-sm" href="templates.php"><i class="ti ti-layout-grid"></i> Templates</a>'
                . '<a class="btn btn-outline btn-sm" href="' . htmlspecialchars($report_url, ENT_QUOTES) . '"><i class="ti ti-chart-bar"></i> Market Report</a>'
-               . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
+               . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
 ]);
 ?>
     <?php if ($month === ''): ?>

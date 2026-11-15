@@ -71,7 +71,7 @@ function require_login(): void {
  * The marketing account this login is linked to (users.intake_id), kept in
  * the session and refreshed at most every 5 minutes while a database
  * connection is open. 0 when none. The admin header's "My Portal" link reads
- * this: index.php and agent.php close $conn before the header renders, so the
+ * this: agents.php and agent.php close $conn before the header renders, so the
  * nav itself cannot query (found 2026-10-10, when Jonathan's link never
  * showed). Guarded: a missing column, a closed connection or a test stub just
  * leaves the cached value alone.

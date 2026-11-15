@@ -405,7 +405,7 @@ foreach ($by_market as $market => $list) {
         }
 
         // 4. New agent. Link the Spark-era office_roster row when there is one
-        //    nobody has claimed, so index.php draws one card, not two.
+        //    nobody has claimed, so agents.php draws one card, not two.
         $lname = strtolower($m['full']);
         $q_roster->bind_param('sss', $m['email'], $lname, $m['email']);
         $rr = fetch_all_stmt($q_roster);

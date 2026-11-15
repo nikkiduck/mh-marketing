@@ -40,7 +40,7 @@ $groups = [
 admin_tool_header([
     'title'   => 'Templates',
     'hint'    => 'The same template tools agents have on their portal, for any agent. Choose the agent, then the tool.',
-    'actions' => '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
+    'actions' => '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
 ]);
 admin_agent_picker($agents, $agent_id, 'templates.php');
 ?>

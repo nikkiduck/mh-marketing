@@ -33,7 +33,7 @@ admin_tool_header([
     'hint'    => $pk_hdr['hint'] . 'Three a week in the plan: New Listings, Featured Listings, Just Sold (sales or rentals). One picture, or a set: the photos in order as one story or carousel.',
     'actions' => $pk_hdr['back'] . '<a class="btn btn-outline btn-sm" href="social_plan.php"><i class="ti ti-calendar-week"></i> Weekly Plans</a>'
                . '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
-               . '<a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>',
+               . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],
     'active'  => 'social',
     'css'     => plan_admin_css(),

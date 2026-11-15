@@ -435,7 +435,7 @@ function money0(?string $v): string {
 </head>
 <body class="layout-extended" data-pc-preset="preset-1" data-pc-direction="ltr" data-pc-theme="light">
 
-<?php $mh_active = 'marketing'; include __DIR__ . '/inc/_nav.php'; ?>
+<?php include __DIR__ . '/inc/_nav.php'; ?>
 
 <?php
 // Town list for the City picker. Keys are lowercase; display in title case.
@@ -456,7 +456,7 @@ sort($mh_cities);
       <p class="hint" style="margin:4px 0 0;">Transactions from Paperless Pipeline. Nothing here reaches a hot sheet until you promote it.</p>
     </div>
     <div class="hdr-actions">
-      <a class="btn btn-outline btn-sm" href="index.php"><i class="ti ti-users"></i> Agent Roster</a>
+      <a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>
       <a class="btn btn-outline btn-sm" href="hot_sheet_preview.php"><i class="ti ti-mail"></i> Hot Sheets</a>
       <a class="btn btn-outline btn-sm" href="pipeline_events.php"><i class="ti ti-code"></i> Raw payloads</a>
     </div>

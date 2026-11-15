@@ -46,7 +46,8 @@ split tolerable.
 
 ```
 /                    the docroot — every file here is a page, i.e. a URL
-├── index.php        agent roster — the landing page
+├── index.php        Admin Home — the landing page (a card per area)
+├── agents.php       agent roster (was index.php until 2026-11-14)
 ├── agent.php        the primary editing surface
 │                    tabs: Overview | Tasks | Collateral | Advertising | Assets & Docs | Notes
 ├── intake.php       legacy intake form, largely superseded by agent.php

@@ -637,7 +637,7 @@ $view = mh_invoice_allocate($alloc_rows, [
     'other'    => (float)$inv['other'],    'grand_total' => (float)$inv['grand_total'],
 ]);
 
-$nav_active = 'split';
+$nav_active = 'billing';
 $page_title = $invoice_id > 0 ? 'Split an Invoice — ' . ($inv['vendor'] ?: 'Invoice') : 'Split an Invoice';
 ?>
 <!DOCTYPE html>

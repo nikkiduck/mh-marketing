@@ -119,7 +119,7 @@ function mk_roster_alert(mysqli $conn, array $changes, bool $dry = false): array
           . $section('Back in the MLS under Mont Haus',
                      'They were Inactive and are Active again.', $changes['back'], false)
           . $ident_html
-          . '<p style="margin-top:22px;"><a href="' . $h($base . '/index.php') . '"'
+          . '<p style="margin-top:22px;"><a href="' . $h($base . '/agents.php') . '"'
           . ' style="background:#0184BB;color:#fff;text-decoration:none;padding:10px 16px;border-radius:4px;display:inline-block;">Open the roster</a></p></div>';
 
     $out = [];
