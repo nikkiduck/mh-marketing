@@ -160,6 +160,7 @@ function social_stock_region(string $name): string {
         'fort-collins' => 'Front Range', 'colorado-springs' => 'Front Range',
         'colorado' => 'Colorado', 'mountain-highway' => 'Colorado', 'twin-lakes' => 'Colorado', 'winter-park' => 'Colorado',
         'lifestyle' => 'Lifestyle',   // people and things rather than a place (Nikki, 2026-11-14)
+        'branded' => 'Mont Haus Branded',   // corporate images with the logo already on them (Nikki, 2026-11-14)
     ];
     foreach ($map as $prefix => $region) if ($name === $prefix || str_starts_with($name, $prefix . '-')) return $region;
     return 'Beyond Colorado';
@@ -168,7 +169,7 @@ function social_stock_region(string $name): string {
 /** The order the regions are shown in: the mountain markets first, then the Front Range, Colorado at large, then abroad. */
 function social_stock_region_order(): array {
     return ['Aspen & Roaring Fork Valley', 'Vail Valley', 'Summit County', 'Steamboat & Routt County', 'Crested Butte & Gunnison County',
-        'Telluride, Ridgway & the San Juans', 'Front Range', 'Colorado', 'Beyond Colorado', 'Lifestyle'];
+        'Telluride, Ridgway & the San Juans', 'Front Range', 'Colorado', 'Beyond Colorado', 'Lifestyle', 'Mont Haus Branded'];
 }
 
 /** The watermark, lower right (Nikki, 2026-10-15): the ghosted triangle (default), the M mark flush to the corner, or none. ("Faint triangle", a half-strength copy, was offered for one evening on 2026-10-28 and dropped: too close to the plain one.) */

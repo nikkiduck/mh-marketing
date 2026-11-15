@@ -2489,8 +2489,9 @@ in social_render.php reads the place from the start of the file name
 Colorado, Beyond Colorado; `social_stock_grouped()` returns the library
 in that order; a new place prefix goes in the map or lands under Beyond
 Colorado; since 2026-11-14 a tenth group, Lifestyle, comes last: people and
-things rather than a place, file names starting `lifestyle-`; 92 photos
-that day; send.monthaus.com keeps a copy of the map in its
+things rather than a place, file names starting `lifestyle-`, and an
+eleventh after it, Mont Haus Branded: corporate images with the logo
+already on them, `branded-`, 2000 px wide; 95 photos that day; send.monthaus.com keeps a copy of the map in its
 inc/newsletter_builder.php, change both) plus the Mont Haus
 mountains placeholder (assets/images/social-placeholder.jpg, chosen until
 an upload is), headline "Alpine Roots. Global Vision." and Text 1 "Mont
