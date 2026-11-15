@@ -167,6 +167,14 @@ a.pt-card:hover { border-color: var(--gold); box-shadow: 0 2px 10px rgba(0,0,0,.
 .pt-qr-goes span { display: block; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
 .pt-qr-goes b { font-weight: 500; overflow-wrap: anywhere; }
 .pt-qr-meta { color: var(--muted); font-size: 14px; margin-top: 8px; }
+/* The destination is changed in the card (2026-11-15): dropdown, a text box for Custom URL, Save. */
+.pt-qr-form { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.pt-qr-lab { color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .06em; }
+.pt-qr-form select, .pt-qr-form input[type=url] { display: block; width: 100%; min-width: 0; font: 16px var(--sans); padding: 11px 12px;
+  border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--text); }
+.pt-qr-form select:focus, .pt-qr-form input[type=url]:focus { outline: 2px solid var(--gold); border-color: var(--gold); }
+.pt-qr-form input[hidden] { display: none; }   /* the rule above sets display, which would beat the hidden attribute */
+.pt-qr-form .pt-btn { justify-self: start; padding: 11px 20px; }
 .pt-badge { display: inline-block; background: #eceff3; color: var(--warn); font-size: 13px; padding: 2px 10px; border-radius: 999px; margin-left: 6px; vertical-align: middle; font-family: var(--sans); }
 @media (max-width: 420px) { .pt-qr { grid-template-columns: 1fr; } .pt-qr-img { width: 140px; height: 140px; } }
 

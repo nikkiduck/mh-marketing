@@ -21,6 +21,14 @@
  * page on monthaus.com (dest_type 'url', checked with qr_dest_error(), the same
  * rule the admin page and qr.php use). Every change is logged in
  * qr_code_changes with the signed-in user's id, as the admin page does.
+ *
+ * Since 2026-11-15 (Nikki) the change is made IN the code's card on the list:
+ * a dropdown (My Profile, My Listings, Custom URL) and, for Custom URL, a
+ * text box. There is no separate edit page any more (?edit= shows the list).
+ * My Listings is the owner's monthaus.com/{slug}-listings page, stored as a
+ * 'url' destination (qr_listings_url()); a card shows it selected when the
+ * stored address is exactly that one. The form posts `dest` (profile |
+ * listings | custom); the older `dest_type` (profile | url) is still read.
  */
 require_once __DIR__ . '/../inc/portal.php';
 require_once __DIR__ . '/../inc/qr.php';
@@ -55,11 +63,19 @@ function portal_qr_can_profile(array $c): bool {
     return ($c['entity_type'] ?? 'agent') !== 'team' && trim((string)($c['slug'] ?? '')) !== '';
 }
 
-/** "Your profile page", "Jonathan's profile page", or the address. */
+/** The dropdown choice a code's stored destination is: profile, listings or custom. */
+function portal_qr_choice(array $c): string {
+    if (($c['dest_type'] ?? '') === 'profile') return portal_qr_can_profile($c) ? 'profile' : 'custom';
+    return portal_qr_can_profile($c) && rtrim((string)($c['dest_url'] ?? ''), '/') === qr_listings_url((string)$c['slug']) ? 'listings' : 'custom';
+}
+
+/** "Your profile page", "Jonathan's listings page", or the address. */
 function portal_qr_dest_words(array $c, int $acct_id): string {
-    if (($c['dest_type'] ?? '') === 'profile') {
-        if ((int)$c['intake_id'] === $acct_id) return 'Your profile page on monthaus.com';
-        return (strtok(trim((string)$c['agent_name']), ' ') ?: 'Their') . "'s profile page on monthaus.com";
+    $choice = portal_qr_choice($c);
+    if (($c['dest_type'] ?? '') === 'profile' || $choice === 'listings') {
+        $what = $choice === 'listings' ? 'listings page' : 'profile page';
+        if ((int)$c['intake_id'] === $acct_id) return "Your {$what} on monthaus.com";
+        return (strtok(trim((string)$c['agent_name']), ' ') ?: 'Their') . "'s {$what} on monthaus.com";
     }
     $u = (string)($c['dest_url'] ?? '');
     return $u !== '' ? preg_replace('~^https?://~', '', $u) : 'Nowhere yet';
@@ -139,15 +155,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif (!(int)$c['is_active']) {
         $msg = ['err', 'That QR code is paused. Email ' . PORTAL_MARKETING_EMAIL . ' to turn it back on.'];
     } else {
-        $type = ($_POST['dest_type'] ?? '') === 'profile' ? 'profile' : 'url';
-        $url  = $type === 'url' ? trim((string)($_POST['dest_url'] ?? '')) : null;
-        if ($type === 'url' && $url !== '' && !preg_match('~^https?://~i', $url)) $url = 'https://' . $url;
-        $err  = $type === 'profile'
-            ? (portal_qr_can_profile($c) ? '' : 'There is no profile page to point this code at.')
-            : qr_dest_error((string)$url);
+        // The card's dropdown posts `dest`; a form from before 2026-11-15 posts dest_type.
+        $dest = (string)($_POST['dest'] ?? '');
+        if (!in_array($dest, ['profile', 'listings', 'custom'], true)) $dest = ($_POST['dest_type'] ?? '') === 'profile' ? 'profile' : 'custom';
+        $type = $dest === 'profile' ? 'profile' : 'url';
+        $url  = $dest === 'custom' ? trim((string)($_POST['dest_url'] ?? ''))
+              : ($dest === 'listings' && portal_qr_can_profile($c) ? qr_listings_url((string)$c['slug']) : null);
+        if ($dest === 'custom' && $url !== '' && !preg_match('~^https?://~i', $url)) $url = 'https://' . $url;
+        $err  = $dest === 'custom' ? qr_dest_error((string)$url)
+              : (portal_qr_can_profile($c) ? '' : 'There is no ' . ($dest === 'listings' ? 'listings' : 'profile') . ' page to point this code at.');
         if ($err !== '') {
             $msg = ['err', $err];
-            $_SESSION['pt_qr_draft'] = ['id' => $qid, 'dest_type' => $type, 'dest_url' => (string)$url];
+            $_SESSION['pt_qr_draft'] = ['id' => $qid, 'dest' => $dest, 'dest_url' => (string)$url];
         } else {
             $old = $c['dest_type'] === 'profile' ? 'Profile page' : (string)$c['dest_url'];
             $new = $type === 'profile' ? 'Profile page' : $url;
@@ -165,8 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $_SESSION['pt_qr_flash'] = $msg;
-    $back = ($msg[0] ?? '') === 'err' && $c ? ['edit' => $qid] : [];
-    header('Location: ' . portal_url($ctx, '/portal/qr.php', $back));
+    header('Location: ' . portal_url($ctx, '/portal/qr.php'));
     exit;
 }
 
@@ -175,14 +193,13 @@ unset($_SESSION['pt_qr_flash']);
 $draft = $_SESSION['pt_qr_draft'] ?? null;
 unset($_SESSION['pt_qr_draft']);
 
-$edit = isset($_GET['edit']) ? portal_qr_owned($conn, $in, (int)$_GET['edit']) : null;
 $req_view  = isset($_GET['request']);
 $sent_view = isset($_GET['sent']);
 $req_draft = $_SESSION['pt_qr_req'] ?? ['title' => '', 'details' => '', 'destination' => ''];
 unset($_SESSION['pt_qr_req']);
 
 $codes = [];
-if (!$edit && !$req_view && !$sent_view) {
+if (!$req_view && !$sent_view) {
     $r = $conn->query("SELECT q.*, mi.agent_name, mi.slug, " . (mk_column_exists($conn, 'marketing_intakes', 'entity_type') ? 'mi.entity_type' : "'agent' AS entity_type") . "
                          FROM qr_codes q LEFT JOIN marketing_intakes mi ON mi.id = q.intake_id
                         WHERE " . qr_scope_sql($conn, $in) . "
@@ -221,45 +238,6 @@ if ($sent_view): ?>
       <a class="pt-btn quiet" href="<?= ph(portal_url($ctx, '/portal/qr.php')) ?>">Cancel</a>
     </div>
   </form>
-<?php elseif ($edit):
-    $can_profile = portal_qr_can_profile($edit);
-    $cur_type = $draft && (int)$draft['id'] === (int)$edit['id'] ? $draft['dest_type'] : $edit['dest_type'];
-    $cur_url  = $draft && (int)$draft['id'] === (int)$edit['id'] ? $draft['dest_url'] : (string)($edit['dest_url'] ?? '');
-    if (!$can_profile) $cur_type = 'url';
-    $profile_url = $can_profile ? qr_profile_url((string)$edit['slug']) : '';
-?>
-  <h1 class="pt-h1">Where should “<?= ph($edit['label'] ?: $edit['code']) ?>” go?</h1>
-  <p class="pt-lead">The printed code stays the same. Only the destination URL changes.<?php if (portal_qr_is_shared($edit, $ctx)): ?>
-    This code is <?= ph($edit['agent_name']) ?>'s, shared with you: you both change the same destination.<?php endif; ?></p>
-
-  <?php if (!(int)$edit['is_active']): ?>
-    <div class="pt-flash err">This QR code is paused. Email <?= PORTAL_MARKETING_EMAIL ?> to turn it back on.</div>
-    <a class="pt-btn quiet" href="<?= ph(portal_url($ctx, '/portal/qr.php')) ?>">Back to your QR codes</a>
-  <?php else: ?>
-  <form method="post" action="<?= ph(portal_url($ctx, '/portal/qr.php')) ?>">
-    <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
-    <input type="hidden" name="id" value="<?= (int)$edit['id'] ?>">
-    <?php if ($can_profile): ?>
-      <label class="pt-choice">
-        <input type="radio" name="dest_type" value="profile" <?= $cur_type === 'profile' ? 'checked' : '' ?>>
-        <b><?= (int)$edit['intake_id'] === $acct_id ? 'My profile page' : ph(strtok((string)$edit['agent_name'], ' ')) . '\'s profile page' ?></b>
-        <small><?= ph(preg_replace('~^https?://~', '', $profile_url)) ?></small>
-      </label>
-    <?php endif; ?>
-    <label class="pt-choice">
-      <input type="radio" name="dest_type" value="url" <?= $cur_type === 'url' ? 'checked' : '' ?>>
-      <b>A page on monthaus.com</b>
-      <small>For example one of your listings. Copy its address from your browser and paste it here.</small>
-      <input type="url" name="dest_url" inputmode="url" placeholder="https://monthaus.com/..." value="<?= ph($cur_type === 'url' ? $cur_url : '') ?>"
-             onfocus="this.closest('label').querySelector('input[type=radio]').checked = true">
-    </label>
-    <div class="pt-row">
-      <button type="submit" class="pt-btn main">Save</button>
-      <a class="pt-btn quiet" href="<?= ph(portal_url($ctx, '/portal/qr.php')) ?>">Cancel</a>
-    </div>
-  </form>
-  <?php endif; ?>
-
 <?php else: ?>
   <h1 class="pt-h1">Your QR codes</h1>
   <p class="pt-lead">Each code is printed on a sign or a card. You can change where it sends people at any time, without reprinting anything.</p>
@@ -282,8 +260,34 @@ if ($sent_view): ?>
         <?php if (!$mine): ?><p class="pt-qr-owner"><?= ph($c['agent_name']) ?><?= portal_qr_is_shared($c, $ctx) ? ' · shared with you' : '' ?></p><?php endif; ?>
         <p class="pt-qr-goes"><span>Goes to</span><b><?= ph(portal_qr_dest_words($c, $acct_id)) ?></b></p>
         <p class="pt-qr-meta">Scanned <?= $n === 1 ? 'once' : number_format($n) . ' times' ?></p>
-        <?php if ($live): ?>
-          <a class="pt-btn main" style="margin-top:12px" href="<?= ph(portal_url($ctx, '/portal/qr.php', ['edit' => (int)$c['id']])) ?>">Change where it goes</a>
+        <?php if ($live):
+            // The change is made here, in the card (Nikki, 2026-11-15). What the agent
+            // typed comes back after an error; else the stored destination is shown.
+            $can    = portal_qr_can_profile($c);
+            $mine_d = $draft && (int)$draft['id'] === (int)$c['id'];
+            $choice = $mine_d ? (string)$draft['dest'] : portal_qr_choice($c);
+            if (!$can) $choice = 'custom';
+            $typed  = $mine_d ? (string)$draft['dest_url'] : ($choice === 'custom' ? (string)($c['dest_url'] ?? '') : '');
+            $whose  = $mine ? 'My' : (strtok(trim((string)$c['agent_name']), ' ') ?: 'Their') . "'s";
+            $fid    = 'qr' . (int)$c['id'];
+        ?>
+          <form method="post" action="<?= ph(portal_url($ctx, '/portal/qr.php')) ?>" class="pt-qr-form">
+            <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
+            <input type="hidden" name="id" value="<?= (int)$c['id'] ?>">
+            <label class="pt-qr-lab" for="<?= $fid ?>">Change where it goes</label>
+            <?php if ($can): ?>
+            <select name="dest" id="<?= $fid ?>" data-qr-dest>
+              <option value="profile"<?= $choice === 'profile' ? ' selected' : '' ?>><?= ph($whose) ?> Profile</option>
+              <option value="listings"<?= $choice === 'listings' ? ' selected' : '' ?>><?= ph($whose) ?> Listings</option>
+              <option value="custom"<?= $choice === 'custom' ? ' selected' : '' ?>>Custom URL</option>
+            </select>
+            <?php else: ?>
+            <input type="hidden" name="dest" value="custom">
+            <?php endif; ?>
+            <input type="url" name="dest_url" inputmode="url" maxlength="1000" placeholder="https://monthaus.com/..." aria-label="Custom URL on monthaus.com"
+                   value="<?= ph($typed) ?>"<?= $can ? '' : ' id="' . $fid . '"' ?><?= $choice === 'custom' ? '' : ' hidden' ?>>
+            <button type="submit" class="pt-btn main">Save</button>
+          </form>
         <?php else: ?>
           <p class="pt-help">Paused: scans go to the Mont Haus home page. Email <?= PORTAL_MARKETING_EMAIL ?> to turn it back on.</p>
         <?php endif; ?>
@@ -293,6 +297,13 @@ if ($sent_view): ?>
   </div>
 
   <?php if ($codes): ?>
+  <script>
+    // Custom URL shows the text box; My Profile and My Listings need none.
+    document.querySelectorAll('[data-qr-dest]').forEach(function (sel) {
+      var box = sel.form.querySelector('input[name=dest_url]');
+      sel.addEventListener('change', function () { box.hidden = sel.value !== 'custom'; if (!box.hidden) box.focus(); });
+    });
+  </script>
   <p class="pt-help" style="margin-top:22px">Need another QR code? <a href="<?= ph(portal_url($ctx, '/portal/qr.php', ['request' => 1])) ?>">Request one ›</a></p>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script src="/assets/js/mh-qr.js?v=<?= (int)@filemtime(__DIR__ . '/../assets/js/mh-qr.js') ?>"></script>

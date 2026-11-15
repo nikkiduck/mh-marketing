@@ -87,6 +87,16 @@ function qr_profile_url(string $slug): string {
 }
 
 /**
+ * An agent's listings page on the public site: /{slug}-listings (the site's
+ * agent-listings.php, 2026-11-15). A code pointed at it is stored as an
+ * ordinary 'url' destination (dest_type is an ENUM of profile | url), and the
+ * site 301s the address if the agent's web address later changes.
+ */
+function qr_listings_url(string $slug): string {
+    return qr_profile_url($slug) . '-listings';
+}
+
+/**
  * Where a code sends people right now, or null when it cannot say (paused, a
  * profile code whose broker has no web address, a stored URL that no longer
  * passes the rules). The caller falls back; this never invents a target.

@@ -169,7 +169,10 @@ portal_header($ctx, 'My Profile', 'profile', $jump);
           <p class="pt-card-sub pt-fwd" style="margin-top:4px"><?= $alt !== '' ? 'Your Mont Haus email forwards to ' . ph($alt) . '.' : 'Your Mont Haus email is forwarded to your other address.' ?></p>
         <?php endif; ?>
         <?php if (trim((string)($me['slug'] ?? '')) !== '' && ($me['web_status'] ?? '') === 'approved'): ?>
-          <p class="pt-card-sub" style="margin-top:6px"><a href="<?= ph(qr_profile_url((string)$me['slug'])) ?>" target="_blank" rel="noopener">View your page on monthaus.com ↗</a></p>
+          <p class="pt-card-sub" style="margin-top:6px"><a href="<?= ph(qr_profile_url((string)$me['slug'])) ?>" target="_blank" rel="noopener">Profile page ↗</a></p>
+          <?php if (!$is_team): /* monthaus.com/{slug}-listings, every approved agent has one (2026-11-15) */ ?>
+          <p class="pt-card-sub" style="margin-top:2px"><a href="<?= ph(qr_listings_url((string)$me['slug'])) ?>" target="_blank" rel="noopener">Listings page ↗</a></p>
+          <?php endif; ?>
         <?php elseif (!$is_team): ?>
           <p class="pt-card-sub" style="margin-top:6px">Your page on monthaus.com is not published yet.</p>
         <?php endif; ?>

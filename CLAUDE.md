@@ -51,8 +51,10 @@ Nikki: "Agent Roster page should be just for agent management."
 ## Broker page links (2026-10-13)
 
 The public site's broker pages live at `/{slug}` (monthaus.com/bryan-cournoyer).
-`qr_profile_url()` (inc/qr.php: QR destinations, the portal's "View your page"
-link) and the profile page's "View public profile" build that form. The site
+`qr_profile_url()` (inc/qr.php: QR destinations, the portal's "Profile page"
+link) and the profile page's "View public profile" build that form. Each agent
+also has `/{slug}-listings` on the site (2026-11-15; `qr_listings_url()`): the
+portal's My Profile shows "Profile page" and "Listings page" links. The site
 301s the old `broker.php?s=` form, so QR codes printed before this keep working.
 
 ## How to work on this project
@@ -2216,6 +2218,15 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   `require_role('admin')` (a blank role used to pass its own check).
 - `portal/qr.php`: agents change their codes' destination only (profile page
   or a monthaus.com page via `qr_dest_error()`), logged in `qr_code_changes`.
+  Since 2026-11-15 the change is made in the code's card on the list (no
+  separate edit page; `?edit=` shows the list): a dropdown, My Profile / My
+  Listings / Custom URL, and a text box for Custom URL only. On a shared code
+  the first two read "Kim's Profile" / "Kim's Listings" (the OWNER's pages);
+  a team's code has no dropdown, only the box. My Listings is the site's
+  `/{slug}-listings` page (`qr_listings_url()` in inc/qr.php), stored as an
+  ordinary `url` destination because `dest_type` is ENUM('profile','url'); a
+  card shows it selected when the stored address is exactly that one. The
+  form posts `dest` (profile | listings | custom); `dest_type` is still read.
 - `portal/spend.php`: month by month from `mh_agent_financials()` (same
   function as Billing), account only (Weber Boxer Group = the team row).
   "You paid" / "Mont Haus paid" / "Being finalised" (undecided who-pays).

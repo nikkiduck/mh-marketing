@@ -43,7 +43,7 @@ mkdir($SB . '/inc', 0777, true);
 mkdir($SB . '/portal', 0777, true);
 foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/receipt.php', 'portal/advertising.php', 'portal/orders.php', 'portal/memberships.php',
           'portal/asset.php', 'portal/hotsheets.php', 'portal/brand.php', 'portal/profile.php', 'portal/elevation.php', 'portal/elevation_save.php', 'portal/elevation_print.php', 'portal/elevation_pdf.php', 'portal/contact.php', 'portal/brand_guidelines.php', 'portal/business_cards.php', 'portal/yard_signs.php', 'inc/brand_embed.php', 'brand-guidelines/index.html', 'brand-guidelines/assets/css/brand-guidelines.css', 'inc/portal.php', 'inc/elevation.php', 'inc/portal_hotsheets.php', 'inc/qr.php', 'inc/schema.php', 'inc/config.php', 'inc/financials.php',
-          'inc/creatives.php', 'inc/boards.php', 'inc/agent_lifecycle.php', 'inc/_onboarding.php'] as $f) {
+          'inc/creatives.php', 'inc/whats_new.php', 'inc/boards.php', 'inc/agent_lifecycle.php', 'inc/_onboarding.php'] as $f) {
     if (!is_file("{$ROOT}/{$f}")) { fwrite(STDERR, "FATAL: missing {$f}\n"); exit(1); }
     @mkdir(dirname("{$SB}/{$f}"), 0777, true);
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
@@ -503,7 +503,7 @@ ok('Jackson: My Profile renders with Hot Sheets, not subscribed, every area offe
 ok('…his name and email read-only, his board id, his listing as a card, and nothing of Kim\'s', has($b, 'Jackson Horn') && has($b, 'jackson.horn@monthaus.com')
    && has($b, 'JHORN1') && has($b, '30 Smith Way') && has($b, '$4,500,000') && has($b, 'View on the website') && has($b, 'pt-lstatus active">Active<')
    && !has($b, 'KCSECRET') && !has($b, 'Secret Ln') && !has($b, 'bio_short') && !has($b, 'name="cell_phone"')
-   && has($b, 'site.monthaus.com/jackson-horn') && has($b, 'View your page on monthaus.com') && has($b, 'Social + Digital') && has($b, 'Personal Website'), $b);
+   && has($b, 'site.monthaus.com/jackson-horn') && has($b, 'Profile page ↗') && has($b, '/jackson-horn-listings') && has($b, 'Listings page ↗') && has($b, 'Social + Digital') && has($b, 'Personal Website'), $b);
 ok('…an anchors row in the header band (above the title), listings last, no message section (the form is the footer now)', has($b, 'href="#hotsheets"') && has($b, 'href="#areas"') && has($b, 'href="#listings"')
    && strpos($b, 'pt-subnav-wrap sticky') < strpos($b, '<main class="pt-main">') && strpos($b, 'id="listings"') > strpos($b, 'id="hotsheets"') && !has($b, 'id="message"') && has($b, 'id="contact-marketing"'), $b);
 [$c, $loc, ] = req('jackson', '/portal/hotsheets.php', ['csrf_token' => 'tok', 'action' => 'save', 'frequency' => 'daily', 'areas' => ['vail-valley', 'bogus']]);
@@ -596,9 +596,10 @@ echo "\nA SHARED CODE (qr_code_shares, 2026-10-26)\n";
 [$c, , $b] = req('jackson', '/portal/qr.php');
 ok('Jackson sees Kim\'s open house code, named as hers and shared', has($b, 'kc-open') && has($b, 'Kimberlee Coates · shared with you'), $b);
 ok('…but still nothing of her unshared code', !has($b, 'kcoates') && !has($b, 'KC Secret'));
+ok('its card offers HER profile and listings pages and a custom URL (in the card since 2026-11-15)', has($b, 'Kimberlee&#039;s Profile</option>')
+   && has($b, 'Kimberlee&#039;s Listings</option>') && has($b, 'Custom URL</option>'), $b);
 [$c, , $b] = req('jackson', '/portal/qr.php?edit=6');
-ok('he can open it, is told whose it is, and may point it at HER profile page', has($b, 'Where should') && has($b, 'This code is Kimberlee Coates\'s, shared with you')
-   && has($b, 'Kimberlee\'s profile page') && !has($b, 'My profile page'), $b);
+ok('the old ?edit= address shows the list, not a separate page', $c === 200 && !has($b, 'Where should') && has($b, 'Your QR codes'), $b);
 [$c, $loc] = req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/listing/25001']);
 $w = writes();
 ok('…and change where it goes: the one shared row is updated, logged with his user id', ($w[0][0] ?? '') === 'update_qr' && ($w[0][1] ?? []) === ['url', 'https://monthaus.com/listing/25001', 6]
@@ -623,7 +624,16 @@ ok('…then back to the list', $c === 302 && $loc === '/portal/qr.php', "{$c} {$
 req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest_type' => 'url', 'dest_url' => 'monthaus.com/no-scheme']);
 ok('an address without https:// gets it added', (writes()[0][1][1] ?? '') === 'https://monthaus.com/no-scheme', json_encode(writes()));
 [$c, $loc] = req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest_type' => 'url', 'dest_url' => 'https://evil.example.com/']);
-ok('a page off monthaus.com is refused', writes() === [] && has($loc, 'edit=1'), json_encode(writes()) . " {$loc}");
+ok('a page off monthaus.com is refused, back on the list', writes() === [] && $loc === '/portal/qr.php', json_encode(writes()) . " {$loc}");
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'listings']);
+$w = writes();
+ok('My Listings saves the agent\'s own listings page as a url destination', ($w[0][1][0] ?? '') === 'url' && str_ends_with((string)($w[0][1][1] ?? ''), '/jackson-horn-listings') && ($w[0][1][2] ?? 0) === 1, json_encode($w));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest' => 'listings']);
+ok('…and on a shared code it is the OWNER\'s listings page', str_ends_with((string)(writes()[0][1][1] ?? ''), '/kim-coates-listings'), json_encode(writes()));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'custom', 'dest_url' => 'https://monthaus.com/listing/25001']);
+ok('Custom URL saves the typed address', (writes()[0][1] ?? []) === ['url', 'https://monthaus.com/listing/25001', 1], json_encode(writes()));
+req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest' => 'listings']);
+ok('a team code cannot point at a listings page it does not have', writes() === [], json_encode(writes()));
 req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 5, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/x']);
 ok('a paused code cannot be changed', writes() === [], json_encode(writes()));
 req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest_type' => 'profile']);
@@ -634,10 +644,11 @@ req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest_type' => '
 ok('…and so can the team\'s code', (writes()[0][1][2] ?? 0) === 2, json_encode(writes()));
 req('jackson', '/portal/qr.php', ['csrf_token' => 'nope', 'id' => 1, 'dest_type' => 'profile']);
 ok('a bad form token writes nothing', writes() === [], json_encode(writes()));
-[, , $b] = req('jackson', '/portal/qr.php?edit=1');
-ok('the edit page offers My profile page and a monthaus.com page', has($b, 'My profile page') && has($b, 'A page on monthaus.com'), $b);
-[, , $b] = req('jon', '/portal/qr.php?edit=2');
-ok('a team code\'s edit page offers no profile choice', !has($b, 'profile page</b>') && has($b, 'A page on monthaus.com'), $b);
+[, , $b] = req('jackson', '/portal/qr.php');
+ok('his card offers My Profile, My Listings and Custom URL, My Profile selected', has($b, '<option value="profile" selected>My Profile</option>')
+   && has($b, '<option value="listings">My Listings</option>') && has($b, '<option value="custom">Custom URL</option>'), $b);
+[, , $b] = req('jon', '/portal/qr.php');
+ok('a team code\'s card has no dropdown, only the address box', !has($b, 's Profile</option>') && has($b, 'name="dest" value="custom"') && has($b, 'value="https://monthaus.com/weber-boxer"'), $b);
 
 echo "\nSPEND\n";
 [$c, , $b] = req('jackson', '/portal/spend.php');

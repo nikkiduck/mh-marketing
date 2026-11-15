@@ -15,7 +15,7 @@ e21f7ff6086fdea2b3fec475c3bf1a73  assets/css/elevation.css
 ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
 bc3a09f0c1d9434b199705a14369bc95  assets/css/market.css
 480bf38c8914ca4843d92b88280d01f7  assets/css/mh-theme.css
-cfbf1d8f468d748c21ff8df8a466de79  assets/css/portal.css
+b0cf304dae331b700376a3177dcdfced  assets/css/portal.css
 c6cc7da57a568b53f1235798324b811d  assets/css/social.css
 95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
 e539e5bb247a1ef82888690dd966de01  assets/js/market-report.js
@@ -91,7 +91,7 @@ a2299b1b7c24795c470eac1d77a03df7  inc/plan_render.php
 6906c7e7906d185e23cc994df8881471  inc/plan_store.php
 7f4b2f26a737eb6d155fa7de29294ff7  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
-eec69a07696f12cd4e960af62b9c5282  inc/qr.php
+3b22566fd05ca503c6d9a430553f94f8  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
 a3981c4f73d7aeeb99f132002f3ab4a5  inc/roster_alerts.php
 37a433c2e199c8b974b78eaa958707cf  inc/schema.php
@@ -140,8 +140,8 @@ d11b1b570b09764e3a760efe4c66ad9b  portal/market_post.php
 9a09ec5ad2d6fe7e47f548392f60550c  portal/market_render.php
 2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
 e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
-51263e76886ae7d1c1adf03a99fd3bb1  portal/profile.php
-35ca7afd527862a3e19ba56cc63b6f24  portal/qr.php
+5eaa7597de6bd69db039e8ec2ae5bc8b  portal/profile.php
+2ab72b52a57305e7c48af6aa3cf3142c  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
 c100b7be0bbc3fa29c94576a1acb1f72  portal/social.php
 01f01050d97dfb06402d6d35b99a238e  portal/social_asset.php
