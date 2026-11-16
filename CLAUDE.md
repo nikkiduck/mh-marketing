@@ -867,6 +867,18 @@ The guard is scaffolding for the deploy window, not a permanent abstraction —
 once a migration has been applied everywhere, the guard around it can be
 removed.
 
+## File fields that already have a file (agent.php, 2026-11-16)
+
+Nikki: "My eye immediately sees 'No file chosen' and I forget to look to the
+right where it says current." `mk_file_field()` in `agent.php` draws every
+replaceable upload (an order's proof and receipt, an advertising creative's
+image): with a file on record the field shows **Uploaded**, the file's name
+as a link and a **Replace** button, and the file picker is hidden until
+Replace is pressed (it opens the picker; "Keep the current file" clears and
+hides it again). With no file it is the plain picker. A new upload field on
+that page that can hold an existing file goes through the same function, so
+an uploaded file never sits beside an input that reads "No file chosen".
+
 ## Billing — the collections page
 
 `billing.php` has three tabs, and only the first is a collections view.

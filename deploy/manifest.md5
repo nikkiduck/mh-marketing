@@ -1,8 +1,8 @@
-# Generated 2026-11-16 11:15 from git HEAD
+# Generated 2026-11-16 11:22 from git HEAD
 # marketing.monthaus.com deploy manifest
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
-0f527ee27fdf8651f24edea7ffe60499  agent.php
+1687bd349ca5c804b5ea7e5844177695  agent.php
 acc65c98ab6a2a47efcec0a0029d3fcb  agents.php
 d2b42b70ea661e7f9f5b6fb8fda63c12  anyprop_debug.php
 94b5609c7ce17d8b602b6ae9f8c6d2fd  api/linkinbio_cover.php

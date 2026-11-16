@@ -2206,6 +2206,21 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .form-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
     .form-row label { display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.3px; }
     .form-row label.grow { flex:1; min-width:140px; }
+    /* A file field with a file already on record (mk_file_field()): the file, not an empty picker. */
+    .form-row .upl { flex:1; min-width:140px; display:flex; flex-direction:column; gap:4px; }
+    .upl-label { font-size:12px; font-weight:600; color:#6b7280; text-transform:uppercase; letter-spacing:.3px; }
+    .upl-have { display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:4px; padding:8px 10px; min-height:40px; }
+    .upl-on { display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#15803d; white-space:nowrap; }
+    .upl-on .ti { font-size:15px; }
+    .upl-file { display:inline-flex; align-items:center; gap:5px; font-size:13px; font-weight:600; color:#1f242c; text-decoration:none; word-break:break-all; }
+    .upl-file:hover { color:#4a5569; text-decoration:underline; }
+    .upl-have .btn { margin-left:auto; }
+    .upl-have .btn[hidden] { display:none; }
+    .upl-pick { display:flex; flex-direction:column; gap:4px; }
+    .upl-pick[hidden] { display:none; }
+    .upl-note { font-size:12px; color:#6b7280; display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .upl-note.chosen { color:#b45309; font-weight:600; }
+    .upl-keep { all:unset; cursor:pointer; font-size:12px; font-weight:600; color:#4a5569; text-decoration:underline; }
     /* A tickbox and its wording, not a field label. The rule above stacks its
        children and shouts the text in grey uppercase, which is right for
        "LABEL above input" and wrong here: it put the box on one line and the
@@ -4154,6 +4169,37 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
   <?php
   }
 
+  /**
+   * A file field that says what is already uploaded (Nikki, 2026-11-16: "My eye immediately
+   * sees 'No file chosen' and I forget to look to the right where it says current").
+   * With a file on record the field IS that file: its name as a link, "Uploaded", and a
+   * Replace button; the file picker stays out of sight until Replace is pressed, so
+   * nothing on the form reads as empty. With no file it is the plain picker, as before.
+   * $hint is the small print after the label; $icon a Tabler icon name for the file.
+   */
+  function mk_file_field(string $label, string $hint, string $name, string $accept, string $have_name = '', string $have_href = '', string $icon = 'file'): void {
+      $h = fn($v) => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+      if ($have_href === ''): ?>
+      <label class="grow"><?= $h($label) ?> <small style="font-weight:400;color:#9ca3af;"><?= $h($hint) ?></small>
+        <input type="file" name="<?= $h($name) ?>" class="form-input" accept="<?= $h($accept) ?>">
+      </label>
+      <?php else: ?>
+      <div class="grow upl">
+        <span class="upl-label"><?= $h($label) ?> <small style="font-weight:400;color:#9ca3af;"><?= $h($hint) ?></small></span>
+        <div class="upl-have">
+          <span class="upl-on"><i class="ti ti-circle-check" aria-hidden="true"></i> Uploaded</span>
+          <a class="upl-file" href="<?= $h($have_href) ?>" target="_blank" rel="noopener" title="Open the file"><i class="ti ti-<?= $h($icon) ?>" aria-hidden="true"></i> <?= $h($have_name) ?></a>
+          <button type="button" class="btn btn-outline btn-xs js-upl-replace"><i class="ti ti-upload"></i> Replace</button>
+        </div>
+        <div class="upl-pick" hidden>
+          <input type="file" name="<?= $h($name) ?>" class="form-input" accept="<?= $h($accept) ?>" aria-label="<?= $h($label) ?>: the new file">
+          <div class="upl-note"><span class="js-upl-msg">Choose the new file. It replaces the current one when you save.</span>
+            <button type="button" class="upl-keep js-upl-keep">Keep the current file</button></div>
+        </div>
+      </div>
+      <?php endif;
+  }
+
   /** $direct: also offer "Paid directly by agent" (collateral orders, once the column exists). */
   function mk_who_pays_fields(array $row, string $key, string $total_field = 'cost', bool $direct = false): void {
       $paid_by = $row['paid_by'] ?? '';
@@ -4300,38 +4346,14 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
 
     <?php global $has_proofs; if ($has_proofs): // sql/creatives_v1.sql ?>
     <div class="form-row">
-      <label class="grow">Proof / final design <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 16 MB max)</small>
-        <input type="file" name="proof" class="form-input" accept="image/jpeg,image/png,image/gif,application/pdf">
-      </label>
-      <?php if (!empty($o['proof_file'])): ?>
-        <label style="flex-shrink:0;">
-          <span style="display:block;font-size:12px;font-weight:600;color:#6b7280;
-                       text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">Current</span>
-          <a class="order-link" href="creative.php?order=<?= $oid_ref ?>" target="_blank">
-            <i class="ti ti-photo" style="font-size:10px;"></i>
-            <?= htmlspecialchars($o['proof_orig_name'] ?: 'View proof') ?>
-          </a>
-          <span style="font-size:11px;color:#9ca3af;">— uploading a new file replaces it</span>
-        </label>
-      <?php endif; ?>
+      <?php mk_file_field('Proof / final design', '(what the agent sees on the portal; JPG, PNG, GIF or PDF, 16 MB max)', 'proof', 'image/jpeg,image/png,image/gif,application/pdf',
+                          !empty($o['proof_file']) ? (string)($o['proof_orig_name'] ?: 'View proof') : '', !empty($o['proof_file']) ? 'creative.php?order=' . $oid_ref : '', 'photo'); ?>
     </div>
     <?php endif; ?>
 
     <div class="form-row">
-      <label class="grow">Receipt <small style="font-weight:400;color:#9ca3af;">(PDF, JPG or PNG — max 10 MB)</small>
-        <input type="file" name="receipt" class="form-input" accept="application/pdf,image/jpeg,image/png">
-      </label>
-      <?php if (!empty($o['receipt_file'])): ?>
-        <label style="flex-shrink:0;">
-          <span style="display:block;font-size:12px;font-weight:600;color:#6b7280;
-                       text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">Current</span>
-          <a class="order-link" href="receipt.php?order_id=<?= $oid_ref ?>" target="_blank">
-            <i class="ti ti-receipt" style="font-size:10px;"></i>
-            <?= htmlspecialchars($o['receipt_orig_name'] ?: 'View receipt') ?>
-          </a>
-          <span style="font-size:11px;color:#9ca3af;">— uploading a new file replaces it</span>
-        </label>
-      <?php endif; ?>
+      <?php mk_file_field('Receipt', '(PDF, JPG or PNG, max 10 MB)', 'receipt', 'application/pdf,image/jpeg,image/png',
+                          !empty($o['receipt_file']) ? (string)($o['receipt_orig_name'] ?: 'View receipt') : '', !empty($o['receipt_file']) ? 'receipt.php?order_id=' . $oid_ref : '', 'receipt'); ?>
     </div>
 
     <div class="form-row">
@@ -4993,16 +5015,8 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                       <input type="hidden" name="asset_id" value="<?= $af['id'] ?>">
                       <?php if ($has_creatives): ?>
                       <div class="form-row">
-                        <label class="grow">Image or PDF <small style="font-weight:400;color:#9ca3af;">(what the agent sees on the portal; JPG, PNG, GIF or PDF, 16 MB max)</small>
-                          <input type="file" name="image" class="form-input" accept="image/jpeg,image/png,image/gif,application/pdf">
-                        </label>
-                        <?php if ($af['image'] !== ''): ?>
-                          <label style="flex-shrink:0;">
-                            <span style="display:block;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px;">Current</span>
-                            <a class="order-link" href="creative.php?asset=<?= (int)$af['id'] ?>" target="_blank"><i class="ti ti-photo" style="font-size:10px;"></i> <?= htmlspecialchars($af['iname'] ?: 'View') ?></a>
-                            <span style="font-size:11px;color:#9ca3af;">— uploading a new file replaces it</span>
-                          </label>
-                        <?php endif; ?>
+                        <?php mk_file_field('Image or PDF', '(what the agent sees on the portal; JPG, PNG, GIF or PDF, 16 MB max)', 'image', 'image/jpeg,image/png,image/gif,application/pdf',
+                                            $af['image'] !== '' ? (string)($af['iname'] ?: 'View') : '', $af['image'] !== '' ? 'creative.php?asset=' . (int)$af['id'] : '', 'photo'); ?>
                       </div>
                       <?php endif; ?>
                       <div class="form-row">
@@ -6005,6 +6019,35 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   // Wait for layout to settle so the position is right
   if (document.readyState === 'complete') go();
   else window.addEventListener('load', go);
+})();
+
+// ── File fields that already have a file (mk_file_field()): Replace shows the picker ──
+(function () {
+  var DEFAULT = 'Choose the new file. It replaces the current one when you save.';
+  function parts(el) {
+    var box = el.closest('.upl');
+    return box ? { box: box, pick: box.querySelector('.upl-pick'), input: box.querySelector('input[type="file"]'),
+                   btn: box.querySelector('.js-upl-replace'), note: box.querySelector('.upl-note'), msg: box.querySelector('.js-upl-msg') } : null;
+  }
+  function reset(p) {
+    p.input.value = ''; p.pick.hidden = true; p.btn.hidden = false;
+    p.msg.textContent = DEFAULT; p.note.classList.remove('chosen');
+  }
+  document.addEventListener('click', function (e) {
+    var rep = e.target.closest ? e.target.closest('.js-upl-replace') : null;
+    var keep = e.target.closest ? e.target.closest('.js-upl-keep') : null;
+    if (rep)  { var p = parts(rep);  if (!p) return; p.pick.hidden = false; p.btn.hidden = true; p.input.click(); }
+    if (keep) { var q = parts(keep); if (q) reset(q); }
+  });
+  document.addEventListener('change', function (e) {
+    var el = e.target;
+    if (!el.matches || !el.matches('.upl input[type="file"]')) return;
+    var p = parts(el); if (!p) return;
+    if (el.files && el.files.length) {
+      p.msg.textContent = el.files[0].name + ' replaces the current file when you save.';
+      p.note.classList.add('chosen');
+    } else { p.msg.textContent = DEFAULT; p.note.classList.remove('chosen'); }
+  });
 })();
 
 // ── Who-pays: reveal the split inputs, and check they add up ─────────────────
