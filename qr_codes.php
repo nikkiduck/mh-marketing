@@ -85,9 +85,9 @@ function qr_listings_pick(string $type, ?string $url, string $slug): string {
     return '';
 }
 
-/** The "A listings page" radio and its dropdown, for the new form and every Change form. */
+/** The "Team listings page" radio and its dropdown, for the new form and every Change form. */
 function qr_listings_control(string $pick, bool $checked): string {
-    $h = '<label><input type="radio" name="dest_type" value="listings"' . ($checked ? ' checked' : '') . '> A listings page</label>'
+    $h = '<label><input type="radio" name="dest_type" value="listings"' . ($checked ? ' checked' : '') . '> Team listings page</label>'
        . '<select name="listings_key" class="form-input" data-listings-input style="max-width:640px;">'
        . '<option value="self"' . ($pick === 'self' ? ' selected' : '') . '>The broker\'s own listings page</option>';
     foreach (mk_site_teams() as $t) {
@@ -764,7 +764,7 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
     var prof = box.querySelector('input[value="profile"]'), url = box.querySelector('input[value="url"]');
     var urlIn = box.querySelector('[data-url-input]'), plab = box.querySelector('[data-profile-label]');
     var prev = box.querySelector('[data-profile-preview]');
-    // "A listings page": the broker's own (agents with a web address only) or a team's page on the site.
+    // "Team listings page": the broker's own (agents with a web address only) or a team's page on the site.
     var lst = box.querySelector('input[value="listings"]'), lstSel = box.querySelector('[data-listings-input]');
     function sync(fromBroker) {
       var o = sel.options[sel.selectedIndex], slug = o.dataset.slug || '', team = o.dataset.team === '1';
