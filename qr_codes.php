@@ -48,52 +48,92 @@ function qr_broker(mysqli $conn, int $iid, bool $has_team): ?array {
     return $r ? ($r->fetch_assoc() ?: null) : null;
 }
 
-/** Checks the destination half of a post. Returns [type, url|null, error]. */
-function qr_read_dest(array $p, ?array $broker): array {
-    // A listings page (2026-11-15): the broker's own monthaus.com/{slug}-listings, or one of
-    // the site's team pages (mk_site_teams()). Stored as an ordinary url destination.
-    if (($p['dest_type'] ?? '') === 'listings') {
-        $key = (string) ($p['listings_key'] ?? '');
-        if ($key === 'self') {
-            $slug = trim((string) ($broker['slug'] ?? ''));
-            if (!$broker || $slug === '' || in_array($broker['entity_type'] ?? 'agent', ['team', 'staff'], true)) {
-                return ['url', null, 'Only an agent with a web address has a listings page of their own. Choose a team\'s listings page or a specific page.'];
-            }
-            return ['url', qr_listings_url($slug), ''];
+/**
+ * The teams among the brokers, for the destination choices (2026-11-16):
+ * [ team intake id => ['members' => [ ['slug', 'name'] ], 'page' => site team | null ] ].
+ * `page` is the team's listings page on the public site (qr_site_team_of()).
+ */
+function qr_admin_teams(mysqli $conn, array $brokers): array {
+    $out = [];
+    foreach ($brokers as $b) {
+        if (($b['entity_type'] ?? 'agent') !== 'team') continue;
+        $members = qr_team_members($conn, (int) $b['id']);
+        $out[(int) $b['id']] = ['members' => $members, 'page' => qr_site_team_of(array_column($members, 'slug'))];
+    }
+    return $out;
+}
+
+/**
+ * Checks the destination half of a post. Returns [type, url|null, error].
+ * Three choices (Nikki, 2026-11-16): Profile page, Listings page, Other.
+ *   An agent:  their own profile page (stored as 'profile', so it follows a
+ *              changed web address) or their own monthaus.com/{slug}-listings.
+ *   A team:    profile_pick = a member's web address; listings_pick = 'team'
+ *              (the team's page on the site) or a member's web address.
+ *   Other:     any https address.
+ * Everything but an agent's own profile is stored as a 'url' destination.
+ */
+function qr_read_dest(array $p, ?array $broker, array $teams = []): array {
+    $kind = (string) ($p['dest_type'] ?? '');
+    if ($kind === 'url') {
+        $url = trim((string) ($p['dest_url'] ?? ''));
+        return ['url', $url, qr_dest_error($url)];
+    }
+    $what = $kind === 'listings' ? 'listings page' : 'profile page';
+    $ent  = $broker['entity_type'] ?? 'agent';
+    if (!$broker)          return ['url', null, "Pick a broker to point at their {$what}, or choose Other."];
+    if ($ent === 'staff')  return ['url', null, $broker['agent_name'] . " is staff, not an agent, and has no {$what}. Choose Other."];
+    if ($ent === 'team') {
+        $team   = $teams[(int) $broker['id']] ?? ['members' => [], 'page' => null];
+        $pick   = (string) ($p[$kind === 'listings' ? 'listings_pick' : 'profile_pick'] ?? '');
+        if ($kind === 'listings' && $pick === 'team') {
+            return $team['page'] ? ['url', qr_listings_url($team['page']['key']), '']
+                                 : ['url', null, $broker['agent_name'] . ' has no listings page on the website yet. Choose a team member or Other.'];
         }
-        foreach (mk_site_teams() as $t) if ($t['key'] === $key) return ['url', qr_listings_url($t['key']), ''];
-        return ['url', null, 'Choose which listings page the code should open.'];
+        foreach ($team['members'] as $m) {
+            if ($m['slug'] === $pick) return ['url', $kind === 'listings' ? qr_listings_url($pick) : qr_profile_url($pick), ''];
+        }
+        return ['url', null, "Choose whose {$what} the code should open."];
     }
-    $type = ($p['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
-    if ($type === 'profile') {
-        if (!$broker)                                         return [$type, null, 'Pick a broker to point at their profile page, or choose a specific page.'];
-        if (($broker['entity_type'] ?? 'agent') === 'team')   return [$type, null, $broker['agent_name'] . ' is a team and has no profile page. Choose a specific page.'];
-        if (($broker['entity_type'] ?? 'agent') === 'staff')  return [$type, null, $broker['agent_name'] . ' is staff, not an agent, and has no profile page. Choose a specific page.'];
-        if (trim((string) $broker['slug']) === '')            return [$type, null, $broker['agent_name'] . ' has no web address yet (set it under Website on their page), so there is no profile page to point at.'];
-        return [$type, null, ''];
-    }
-    $url = trim((string) ($p['dest_url'] ?? ''));
-    return [$type, $url, qr_dest_error($url)];
+    if (trim((string) $broker['slug']) === '') return ['url', null, $broker['agent_name'] . " has no web address yet (set it under Website on their page), so there is no {$what} to point at."];
+    return $kind === 'listings' ? ['url', qr_listings_url(trim((string) $broker['slug'])), ''] : ['profile', null, ''];
 }
 
-/** Which listings choice a stored destination is: 'self', a team key, or '' (none of them). */
-function qr_listings_pick(string $type, ?string $url, string $slug): string {
+/**
+ * Which choice a stored destination is, for a form's starting state:
+ * ['kind' => profile | listings | url, 'pick' => a member's web address | 'team' | ''].
+ */
+function qr_dest_state(string $type, ?string $url, ?array $broker, array $teams): array {
+    if ($type === 'profile') return ['kind' => 'profile', 'pick' => ''];
     $u = rtrim((string) $url, '/');
-    if ($type !== 'url' || $u === '') return '';
-    if ($slug !== '' && $u === qr_listings_url($slug)) return 'self';
-    foreach (mk_site_teams() as $t) if ($u === qr_listings_url($t['key'])) return $t['key'];
-    return '';
+    if ($u !== '' && $broker) {
+        if (($broker['entity_type'] ?? 'agent') === 'team') {
+            $team = $teams[(int) ($broker['id'] ?? 0)] ?? ['members' => [], 'page' => null];
+            if ($team['page'] && $u === qr_listings_url($team['page']['key'])) return ['kind' => 'listings', 'pick' => 'team'];
+            foreach ($team['members'] as $m) {
+                if ($u === qr_profile_url($m['slug']))  return ['kind' => 'profile',  'pick' => $m['slug']];
+                if ($u === qr_listings_url($m['slug'])) return ['kind' => 'listings', 'pick' => $m['slug']];
+            }
+        } elseif (($slug = trim((string) ($broker['slug'] ?? ''))) !== '') {
+            if ($u === qr_listings_url($slug)) return ['kind' => 'listings', 'pick' => ''];
+        }
+    }
+    return ['kind' => 'url', 'pick' => ''];
 }
 
-/** The "Team listings page" radio and its dropdown, for the new form and every Change form. */
-function qr_listings_control(string $pick, bool $checked): string {
-    $h = '<label><input type="radio" name="dest_type" value="listings"' . ($checked ? ' checked' : '') . '> Team listings page</label>'
-       . '<select name="listings_key" class="form-input" data-listings-input style="max-width:640px;">'
-       . '<option value="self"' . ($pick === 'self' ? ' selected' : '') . '>The broker\'s own listings page</option>';
-    foreach (mk_site_teams() as $t) {
-        $h .= '<option value="' . e($t['key']) . '"' . ($pick === $t['key'] ? ' selected' : '') . '>' . e($t['name']) . ' listings page</option>';
-    }
-    return $h . '</select>';
+/** The three "Opens" choices, for the new form and every Change form. The script fills the dropdowns from the Broker select. */
+function qr_dest_controls(array $state, string $url_value): string {
+    $ck = fn(string $k) => $state['kind'] === $k ? ' checked' : '';
+    return '<div class="radio-row" data-dest data-pick="' . e($state['pick']) . '">'
+         . '<label data-profile-label><input type="radio" name="dest_type" value="profile"' . $ck('profile') . '> Profile page'
+         . ' <select name="profile_pick" class="form-input pick" data-profile-pick hidden disabled aria-label="Whose profile page"></select>'
+         . ' <span class="hint" data-profile-preview></span></label>'
+         . '<label data-listings-label><input type="radio" name="dest_type" value="listings"' . $ck('listings') . '> Listings page'
+         . ' <select name="listings_pick" class="form-input pick" data-listings-pick hidden disabled aria-label="Whose listings page"></select>'
+         . ' <span class="hint" data-listings-preview></span></label>'
+         . '<label><input type="radio" name="dest_type" value="url"' . $ck('url') . '> Other</label>'
+         . '<input type="url" name="dest_url" class="form-input" data-url-input placeholder="https://..." value="' . e($url_value) . '" style="max-width:640px;">'
+         . '</div>';
 }
 
 function qr_dest_text(string $type, ?string $url): string {
@@ -116,7 +156,7 @@ if ($ready && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $broker = qr_broker($conn, $iid, $has_team);
         $code   = qr_normalize_code((string) ($_POST['code'] ?? ''));
         $label  = mb_substr(trim((string) ($_POST['label'] ?? '')), 0, 120);
-        [$type, $url, $derr] = qr_read_dest($_POST, $broker);
+        [$type, $url, $derr] = qr_read_dest($_POST, $broker, qr_admin_teams($conn, $broker ? [$broker] : []));
 
         $err = $iid && !$broker ? 'That broker could not be found.' : (qr_code_error($code) ?: $derr);
         if ($err === '') {
@@ -128,7 +168,7 @@ if ($ready && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($err !== '') {
             $flash = ['err', $err];
             // Keep what was typed, so a typo does not mean starting over.
-            $_SESSION['qr_draft'] = array_intersect_key($_POST, array_flip(['intake_id', 'code', 'label', 'dest_type', 'dest_url', 'listings_key']));
+            $_SESSION['qr_draft'] = array_intersect_key($_POST, array_flip(['intake_id', 'code', 'label', 'dest_type', 'dest_url', 'profile_pick', 'listings_pick']));
         } else {
             $bid = $broker ? (int) $broker['id'] : null;
             $s = $conn->prepare("INSERT INTO qr_codes (code, intake_id, label, dest_type, dest_url, created_by) VALUES (?, ?, ?, ?, ?, ?)");
@@ -165,7 +205,7 @@ if ($ready && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $iid    = (int) ($_POST['intake_id'] ?? 0);
             $broker = qr_broker($conn, $iid, $has_team);
             $label  = mb_substr(trim((string) ($_POST['label'] ?? '')), 0, 120);
-            [$type, $url, $derr] = qr_read_dest($_POST, $broker);
+            [$type, $url, $derr] = qr_read_dest($_POST, $broker, qr_admin_teams($conn, $broker ? [$broker] : []));
             $err = $iid && !$broker ? 'That broker could not be found.' : $derr;
 
             if ($err !== '') {
@@ -274,6 +314,7 @@ $bcols   = 'id, agent_name, slug, is_active, status' . ($has_team ? ', entity_ty
 $brokers = $conn->query("SELECT {$bcols} FROM marketing_intakes
                           WHERE is_active = 1 AND status <> 'archived'
                           ORDER BY agent_name")->fetch_all(MYSQLI_ASSOC);
+$teams   = qr_admin_teams($conn, $brokers);   // members and the listings page of each team, for the Opens choices (before the connection closes)
 
 $codes = $changes = $recent = $shares = [];
 $taken = [];
@@ -370,6 +411,8 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
     .radio-row { display:flex; flex-direction:column; gap:6px; margin:4px 0 10px; font-size:14px; }
     .radio-row label { display:flex; gap:8px; align-items:center; }
     .radio-row label.disabled { color:#9ca3af; }
+    .radio-row select.pick { width:auto; max-width:300px; padding:4px 28px 4px 8px; font-size:14px; }
+    .radio-row .hint a { color:inherit; }
     .flash { padding:10px 14px; border-radius:6px; margin-bottom:16px; font-size:14px; }
     .flash.ok  { background:#f0fdf4; color:#15803d; }
     .flash.err { background:#fef2f2; color:#b91c1c; }
@@ -470,7 +513,7 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
             <select name="intake_id" id="newBroker" class="form-input">
               <option value="0" data-slug="" data-team="0">Office (no broker)</option>
               <?php foreach ($brokers as $b): $team = in_array($b['entity_type'] ?? '', ['team', 'staff'], true); /* no profile page */ ?>
-                <option value="<?= (int) $b['id'] ?>" data-slug="<?= e($b['slug']) ?>" data-team="<?= $team ? 1 : 0 ?>"
+                <option value="<?= (int) $b['id'] ?>" data-slug="<?= e($b['slug']) ?>" data-team="<?= $team ? 1 : 0 ?>" data-entity="<?= e($b['entity_type'] ?? 'agent') ?>"
                         <?= (int) $b['id'] === $d_iid ? 'selected' : '' ?>><?= e($b['agent_name']) ?><?= ($b['entity_type'] ?? '') === 'staff' ? ' (staff)' : ($team ? ' (team)' : '') ?></option>
               <?php endforeach; ?>
             </select>
@@ -488,14 +531,7 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
           </div>
         </div>
         <span class="fld-label">Opens</span>
-        <div class="radio-row" data-dest>
-          <label data-profile-label><input type="radio" name="dest_type" value="profile" <?= $d_type === 'profile' ? 'checked' : '' ?>>
-            The broker's profile page <span class="hint" data-profile-preview></span></label>
-          <?= qr_listings_control((string) ($draft['listings_key'] ?? 'self'), $d_type === 'listings') ?>
-          <label><input type="radio" name="dest_type" value="url" <?= $d_type === 'url' ? 'checked' : '' ?>> A specific page on <?= e(QR_ALLOWED_DOMAIN) ?></label>
-          <input type="url" name="dest_url" class="form-input" data-url-input placeholder="https://monthaus.com/listing/..."
-                 value="<?= e($draft['dest_url'] ?? '') ?>" style="max-width:640px;">
-        </div>
+        <?= qr_dest_controls(['kind' => $d_type, 'pick' => (string) ($draft[$d_type === 'listings' ? 'listings_pick' : 'profile_pick'] ?? '')], (string) ($draft['dest_url'] ?? '')) ?>
         <button type="submit" class="btn btn-primary btn-sm">Create code</button>
         <p class="hint" style="margin:10px 0 0;">
           The code is what gets printed, so it can never be changed or reused afterwards. Short and readable is best:
@@ -528,7 +564,7 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
           $warn   = '';
           if ($live && $target === null) {
               $warn = $c['dest_type'] === 'profile'
-                  ? 'This broker has no web address, so scans go to ' . QR_FALLBACK_URL . '. Set it on their page or choose a specific page.'
+                  ? 'This broker has no web address, so scans go to ' . QR_FALLBACK_URL . '. Set it on their page or choose Other.'
                   : 'The saved address no longer passes the rules, so scans go to ' . QR_FALLBACK_URL . '.';
           } elseif ($c['intake_id'] && $c['dest_type'] === 'profile'
                     && (!(int) $c['agent_active'] || $c['agent_status'] === 'archived')) {
@@ -587,11 +623,11 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
                         <option value="0" data-slug="" data-team="0">Office (no broker)</option>
                         <?php $listed = false; foreach ($brokers as $b): $bt = in_array($b['entity_type'] ?? '', ['team', 'staff'], true);
                           if ((int) $b['id'] === (int) $c['intake_id']) $listed = true; ?>
-                          <option value="<?= (int) $b['id'] ?>" data-slug="<?= e($b['slug']) ?>" data-team="<?= $bt ? 1 : 0 ?>"
+                          <option value="<?= (int) $b['id'] ?>" data-slug="<?= e($b['slug']) ?>" data-team="<?= $bt ? 1 : 0 ?>" data-entity="<?= e($b['entity_type'] ?? 'agent') ?>"
                                   <?= (int) $b['id'] === (int) $c['intake_id'] ? 'selected' : '' ?>><?= e($b['agent_name']) ?><?= ($b['entity_type'] ?? '') === 'staff' ? ' (staff)' : ($bt ? ' (team)' : '') ?></option>
                         <?php endforeach; ?>
                         <?php if ($c['intake_id'] && !$listed): // archived broker: keep them selectable so saving does not unassign ?>
-                          <option value="<?= (int) $c['intake_id'] ?>" data-slug="<?= e($c['slug']) ?>" data-team="<?= $team ? 1 : 0 ?>" selected>
+                          <option value="<?= (int) $c['intake_id'] ?>" data-slug="<?= e($c['slug']) ?>" data-team="<?= $team ? 1 : 0 ?>" data-entity="<?= e($c['entity_type'] ?? 'agent') ?>" selected>
                             <?= e($c['agent_name'] ?: 'Broker #' . $c['intake_id']) ?> (archived)</option>
                         <?php endif; ?>
                       </select>
@@ -602,15 +638,8 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
                     </div>
                   </div>
                   <span class="fld-label">Opens</span>
-                  <div class="radio-row" data-dest>
-                    <label data-profile-label><input type="radio" name="dest_type" value="profile" <?= $c['dest_type'] === 'profile' ? 'checked' : '' ?>>
-                      The broker's profile page <span class="hint" data-profile-preview></span></label>
-                    <?php $lpick = qr_listings_pick((string) $c['dest_type'], $c['dest_url'], trim((string) ($c['slug'] ?? ''))); ?>
-                    <?= qr_listings_control($lpick !== '' ? $lpick : 'self', $lpick !== '') ?>
-                    <label><input type="radio" name="dest_type" value="url" <?= $c['dest_type'] === 'url' && $lpick === '' ? 'checked' : '' ?>> A specific page on <?= e(QR_ALLOWED_DOMAIN) ?></label>
-                    <input type="url" name="dest_url" class="form-input" data-url-input placeholder="https://monthaus.com/listing/..."
-                           value="<?= e($lpick === '' ? ($c['dest_url'] ?? '') : '') ?>" style="max-width:640px;">
-                  </div>
+                  <?php $dstate = qr_dest_state((string) $c['dest_type'], $c['dest_url'], $c['intake_id'] ? ['id' => (int) $c['intake_id'], 'slug' => $c['slug'], 'entity_type' => $c['entity_type'] ?? 'agent'] : null, $teams); ?>
+                  <?= qr_dest_controls($dstate, $dstate['kind'] === 'url' ? (string) ($c['dest_url'] ?? '') : '') ?>
                   <?php if ($has_shares): $shared_ids = array_column($shares[$qid] ?? [], 'id'); ?>
                     <span class="fld-label">Also on the portal of</span>
                     <div class="share-grid" data-share-grid>
@@ -694,6 +723,7 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
 <script src="assets/js/mh-qr.js?v=<?= (int) @filemtime(__DIR__ . '/assets/js/mh-qr.js') ?>"></script>
 <script>
 (function () {
+  var TEAMS = <?= json_encode((object) $teams, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP) ?>;   // team id → members + listings page, for the Opens dropdowns
   var PROFILE_BASE = <?= json_encode(rtrim(defined('PUBLIC_SITE_URL') ? PUBLIC_SITE_URL : QR_FALLBACK_URL, '/') . '/') ?>;   // /{slug}, as qr_profile_url() stores it (the preview showed the old broker.php?s= form until 2026-11-04)
   var TAKEN = <?= json_encode(array_values($taken)) ?>;
 
@@ -761,30 +791,51 @@ $d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draf
   function wire(form) {
     var sel = form.querySelector('select[name="intake_id"]'), box = form.querySelector('[data-dest]');
     if (!sel || !box) return;
-    var prof = box.querySelector('input[value="profile"]'), url = box.querySelector('input[value="url"]');
-    var urlIn = box.querySelector('[data-url-input]'), plab = box.querySelector('[data-profile-label]');
-    var prev = box.querySelector('[data-profile-preview]');
-    // "Team listings page": the broker's own (agents with a web address only) or a team's page on the site.
-    var lst = box.querySelector('input[value="listings"]'), lstSel = box.querySelector('[data-listings-input]');
+    var prof = box.querySelector('input[value="profile"]'), lst = box.querySelector('input[value="listings"]'), url = box.querySelector('input[value="url"]');
+    var urlIn = box.querySelector('[data-url-input]');
+    var pPick = box.querySelector('[data-profile-pick]'), lPick = box.querySelector('[data-listings-pick]');
+    var pPrev = box.querySelector('[data-profile-preview]'), lPrev = box.querySelector('[data-listings-preview]');
+    var firstPick = box.dataset.pick || '';   // the stored choice, applied the first time the dropdowns are filled
+    function fill(selEl, opts, want) {
+      selEl.innerHTML = '';
+      opts.forEach(function (o) { var el = document.createElement('option'); el.value = o[0]; el.textContent = o[1]; selEl.appendChild(el); });
+      if (want && opts.some(function (o) { return o[0] === want; })) selEl.value = want;
+      selEl.hidden = selEl.disabled = opts.length === 0;
+    }
+    // The address beside a choice, as a link that opens it, or the reason the choice is not there.
+    function show(span, label, radio, address, why) {
+      radio.disabled = !address; label.classList.toggle('disabled', !address);
+      span.textContent = '';
+      if (!address) { span.textContent = '(' + why + ')'; return; }
+      var a = document.createElement('a'); a.href = address; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = address.replace(/^https:\/\//, '') + ' \u2197'; span.appendChild(a);
+    }
     function sync(fromBroker) {
-      var o = sel.options[sel.selectedIndex], slug = o.dataset.slug || '', team = o.dataset.team === '1';
-      var can = slug !== '' && !team;
-      prof.disabled = !can; plab.classList.toggle('disabled', !can);
-      prev.textContent = can ? '(' + (PROFILE_BASE + encodeURIComponent(slug)).replace(/^https:\/\//, '') + ')'
-                        : (team ? '(teams have no profile page)' : (sel.value === '0' ? '(pick a broker)' : '(no web address set)'));
-      if (!can && prof.checked) url.checked = true;
-      if (can && fromBroker && urlIn.value === '' && !lst.checked) prof.checked = true;
-      var self = lstSel.querySelector('option[value="self"]');
-      self.disabled = !can;
-      self.textContent = can ? "The broker's own listings page (" + (PROFILE_BASE + encodeURIComponent(slug)).replace(/^https:\/\//, '') + "-listings)" : "The broker's own listings page (agents only)";
-      if (!can && lstSel.value === 'self' && lstSel.options.length > 1) lstSel.selectedIndex = 1;
-      lstSel.style.display = lst.checked ? '' : 'none';
+      var o = sel.options[sel.selectedIndex], slug = o.dataset.slug || '', ent = o.dataset.entity || 'agent';
+      var team = ent === 'team' ? (TEAMS[sel.value] || { members: [], page: null }) : null;
+      if (fromBroker !== false || !box.dataset.filled) {
+        var members = team ? team.members.map(function (m) { return [m.slug, m.name]; }) : [];
+        var keepP = box.dataset.filled ? pPick.value : (prof.checked ? firstPick : ''), keepL = box.dataset.filled ? lPick.value : (lst.checked ? firstPick : '');
+        fill(pPick, members, keepP);
+        fill(lPick, (team && team.page ? [['team', team.page.name]] : []).concat(members), keepL);
+        box.dataset.filled = '1';
+      }
+      var why = sel.value === '0' ? 'pick a broker' : (ent === 'staff' ? 'staff have no pages on the website' : (team ? 'no team members with a web address' : 'no web address set'));
+      var pAddr = team ? (pPick.value ? PROFILE_BASE + encodeURIComponent(pPick.value) : '') : (slug && ent === 'agent' ? PROFILE_BASE + encodeURIComponent(slug) : '');
+      var lKey  = team ? (lPick.value === 'team' ? team.page.key : lPick.value) : (slug && ent === 'agent' ? slug : '');
+      show(pPrev, box.querySelector('[data-profile-label]'), prof, pAddr, why);
+      show(lPrev, box.querySelector('[data-listings-label]'), lst, lKey ? PROFILE_BASE + encodeURIComponent(lKey) + '-listings' : '', why);
+      if ((prof.checked && prof.disabled) || (lst.checked && lst.disabled)) url.checked = true;
+      if (!prof.disabled && fromBroker === true && urlIn.value === '' && url.checked) prof.checked = true;
       urlIn.style.display = url.checked ? '' : 'none';
       urlIn.required = url.checked;
     }
     sel.addEventListener('change', function () { sync(true); });
-    [prof, url, lst].forEach(function (r) { r.addEventListener('change', function () { sync(false); if (url.checked) urlIn.focus(); }); });
-    sync(false);
+    [prof, lst, url].forEach(function (r) { r.addEventListener('change', function () { sync(false); if (url.checked) urlIn.focus(); }); });
+    // Choosing a name in a dropdown chooses that line too.
+    pPick.addEventListener('change', function () { prof.checked = true; sync(false); });
+    lPick.addEventListener('change', function () { lst.checked = true; sync(false); });
+    sync(null);
     // "Also on the portal of": the owner is never a share, so their box follows the Broker select.
     var grid = form.querySelector('[data-share-grid]');
     if (grid) sel.addEventListener('change', function () {

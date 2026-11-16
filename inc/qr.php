@@ -21,10 +21,10 @@ if (!defined('QR_BASE_URL'))      define('QR_BASE_URL', 'https://qr.monthaus.com
 // standing at a sign in the snow should always end up somewhere useful.
 if (!defined('QR_FALLBACK_URL'))  define('QR_FALLBACK_URL', 'https://monthaus.com');
 
-// Destinations must be on this domain or one of its subdomains. Keeps
-// qr.monthaus.com from becoming an open redirect to anywhere on the internet.
-if (!defined('QR_ALLOWED_DOMAIN')) define('QR_ALLOWED_DOMAIN', 'monthaus.com');
-
+// The public site's domain. Until 2026-11-16 every destination had to be on it
+// (or a subdomain); Nikki lifted that ("they should be able to point these
+// anywhere, including a personal website"), so today it only decides which
+// destinations get the utm tags (qr_with_utm()).
 // Tag the visit so the website's analytics can tell QR traffic apart:
 // ?utm_source=qr&utm_medium=print&utm_campaign=<code>. Skipped when the
 // destination already carries its own utm_source.
@@ -63,16 +63,16 @@ function qr_dest_error(string $url): string {
     if (!$p || empty($p['host']))              return 'That is not a full web address. Start it with https://';
     if (strtolower($p['scheme'] ?? '') !== 'https')
                                                return 'The address must start with https://';
-    $host   = strtolower($p['host']);
-    $domain = strtolower(QR_ALLOWED_DOMAIN);
-    if ($host !== $domain && !str_ends_with($host, '.' . $domain))
-                                               return 'Codes can only point at ' . $domain . ' (or one of its subdomains).';
+    $host = strtolower($p['host']);
+    if (!preg_match('/^[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/', $host))
+                                               return 'That is not a full web address. Check the part after https://';
     if ($host === strtolower((string) parse_url(QR_BASE_URL, PHP_URL_HOST)))
                                                return 'A code cannot point back at ' . $host . '.';
     if (!empty($p['user']) || !empty($p['pass']))
                                                return 'That address has a username in it.';
     return '';
 }
+
 
 /** The printed address for a code. */
 function qr_public_url(string $code): string {
@@ -117,6 +117,9 @@ function qr_resolve(array $row): ?string {
 /** Add the utm tags, keeping any query string and #fragment intact. */
 function qr_with_utm(string $url, string $code): string {
     if (!QR_ADD_UTM || stripos($url, 'utm_source=') !== false) return $url;
+    // Only our own site reads the tags; another site's address is sent on exactly as saved (2026-11-16).
+    $host = strtolower((string) parse_url($url, PHP_URL_HOST)); $dom = strtolower(QR_ALLOWED_DOMAIN);
+    if ($host !== $dom && !str_ends_with($host, '.' . $dom)) return $url;
     $frag = '';
     if (($h = strpos($url, '#')) !== false) { $frag = substr($url, $h); $url = substr($url, 0, $h); }
     $tags = http_build_query(['utm_source' => 'qr', 'utm_medium' => 'print', 'utm_campaign' => $code]);
@@ -180,5 +183,52 @@ function qr_shares_for(mysqli $conn, array $qr_ids): array {
     if ($r) foreach ($r as $row) {
         $out[(int) $row['qr_id']][] = ['id' => (int) $row['intake_id'], 'name' => (string) ($row['agent_name'] ?? ('Broker #' . $row['intake_id']))];
     }
+    return $out;
+}
+
+// ── Teams, for the destination choices (2026-11-16) ─────────────────────────
+// A QR code may open a teammate's profile page or the team's listings page.
+// Two records are involved: marketing's own team accounts (marketing_intakes
+// entity_type 'team' + team_members), and the teams the public site has a
+// listings page for (mk_site_teams() in inc/boards.php, from the site's
+// webroot/_teams.php). They are tied together by their MEMBERS, never by name:
+// a marketing team's listings page is the site team with exactly the same
+// member web addresses.
+
+/** The members of a marketing team who have a web address: [ ['slug' =>, 'name' =>] ], by name. */
+function qr_team_members(mysqli $conn, int $team_id): array {
+    if ($team_id <= 0 || !mk_table_exists($conn, 'team_members')) return [];
+    $st = $conn->prepare("SELECT m.slug, m.agent_name AS name FROM team_members tm JOIN marketing_intakes m ON m.id = tm.member_id
+                           WHERE tm.team_id = ? AND m.is_active = 1 AND m.status <> 'archived' AND m.slug <> '' ORDER BY m.agent_name");
+    $st->bind_param('i', $team_id); $st->execute();
+    $rows = $st->get_result()->fetch_all(MYSQLI_ASSOC); $st->close();
+    return $rows;
+}
+
+/** The site team (mk_site_teams() entry) whose members are exactly these web addresses, or null. */
+function qr_site_team_of(array $slugs): ?array {
+    require_once __DIR__ . '/boards.php';
+    $want = array_values(array_unique(array_map('strval', $slugs))); sort($want);
+    if (!$want) return null;
+    foreach (mk_site_teams() as $t) { $have = $t['members']; sort($have); if ($have === $want) return $t; }
+    return null;
+}
+
+/** The site teams this web address is a member of. */
+function qr_site_teams_with(string $slug): array {
+    require_once __DIR__ . '/boards.php';
+    return $slug === '' ? [] : array_values(array_filter(mk_site_teams(), fn($t) => in_array($slug, $t['members'], true)));
+}
+
+/** [ slug => agent_name ] for active accounts with these web addresses. */
+function qr_names_by_slug(mysqli $conn, array $slugs): array {
+    $slugs = array_values(array_unique(array_filter(array_map('strval', $slugs), fn($s) => $s !== '')));
+    if (!$slugs) return [];
+    $st = $conn->prepare("SELECT slug, agent_name FROM marketing_intakes WHERE is_active = 1 AND status <> 'archived' AND slug IN ("
+                       . implode(',', array_fill(0, count($slugs), '?')) . ")");
+    $st->bind_param(str_repeat('s', count($slugs)), ...$slugs); $st->execute();
+    $out = [];
+    foreach ($st->get_result()->fetch_all(MYSQLI_ASSOC) as $r) $out[(string)$r['slug']] = (string)$r['agent_name'];
+    $st->close();
     return $out;
 }

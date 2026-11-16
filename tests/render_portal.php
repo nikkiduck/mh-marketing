@@ -130,6 +130,11 @@ class mysqli {
         if (preg_match('/FROM marketing_intakes WHERE id = \?/', $sql)) {
             return self::s(array_values(array_filter($D['intakes'], fn($a) => (int)$a['id'] === (int)$p[0])));
         }
+        // qr_names_by_slug() (2026-11-16): the names of a person's teammates, by web address.
+        if (preg_match('/SELECT slug, agent_name FROM marketing_intakes WHERE .* slug IN \(/', $sql)) {
+            return self::s(array_values(array_map(fn($a) => ['slug' => $a['slug'], 'agent_name' => $a['agent_name']],
+                array_filter($D['intakes'], fn($a) => in_array((string)$a['slug'], array_map('strval', $p), true)))));
+        }
         if (preg_match('/FROM team_members WHERE team_id = \?/', $sql)) {
             return self::s(array_map(fn($m) => ['member_id' => $m], $D['teams'][(string)$p[0]] ?? []));
         }
@@ -433,7 +438,7 @@ ok('Jackson sees NOTHING of Kim\'s', !has($b, 'kcoates') && !has($b, 'KC Secret'
 ok('Jackson sees NOTHING of Weber Boxer\'s', !has($b, 'wb-office') && !has($b, 'jboxer-yard') && !has($b, 'Weber'));
 ok('his paused code says paused and has no change button', has($b, 'JH Open House') && has($b, 'Paused')
    && substr_count($b, 'Change where it goes') === 2);   // his live yard sign and Kim's shared code (2026-10-26), never the paused one
-ok('plain words for a profile destination', has($b, 'Your agent profile on monthaus.com'));
+ok('plain words for a profile destination', has($b, 'Your profile page on monthaus.com'));
 
 [$c, , $b] = req('jackson', '/portal/');
 ok('Jackson home renders and counts his codes and the one shared with him', $c === 200 && no_fatal($b) && has($b, 'You have 3 QR codes'), $b);
@@ -579,7 +584,7 @@ ok('…a preview sends nothing', writes() === [] && mails() === [], json_encode(
 // 2026-10-08 (Nikki): a login is the PERSON's; the team's marketing is a section on each member's portal.
 [$c, , $b] = req('jon', '/portal/qr.php');
 ok('Jonathan: his own code and the team\'s code shown', has($b, 'wb-office') && has($b, 'jboxer-yard'), $b);
-ok('Jonathan: his own code is "Your profile page"', has($b, 'Your agent profile on monthaus.com'), $b);
+ok('Jonathan: his own code is "Your profile page"', has($b, 'Your profile page on monthaus.com'), $b);
 ok('Jonathan sees NOTHING of Jackson\'s or Kim\'s', !has($b, 'jhorn') && !has($b, 'kcoates'));
 [, , $b] = req('jon', '/portal/');
 ok('Jonathan\'s home greets HIM and counts both codes', has($b, 'Hello, Jonathan') && !has($b, 'Hello, Weber') && has($b, 'You have 2 QR codes'), $b);
@@ -603,9 +608,13 @@ echo "\nA SHARED CODE (qr_code_shares, 2026-10-26)\n";
 [$c, , $b] = req('jackson', '/portal/qr.php');
 ok('Jackson sees Kim\'s open house code, named as hers and shared', has($b, 'kc-open') && has($b, 'Kimberlee Coates · shared with you'), $b);
 ok('…but still nothing of her unshared code', !has($b, 'kcoates') && !has($b, 'KC Secret'));
-ok('its card offers HIS OWN pages, his team\'s listings and a custom URL (in the card since 2026-11-15)', substr_count($b, '>My agent profile</option>') === 2
+ok('each card: Profile page (My profile or his teammate), Listings page (My listings or the team\'s), Other (2026-11-16)', substr_count($b, 'value="profile"') === 2
+   && substr_count($b, '>My profile</option>') === 2 && substr_count($b, '<option value="kim-coates">Kimberlee Coates</option>') === 2
    && substr_count($b, '>My listings</option>') === 2 && substr_count($b, '<option value="team:coates-horn">Coates Horn listings</option>') === 2
-   && has($b, 'Custom URL</option>') && !has($b, 'Weber Boxer Group listings') && !has($b, 'Kimberlee&#039;s'), $b);
+   && substr_count($b, 'value="custom"') === 2 && !has($b, 'Weber Boxer Group listings') && !has($b, 'Custom URL'), $b);
+ok('"Your pages" links every choice once, above the cards', has($b, 'class="pt-qr-ref"') && has($b, '/jackson-horn" target="_blank" rel="noopener">My profile ↗')
+   && has($b, '/jackson-horn-listings" target="_blank" rel="noopener">My listings ↗') && has($b, '/coates-horn-listings" target="_blank" rel="noopener">Coates Horn listings ↗')
+   && has($b, '/kim-coates" target="_blank" rel="noopener">Kimberlee Coates&#039;s profile ↗'), $b);
 [$c, , $b] = req('jackson', '/portal/qr.php?edit=6');
 ok('the old ?edit= address shows the list, not a separate page', $c === 200 && !has($b, 'Where should') && has($b, 'Your QR codes'), $b);
 [$c, $loc] = req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/listing/25001']);
@@ -632,7 +641,15 @@ ok('…then back to the list', $c === 302 && $loc === '/portal/qr.php', "{$c} {$
 req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest_type' => 'url', 'dest_url' => 'monthaus.com/no-scheme']);
 ok('an address without https:// gets it added', (writes()[0][1][1] ?? '') === 'https://monthaus.com/no-scheme', json_encode(writes()));
 [$c, $loc] = req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest_type' => 'url', 'dest_url' => 'https://evil.example.com/']);
-ok('a page off monthaus.com is refused, back on the list', writes() === [] && $loc === '/portal/qr.php', json_encode(writes()) . " {$loc}");
+ok('a page on another site is allowed (any https address since 2026-11-16)', (writes()[0][1] ?? []) === ['url', 'https://evil.example.com/', 1] && $loc === '/portal/qr.php', json_encode(writes()) . " {$loc}");
+[$c, $loc] = req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'custom', 'dest_url' => 'http://plain.example.com/']);
+ok('…but not without https', writes() === [] && $loc === '/portal/qr.php', json_encode(writes()));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'profile', 'profile_pick' => 'kim-coates']);
+ok('Profile page: a teammate\'s profile can be chosen', (writes()[0][1] ?? []) === ['url', 'https://site.monthaus.com/kim-coates', 1] || str_ends_with((string)(writes()[0][1][1] ?? ''), '/kim-coates'), json_encode(writes()));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'profile', 'profile_pick' => 'jonathan-boxer']);
+ok('…someone who is not on his team cannot', writes() === [], json_encode(writes()));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'listings', 'listings_pick' => 'team:coates-horn']);
+ok('Listings page: the team\'s page by its dropdown', str_ends_with((string)(writes()[0][1][1] ?? ''), '/coates-horn-listings'), json_encode(writes()));
 req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'listings']);
 $w = writes();
 ok('My Listings saves the agent\'s own listings page as a url destination', ($w[0][1][0] ?? '') === 'url' && str_ends_with((string)($w[0][1][1] ?? ''), '/jackson-horn-listings') && ($w[0][1][2] ?? 0) === 1, json_encode($w));
@@ -661,11 +678,10 @@ ok('…and so can the team\'s code', (writes()[0][1][2] ?? 0) === 2, json_encode
 req('jackson', '/portal/qr.php', ['csrf_token' => 'nope', 'id' => 1, 'dest_type' => 'profile']);
 ok('a bad form token writes nothing', writes() === [], json_encode(writes()));
 [, , $b] = req('jackson', '/portal/qr.php');
-ok('his card offers My agent profile (selected), My listings, Coates Horn listings and Custom URL', has($b, '<option value="profile" selected>My agent profile</option>')
-   && has($b, '<option value="listings">My listings</option>') && has($b, '<option value="custom">Custom URL</option>'), $b);
+ok('his own code opens on Profile page with My profile selected', has($b, 'name="dest" value="profile" checked') && has($b, '<option value="me" selected>My profile</option>'), $b);
 [, , $b] = req('jon', '/portal/qr.php');
-ok('on a team\'s code a member has the same choices plus the team\'s listings, Custom URL selected with the address', has($b, '>Weber Boxer Group listings</option>')
-   && has($b, '<option value="custom" selected>Custom URL</option>') && has($b, 'value="https://monthaus.com/weber-boxer"') && !has($b, 'Coates Horn'), $b);
+ok('on a team\'s code a member has his own choices and the team\'s listings; it opens on Other with the address', has($b, '>Weber Boxer Group listings</option>')
+   && has($b, 'name="dest" value="custom" checked') && has($b, 'value="https://monthaus.com/weber-boxer"') && !has($b, 'Coates Horn'), $b);
 
 echo "\nSPEND\n";
 [$c, , $b] = req('jackson', '/portal/spend.php');
@@ -718,7 +734,7 @@ ok('…the email outcome is recorded', ($w[1][0] ?? '') === 'request_email' && (
 ok('…and she sees the confirmation', $c === 302 && has($loc, 'sent=1'), "{$c} {$loc}");
 [, , $b] = req('sierrah', '/portal/qr.php?sent=1');
 ok('confirmation: your request has been sent', has($b, 'Your request has been sent!'), $b);
-foreach (['My profile page' => 'not a web address', 'https://zillow.com/x' => 'another site', 'http://evil.example.com' => 'off monthaus.com'] as $bad => $why) {
+foreach (['My profile page' => 'not a web address', 'http://evil.example.com' => 'no https', 'https://qr.monthaus.com/x' => 'back at the QR address'] as $bad => $why) {
     [$c, $loc] = req('sierrah', '/portal/qr.php', ['csrf_token' => 'tok', 'action' => 'request', 'title' => 'X', 'details' => '', 'destination' => $bad]);
     ok("destination refused: {$why}", writes() === [] && mails() === [] && has($loc, 'request=1'), json_encode(writes()) . $loc);
 }

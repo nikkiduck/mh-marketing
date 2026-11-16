@@ -2053,9 +2053,12 @@ same database as this site.
   `QR_FALLBACK_URL`. `inc/db.php` die()s on a failed connect, so qr.php
   registers a shutdown function that turns any unplanned exit into that
   redirect. Keep it.
-- Destinations must pass `qr_dest_error()` (https, `QR_ALLOWED_DOMAIN` or a
-  subdomain), and qr.php re-checks the stored URL at scan time, so it can
-  never become an open redirect.
+- Destinations must pass `qr_dest_error()`: any https address since
+  2026-11-16 (Nikki: "they should be able to point these anywhere, including
+  a personal website"); until then only monthaus.com. A destination is only
+  ever set by a signed-in admin or agent and every change is logged, and
+  qr.php re-checks the stored URL at scan time. `QR_ALLOWED_DOMAIN` now only
+  decides which destinations get the utm tags (ours).
 - `dest_type = 'profile'` is resolved at scan time to
   `PUBLIC_SITE_URL/broker.php?s=<slug>`, so those codes move to monthaus.com
   by themselves when PUBLIC_SITE_URL changes at go-live.
@@ -2236,22 +2239,27 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 - `portal/qr.php`: agents change their codes' destination only (profile page
   or a monthaus.com page via `qr_dest_error()`), logged in `qr_code_changes`.
   Since 2026-11-15 the change is made in the code's card on the list (no
-  separate edit page; `?edit=` shows the list): a dropdown and a text box for
-  Custom URL only. The dropdown is about the SIGNED-IN person, whoever owns
-  the code (`portal_qr_options()`): My agent profile, My listings (the site's
-  `/{slug}-listings`, `qr_listings_url()`), "{Team} listings" for each team
-  page on the site they are a member of, Custom URL. Those teams are the
-  site's (`teams` in its api/boards.php, cached with the boards;
-  `mk_site_teams()` in inc/boards.php), NOT `team_members`. Everything is
-  stored as a `url` destination (`dest_type` is ENUM('profile','url')) except
-  My agent profile on the person's own code, which stays `profile`. A card
-  shows the choice whose address the code goes to now, else Custom URL with
-  the address in the box. The form posts `dest` (profile | listings |
-  team:{key} | custom); `dest_type` is still read.
-  The admin page (`qr_codes.php`) has the same pages as a third "Opens"
-  choice, "Team listings page": the broker's own (agents with a web address) or
-  any of the site's team pages, also stored as a `url` destination
-  (`qr_read_dest()`, `qr_listings_pick()`, `qr_listings_control()`).
+  separate edit page; `?edit=` shows the list). Three choices since
+  2026-11-16 (Nikki), on the portal AND on the admin page:
+  **Profile page**, **Listings page** (the site's `/{slug}-listings`,
+  `qr_listings_url()`), **Other** (any https address).
+  - Portal (`portal_qr_menu()`): about the SIGNED-IN person, whoever owns the
+    code. On a team, Profile page has a dropdown (My profile, each teammate)
+    and Listings page has one (My listings, "{Team} listings"). "On a team" =
+    a member of a team with a listings page on the site (`mk_site_teams()`,
+    from `teams` in the site's api/boards.php; `qr_site_teams_with()`).
+    "Your pages" above the cards links every choice.
+  - Admin (`qr_read_dest()`, `qr_dest_state()`, `qr_dest_controls()`, the
+    `TEAMS` script data): about the BROKER picked. An agent: no dropdowns. A
+    marketing team account: Profile page lists its members
+    (`qr_team_members()`), Listings page lists the team's page then the
+    members. The address beside each choice is a link.
+  - A marketing team account and a site team page are tied by their MEMBERS
+    (`qr_site_team_of()`: exactly the same web addresses), never by name.
+  - Stored as `url` destinations (`dest_type` is ENUM('profile','url'))
+    except an agent's own profile on their own code, which stays `profile`.
+    A form opens on the choice whose address the code goes to now, else
+    Other with the address in the box.
 - `portal/spend.php`: month by month from `mh_agent_financials()` (same
   function as Billing), account only (Weber Boxer Group = the team row).
   "You paid" / "Mont Haus paid" / "Being finalised" (undecided who-pays).
