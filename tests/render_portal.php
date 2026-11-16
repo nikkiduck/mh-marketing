@@ -49,6 +49,13 @@ foreach (['portal/index.php', 'portal/qr.php', 'portal/spend.php', 'portal/recei
     copy("{$ROOT}/{$f}", "{$SB}/{$f}");
 }
 
+// The registry cache the pages read (inc/boards.php): no boards, so the built-in
+// copy applies; the site's two team listings pages (2026-11-15).
+file_put_contents($SB . '/boards.json', json_encode(['teams' => [
+    ['key' => 'weberboxergroup', 'name' => 'Weber Boxer Group', 'label' => 'Weber Boxer Group', 'members' => ['jonathan-boxer', 'scott-weber', 'sara-perkowski']],
+    ['key' => 'coates-horn', 'name' => 'Coates Horn Team', 'label' => 'Coates Horn', 'members' => ['jackson-horn', 'kim-coates']],
+]]));
+
 file_put_contents($SB . '/inc/auth.php', <<<'PHP'
 <?php
 if (session_status() === PHP_SESSION_NONE) { session_start(); }
@@ -385,7 +392,7 @@ http_response_code(!empty($scen['mail_fails']) ? 500 : 202);
 PHP);
 $log  = $SB . '/server.log';
 file_put_contents($SB . '/scenario.json', json_encode(scenario()));
-$pid = (int)trim(shell_exec(sprintf('PHP_CLI_SERVER_WORKERS=4 MH_SENDGRID_URL=%s php -n -d extension=curl -d extension=mbstring -d session.save_path=%s -S 127.0.0.1:%d -t %s > %s 2>&1 & echo $!',
+$pid = (int)trim(shell_exec(sprintf('PHP_CLI_SERVER_WORKERS=4 MH_BOARDS_CACHE=' . escapeshellarg($SB . '/boards.json') . ' MH_SENDGRID_URL=%s php -n -d extension=curl -d extension=mbstring -d session.save_path=%s -S 127.0.0.1:%d -t %s > %s 2>&1 & echo $!',
     escapeshellarg("http://127.0.0.1:{$PORT}/fake_sendgrid.php"), escapeshellarg($SB), $PORT, escapeshellarg($SB), escapeshellarg($log))));
 register_shutdown_function(function () use ($pid, $SB) { if ($pid > 0) @exec("kill {$pid} 2>/dev/null"); @exec('rm -rf ' . escapeshellarg($SB)); });
 for ($i = 0, $up = false; $i < 60 && !$up; $i++) { $fp = @fsockopen('127.0.0.1', $PORT, $e, $s, 0.2); if ($fp) { fclose($fp); $up = true; } else usleep(120000); }
@@ -426,7 +433,7 @@ ok('Jackson sees NOTHING of Kim\'s', !has($b, 'kcoates') && !has($b, 'KC Secret'
 ok('Jackson sees NOTHING of Weber Boxer\'s', !has($b, 'wb-office') && !has($b, 'jboxer-yard') && !has($b, 'Weber'));
 ok('his paused code says paused and has no change button', has($b, 'JH Open House') && has($b, 'Paused')
    && substr_count($b, 'Change where it goes') === 2);   // his live yard sign and Kim's shared code (2026-10-26), never the paused one
-ok('plain words for a profile destination', has($b, 'Your profile page on monthaus.com'));
+ok('plain words for a profile destination', has($b, 'Your agent profile on monthaus.com'));
 
 [$c, , $b] = req('jackson', '/portal/');
 ok('Jackson home renders and counts his codes and the one shared with him', $c === 200 && no_fatal($b) && has($b, 'You have 3 QR codes'), $b);
@@ -572,7 +579,7 @@ ok('…a preview sends nothing', writes() === [] && mails() === [], json_encode(
 // 2026-10-08 (Nikki): a login is the PERSON's; the team's marketing is a section on each member's portal.
 [$c, , $b] = req('jon', '/portal/qr.php');
 ok('Jonathan: his own code and the team\'s code shown', has($b, 'wb-office') && has($b, 'jboxer-yard'), $b);
-ok('Jonathan: his own code is "Your profile page"', has($b, 'Your profile page on monthaus.com'), $b);
+ok('Jonathan: his own code is "Your profile page"', has($b, 'Your agent profile on monthaus.com'), $b);
 ok('Jonathan sees NOTHING of Jackson\'s or Kim\'s', !has($b, 'jhorn') && !has($b, 'kcoates'));
 [, , $b] = req('jon', '/portal/');
 ok('Jonathan\'s home greets HIM and counts both codes', has($b, 'Hello, Jonathan') && !has($b, 'Hello, Weber') && has($b, 'You have 2 QR codes'), $b);
@@ -596,8 +603,9 @@ echo "\nA SHARED CODE (qr_code_shares, 2026-10-26)\n";
 [$c, , $b] = req('jackson', '/portal/qr.php');
 ok('Jackson sees Kim\'s open house code, named as hers and shared', has($b, 'kc-open') && has($b, 'Kimberlee Coates · shared with you'), $b);
 ok('…but still nothing of her unshared code', !has($b, 'kcoates') && !has($b, 'KC Secret'));
-ok('its card offers HER profile and listings pages and a custom URL (in the card since 2026-11-15)', has($b, 'Kimberlee&#039;s Profile</option>')
-   && has($b, 'Kimberlee&#039;s Listings</option>') && has($b, 'Custom URL</option>'), $b);
+ok('its card offers HIS OWN pages, his team\'s listings and a custom URL (in the card since 2026-11-15)', substr_count($b, '>My agent profile</option>') === 2
+   && substr_count($b, '>My listings</option>') === 2 && substr_count($b, '<option value="team:coates-horn">Coates Horn listings</option>') === 2
+   && has($b, 'Custom URL</option>') && !has($b, 'Weber Boxer Group listings') && !has($b, 'Kimberlee&#039;s'), $b);
 [$c, , $b] = req('jackson', '/portal/qr.php?edit=6');
 ok('the old ?edit= address shows the list, not a separate page', $c === 200 && !has($b, 'Where should') && has($b, 'Your QR codes'), $b);
 [$c, $loc] = req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/listing/25001']);
@@ -629,15 +637,23 @@ req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'l
 $w = writes();
 ok('My Listings saves the agent\'s own listings page as a url destination', ($w[0][1][0] ?? '') === 'url' && str_ends_with((string)($w[0][1][1] ?? ''), '/jackson-horn-listings') && ($w[0][1][2] ?? 0) === 1, json_encode($w));
 req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest' => 'listings']);
-ok('…and on a shared code it is the OWNER\'s listings page', str_ends_with((string)(writes()[0][1][1] ?? ''), '/kim-coates-listings'), json_encode(writes()));
+ok('…and on a code shared with him it is still HIS listings page', str_ends_with((string)(writes()[0][1][1] ?? ''), '/jackson-horn-listings'), json_encode(writes()));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 6, 'dest' => 'profile']);
+ok('My agent profile on a shared code is HIS profile, stored as an address', (writes()[0][1][0] ?? '') === 'url' && str_ends_with((string)(writes()[0][1][1] ?? ''), '/jackson-horn'), json_encode(writes()));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'profile']);
+ok('My agent profile on his own code, already there, is no change', writes() === [], json_encode(writes()));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'team:coates-horn']);
+ok('his team\'s listings page can be chosen', (writes()[0][1][0] ?? '') === 'url' && str_ends_with((string)(writes()[0][1][1] ?? ''), '/coates-horn-listings'), json_encode(writes()));
+req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'team:weberboxergroup']);
+ok('…a team he is not in cannot', writes() === [], json_encode(writes()));
 req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 1, 'dest' => 'custom', 'dest_url' => 'https://monthaus.com/listing/25001']);
 ok('Custom URL saves the typed address', (writes()[0][1] ?? []) === ['url', 'https://monthaus.com/listing/25001', 1], json_encode(writes()));
-req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest' => 'listings']);
-ok('a team code cannot point at a listings page it does not have', writes() === [], json_encode(writes()));
+req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest' => 'team:weberboxergroup']);
+ok('a member can point the team\'s code at the team\'s listings page', str_ends_with((string)(writes()[0][1][1] ?? ''), '/weberboxergroup-listings') && (writes()[0][1][2] ?? 0) === 2, json_encode(writes()));
 req('jackson', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 5, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/x']);
 ok('a paused code cannot be changed', writes() === [], json_encode(writes()));
 req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest_type' => 'profile']);
-ok('a team code cannot point at a profile it does not have', writes() === [], json_encode(writes()));
+ok('My agent profile on a team\'s code is the member\'s own profile, as an address', (writes()[0][1][0] ?? '') === 'url' && str_ends_with((string)(writes()[0][1][1] ?? ''), '/jonathan-boxer'), json_encode(writes()));
 req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 3, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/jb']);
 ok('a member\'s own code can be changed from his portal', (writes()[0][1][2] ?? 0) === 3, json_encode(writes()));
 req('jon', '/portal/qr.php', ['csrf_token' => 'tok', 'id' => 2, 'dest_type' => 'url', 'dest_url' => 'https://monthaus.com/wb2']);
@@ -645,10 +661,11 @@ ok('…and so can the team\'s code', (writes()[0][1][2] ?? 0) === 2, json_encode
 req('jackson', '/portal/qr.php', ['csrf_token' => 'nope', 'id' => 1, 'dest_type' => 'profile']);
 ok('a bad form token writes nothing', writes() === [], json_encode(writes()));
 [, , $b] = req('jackson', '/portal/qr.php');
-ok('his card offers My Profile, My Listings and Custom URL, My Profile selected', has($b, '<option value="profile" selected>My Profile</option>')
-   && has($b, '<option value="listings">My Listings</option>') && has($b, '<option value="custom">Custom URL</option>'), $b);
+ok('his card offers My agent profile (selected), My listings, Coates Horn listings and Custom URL', has($b, '<option value="profile" selected>My agent profile</option>')
+   && has($b, '<option value="listings">My listings</option>') && has($b, '<option value="custom">Custom URL</option>'), $b);
 [, , $b] = req('jon', '/portal/qr.php');
-ok('a team code\'s card has no dropdown, only the address box', !has($b, 's Profile</option>') && has($b, 'name="dest" value="custom"') && has($b, 'value="https://monthaus.com/weber-boxer"'), $b);
+ok('on a team\'s code a member has the same choices plus the team\'s listings, Custom URL selected with the address', has($b, '>Weber Boxer Group listings</option>')
+   && has($b, '<option value="custom" selected>Custom URL</option>') && has($b, 'value="https://monthaus.com/weber-boxer"') && !has($b, 'Coates Horn'), $b);
 
 echo "\nSPEND\n";
 [$c, , $b] = req('jackson', '/portal/spend.php');

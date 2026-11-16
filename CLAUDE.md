@@ -2219,14 +2219,18 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 - `portal/qr.php`: agents change their codes' destination only (profile page
   or a monthaus.com page via `qr_dest_error()`), logged in `qr_code_changes`.
   Since 2026-11-15 the change is made in the code's card on the list (no
-  separate edit page; `?edit=` shows the list): a dropdown, My Profile / My
-  Listings / Custom URL, and a text box for Custom URL only. On a shared code
-  the first two read "Kim's Profile" / "Kim's Listings" (the OWNER's pages);
-  a team's code has no dropdown, only the box. My Listings is the site's
-  `/{slug}-listings` page (`qr_listings_url()` in inc/qr.php), stored as an
-  ordinary `url` destination because `dest_type` is ENUM('profile','url'); a
-  card shows it selected when the stored address is exactly that one. The
-  form posts `dest` (profile | listings | custom); `dest_type` is still read.
+  separate edit page; `?edit=` shows the list): a dropdown and a text box for
+  Custom URL only. The dropdown is about the SIGNED-IN person, whoever owns
+  the code (`portal_qr_options()`): My agent profile, My listings (the site's
+  `/{slug}-listings`, `qr_listings_url()`), "{Team} listings" for each team
+  page on the site they are a member of, Custom URL. Those teams are the
+  site's (`teams` in its api/boards.php, cached with the boards;
+  `mk_site_teams()` in inc/boards.php), NOT `team_members`. Everything is
+  stored as a `url` destination (`dest_type` is ENUM('profile','url')) except
+  My agent profile on the person's own code, which stays `profile`. A card
+  shows the choice whose address the code goes to now, else Custom URL with
+  the address in the box. The form posts `dest` (profile | listings |
+  team:{key} | custom); `dest_type` is still read.
 - `portal/spend.php`: month by month from `mh_agent_financials()` (same
   function as Billing), account only (Weber Boxer Group = the team row).
   "You paid" / "Mont Haus paid" / "Being finalised" (undecided who-pays).

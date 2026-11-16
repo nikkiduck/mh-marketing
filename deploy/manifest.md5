@@ -53,7 +53,7 @@ b97e836d5b0b6da31bc52ef3dab507a4  inc/ads_render.php
 8473657b195294f793ca1a40e97e7fbb  inc/agent_lifecycle.php
 48abe9e2a29376911e0ede45deee6a3b  inc/agent_roster.php
 18900b404a17903d1b7c5e61088cd704  inc/auth.php
-dfbecd5baf8eb89a44ce4f33ea6cbbed  inc/boards.php
+2bf7de454a89f9fcb0622a76786ed0f3  inc/boards.php
 5d342fa9a131350b281e46f52aa5480c  inc/brand_embed.php
 1146dc1070d51e9918bfa7581a8611c5  inc/campaign_share.php
 ed63e93008d91724efd27d9a7df2b035  inc/captions.php
@@ -141,7 +141,7 @@ d11b1b570b09764e3a760efe4c66ad9b  portal/market_post.php
 2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
 e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
 5eaa7597de6bd69db039e8ec2ae5bc8b  portal/profile.php
-2ab72b52a57305e7c48af6aa3cf3142c  portal/qr.php
+6e85121faa7783c2b2792f8e69b2f32d  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php
 c100b7be0bbc3fa29c94576a1acb1f72  portal/social.php
 01f01050d97dfb06402d6d35b99a238e  portal/social_asset.php

@@ -141,11 +141,13 @@ function mk_boards_refresh(bool $write = true): array {
     mk_board_registry($boards);   // this request uses the fresh copy
     $areas = mk_areas_parse($d['areas'] ?? null);   // [] when the site is older than 2026-10-06
     if ($areas) mk_areas($areas);
+    $teams = mk_teams_parse($d['teams'] ?? null);   // [] when the site is older than 2026-11-15
+    mk_site_teams($teams);
     $n = count($boards);
     if (!$write) return ['ok' => true, 'message' => "{$n} boards from the site (cache not written: dry run)"];
 
     $json = json_encode(['fetched_at' => gmdate('Y-m-d\TH:i:s\Z'), 'generated_at' => $d['generated_at'] ?? null,
-                         'boards' => $boards, 'areas' => $areas],
+                         'boards' => $boards, 'areas' => $areas, 'teams' => $teams],
                         JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
     $tmp = BOARDS_CACHE_FILE . '.' . getmypid() . '.tmp';
     if (@file_put_contents($tmp, $json) === false || !@chmod($tmp, 0644) || !@rename($tmp, BOARDS_CACHE_FILE)) {
@@ -316,6 +318,36 @@ function mk_areas_parse($v): array {
         $out[] = ['key' => $akey, 'area' => $name, 'towns' => $towns];
     }
     return $out;
+}
+
+/**
+ * The site's `teams` (2026-11-15): the teams with a listings page on the
+ * public site, monthaus.com/{key}-listings (its webroot/_teams.php), as
+ * [ { key, name, label, members: [agent slugs] } ]. [] when missing or
+ * malformed (never a half list). The agent portal's QR code dropdown offers
+ * each member "{label} listings" (portal/qr.php). Not marketing's own
+ * team_members (the team accounts): this is only what the site has a page for.
+ */
+function mk_teams_parse($v): array {
+    if (!is_array($v)) return [];
+    $out = [];
+    foreach ($v as $t) {
+        $key = (string)($t['key'] ?? ''); $name = trim((string)($t['name'] ?? ''));
+        if (!preg_match('/^[a-z0-9][a-z0-9-]{1,80}$/', $key) || $name === '' || !is_array($t['members'] ?? null)) return [];
+        $members = [];
+        foreach ($t['members'] as $m) { if (!is_string($m) || !preg_match('/^[a-z0-9][a-z0-9-]{1,80}$/', $m)) return []; $members[] = $m; }
+        $out[] = ['key' => $key, 'name' => $name, 'label' => trim((string)($t['label'] ?? '')) ?: $name, 'members' => $members];
+    }
+    return $out;
+}
+
+/** The site's teams: from the cache; [] until the site sends them. Pass $set to replace it for this request. */
+function mk_site_teams(?array $set = null): array {
+    static $teams = null;
+    if ($set !== null) { $teams = $set; return $teams; }
+    if ($teams !== null) return $teams;
+    $d = is_readable(BOARDS_CACHE_FILE) ? json_decode((string)file_get_contents(BOARDS_CACHE_FILE), true) : null;
+    return $teams = mk_teams_parse(is_array($d) ? ($d['teams'] ?? null) : null);
 }
 
 /** The area list: the cache when it carries one, else the built-in copy. Pass $set to replace it for this request. */
