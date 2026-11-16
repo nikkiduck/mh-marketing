@@ -2247,6 +2247,10 @@ Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
   shows the choice whose address the code goes to now, else Custom URL with
   the address in the box. The form posts `dest` (profile | listings |
   team:{key} | custom); `dest_type` is still read.
+  The admin page (`qr_codes.php`) has the same pages as a third "Opens"
+  choice, "A listings page": the broker's own (agents with a web address) or
+  any of the site's team pages, also stored as a `url` destination
+  (`qr_read_dest()`, `qr_listings_pick()`, `qr_listings_control()`).
 - `portal/spend.php`: month by month from `mh_agent_financials()` (same
   function as Billing), account only (Weber Boxer Group = the team row).
   "You paid" / "Mont Haus paid" / "Being finalised" (undecided who-pays).

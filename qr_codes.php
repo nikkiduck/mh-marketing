@@ -23,6 +23,7 @@ require_once __DIR__ . '/inc/db.php';
 require_once __DIR__ . '/inc/config.php';
 require_once __DIR__ . '/inc/schema.php';
 require_once __DIR__ . '/inc/qr.php';
+require_once __DIR__ . '/inc/boards.php';   // mk_site_teams(): the site's team listings pages
 require_login();
 require_role('admin');
 
@@ -49,6 +50,20 @@ function qr_broker(mysqli $conn, int $iid, bool $has_team): ?array {
 
 /** Checks the destination half of a post. Returns [type, url|null, error]. */
 function qr_read_dest(array $p, ?array $broker): array {
+    // A listings page (2026-11-15): the broker's own monthaus.com/{slug}-listings, or one of
+    // the site's team pages (mk_site_teams()). Stored as an ordinary url destination.
+    if (($p['dest_type'] ?? '') === 'listings') {
+        $key = (string) ($p['listings_key'] ?? '');
+        if ($key === 'self') {
+            $slug = trim((string) ($broker['slug'] ?? ''));
+            if (!$broker || $slug === '' || in_array($broker['entity_type'] ?? 'agent', ['team', 'staff'], true)) {
+                return ['url', null, 'Only an agent with a web address has a listings page of their own. Choose a team\'s listings page or a specific page.'];
+            }
+            return ['url', qr_listings_url($slug), ''];
+        }
+        foreach (mk_site_teams() as $t) if ($t['key'] === $key) return ['url', qr_listings_url($t['key']), ''];
+        return ['url', null, 'Choose which listings page the code should open.'];
+    }
     $type = ($p['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     if ($type === 'profile') {
         if (!$broker)                                         return [$type, null, 'Pick a broker to point at their profile page, or choose a specific page.'];
@@ -59,6 +74,26 @@ function qr_read_dest(array $p, ?array $broker): array {
     }
     $url = trim((string) ($p['dest_url'] ?? ''));
     return [$type, $url, qr_dest_error($url)];
+}
+
+/** Which listings choice a stored destination is: 'self', a team key, or '' (none of them). */
+function qr_listings_pick(string $type, ?string $url, string $slug): string {
+    $u = rtrim((string) $url, '/');
+    if ($type !== 'url' || $u === '') return '';
+    if ($slug !== '' && $u === qr_listings_url($slug)) return 'self';
+    foreach (mk_site_teams() as $t) if ($u === qr_listings_url($t['key'])) return $t['key'];
+    return '';
+}
+
+/** The "A listings page" radio and its dropdown, for the new form and every Change form. */
+function qr_listings_control(string $pick, bool $checked): string {
+    $h = '<label><input type="radio" name="dest_type" value="listings"' . ($checked ? ' checked' : '') . '> A listings page</label>'
+       . '<select name="listings_key" class="form-input" data-listings-input style="max-width:640px;">'
+       . '<option value="self"' . ($pick === 'self' ? ' selected' : '') . '>The broker\'s own listings page</option>';
+    foreach (mk_site_teams() as $t) {
+        $h .= '<option value="' . e($t['key']) . '"' . ($pick === $t['key'] ? ' selected' : '') . '>' . e($t['name']) . ' listings page</option>';
+    }
+    return $h . '</select>';
 }
 
 function qr_dest_text(string $type, ?string $url): string {
@@ -93,7 +128,7 @@ if ($ready && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($err !== '') {
             $flash = ['err', $err];
             // Keep what was typed, so a typo does not mean starting over.
-            $_SESSION['qr_draft'] = array_intersect_key($_POST, array_flip(['intake_id', 'code', 'label', 'dest_type', 'dest_url']));
+            $_SESSION['qr_draft'] = array_intersect_key($_POST, array_flip(['intake_id', 'code', 'label', 'dest_type', 'dest_url', 'listings_key']));
         } else {
             $bid = $broker ? (int) $broker['id'] : null;
             $s = $conn->prepare("INSERT INTO qr_codes (code, intake_id, label, dest_type, dest_url, created_by) VALUES (?, ?, ?, ?, ?, ?)");
@@ -295,7 +330,7 @@ $filter_name = '';
 foreach ($brokers as $b) if ((int) $b['id'] === $filter) $filter_name = $b['agent_name'];
 
 $d_iid  = (int) ($draft['intake_id'] ?? $filter);
-$d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
+$d_type = in_array($draft['dest_type'] ?? '', ['url', 'listings'], true) ? $draft['dest_type'] : 'profile';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -456,6 +491,7 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
         <div class="radio-row" data-dest>
           <label data-profile-label><input type="radio" name="dest_type" value="profile" <?= $d_type === 'profile' ? 'checked' : '' ?>>
             The broker's profile page <span class="hint" data-profile-preview></span></label>
+          <?= qr_listings_control((string) ($draft['listings_key'] ?? 'self'), $d_type === 'listings') ?>
           <label><input type="radio" name="dest_type" value="url" <?= $d_type === 'url' ? 'checked' : '' ?>> A specific page on <?= e(QR_ALLOWED_DOMAIN) ?></label>
           <input type="url" name="dest_url" class="form-input" data-url-input placeholder="https://monthaus.com/listing/..."
                  value="<?= e($draft['dest_url'] ?? '') ?>" style="max-width:640px;">
@@ -569,9 +605,11 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
                   <div class="radio-row" data-dest>
                     <label data-profile-label><input type="radio" name="dest_type" value="profile" <?= $c['dest_type'] === 'profile' ? 'checked' : '' ?>>
                       The broker's profile page <span class="hint" data-profile-preview></span></label>
-                    <label><input type="radio" name="dest_type" value="url" <?= $c['dest_type'] === 'url' ? 'checked' : '' ?>> A specific page on <?= e(QR_ALLOWED_DOMAIN) ?></label>
+                    <?php $lpick = qr_listings_pick((string) $c['dest_type'], $c['dest_url'], trim((string) ($c['slug'] ?? ''))); ?>
+                    <?= qr_listings_control($lpick !== '' ? $lpick : 'self', $lpick !== '') ?>
+                    <label><input type="radio" name="dest_type" value="url" <?= $c['dest_type'] === 'url' && $lpick === '' ? 'checked' : '' ?>> A specific page on <?= e(QR_ALLOWED_DOMAIN) ?></label>
                     <input type="url" name="dest_url" class="form-input" data-url-input placeholder="https://monthaus.com/listing/..."
-                           value="<?= e($c['dest_url'] ?? '') ?>" style="max-width:640px;">
+                           value="<?= e($lpick === '' ? ($c['dest_url'] ?? '') : '') ?>" style="max-width:640px;">
                   </div>
                   <?php if ($has_shares): $shared_ids = array_column($shares[$qid] ?? [], 'id'); ?>
                     <span class="fld-label">Also on the portal of</span>
@@ -726,6 +764,8 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
     var prof = box.querySelector('input[value="profile"]'), url = box.querySelector('input[value="url"]');
     var urlIn = box.querySelector('[data-url-input]'), plab = box.querySelector('[data-profile-label]');
     var prev = box.querySelector('[data-profile-preview]');
+    // "A listings page": the broker's own (agents with a web address only) or a team's page on the site.
+    var lst = box.querySelector('input[value="listings"]'), lstSel = box.querySelector('[data-listings-input]');
     function sync(fromBroker) {
       var o = sel.options[sel.selectedIndex], slug = o.dataset.slug || '', team = o.dataset.team === '1';
       var can = slug !== '' && !team;
@@ -733,12 +773,17 @@ $d_type = ($draft['dest_type'] ?? '') === 'url' ? 'url' : 'profile';
       prev.textContent = can ? '(' + (PROFILE_BASE + encodeURIComponent(slug)).replace(/^https:\/\//, '') + ')'
                         : (team ? '(teams have no profile page)' : (sel.value === '0' ? '(pick a broker)' : '(no web address set)'));
       if (!can && prof.checked) url.checked = true;
-      if (can && fromBroker && urlIn.value === '') prof.checked = true;
+      if (can && fromBroker && urlIn.value === '' && !lst.checked) prof.checked = true;
+      var self = lstSel.querySelector('option[value="self"]');
+      self.disabled = !can;
+      self.textContent = can ? "The broker's own listings page (" + (PROFILE_BASE + encodeURIComponent(slug)).replace(/^https:\/\//, '') + "-listings)" : "The broker's own listings page (agents only)";
+      if (!can && lstSel.value === 'self' && lstSel.options.length > 1) lstSel.selectedIndex = 1;
+      lstSel.style.display = lst.checked ? '' : 'none';
       urlIn.style.display = url.checked ? '' : 'none';
       urlIn.required = url.checked;
     }
     sel.addEventListener('change', function () { sync(true); });
-    [prof, url].forEach(function (r) { r.addEventListener('change', function () { sync(false); if (url.checked) urlIn.focus(); }); });
+    [prof, url, lst].forEach(function (r) { r.addEventListener('change', function () { sync(false); if (url.checked) urlIn.focus(); }); });
     sync(false);
     // "Also on the portal of": the owner is never a share, so their box follows the Broker select.
     var grid = form.querySelector('[data-share-grid]');
