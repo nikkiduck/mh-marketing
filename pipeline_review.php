@@ -516,7 +516,10 @@ sort($mh_cities);
           <span style="color:#9ca3af;font-size:11px;">(withheld until closing)</span>
         <?php endif; ?>
       </div>
-      <div class="k">Paperless ID</div>  <div class="v"><?= h($t['pipeline_txn_id']) ?></div>
+      <?php // The deal's own page in Paperless Pipeline, to check the details and the location before promoting
+            // (Nikki, 2026-11-16). The transaction id is the number in Paperless's address; only a plain number links. ?>
+      <div class="k">Paperless ID</div>  <div class="v"><?= h($t['pipeline_txn_id']) ?><?php if (ctype_digit((string)$t['pipeline_txn_id'])): ?>
+        &nbsp;<a href="https://app.paperlesspipeline.com/tx/view/<?= h($t['pipeline_txn_id']) ?>/" target="_blank" rel="noopener">Open in Paperless Pipeline <i class="ti ti-external-link"></i></a><?php endif; ?></div>
     </div>
 
     <?php if ($is_repromote): ?>
