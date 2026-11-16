@@ -2012,6 +2012,22 @@ the fix is at the boards, not in the feed. Name search is `contains` on
 MemberFullName in several casings because Anyprop cannot filter on last
 name and `contains` is case-sensitive.
 
+Lists (Nikki, 2026-11-16, after asking for Aspen's members as a spreadsheet):
+Members can also be searched by **company** (`contains` on OfficeName, same
+four casings) or as **everyone on the board** (a board is required; offices
+too), with a **Status** filter (MemberStatus / OfficeStatus, filtered by
+Anyprop). **Member type** cannot be filtered at Anyprop (not in the Member
+whitelist: MemberEmail, MemberFullName, MemberMlsId, MemberStateLicense,
+MemberStateOrProvince, MemberStatus, ModificationTimestamp, OfficeKey,
+OfficeMlsId, OfficeName, OriginatingSystemName, anyprop_MemberPhone), so the
+page shows each type in the results with its count and keeps the picked one
+after fetching every row. Up to `APD_MAX_ROWS` (5,000), following
+@odata.nextLink 500 at a time; Aspen's whole board is 1,710. **Download CSV**
+(Board, First Name, Last Name, Company, Email, Status, Member Type, MLS ID,
+Office MLS ID; UTF-8 with BOM for Excel) and **Download JSON** re-run the
+search and return every row; the page draws the first 200 records of the raw
+JSON.
+
 `spark_debug.php` (deleted 2026-10-19 with the rest of Spark) was the same
 tool against a board's own Spark (FBS) RESO feed, to compare with Anyprop: tokens from inc/db.php (Aspen, Vail) or one
 pasted into the form (POSTed, kept in the PHP session, "Forget token"
