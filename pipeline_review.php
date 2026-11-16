@@ -657,7 +657,9 @@ sort($mh_cities);
             <form method="POST" style="margin:0;display:flex;gap:6px;align-items:center;">
               <input type="hidden" name="_action" value="set_area">
               <input type="hidden" name="manual_listing_id" value="<?= (int)$d['ml_id'] ?>">
-              <select name="area_key" style="width:auto;padding:4px 6px;font-size:12px;<?= ($d['ml_area'] ?? '') === '' || $d['ml_area'] === null ? 'border-color:#fdba74;background:#fff7ed;' : '' ?>" onchange="this.form.submit()">
+              <?php // Right padding leaves room for the theme's chevron (the name ran under it), and the
+                    // no-area tint is background-color so it does not wipe the chevron out (2026-11-16). ?>
+              <select name="area_key" style="width:auto;padding:4px 30px 4px 8px;background-position:right 10px center;font-size:12px;<?= ($d['ml_area'] ?? '') === '' || $d['ml_area'] === null ? 'border-color:#fdba74;background-color:#fff7ed;' : '' ?>" onchange="this.form.submit()">
                 <option value="">No area (in no email)</option>
                 <?php foreach ($area_names as $ak => $an): ?>
                   <option value="<?= h($ak) ?>" <?= ($d['ml_area'] ?? '') === $ak ? 'selected' : '' ?>><?= h($an) ?></option>
