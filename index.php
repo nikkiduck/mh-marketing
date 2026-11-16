@@ -5,7 +5,7 @@
  *
  * One card per area, in the order she gave: Agent Roster, Social Media, MH
  * Send, Market Reports, Hot Sheets, Templates, QR Codes, Agent Billing, Brand
- * Guidelines, Portal Users, What's New. These used to be the row of buttons in the
+ * Guidelines, Portal Users, What's New, Anyprop Debug. These used to be the row of buttons in the
  * roster's header; the roster is agents.php now and keeps only the agent
  * management ones. A card a role cannot open is not drawn (Social Media, MH
  * Send, Portal Users and What's New are super admin only, as their pages are).
@@ -53,6 +53,7 @@ $cards = [
     ['Brand Guidelines', '/brand-guidelines/',         'palette',         'The public brand guidelines page.', true, true],
     ['Portal Users',     'users.php',                  'key',             'Who may sign in, their role and which marketing account they see.', false, $super],
     ['What\'s New',      'whats_new.php',              'bell',            'The notices agents see under their bell, on the portal and in MH Send.', false, $super],
+    ['Anyprop Debug',    'anyprop_debug.php',          'database',        'The raw Anyprop feed: look up a member or an office, or list a board or a company.', false, $super],   // the page admits any admin; the card is hers (Nikki, 2026-11-16: "in my Admin Home")
 ];
 
 admin_tool_header([
