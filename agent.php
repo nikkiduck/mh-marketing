@@ -942,6 +942,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                           'ordered_at','tracking_number','tracking_url','delivered_at','file_url','notes',
                           'paid_by','paid_broker_amount','paid_mh_amount','billed_with_order_id'];
     $valid_coll_types  = ['business_cards','yard_signs','oh_signs','postcards','brochures','other'];
+    // "Paid directly by agent" (Nikki, 2026-11-16; sql/collateral_paid_direct_v1.sql): the agent paid the
+    // vendor on their own card, so Mont Haus does not bill their share. It only means something when the
+    // agent has a share (Who Pays is Broker or Split), so it is stored as 0 otherwise. Written only once
+    // the column exists: an unknown column would fail the whole save silently.
+    $coll_has_direct = mk_column_exists($conn, 'marketing_collateral_orders', 'paid_direct');
+    $coll_direct     = (!empty($_POST['paid_direct']) && in_array($_POST['paid_by'] ?? '', ['broker', 'split'], true)) ? 1 : 0;
 
     if ($action === 'add_collateral_order') {
         $type = trim($_POST['type'] ?? '');
@@ -960,6 +966,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $cols[]  = "`{$f}`"; $phs[] = '?';
                     $vals[]  = $v === '' ? null : $v; $types .= 's';
                 }
+                if ($coll_has_direct) { $cols[] = '`paid_direct`'; $phs[] = '?'; $vals[] = $coll_direct; $types .= 'i'; }
                 if ($rec) {
                     foreach ([['receipt_file', $rec['file']], ['receipt_orig_name', $rec['orig']],
                               ['receipt_uploaded_at', date('Y-m-d H:i:s')]] as [$c, $v]) {
@@ -991,6 +998,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sets[]  = "`{$f}` = ?";
             $vals[]  = $v === '' ? null : $v; $types .= 's';
         }
+        if ($coll_has_direct) { $sets[] = '`paid_direct` = ?'; $vals[] = $coll_direct; $types .= 'i'; }
 
         // A new upload replaces the old file; no upload leaves it untouched.
         $rec = mk_store_receipt();
@@ -1608,6 +1616,7 @@ if ($r) {
     }
 }
 $has_acct = mk_column_exists($conn, 'marketing_collateral_orders', 'accounting_sent_at');   // Send to Accounting (sql/collateral_accounting_v1.sql)
+$has_direct = mk_column_exists($conn, 'marketing_collateral_orders', 'paid_direct');         // Paid directly by agent (sql/collateral_paid_direct_v1.sql)
 
 // ── Campaigns ─────────────────────────────────────────────────────────────────
 $has_medium = mk_column_exists($conn, 'marketing_campaigns', 'medium');   // print vs digital; checked here, above the early close
@@ -2539,6 +2548,10 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .pay-split { display:flex; gap:12px; align-items:flex-end; margin-top:10px;
                  padding-top:10px; border-top:1px solid #f3f4f6; flex-wrap:wrap; }
     .pay-hint { font-size:11px; color:#9ca3af; padding-bottom:8px; }
+    .pay-direct { display:flex; align-items:flex-start; gap:7px; margin-top:10px; padding-top:10px; border-top:1px dashed #e5e7eb; font-size:13px; cursor:pointer; }
+    .pay-direct input { margin-top:2px; }
+    .pay-direct small { display:block; font-size:11px; color:#9ca3af; font-weight:400; }
+    .pay-chip.direct { background:#0f766e; }
     .pay-hint.bad { color:#b45309; }
 
     .pay-summary { display:flex; align-items:center; gap:8px; margin:6px 0 2px; flex-wrap:wrap; }
@@ -4141,7 +4154,8 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
   <?php
   }
 
-  function mk_who_pays_fields(array $row, string $key, string $total_field = 'cost'): void {
+  /** $direct: also offer "Paid directly by agent" (collateral orders, once the column exists). */
+  function mk_who_pays_fields(array $row, string $key, string $total_field = 'cost', bool $direct = false): void {
       $paid_by = $row['paid_by'] ?? '';
       $grp = $key !== '' ? $key : ('new' . substr(md5(uniqid('', true)), 0, 6));
   ?>
@@ -4179,6 +4193,14 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         </label>
         <span class="pay-hint" data-hint="<?= htmlspecialchars($grp) ?>"></span>
       </div>
+      <?php if ($direct): // shown while the agent has a share: Broker or Split (the script below follows the radios) ?>
+      <label class="pay-direct" data-direct="<?= htmlspecialchars($grp) ?>"
+             style="<?= in_array($paid_by, ['broker', 'split'], true) ? '' : 'display:none;' ?>">
+        <input type="checkbox" name="paid_direct" value="1" <?= !empty($row['paid_direct']) ? 'checked' : '' ?>>
+        <span>Paid directly by agent
+          <small>The agent has already paid the vendor. Mont Haus does not bill this; it still counts as the agent's spend.</small></span>
+      </label>
+      <?php endif; ?>
     </div>
   <?php }
 
@@ -4193,6 +4215,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
       <span class="pay-chip" style="background:<?= $colors[$pb] ?? '#6b7280' ?>;">
         <?= $labels[$pb] ?? htmlspecialchars($pb) ?>
       </span>
+      <?php if (!empty($row['paid_direct']) && in_array($pb, ['broker', 'split'], true)): // collateral orders only ?>
+        <span class="pay-chip direct" title="The agent paid the vendor. Mont Haus does not bill this.">Paid directly by agent</span>
+      <?php endif; ?>
       <?php if ($pb === 'split'):
         $sum   = (float)($row['paid_broker_amount'] ?? 0) + (float)($row['paid_mh_amount'] ?? 0);
         $total = (float)($row[$total_col] ?? 0);
@@ -4271,7 +4296,7 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     </div>
     <?php endif; ?>
 
-    <?php mk_who_pays_fields($o, 'ord' . $oid_ref); ?>
+    <?php global $has_direct; mk_who_pays_fields($o, 'ord' . $oid_ref, 'cost', !empty($has_direct)); ?>
 
     <?php global $has_proofs; if ($has_proofs): // sql/creatives_v1.sql ?>
     <div class="form-row">
@@ -5535,6 +5560,12 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
             <div class="fin-grand-label">Total Billed to Broker</div>
             <div class="fin-grand-num broker"><?= money2((float)$fin_grand['broker']) ?></div>
           </div>
+          <?php if (($fin_grand['direct'] ?? 0) > 0): // collateral the agent paid for on their own card: spend, never billed ?>
+          <div class="fin-grand-box">
+            <div class="fin-grand-label">Paid Directly by Agent</div>
+            <div class="fin-grand-num"><?= money2((float)$fin_grand['direct']) ?></div>
+          </div>
+          <?php endif; ?>
           <?php if ($fin_grand['unassigned'] > 0): ?>
           <div class="fin-grand-box">
             <div class="fin-grand-label">Unassigned</div>
@@ -5559,6 +5590,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
           <div class="fin-month-totals">
             <span>Mont Haus <strong class="mh"><?= money2((float)$m['mh']) ?></strong></span>
             <span>Broker <strong class="broker"><?= money2((float)$m['broker']) ?></strong></span>
+            <?php if (($m['direct'] ?? 0) > 0): ?>
+              <span>Paid directly <strong><?= money2((float)$m['direct']) ?></strong></span>
+            <?php endif; ?>
             <?php if ($m['unassigned'] > 0): ?>
               <span>Unassigned <strong class="unassigned"><?= money2((float)$m['unassigned']) ?></strong></span>
             <?php endif; ?>
@@ -5685,6 +5719,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
                   <span class="fin-flag">&mdash;</span>
                 <?php elseif ($unassigned): ?>
                   <span class="fin-flag" title="Who Pays not set — excluded from the totals">not set</span>
+                <?php elseif (($it['direct'] ?? 0) > 0): // the agent's share, already paid to the vendor: shown, not in the month's Broker total ?>
+                  <?= $it['broker'] > 0 ? money2((float)$it['broker']) . '<br>' : '' ?>
+                  <span class="fin-flag" title="The agent paid the vendor. Not billed by Mont Haus, so not in the Broker total."><?= money2((float)$it['direct']) ?> paid directly</span>
                 <?php else: ?>
                   <?= $it['broker'] > 0 ? money2((float)$it['broker']) : '—' ?>
                 <?php endif; ?>
@@ -5708,6 +5745,9 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
         <div class="fin-month-summary">
           <span><strong>Total Paid by Mont Haus:</strong> <span class="mh"><?= money2((float)$m['mh']) ?></span></span>
           <span><strong>Total Due from Broker:</strong> <span class="broker"><?= money2((float)$m['broker']) ?></span></span>
+          <?php if (($m['direct'] ?? 0) > 0): ?>
+          <span><strong>Paid Directly by Agent:</strong> <?= money2((float)$m['direct']) ?></span>
+          <?php endif; ?>
         </div>
       </div>
       <?php endforeach; ?>
@@ -5999,6 +6039,14 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
       var wrap = splitFor(el.dataset.grp);
       if (wrap) wrap.style.display = (el.value === 'split') ? '' : 'none';
       if (el.value === 'split') checkTotals(el.form, el.dataset.grp, el.dataset.total);
+      // "Paid directly by agent" only while the agent has a share; hidden, it is also unticked
+      // looked up inside this form: every "new order" form shares one group name
+      var direct = el.form ? el.form.querySelector('[data-direct]') : null;
+      if (direct) {
+        var has = (el.value === 'broker' || el.value === 'split');
+        direct.style.display = has ? '' : 'none';
+        if (!has) direct.querySelector('input').checked = false;
+      }
     }
   });
 

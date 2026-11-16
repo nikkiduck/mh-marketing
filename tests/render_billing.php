@@ -289,6 +289,57 @@ ok('each line carries its own three-way split',
 ok('the former agent is NOT in the modal data', !isset($bd['30']),
    'the modal only opens from tab 1, so shipping her lines would be dead weight');
 
+echo "\nPAID DIRECTLY BY AGENT\n";
+// An agent who paid the vendor on their own card must never be billed for it
+// again (Nikki, 2026-11-16; sql/collateral_paid_direct_v1.sql). Minette gets
+// two more orders: $300 she paid outright, and a $200 split whose $120 broker
+// share she paid herself ($80 Mont Haus). Nothing she owes may move.
+ok('with no such order the page has no Paid directly column', !has($h, 'Paid directly by agent'),
+   'the column appears only once an order is ticked');
+$DIRECT = $COLLATERAL;
+$DIRECT['12'][] = [
+    'id' => '503', 'type' => 'postcards', 'label' => 'Her own postcards',
+    'vendor' => 'Vistaprint', 'cost' => '300.00', 'ordered_at' => $YM,
+    'created_at' => $YM, 'billed_with_order_id' => null,
+    'receipt_file' => null, 'receipt_orig_name' => null,
+    'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null, 'paid_direct' => '1',
+];
+$DIRECT['12'][] = [
+    'id' => '504', 'type' => 'brochures', 'label' => 'Shared brochures',
+    'vendor' => 'Vistaprint', 'cost' => '200.00', 'ordered_at' => $YM,
+    'created_at' => $YM, 'billed_with_order_id' => null,
+    'receipt_file' => null, 'receipt_orig_name' => null,
+    'paid_by' => 'split', 'paid_broker_amount' => '120.00', 'paid_mh_amount' => '80.00', 'paid_direct' => '1',
+];
+// A tick on an order Mont Haus pays for means nothing and must change nothing.
+$DIRECT['30'][0]['paid_direct'] = '1';
+$r5 = render($SB, [], $INTAKES, $DIRECT, $CAMPAIGNS, []);
+$h5 = $r5['html'];
+ok('renders', $r5['code'] === 0 && !has($h5, 'Fatal error') && !has($h5, 'Warning:'), substr(strip_tags($h5), 0, 400));
+$d1 = panel($h5, 'due'); $d2 = panel($h5, 'monthly'); $d3 = panel($h5, 'agents');
+preg_match('/data-bd-agent="12"[^>]*>\s*([$0-9.,]+)/s', $d1, $mm);
+ok('what Minette owes is still $500.00', ($mm[1] ?? '') === '$500.00', 'row amount: ' . ($mm[1] ?? '(none)'));
+ok('her row says what she paid directly', has($d1, 'Paid directly $420.00'));
+ok('due from agents is still $2,000.00', has($d2, '$2,000.00') && !has($d2, '$2,420.00') && !has($d2, '$2,300.00'));
+ok('the monthly tab gains the column', has($d2, 'Paid directly by agent') && has($d2, '$420.00'));
+// MH = 610.47 + 80.00 = 690.47; total = 2000.00 + 420.00 + 690.47 + 250.00 = 3360.47
+ok('Mont Haus covers its $80 of the split', has($d2, '$690.47'));
+ok('the four columns sum to the month total', has($d2, '$3,360.47'));
+ok('a tick on a Mont Haus order changes nothing', has($d2, '$412.00'));
+ok('billed to agents, all time, is still $2,000.00', has($d3, '$2,000.00') && has($d3, '$420.00') && !has($d3, '$2,420.00'));
+preg_match('/id="blBreakdown"[^>]*>(.*?)<\/script>/s', $h5, $m5);
+$bd5 = json_decode($m5[1] ?? '{}', true);
+$by = []; foreach (($bd5['12'][$ym] ?? []) as $l) $by[$l['name']] = $l;
+ok('the breakdown lists both orders, agent share 0, paid directly 300 and 120',
+   abs(($by['Postcards: Her own postcards']['direct'] ?? -1) - 300.0) < 0.005 && abs(($by['Postcards: Her own postcards']['broker'] ?? -1)) < 0.005
+   && abs(($by['Brochures: Shared brochures']['direct'] ?? -1) - 120.0) < 0.005 && abs(($by['Brochures: Shared brochures']['broker'] ?? -1)) < 0.005
+   && abs(($by['Brochures: Shared brochures']['mh'] ?? -1) - 80.0) < 0.005, json_encode($bd5['12'][$ym] ?? null));
+// Marking the month invoiced must freeze $500, not $920.
+$r6 = render($SB, [], $INTAKES, $DIRECT, $CAMPAIGNS,
+             [['intake_id' => '12', 'ym' => $ym, 'billed_at' => date('Y-m-d'), 'billed_amount' => '500.00', 'paid_at' => null, 'paid_by_user' => null, 'billed_by' => '1']]);
+ok('an invoice for $500 does not read as changed', $r6['code'] === 0 && !has(panel($r6['html'], 'due'), 'bl-drift'),
+   'the invoiced figure and the figure now must both be the billable $500');
+
 echo "\n{$pass} passed, {$fail} failed\n";
 exec('rm -rf ' . escapeshellarg($SB));
 exit($fail === 0 ? 0 : 1);

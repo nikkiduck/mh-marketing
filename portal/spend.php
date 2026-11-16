@@ -26,9 +26,9 @@ $ctx = portal_context($conn);
 /** This year's and all-time totals for one scope's months. */
 function portal_spend_sums(array $fin): array {
     $year = date('Y');
-    $sum = ['year' => ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0], 'all' => $fin['grand']];
+    $sum = ['year' => ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0, 'direct' => 0.0], 'all' => $fin['grand']];
     foreach ($fin['months'] as $k => $m) {
-        if (substr($k, 0, 4) === $year) foreach (['broker', 'mh', 'unassigned'] as $f) $sum['year'][$f] += $m[$f];
+        if (substr($k, 0, 4) === $year) foreach (['broker', 'mh', 'unassigned', 'direct'] as $f) $sum['year'][$f] += (float)($m[$f] ?? 0);
     }
     return $sum;
 }
@@ -45,11 +45,15 @@ $month = (preg_match('/^\d{4}-\d{2}$/', $want) && isset($months[$want])) ? $mont
 
 portal_header($ctx, 'Spend', 'spend');
 
-/** The three figures, "Being finalised" only when there is something in it. */
+/**
+ * The three figures, "Being finalised" only when there is something in it.
+ * "You paid" is everything the agent paid: what Mont Haus bills them (`broker`)
+ * and what they paid a vendor themselves (`direct`, 2026-11-16).
+ */
 function portal_spend_figs(array $f, string $you = 'You'): void {
     ?>
     <div class="pt-figs">
-      <div><span><?= ph($you) ?> paid</span><b><?= ph(portal_money($f['broker'])) ?></b></div>
+      <div><span><?= ph($you) ?> paid</span><b><?= ph(portal_money($f['broker'] + (float)($f['direct'] ?? 0))) ?></b></div>
       <div><span>Mont Haus paid</span><b><?= ph(portal_money($f['mh'])) ?></b></div>
       <?php if (round($f['unassigned'], 2) > 0): ?>
         <div class="tbd"><span>Being finalised</span><b><?= ph(portal_money($f['unassigned'])) ?></b></div>
@@ -88,6 +92,7 @@ if ($month):
           <span class="muted">No charge</span>
         <?php else: ?>
           <?php if ($it['broker'] > 0): ?><span><?= ph($you) ?> paid <b><?= ph(portal_money($it['broker'])) ?></b></span><?php endif; ?>
+          <?php if (($it['direct'] ?? 0) > 0): ?><span><?= ph($you) ?> paid <b><?= ph(portal_money($it['direct'])) ?></b> directly</span><?php endif; ?>
           <?php if ($it['mh'] > 0): ?><span>Mont Haus paid <b><?= ph(portal_money($it['mh'])) ?></b></span><?php endif; ?>
           <?php if ($it['unassigned'] > 0): ?><span class="tbd">Being finalised <b><?= ph(portal_money($it['unassigned'])) ?></b></span><?php endif; ?>
         <?php endif; ?>

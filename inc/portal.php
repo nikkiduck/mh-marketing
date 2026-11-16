@@ -417,7 +417,7 @@ function portal_run_words(?string $start, ?string $end): string {
  */
 function portal_spend_total_words(array $sp): string {
     if ($sp['billed_with'] !== '') return 'Included in ' . $sp['billed_with'];
-    $total = (float)$sp['broker'] + (float)$sp['mh'] + (float)$sp['unassigned'];
+    $total = (float)$sp['broker'] + (float)$sp['mh'] + (float)$sp['unassigned'] + (float)($sp['direct'] ?? 0);
     if ($total > 0) return portal_money($total) . ' spent';
     if ($sp['pending']) return 'Amount being finalised';
     if ($sp['lines'] > 0) return 'No charge';
@@ -484,17 +484,19 @@ function portal_order_kind(string $type): string {
 /**
  * What one placement or order cost, from the same mh_agent_financials() pass
  * the Spend page shows: every line whose ref_id is this item, summed.
- * Returns broker / mh / unassigned, 'lines' (how many months carried it),
+ * Returns broker / mh / unassigned / direct ('direct' = the agent's share of a
+ * print order they paid the vendor for themselves; inc/financials.php keeps
+ * it out of `broker`, which is what Mont Haus bills), 'lines' (how many months carried it),
  * 'pending' (a line still awaiting its figure) and 'billed_with' (a print
  * order included in another order's cost). Spend only, never billing state.
  */
 function portal_item_spend(array $fin, string $kind, int $ref_id): array {
-    $r = ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0, 'lines' => 0, 'pending' => false, 'billed_with' => ''];
+    $r = ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0, 'direct' => 0.0, 'lines' => 0, 'pending' => false, 'billed_with' => ''];
     foreach ($fin['months'] as $m) {
         foreach ($m['items'] as $it) {
             if (($it['kind'] ?? '') !== $kind || (int)($it['ref_id'] ?? 0) !== $ref_id) continue;
             $r['lines']++;
-            foreach (['broker', 'mh', 'unassigned'] as $f) $r[$f] += (float)($it[$f] ?? 0);
+            foreach (['broker', 'mh', 'unassigned', 'direct'] as $f) $r[$f] += (float)($it[$f] ?? 0);
             if ($kind === 'Advertising' && empty($it['set']) && (float)($it['total'] ?? 0) == 0.0) $r['pending'] = true;
             if (!empty($it['billed_with'])) $r['billed_with'] = (string)$it['billed_with'];
         }
@@ -507,6 +509,7 @@ function portal_item_spend_html(array $sp, string $you = 'You'): string {
     if ($sp['billed_with'] !== '') return '<span class="muted">Included in ' . ph($sp['billed_with']) . '</span>';
     $out = [];
     if ($sp['broker'] > 0)     $out[] = ph($you) . ' paid <b>' . ph(portal_money($sp['broker'])) . '</b>';
+    if (($sp['direct'] ?? 0) > 0) $out[] = ph($you) . ' paid <b>' . ph(portal_money($sp['direct'])) . '</b> directly';   // their own card, to the vendor
     if ($sp['mh'] > 0)         $out[] = 'Mont Haus paid <b>' . ph(portal_money($sp['mh'])) . '</b>';
     if ($sp['unassigned'] > 0) $out[] = '<span class="tbd">Being finalised <b>' . ph(portal_money($sp['unassigned'])) . '</b></span>';
     if (!$out && $sp['pending']) $out[] = '<span class="tbd">Amount being finalised</span>';

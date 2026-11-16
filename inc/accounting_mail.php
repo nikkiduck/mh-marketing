@@ -130,6 +130,11 @@ function mk_acct_order_email(array $agent, array $o, array $sib, string $sender_
         if (($o['paid_by'] ?? '') === 'split') {
             $pay_lines[] = 'Broker ' . mk_acct_money($o['paid_broker_amount'] ?? 0) . ' / Mont Haus ' . mk_acct_money($o['paid_mh_amount'] ?? 0);
         }
+        // Paid directly by agent (Nikki, 2026-11-16): the agent paid the vendor on their own card, so
+        // accounting must not bill their share. Said in so many words, because this email is what they book from.
+        if (!empty($o['paid_direct']) && in_array($o['paid_by'] ?? '', ['broker', 'split'], true)) {
+            $pay_lines[] = ($o['paid_by'] === 'split' ? 'The broker\'s share was' : 'This was') . ' paid directly by the agent to the vendor: do not bill the agent for it';
+        }
     }
 
     // Shared receipt: the other orders on it and the combined figure.

@@ -910,6 +910,38 @@ Mont Haus's share has **no paid state**, and none should be invented for it. It 
 absorbed, not invoiced — spend, not a receivable. Only the broker figure has
 `billed_at` / `paid_at` in `marketing_billing_months`.
 
+### Paid directly by agent (2026-11-16)
+
+Nikki: "If an agent is paying for their own collateral and uses their own
+credit card, I need to mark 'already paid' ... so MH doesn't bill them again."
+A tick under Who Pays on a **collateral order** (`paid_direct`,
+`sql/collateral_paid_direct_v1.sql`), offered while the agent has a share
+(Who Pays is Broker or Split) and stored as 0 otherwise.
+
+- `mh_agent_financials()` reports that share as **`direct`, not `broker`**
+  (item, month and grand totals all carry `direct`). `broker` stays "what
+  Mont Haus bills": Due from agent, Outstanding, the roster's balance marker
+  and the invoiced snapshot read `broker` alone, so a reader that has never
+  heard of `direct` can only bill less, never twice. Keep it that way: do
+  not fold `direct` into `broker`.
+- A reader that shows what the agent **spent** adds it back: the portal's
+  "You paid" (Spend, the home card, an order's line: "You paid $X directly")
+  and the agent's Financials tab ("Paid Directly by Agent", and the line's
+  Broker cell reads "$X paid directly").
+- Billing: a "Paid directly" chip on the month's row, the amount in the
+  breakdown pop-up's Agent cell but not its total, and a **Paid directly by
+  agent** column on the Monthly breakdown and Agent totals tabs that appears
+  only once some agent has such an order. Month total = the four columns.
+- The Send to Accounting email says the agent paid the vendor and not to
+  bill them.
+- Collateral orders only. Advertising shares the Who Pays control
+  (`mk_who_pays_fields()`, fourth argument) but has no column for it.
+- Everything is behind `mk_column_exists()`, so the code was deployed before
+  the migration and did nothing until it was run.
+- `tests/render_billing.php` has the cases (what is owed does not move; an
+  invoice for the billable figure does not read as changed);
+  `tests/render_portal.php` has the agent's side.
+
 ### The tab lives in the URL
 
 `?tab=due|monthly|agents`, validated server-side with a fallback to `due`.

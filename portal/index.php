@@ -44,7 +44,7 @@ function portal_home_counts(mysqli $conn, int $id): array {
     // This year's spend, from the one money function (portal/spend.php has the detail).
     $fin = mh_agent_financials($conn, $id);
     $yr = ['broker' => 0.0, 'mh' => 0.0];
-    foreach ($fin['months'] as $k => $m) if (substr($k, 0, 4) === date('Y')) { $yr['broker'] += $m['broker']; $yr['mh'] += $m['mh']; }
+    foreach ($fin['months'] as $k => $m) if (substr($k, 0, 4) === date('Y')) { $yr['broker'] += $m['broker'] + (float)($m['direct'] ?? 0); $yr['mh'] += $m['mh']; }   // what the agent spent, paid to a vendor directly included
     return ['ads' => $ads, 'mem' => $mem, 'ord' => $ord, 'fin' => $fin, 'yr' => $yr];
 }
 

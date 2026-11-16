@@ -313,6 +313,7 @@ function scenario(array $over = []): array {
             ],
             'orders' => [
                 ['id' => 11, 'intake_id' => 6, 'type' => 'business_cards', 'label' => 'JH cards', 'vendor' => 'Oakley', 'cost' => 250, 'ordered_at' => '2026-09-02', 'created_at' => '2026-09-02 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => 'JHRECEIPT.pdf', 'receipt_orig_name' => 'jh-cards.pdf', 'paid_by' => 'broker', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
+                 'paid_direct' => 1,   // he paid the vendor himself (2026-11-16): still his spend, in the same words and the same totals
                  'status' => 'shipped', 'qty' => '500', 'tracking_number' => '1Z999JH', 'tracking_url' => 'https://www.ups.com/track?t=1Z999JH', 'delivered_at' => null, 'file_url' => 'https://www.dropbox.com/jh-cards-final',
                  'proof_file' => 'JHPROOF.png', 'proof_orig_name' => 'jh-cards-proof.png', 'proof_thumb' => 'JHPROOF_thumb.jpg', 'proof_uploaded_at' => '2026-09-01 10:00:00'],
                 ['id' => 12, 'intake_id' => 6, 'type' => 'other', 'label' => 'JH flyers', 'vendor' => 'Local', 'cost' => 99.5, 'ordered_at' => '2026-09-10', 'created_at' => '2026-09-10 10:00:00', 'billed_with_order_id' => null, 'receipt_file' => null, 'receipt_orig_name' => null, 'paid_by' => '', 'paid_broker_amount' => null, 'paid_mh_amount' => null,
@@ -692,6 +693,7 @@ ok('NOTHING of Kim\'s or Weber Boxer\'s spend', !has($b, '7,777') && !has($b, '8
 ok('no billing words anywhere', !preg_match('/invoic|billed|overdue|balance|unpaid/i', strip_tags($b)), $b);
 [$c, , $b] = req('jackson', '/portal/spend.php?m=2026-09');
 ok('a month opens with its lines in plain words', has($b, 'Business Cards: JH cards') && has($b, 'You paid') && has($b, 'JH flyers'), $b);
+ok('an order he paid the vendor for himself says so, and still counts as his $250', has($b, 'You paid <b>$250</b> directly'), $b);
 ok('…with a receipt link for his order only', has($b, 'receipt.php?order=11') && !has($b, 'order=13'), $b);
 ok('…and no billing words', !preg_match('/invoic|billed|overdue|balance|unpaid/i', strip_tags($b)));
 [$c, , $b] = req('jackson', '/portal/spend.php?m=2026-03');

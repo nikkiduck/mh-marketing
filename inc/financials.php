@@ -30,12 +30,15 @@ function mk_fin_add(array &$months, string $date, array $item): void {
             'broker'     => 0.0,
             'mh'         => 0.0,
             'unassigned' => 0.0,
+            'direct'     => 0.0,
         ];
     }
+    $item['direct'] = (float)($item['direct'] ?? 0);   // every line carries it; only a collateral order can have one
     $months[$key]['items'][]      = $item;
     $months[$key]['broker']      += $item['broker'];
     $months[$key]['mh']          += $item['mh'];
     $months[$key]['unassigned']  += $item['unassigned'];
+    $months[$key]['direct']      += $item['direct'];
 }
 
 /**
@@ -312,10 +315,19 @@ function mk_camp_resolve(array $c, string $ym, array $ov): ?array {
  *   not set    → counted as unassigned; shown, but in neither total, so an
  *                undecided line is visible rather than silently skewing things
  *
+ * Paid directly by agent (collateral orders; Nikki, 2026-11-16,
+ * sql/collateral_paid_direct_v1.sql): the agent paid the vendor on their own
+ * card. Their share of that order is reported as `direct` and NOT as
+ * `broker`, because `broker` is what Mont Haus bills: billing.php's Due from
+ * agent, the roster's balance marker and the invoiced total all read `broker`
+ * alone, so a reader that has never heard of `direct` can only bill less,
+ * never twice. A reader that shows what the agent SPENT (their Financials
+ * tab, the portal's Spend page) adds `direct` to it.
+ *
  * Returns:
- *   months          'YYYY-MM' => ['label','items'=>[],'broker','mh','unassigned'],
+ *   months          'YYYY-MM' => ['label','items'=>[],'broker','mh','unassigned','direct'],
  *                   newest month first, newest line first within a month
- *   grand           ['broker','mh','unassigned'] across every month shown
+ *   grand           ['broker','mh','unassigned','direct'] across every month shown
  *   coll_rows       the collateral orders, keyed by id — the Collateral tab
  *                   reuses these rather than querying twice
  *   camp_overrides  [campaign_id][ym] => row, likewise for the month grid
@@ -339,10 +351,12 @@ function mh_agent_financials(mysqli $conn, int $id): array {
     // items). The order holding the cost reports it; the linked ones contribute
     // nothing, so a combined purchase is counted once.
     $coll_rows = [];
+    // paid_direct is read only once it exists (sql/collateral_paid_direct_v1.sql), so the code can go out before the migration
+    $direct_col = mk_column_exists($conn, 'marketing_collateral_orders', 'paid_direct') ? ', paid_direct' : '';
     $r = $conn->query("
         SELECT id, type, label, vendor, cost, ordered_at, created_at, billed_with_order_id,
                receipt_file, receipt_orig_name,
-               paid_by, paid_broker_amount, paid_mh_amount
+               paid_by, paid_broker_amount, paid_mh_amount{$direct_col}
           FROM marketing_collateral_orders
          WHERE intake_id = {$id}
     ");
@@ -385,6 +399,13 @@ function mh_agent_financials(mysqli $conn, int $id): array {
 
             $parts = mk_fin_split($row['paid_by'] ?? null, $total,
                                   $row['paid_broker_amount'], $row['paid_mh_amount']);
+            // Paid directly by agent: their share has already gone to the vendor, so it
+            // leaves `broker` (what Mont Haus bills) and is reported as `direct`.
+            $parts['direct'] = 0.0;
+            if (!empty($row['paid_direct']) && $parts['broker'] > 0) {
+                $parts['direct'] = $parts['broker'];
+                $parts['broker'] = 0.0;
+            }
             // "Business Cards: Initial Order" — the label alone is rarely distinct
             $type_label = mk_coll_type_label((string)$row['type']);
             $order_label = trim((string)$row['label']);
@@ -524,11 +545,12 @@ function mh_agent_financials(mysqli $conn, int $id): array {
     unset($_m);
 
     // Running totals across every month shown
-    $fin_grand = ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0];
+    $fin_grand = ['broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0, 'direct' => 0.0];
     foreach ($fin_months as $_m) {
         $fin_grand['broker']     += $_m['broker'];
         $fin_grand['mh']         += $_m['mh'];
         $fin_grand['unassigned'] += $_m['unassigned'];
+        $fin_grand['direct']     += $_m['direct'];
     }
 
     return [

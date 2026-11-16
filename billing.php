@@ -157,7 +157,12 @@ $n_flagged   = 0;    // months whose live total no longer matches the invoice
 // run. Tab 1 hides settled months older than last month, which is right for a
 // to-do list and wrong for a total: reusing $rows would make "covered by Mont
 // Haus to date" silently shrink as months got paid off.
-$by_month     = [];   // ym => ['label', 'agents' => [...], 'broker','mh','unassigned']
+$by_month     = [];   // ym => ['label', 'agents' => [...], 'broker','mh','unassigned','direct']
+// Paid directly by agent (collateral an agent paid for on their own card; inc/financials.php
+// reports it as `direct`, never as `broker`). Nothing on this page bills it: Due from agent,
+// Outstanding and the invoiced figure all come from `broker`. Tabs 2 and 3 show it in a column
+// of its own, which appears once any agent has such an order.
+$any_direct   = false;
 $agent_totals = [];   // one row per agent, all-time
 $breakdown    = [];   // [intake_id][ym] => line items, for the tab-1 modal
 
@@ -167,12 +172,13 @@ foreach ($intakes as $ag) {
     $fin    = mh_agent_financials($conn, $iid);
 
     // ---- all-time, every agent, unfiltered
-    $t_broker = 0.0; $t_paid = 0.0; $t_mh = 0.0; $t_un = 0.0;
+    $t_broker = 0.0; $t_paid = 0.0; $t_mh = 0.0; $t_un = 0.0; $t_di = 0.0;
     foreach ($fin['months'] as $ym => $m) {
-        $b = (float)$m['broker']; $mh = (float)$m['mh']; $un = (float)$m['unassigned'];
-        if (abs($b) < 0.005 && abs($mh) < 0.005 && abs($un) < 0.005) continue;
+        $b = (float)$m['broker']; $mh = (float)$m['mh']; $un = (float)$m['unassigned']; $di = (float)($m['direct'] ?? 0);
+        if (abs($b) < 0.005 && abs($mh) < 0.005 && abs($un) < 0.005 && abs($di) < 0.005) continue;
 
-        $t_broker += $b; $t_mh += $mh; $t_un += $un;
+        $t_broker += $b; $t_mh += $mh; $t_un += $un; $t_di += $di;
+        if (abs($di) >= 0.005) $any_direct = true;
         // Paid is tracked per agent-month in marketing_billing_months, and it
         // records the invoice to the BROKER. Mont Haus's share is absorbed, not
         // invoiced, so it has no payment state and none is invented for it.
@@ -180,22 +186,23 @@ foreach ($intakes as $ag) {
 
         if (!isset($by_month[$ym])) {
             $by_month[$ym] = ['label' => $m['label'], 'agents' => [],
-                              'broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0];
+                              'broker' => 0.0, 'mh' => 0.0, 'unassigned' => 0.0, 'direct' => 0.0];
         }
         $by_month[$ym]['agents'][] = [
             'id' => $iid, 'name' => $ag['agent_name'], 'active' => $active,
-            'broker' => $b, 'mh' => $mh, 'unassigned' => $un,
+            'broker' => $b, 'mh' => $mh, 'unassigned' => $un, 'direct' => $di,
         ];
         $by_month[$ym]['broker']     += $b;
         $by_month[$ym]['mh']         += $mh;
         $by_month[$ym]['unassigned'] += $un;
+        $by_month[$ym]['direct']     += $di;
     }
-    if (abs($t_broker) >= 0.005 || abs($t_mh) >= 0.005 || abs($t_un) >= 0.005) {
+    if (abs($t_broker) >= 0.005 || abs($t_mh) >= 0.005 || abs($t_un) >= 0.005 || abs($t_di) >= 0.005) {
         $agent_totals[] = [
             'id' => $iid, 'name' => $ag['agent_name'], 'active' => $active,
             'broker' => $t_broker, 'paid' => $t_paid,
             'outstanding' => $t_broker - $t_paid,
-            'mh' => $t_mh, 'unassigned' => $t_un,
+            'mh' => $t_mh, 'unassigned' => $t_un, 'direct' => $t_di,
         ];
     }
 
@@ -249,6 +256,7 @@ foreach ($intakes as $ag) {
                 'broker'   => (float)($it['broker'] ?? 0),
                 'mh'       => (float)($it['mh'] ?? 0),
                 'un'       => (float)($it['unassigned'] ?? 0),
+                'direct'   => (float)($it['direct'] ?? 0),   // paid directly by agent: listed, never in the Agent total
                 'linked'   => (string)($it['billed_with'] ?? ''),
             ];
         }
@@ -258,7 +266,7 @@ foreach ($intakes as $ag) {
             'ym' => $ym, 'label' => $m['label'], 'owed' => $owed, 'age' => $age,
             'billed' => $billed, 'paid' => $paid, 'state' => $state,
             'snap' => $snap, 'drift' => $drift, 'n_items' => count($lines),
-            'mh' => (float)$m['mh'], 'unassigned' => (float)$m['unassigned'],
+            'mh' => (float)$m['mh'], 'unassigned' => (float)$m['unassigned'], 'direct' => (float)($m['direct'] ?? 0),
             'billed_at' => $st['billed_at'] ?? null,
             'paid_at'   => $st['paid_at']   ?? null,
         ];
@@ -295,8 +303,8 @@ usort($rows, function ($a, $b) {
 krsort($by_month);
 foreach ($by_month as &$_bm) {
     usort($_bm['agents'], function ($a, $b) {
-        $ta = $a['broker'] + $a['mh'] + $a['unassigned'];
-        $tb = $b['broker'] + $b['mh'] + $b['unassigned'];
+        $ta = $a['broker'] + $a['mh'] + $a['unassigned'] + $a['direct'];
+        $tb = $b['broker'] + $b['mh'] + $b['unassigned'] + $b['direct'];
         if (abs($ta - $tb) >= 0.005) return $tb <=> $ta;
         return strcmp($a['name'], $b['name']);
     });
@@ -307,17 +315,18 @@ unset($_bm);
 // Mont Haus covers entirely would sort last on outstanding alone, which is
 // exactly the row this tab exists to surface.
 usort($agent_totals, function ($a, $b) {
-    $ta = $a['broker'] + $a['mh'] + $a['unassigned'];
-    $tb = $b['broker'] + $b['mh'] + $b['unassigned'];
+    $ta = $a['broker'] + $a['mh'] + $a['unassigned'] + $a['direct'];
+    $tb = $b['broker'] + $b['mh'] + $b['unassigned'] + $b['direct'];
     if (abs($ta - $tb) >= 0.005) return $tb <=> $ta;
     return strcmp($a['name'], $b['name']);
 });
 
 // All-time totals for the Agent totals tab.
-$all_broker = 0.0; $all_paid = 0.0; $all_mh = 0.0; $all_un = 0.0;
+$all_broker = 0.0; $all_paid = 0.0; $all_mh = 0.0; $all_un = 0.0; $all_di = 0.0;
 foreach ($agent_totals as $t) {
     $all_broker += $t['broker']; $all_paid += $t['paid'];
     $all_mh     += $t['mh'];     $all_un   += $t['unassigned'];
+    $all_di     += $t['direct'];
 }
 
 // The monthly tab's tiles are scoped to the newest month, not to all time —
@@ -472,6 +481,8 @@ $nav_active = 'billing';
     .bl-num  { font-weight:600; color:#1f2937; }
     .bl-mh   { font-weight:600; color:#0f766e; }
     .bl-un   { font-weight:600; color:#b45309; }
+    .bl-di   { font-weight:600; color:#4b5563; }
+    .bl-direct { display:block; font-size:11px; font-weight:600; color:#4b5563; white-space:nowrap; }
     /* A zero is noise in a money column — the eye should land on the figures
        that are actually there. Dimmed to a dash rather than removed, so an
        empty cell never reads as "not applicable". */
@@ -777,6 +788,12 @@ $nav_active = 'billing';
                       <i class="ti ti-building"></i> MH <?= money2($m['mh']) ?>
                     </span>
                   <?php endif; ?>
+                  <?php if (abs($m['direct']) >= 0.005): ?>
+                    <span class="bl-tag" style="background:#eceff3;color:#374151;"
+                          title="Paid directly by the agent to the vendor. Not billed by Mont Haus, and not in the amount on this row.">
+                      <i class="ti ti-credit-card"></i> Paid directly <?= money2($m['direct']) ?>
+                    </span>
+                  <?php endif; ?>
                   <?php if (abs($m['unassigned']) >= 0.005): ?>
                     <span class="bl-tag" style="background:#ffedd5;color:#9a3412;"
                           title="Who Pays is not set on one or more lines this month">
@@ -896,6 +913,7 @@ function bl_agent_link(array $a): string {
               <tr>
                 <th>Agent</th>
                 <th>Due from agent</th>
+                <?php if ($any_direct): ?><th title="Collateral the agent paid the vendor for. Never billed by Mont Haus.">Paid directly by agent</th><?php endif; ?>
                 <th>Covered by Mont Haus</th>
                 <th>Undecided</th>
                 <th>Month total</th>
@@ -906,9 +924,10 @@ function bl_agent_link(array $a): string {
                 <tr>
                   <td><?= bl_agent_link($a) ?></td>
                   <td><?= bl_cell($a['broker']) ?></td>
+                  <?php if ($any_direct): ?><td><?= bl_cell($a['direct'], 'bl-di') ?></td><?php endif; ?>
                   <td><?= bl_cell($a['mh'], 'bl-mh') ?></td>
                   <td><?= bl_cell($a['unassigned'], 'bl-un') ?></td>
-                  <td><?= bl_cell($a['broker'] + $a['mh'] + $a['unassigned']) ?></td>
+                  <td><?= bl_cell($a['broker'] + $a['direct'] + $a['mh'] + $a['unassigned']) ?></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
@@ -916,9 +935,10 @@ function bl_agent_link(array $a): string {
               <tr>
                 <td><?= htmlspecialchars($bm['label']) ?> total</td>
                 <td><?= bl_cell($bm['broker']) ?></td>
+                <?php if ($any_direct): ?><td><?= bl_cell($bm['direct'], 'bl-di') ?></td><?php endif; ?>
                 <td><?= bl_cell($bm['mh'], 'bl-mh') ?></td>
                 <td><?= bl_cell($bm['unassigned'], 'bl-un') ?></td>
-                <td><?= bl_cell($bm['broker'] + $bm['mh'] + $bm['unassigned']) ?></td>
+                <td><?= bl_cell($bm['broker'] + $bm['direct'] + $bm['mh'] + $bm['unassigned']) ?></td>
               </tr>
             </tfoot>
           </table>
@@ -961,6 +981,7 @@ function bl_agent_link(array $a): string {
               <th>Outstanding</th>
               <th>Paid</th>
               <th>Billed to agent</th>
+              <?php if ($any_direct): ?><th title="Collateral the agent paid the vendor for. Never billed by Mont Haus.">Paid directly by agent</th><?php endif; ?>
               <th>Covered by Mont Haus</th>
               <th>Undecided</th>
             </tr>
@@ -972,6 +993,7 @@ function bl_agent_link(array $a): string {
                 <td><?= bl_cell($a['outstanding']) ?></td>
                 <td><?= bl_cell($a['paid']) ?></td>
                 <td><?= bl_cell($a['broker']) ?></td>
+                <?php if ($any_direct): ?><td><?= bl_cell($a['direct'], 'bl-di') ?></td><?php endif; ?>
                 <td><?= bl_cell($a['mh'], 'bl-mh') ?></td>
                 <td><?= bl_cell($a['unassigned'], 'bl-un') ?></td>
               </tr>
@@ -983,6 +1005,7 @@ function bl_agent_link(array $a): string {
               <td><?= bl_cell($all_broker - $all_paid) ?></td>
               <td><?= bl_cell($all_paid) ?></td>
               <td><?= bl_cell($all_broker) ?></td>
+              <?php if ($any_direct): ?><td><?= bl_cell($all_di, 'bl-di') ?></td><?php endif; ?>
               <td><?= bl_cell($all_mh, 'bl-mh') ?></td>
               <td><?= bl_cell($all_un, 'bl-un') ?></td>
             </tr>
@@ -993,7 +1016,8 @@ function bl_agent_link(array $a): string {
 
     <div class="bl-foot">
       <strong>Outstanding</strong> and <strong>Paid</strong> add up to
-      <strong>Billed to agent</strong>.
+      <strong>Billed to agent</strong>.<?php if ($any_direct): ?> <strong>Paid directly by agent</strong> is collateral an agent
+      paid the vendor for themselves: it is their spend, and it is never billed.<?php endif; ?>
     </div>
 
 </div><!-- /panel-agents -->
@@ -1095,7 +1119,11 @@ function bl_agent_link(array $a): string {
         return '<tr><td><span class="kind">' + esc(l.kind) +
                (l.platform ? ' · ' + esc(l.platform) : '') + '</span>' + esc(l.name) +
                (l.linked ? '<span class="bl-former">on ' + esc(l.linked) + '</span>' : '') +
-               '</td><td>' + cell(l.broker, 'bl-num') +
+               '</td><td>' + (Number(l.direct) > 0.005
+                    /* paid directly by agent: said in the Agent cell, left out of its total */
+                    ? (Math.abs(Number(l.broker)) < 0.005 ? '' : cell(l.broker, 'bl-num')) +
+                      '<span class="bl-direct">' + money(l.direct) + ' paid directly</span>'
+                    : cell(l.broker, 'bl-num')) +
                '</td><td>' + cell(l.mh, 'bl-mh') +
                '</td><td>' + cell(l.un, 'bl-un') + '</td></tr>';
       }).join('');
