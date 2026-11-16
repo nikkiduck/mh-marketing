@@ -73,8 +73,12 @@ img { max-width: 100%; }
 .pt-wn-tag { display: inline-block; vertical-align: 1px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase;
              border-radius: 999px; padding: 1px 8px; background: #e7edf5; color: #3c4f6b; margin-left: 4px; white-space: nowrap; }
 .pt-wn-go { font-weight: 500; white-space: nowrap; }
-.pt-new { display: grid; grid-template-columns: 34px 1fr 32px; gap: 12px; align-items: start; background: #fff; border: 1px solid var(--line);
+.pt-new { display: grid; grid-template-columns: 1fr 32px; gap: 12px; align-items: start; background: #fff; border: 1px solid var(--line);
           border-left: 4px solid var(--gold); border-radius: 12px; padding: 14px 14px 14px 16px; margin: 0 0 22px; }
+/* Every unseen notice is a row in the one box (2026-11-15); a line between rows. */
+.pt-new-it { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; }
+.pt-new-it + .pt-new-it { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 12px; }
+.pt-new-more { font-size: 13px; color: var(--muted); margin: 12px 0 0 46px; }
 .pt-new .pt-wn-ic { font-size: 26px; }
 .pt-new-x { width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; padding: 0; }
 .pt-new-x:hover { background: var(--paper); color: var(--text); }

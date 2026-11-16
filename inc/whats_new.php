@@ -37,6 +37,7 @@ const WN_FIRST_ID = 14075;          // the first id made here: MH Send's old tab
 // Notices that existed before the portal had its bell never show as NEW there (they are in the bell's list).
 const WN_PORTAL_BASELINE = 14074;
 const WN_PANEL_MAX = 12;            // notices listed under the bell
+const WN_BANNER_MAX = 3;            // unseen notices shown in the banner at once; the rest are under the bell
 
 function wn_dir(): string {
     $dir = rtrim(CREATIVES_DIR, '/') . '/whats_new';
@@ -213,8 +214,12 @@ function wn_portal_areas(array $ctx): array {
 }
 
 /**
- * What the portal's header draws: ['items' => the bell's list, 'new' => the newest notice this person has not seen
- * or null, 'latest' => the newest id listed, 'can_mark' => whether seeing it is recorded].
+ * What the portal's header draws: ['items' => the bell's list, 'new' => EVERY notice this person has not seen,
+ * newest first (at most WN_BANNER_MAX; [] when there is none), 'new_more' => how many more unseen ones are only
+ * under the bell, 'latest' => the newest id listed, 'can_mark' => whether seeing it is recorded].
+ *
+ * Several at once (Nikki, 2026-11-15: a second notice posted the next day took the first one's place in the
+ * banner): the banner used to hold only the newest unseen notice.
  *
  * Seen = users.last_seen_announcement_id (the column has been on the table since the hub; nothing used it here).
  * In an admin's preview of someone's portal the marker read is that agent's (their users row by intake_id) and
@@ -234,9 +239,9 @@ function wn_portal_state(mysqli $conn, array $ctx): array {
         $st->execute(); $row = $st->get_result()->fetch_row(); $st->close();
         $mark = max($mark, (int)($row[0] ?? 0));
     } catch (Throwable $e) { /* the page still draws; nothing shows as new */ $mark = PHP_INT_MAX; }
-    $new = null;
-    foreach ($items as $it) if ($it['id'] > $mark) { $new = $it; break; }   // newest first
-    return ['items' => $items, 'new' => $new, 'latest' => $items ? $items[0]['id'] : 0, 'can_mark' => empty($ctx['preview'])];
+    $unseen = array_values(array_filter($items, fn($it) => $it['id'] > $mark));   // newest first
+    $new = array_slice($unseen, 0, WN_BANNER_MAX);
+    return ['items' => $items, 'new' => $new, 'new_more' => count($unseen) - count($new), 'latest' => $items ? $items[0]['id'] : 0, 'can_mark' => empty($ctx['preview'])];
 }
 
 /** Record that a person has seen everything up to $id. Only ever moves the marker forward. */

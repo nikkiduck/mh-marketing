@@ -3555,8 +3555,9 @@ twice".
   bell beside the gear in the admin header (`inc/_nav.php`): post, change
   (never re-announces), hide, delete.
 - **The agent portal** (`portal_header()`): the bell in the bar on every
-  page, and the newest notice the person has not seen as a banner at the top
-  of the page. It shows its own notices plus the B2B and Client Emails ones
+  page, and EVERY notice the person has not seen in one banner at the top
+  of the page, newest first, one close for all (since 2026-11-15; at most
+  `WN_BANNER_MAX`, the rest named as "N more under the bell"). It shows its own notices plus the B2B and Client Emails ones
   the agent's MENU gives them: `portal_send_access()` is the one test for
   the MH Send menu and for `wn_portal_areas()`, so Client Emails notices
   reach the portal when `MH_SEND_CLIENT_EMAILS` goes on. Those carry a tag

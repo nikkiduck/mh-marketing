@@ -326,7 +326,7 @@ function portal_context(mysqli $conn): array {
             'teams' => $teams, 'scopes' => $scopes, 'markets' => $markets];
     // What's New (2026-11-14): worked out here, while the connection is open; portal_header() only draws it.
     try { $ctx['whats_new'] = wn_portal_state($conn, $ctx); }
-    catch (Throwable $e) { error_log('whats_new: ' . $e->getMessage()); $ctx['whats_new'] = ['items' => [], 'new' => null, 'latest' => 0, 'can_mark' => false]; }
+    catch (Throwable $e) { error_log('whats_new: ' . $e->getMessage()); $ctx['whats_new'] = ['items' => [], 'new' => [], 'new_more' => 0, 'latest' => 0, 'can_mark' => false]; }
     return $ctx;
 }
 
@@ -648,9 +648,9 @@ function portal_header(array $ctx, string $title, string $active, array $jump = 
         $nav += $send;                                                              // and after My Tools: that link, or the MH Send menu
     }
     $group = portal_nav_group($active);
-    // What's New (2026-11-14): the bell is in the bar on every page; a notice the person has not seen is also a
-    // banner at the top of the page until they close it. Worked out by portal_context() (wn_portal_state()).
-    $wn = $ctx['whats_new'] ?? ['items' => [], 'new' => null, 'latest' => 0, 'can_mark' => false];
+    // What's New (2026-11-14): the bell is in the bar on every page; every notice the person has not seen is also in
+    // a banner at the top of the page (several at once, one close for all) until they close it. Worked out by portal_context() (wn_portal_state()).
+    $wn = $ctx['whats_new'] ?? ['items' => [], 'new' => [], 'new_more' => 0, 'latest' => 0, 'can_mark' => false];
     $wn_send = portal_send_access($ctx);
     $wn_tag = fn(array $it): string => $it['area'] === 'portal' ? '' : '<span class="pt-wn-tag">' . ph(WN_AREAS[$it['area']][0]) . '</span>';
     $wn_link = fn(array $it): string => $it['area'] === 'portal' ? '' : '<a class="pt-wn-go" href="' . ph($wn_send[$it['area'] . '_url']) . '" target="_blank" rel="noopener">Open ' . ph(WN_AREAS[$it['area']][0]) . ' <span aria-hidden="true">&#8599;</span></a>';
@@ -769,12 +769,19 @@ document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { do
 })();
 </script>
 <main class="pt-main">
-<?php if ($wn['new']): $it = $wn['new']; ?>
-  <div class="pt-new" data-id="<?= (int)$it['id'] ?>" role="status">
-    <span class="pt-wn-ic" aria-hidden="true"><?= ph($it['icon']) ?></span>
-    <div><p class="pt-wn-t">What's new: <?= ph($it['title']) ?> <?= $wn_tag($it) ?></p>
-      <p class="pt-wn-m"><?= nl2br(ph($it['message'])) ?></p>
-      <?php if ($wn_link($it) !== ''): ?><p class="pt-wn-d"><?= $wn_link($it) ?></p><?php endif; ?></div>
+<?php if (!empty($wn['new'])): // one box, one close: closing it records everything up to the newest notice as seen ?>
+  <div class="pt-new" data-id="<?= (int)$wn['latest'] ?>" role="status">
+    <div class="pt-new-list">
+    <?php foreach ($wn['new'] as $it): ?>
+      <div class="pt-new-it">
+        <span class="pt-wn-ic" aria-hidden="true"><?= ph($it['icon']) ?></span>
+        <div><p class="pt-wn-t">What's new: <?= ph($it['title']) ?> <?= $wn_tag($it) ?></p>
+          <p class="pt-wn-m"><?= nl2br(ph($it['message'])) ?></p>
+          <?php if ($wn_link($it) !== ''): ?><p class="pt-wn-d"><?= $wn_link($it) ?></p><?php endif; ?></div>
+      </div>
+    <?php endforeach; ?>
+    <?php if (!empty($wn['new_more'])): ?><p class="pt-new-more"><?= (int)$wn['new_more'] ?> more under the bell at the top of the page.</p><?php endif; ?>
+    </div>
     <button type="button" class="pt-new-x" title="Got it, close" aria-label="Got it, close">&times;</button>
   </div>
 <?php endif; ?>
