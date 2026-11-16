@@ -31,7 +31,14 @@
  * "Download JSON" re-run the same search and return every row; the page shows
  * the first 200 records of the raw JSON.
  *
- * Results are shown as the raw JSON the API returned, plus a short table.
+ * A readable table (Nikki, 2026-11-16: "quite useful and could be for the
+ * other admins as well"): real headers instead of the feed's field names
+ * (apd_catalog()), a click on a header sorts, and a Columns menu shows or
+ * hides any field the result carries (the choice is remembered per browser,
+ * per Members / Offices). The rows travel as one JSON block and the table is
+ * drawn in the browser, so sorting and the column choice need no round trip.
+ * Download CSV carries the columns showing (?cols=). The raw JSON and the
+ * request sit in a section that is closed until it is opened, for debugging.
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
@@ -104,6 +111,156 @@ function apd_contains(string $field, string $q): string {
         [$q, strtolower($q), strtoupper($q), ucwords(strtolower($q))]))) . ')';
 }
 
+/** Fields never offered as a column: credentials, nested or bulky values (the raw JSON has them), and the second address line (shown with the first). */
+const APD_SKIP = ['@odata.id', 'MemberPassword', 'MemberLoginId', 'RawMlsAdditionalData', 'Media', 'HistoryTransactional',
+                  'Office', 'MainOffice', 'OfficeBroker', 'OfficeManager', 'MemberAddress2', 'OfficeAddress2', 'SocialMediaType'];
+
+/**
+ * The columns with a name of our own, in the order they are shown:
+ * feed field => [header, shown by default, group]. Groups: 'main', and 'ids'
+ * (the keys and system ids only a debugging session wants). The default ones
+ * are the columns of the CSV Nikki asked for on 2026-11-16, plus Updated.
+ * A field that is not here is still offered, under its feed name spelled out
+ * (apd_auto_label()).
+ */
+function apd_catalog(string $resource): array {
+    if ($resource === 'Member') return [
+        'OriginatingSystemName'       => ['Board', true, 'main'],
+        'MemberFirstName'             => ['First Name', true, 'main'],
+        'MemberLastName'              => ['Last Name', true, 'main'],
+        'OfficeName'                  => ['Company', true, 'main'],
+        'MemberEmail'                 => ['Email', true, 'main'],
+        'MemberStatus'                => ['Status', true, 'main'],
+        'MemberType'                  => ['Member Type', true, 'main'],
+        'MemberMlsId'                 => ['MLS ID', true, 'main'],
+        'OfficeMlsId'                 => ['Office MLS ID', true, 'main'],
+        'ModificationTimestamp'       => ['Updated', true, 'main'],
+        'MemberFullName'              => ['Full Name', false, 'main'],
+        'MemberMiddleName'            => ['Middle Name', false, 'main'],
+        'MemberNickname'              => ['Nickname', false, 'main'],
+        'MemberMobilePhone'           => ['Mobile Phone', false, 'main'],
+        'MemberDirectPhone'           => ['Direct Phone', false, 'main'],
+        'MemberPreferredPhone'        => ['Preferred Phone', false, 'main'],
+        'MemberPreferredPhoneExt'     => ['Preferred Phone Ext', false, 'main'],
+        'MemberOfficePhone'           => ['Office Phone', false, 'main'],
+        'MemberOfficePhoneExt'        => ['Office Phone Ext', false, 'main'],
+        'MemberHomePhone'             => ['Home Phone', false, 'main'],
+        'MemberFax'                   => ['Fax', false, 'main'],
+        'MemberStateLicense'          => ['License Number', false, 'main'],
+        'MemberDesignation'           => ['Designations', false, 'main'],
+        'MemberLanguages'             => ['Languages', false, 'main'],
+        'MemberAddress1'              => ['Address', false, 'main'],
+        'MemberCity'                  => ['City', false, 'main'],
+        'MemberStateOrProvince'       => ['State', false, 'main'],
+        'MemberPostalCode'            => ['ZIP', false, 'main'],
+        'MemberAOR'                   => ['Association', false, 'main'],
+        'MemberNationalAssociationId' => ['NRDS ID', false, 'main'],
+        'MemberMlsAccessYN'           => ['MLS Access', false, 'main'],
+        'MemberMlsSecurityClass'      => ['MLS Security Class', false, 'main'],
+        'MemberBio'                   => ['Bio', false, 'main'],
+        'OriginalEntryTimestamp'      => ['First Added', false, 'main'],
+        'SourceSystemName'            => ['Source System', false, 'main'],
+        'MemberKey'                   => ['Member Key', false, 'ids'],
+        'OfficeKey'                   => ['Office Key', false, 'ids'],
+        'MemberAORkey'                => ['Association Key', false, 'ids'],
+        'MemberAORMlsId'              => ['Association MLS ID', false, 'ids'],
+        'OriginatingSystemID'         => ['Originating System ID', false, 'ids'],
+        'OriginatingSystemMemberKey'  => ['Originating System Member Key', false, 'ids'],
+        'SourceSystemID'              => ['Source System ID', false, 'ids'],
+        'SourceSystemMemberKey'       => ['Source System Member Key', false, 'ids'],
+        'anyprop_Key'                 => ['Anyprop Key', false, 'ids'],
+        'anyprop_OriginatingSystemID' => ['Anyprop Originating System ID', false, 'ids'],
+    ];
+    return [
+        'OriginatingSystemName'       => ['Board', true, 'main'],
+        'OfficeName'                  => ['Office Name', true, 'main'],
+        'OfficeMlsId'                 => ['Office MLS ID', true, 'main'],
+        'OfficeStatus'                => ['Status', true, 'main'],
+        'OfficeEmail'                 => ['Email', true, 'main'],
+        'OfficePhone'                 => ['Phone', true, 'main'],
+        'ModificationTimestamp'       => ['Updated', true, 'main'],
+        'OfficeAddress1'              => ['Address', false, 'main'],
+        'OfficeCity'                  => ['City', false, 'main'],
+        'OfficeStateOrProvince'       => ['State', false, 'main'],
+        'OfficePostalCode'            => ['ZIP', false, 'main'],
+        'OfficeMailAddress1'          => ['Mailing Address', false, 'main'],
+        'OfficeMailCareOf'            => ['Mailing Care Of', false, 'main'],
+        'OfficeMailCity'              => ['Mailing City', false, 'main'],
+        'OfficeMailStateOrProvince'   => ['Mailing State', false, 'main'],
+        'OfficeMailPostalCode'        => ['Mailing ZIP', false, 'main'],
+        'OfficeFax'                   => ['Fax', false, 'main'],
+        'OfficeType'                  => ['Office Type', false, 'main'],
+        'MainOfficeMlsId'             => ['Main Office MLS ID', false, 'main'],
+        'OfficeBrokerMlsId'           => ['Broker MLS ID', false, 'main'],
+        'OfficeCorporateLicense'      => ['Corporate License', false, 'main'],
+        'IDXOfficeParticipationYN'    => ['IDX Participation', false, 'main'],
+        'OfficeAOR'                   => ['Association', false, 'main'],
+        'OriginalEntryTimestamp'      => ['First Added', false, 'main'],
+        'SourceSystemName'            => ['Source System', false, 'main'],
+        'OfficeKey'                   => ['Office Key', false, 'ids'],
+        'MainOfficeKey'               => ['Main Office Key', false, 'ids'],
+        'OfficeBrokerKey'             => ['Broker Key', false, 'ids'],
+        'OfficeAORkey'                => ['Association Key', false, 'ids'],
+        'OfficeAORMlsId'              => ['Association MLS ID', false, 'ids'],
+        'OriginatingSystemID'         => ['Originating System ID', false, 'ids'],
+        'OriginatingSystemOfficeKey'  => ['Originating System Office Key', false, 'ids'],
+        'SourceSystemID'              => ['Source System ID', false, 'ids'],
+        'SourceSystemOfficeKey'       => ['Source System Office Key', false, 'ids'],
+        'anyprop_Key'                 => ['Anyprop Key', false, 'ids'],
+        'anyprop_OriginatingSystemID' => ['Anyprop Originating System ID', false, 'ids'],
+    ];
+}
+
+/** A header for a feed field we have no name for: "MemberCountyOrParish" reads "Member County Or Parish". */
+function apd_auto_label(string $k): string {
+    $w = preg_replace('/^anyprop_/', 'Anyprop ', $k);
+    $w = preg_replace('/YN$/', '', $w);
+    $w = preg_replace('/(?<=[a-z0-9])(?=[A-Z])/', ' ', $w);
+    return trim(preg_replace(['/\bMls\b/', '/\bId\b/', '/\bAor\b/', '/\bIdx\b/'], ['MLS', 'ID', 'AOR', 'IDX'], $w));
+}
+
+/** What kind of value a field holds: 'date' (shown in Mountain time, sorted by the moment) or 'text'. */
+function apd_kind(string $k): string {
+    return preg_match('/(Timestamp|Date)$/', $k) ? 'date' : 'text';
+}
+
+/** One field of one record as text: the board by its name, Yes / No, a list joined, the two address lines together. */
+function apd_cell(array $r, string $k): string {
+    $v = $r[$k] ?? null;
+    if ($k === 'OriginatingSystemName') return mk_board_label(mk_market_slug((string)$v));
+    if ($k === 'MemberAddress1' || $k === 'OfficeAddress1') {
+        return trim(trim((string)$v) . ' ' . trim((string)($r[substr($k, 0, -1) . '2'] ?? '')));
+    }
+    // CREN sends no MemberFullName: first + last, so the column is never blank for a person
+    if ($k === 'MemberFullName' && trim((string)$v) === '') return trim(($r['MemberFirstName'] ?? '') . ' ' . ($r['MemberLastName'] ?? ''));
+    if (is_bool($v)) return $v ? 'Yes' : 'No';
+    if (is_array($v)) return implode(', ', array_map(fn($x) => is_scalar($x) ? (string)$x : json_encode($x), $v));
+    return trim((string)$v);
+}
+
+/**
+ * The columns a result can show, in order: the named ones (a default one
+ * always; another only when some row has a value for it), then every other
+ * field with a value, under its spelled-out feed name.
+ * Returns [field => ['label', 'on' (shown by default), 'group', 'kind']].
+ */
+function apd_columns(string $resource, array $rows): array {
+    $has = [];
+    foreach ($rows as $r) foreach ($r as $k => $v) {
+        if (isset($has[$k]) || $v === null || $v === '' || $v === []) continue;
+        if (is_array($v)) { foreach ($v as $x) if (!is_scalar($x)) continue 2; }   // a list of plain values only
+        $has[$k] = true;
+    }
+    $cols = [];
+    foreach (apd_catalog($resource) as $k => [$label, $on, $group]) {
+        if ($on || isset($has[$k])) $cols[$k] = ['label' => $label, 'on' => $on, 'group' => $group, 'kind' => apd_kind($k)];
+    }
+    $rest = array_diff(array_keys($has), array_keys($cols), APD_SKIP);
+    sort($rest);
+    foreach ($rest as $k) $cols[$k] = ['label' => apd_auto_label($k), 'on' => false, 'group' => 'other', 'kind' => apd_kind($k)];
+    return $cols;
+}
+
 // ── Inputs ───────────────────────────────────────────────────────────────────
 $resource = ($_GET['resource'] ?? 'Member') === 'Office' ? 'Office' : 'Member';
 $board    = preg_replace('/[^a-z0-9]/', '', strtolower((string)($_GET['board'] ?? '')));
@@ -113,6 +270,8 @@ $top      = max(1, min(APD_MAX_ROWS, (int)($_GET['top'] ?? 500)));
 $status   = in_array($_GET['status'] ?? '', ['Active', 'Inactive'], true) ? $_GET['status'] : '';
 $mtype    = $resource === 'Member' ? trim((string)($_GET['type'] ?? '')) : '';
 $download = in_array($_GET['download'] ?? '', ['csv', 'json'], true) ? $_GET['download'] : '';
+// The columns the CSV should carry: the ones showing in the table when Download CSV was pressed.
+$cols_req = array_values(array_filter(explode(',', (string)($_GET['cols'] ?? '')), fn($k) => (bool)preg_match('/^[A-Za-z0-9_]{1,60}$/', $k)));
 $allowed_by = $resource === 'Member' ? ['mhoffice', 'all', 'name', 'company', 'email', 'mlsid', 'office'] : ['all', 'name', 'mlsid'];
 if (!in_array($by, $allowed_by, true)) $by = 'name';
 $mh_mode  = $resource === 'Member' && $by === 'mhoffice';   // every member of the Mont Haus office(s)
@@ -220,20 +379,22 @@ if ($download !== '' && $fetched !== null && $error === '') {
     header('Content-Disposition: attachment; filename="' . $name . '.csv"');
     $out = fopen('php://output', 'w');
     fwrite($out, "\xEF\xBB\xBF");   // BOM, so Excel reads accented names as UTF-8
-    $label = fn($osn) => mk_board_label(mk_market_slug((string)$osn));
-    if ($resource === 'Member') {
-        fputcsv($out, ['Board', 'First Name', 'Last Name', 'Company', 'Email', 'Status', 'Member Type', 'MLS ID', 'Office MLS ID'], ',', '"', '');
-        foreach ($rows as $r) fputcsv($out, [$label($r['OriginatingSystemName'] ?? ''),
-            trim((string)($r['MemberFirstName'] ?? '')), trim((string)($r['MemberLastName'] ?? '')),
-            trim((string)($r['OfficeName'] ?? '')), trim((string)($r['MemberEmail'] ?? '')),
-            (string)($r['MemberStatus'] ?? ''), (string)($r['MemberType'] ?? ''),
-            (string)($r['MemberMlsId'] ?? ''), (string)($r['OfficeMlsId'] ?? '')], ',', '"', '');
-    } else {
-        fputcsv($out, ['Board', 'Office Name', 'Office MLS ID', 'Status', 'Email', 'Phone'], ',', '"', '');
-        foreach ($rows as $r) fputcsv($out, [$label($r['OriginatingSystemName'] ?? ''),
-            trim((string)($r['OfficeName'] ?? '')), (string)($r['OfficeMlsId'] ?? ''),
-            (string)($r['OfficeStatus'] ?? ''), trim((string)($r['OfficeEmail'] ?? '')),
-            trim((string)($r['OfficePhone'] ?? ''))], ',', '"', '');
+    // The columns showing in the table (?cols=), in the table's order; without that, the default ones.
+    $cols = apd_columns($resource, $rows);
+    $use  = array_filter($cols, fn($c, $k) => $cols_req ? in_array($k, $cols_req, true) : $c['on'], ARRAY_FILTER_USE_BOTH);
+    if (!$use) $use = array_filter($cols, fn($c) => $c['on']);
+    $mt = new DateTimeZone('America/Denver');
+    fputcsv($out, array_column($use, 'label'), ',', '"', '');
+    foreach ($rows as $r) {
+        $line = [];
+        foreach ($use as $k => $c) {
+            $v = apd_cell($r, $k);
+            if ($c['kind'] === 'date' && $v !== '') {   // Mountain time, as the table shows it
+                try { $v = (new DateTime($v))->setTimezone($mt)->format('Y-m-d H:i'); } catch (Throwable $ex) { /* left as the feed sent it */ }
+            }
+            $line[] = $v;
+        }
+        fputcsv($out, $line, ',', '"', '');
     }
     exit;
 }
@@ -245,9 +406,15 @@ $pretty = $fetched !== null
     ? json_encode($mh_mode ? ['mont_haus_offices' => $mh_offices, 'value' => $shown] : ['value' => $shown],
                   JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
     : '';
-$summary_cols = $resource === 'Member'
-    ? ['OriginatingSystemName', 'MemberMlsId', 'MemberFullName', 'MemberEmail', 'MemberStatus', 'MemberType', 'OfficeMlsId', 'OfficeName', 'ModificationTimestamp']
-    : ['OriginatingSystemName', 'OfficeMlsId', 'OfficeName', 'OfficeStatus', 'OfficeEmail', 'OfficePhone', 'ModificationTimestamp'];
+// The table's rows, drawn in the browser: one list of columns, then each record as its values in that order.
+$cols = $fetched !== null ? apd_columns($resource, $rows) : [];
+$table = ['resource' => $resource, 'cols' => [], 'rows' => []];
+foreach ($cols as $k => $c) $table['cols'][] = ['k' => $k, 'label' => $c['label'], 'on' => $c['on'], 'group' => $c['group'], 'kind' => $c['kind']];
+foreach ($rows as $r) {
+    $line = [];
+    foreach ($cols as $k => $c) $line[] = apd_cell($r, $k);
+    $table['rows'][] = $line;
+}
 /** This page's URL with some parameters changed (null drops one). */
 function apd_link(array $change): string {
     $p = array_merge($_GET, $change);
@@ -277,7 +444,7 @@ $conn->close();
     .mh-nav-link:hover  { color:#fff; background:rgba(174,187,204,.25); }
     .mh-nav-link.active { color:#fff; background:rgba(174,187,204,.45); }
     .mh-nav-divider { width:1px; height:20px; background:rgba(255,255,255,.2); margin:0 6px; }
-    .wrap { max-width:1100px; margin:32px auto 60px; padding:0 20px; }
+    .wrap { max-width:1280px; margin:32px auto 60px; padding:0 20px; }
     .mk-page-header { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:18px; }
     .card { background:#fff; border-radius:6px; padding:22px 26px; margin-bottom:18px; }
     .card-title { font-size:14px; font-weight:700; margin:0 0 16px; display:flex; align-items:center; gap:8px; }
@@ -298,7 +465,44 @@ $conn->close();
     table.sum th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:#6b7280; padding:6px 8px; border-bottom:1px solid #e5e7eb; white-space:nowrap; }
     table.sum td { padding:6px 8px; border-bottom:1px solid #eceff3; vertical-align:top; }
     table.sum td.mh { font-weight:600; color:#15803d; }
-    .tbl-scroll { overflow-x:auto; }
+    .tbl-scroll { overflow:auto; }
+    /* The results table: drawn by the script at the foot of the page. */
+    #apdTable { max-height:72vh; border:1px solid #eceff3; border-radius:6px; }
+    #apdTable table.sum { margin:0; }
+    #apdTable th { position:sticky; top:0; z-index:1; background:#f6f7f9; padding:0; border-bottom:1px solid #dfe3e8; }
+    #apdTable th button { all:unset; box-sizing:border-box; display:flex; align-items:center; gap:4px; width:100%; padding:8px 10px; cursor:pointer;
+                          font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#4b5563; white-space:nowrap; }
+    #apdTable th button:hover { color:#111; }
+    #apdTable th button:focus-visible { outline:2px solid #4a5569; outline-offset:-2px; }
+    #apdTable th .ti { font-size:12px; color:#9ca3af; }
+    #apdTable th.sorted button, #apdTable th.sorted .ti { color:#111; }
+    #apdTable td { padding:7px 10px; white-space:nowrap; max-width:340px; overflow:hidden; text-overflow:ellipsis; }
+    #apdTable tbody tr:hover td { background:#fafbfc; }
+    #apdTable td.dim { color:#c5cad3; }
+    .st { display:inline-block; border-radius:999px; padding:1px 9px; font-size:12px; font-weight:600; background:#eceff3; color:#4b5563; }
+    .st.active { background:#e8f6ee; color:#15803d; }
+    .st.inactive { background:#fdecec; color:#b42318; }
+    /* The Columns menu. */
+    .colpick { position:relative; }
+    .colpanel { position:absolute; right:0; top:calc(100% + 6px); z-index:20; width:min(560px, 86vw); max-height:60vh; overflow:auto; background:#fff;
+                border:1px solid #d1d5db; border-radius:8px; box-shadow:0 12px 32px rgba(0,0,0,.14); padding:14px 16px; }
+    .colpanel h4 { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#6b7280; margin:12px 0 6px; }
+    .colpanel h4:first-of-type { margin-top:0; }
+    .colgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(165px, 1fr)); gap:2px 12px; }
+    .colgrid label { display:flex; align-items:center; gap:7px; font-size:13px; color:#1f242c; padding:3px 0; cursor:pointer; margin:0; }
+    .colhead { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:10px; }
+    .colhead span { font-size:12px; color:#6b7280; }
+    .colhead button { all:unset; cursor:pointer; font-size:12px; font-weight:600; color:#4a5569; text-decoration:underline; }
+    /* The debugging section: closed until it is opened. */
+    details.dbg { background:#fff; border-radius:6px; margin-bottom:18px; }
+    details.dbg > summary { cursor:pointer; padding:16px 26px; font-size:14px; font-weight:700; color:#374151; list-style:none; display:flex; align-items:center; gap:8px; }
+    details.dbg > summary::-webkit-details-marker { display:none; }
+    details.dbg > summary .hint { font-weight:400; }
+    details.dbg > summary .chev { margin-left:auto; color:#9ca3af; transition:transform .15s; }
+    details.dbg[open] > summary .chev { transform:rotate(180deg); }
+    .dbg-body { padding:0 26px 22px; }
+    .dbg-body h3 { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.3px; color:#6b7280; margin:16px 0 8px; }
+    .dbg-body h3:first-child { margin-top:0; }
     pre.json { background:#1a1a1a; color:#e5e7eb; font-size:12px; line-height:1.45; padding:16px; border-radius:6px; overflow:auto; max-height:70vh; margin:0; }
     pre.json .k { color:#aebbcc; } pre.json .s { color:#f5e6a8; } pre.json .n { color:#c4b5fd; }
     .pre-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
@@ -321,7 +525,7 @@ $conn->close();
     <div class="mk-page-header">
       <div>
         <h1>Anyprop Feed</h1>
-        <p class="hint" style="margin:4px 0 0;">What the MLS feed says about a member or an office, as the API returns it. Reads only.</p>
+        <p class="hint" style="margin:4px 0 0;">What the MLS feed says about a member or an office. Reads only: nothing here changes the roster.</p>
       </div>
       <a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-arrow-left"></i> Roster</a>
     </div>
@@ -380,7 +584,8 @@ $conn->close();
           Members: name searches the full name as the board spells it (tries the typed spelling, lower, UPPER and Title Case); email and IDs are exact.
           Offices: name (contains) or office MLS ID. Anyprop cannot filter on last name alone.
           <strong>Everyone on the board</strong> needs a board. <strong>Company name</strong> matches the office name as the board spells it (Sopris finds Sopris Realty LLC).
-          After a search, pick a member type under the count (Anyprop cannot filter on it, so the page does). Download CSV or JSON gives every row, up to <?= number_format(APD_MAX_ROWS) ?>.
+          After a search, pick a member type under the count (Anyprop cannot filter on it, so the page does). Click a column heading to sort; Columns chooses what the table shows.
+          Download CSV gives every row, up to <?= number_format(APD_MAX_ROWS) ?>, with the columns showing.
         </p>
       </form>
     </div>
@@ -391,10 +596,10 @@ $conn->close();
         <div class="card-title"><i class="ti ti-building"></i> <?= count($mh_offices) ?> Mont Haus office<?= count($mh_offices) === 1 ? '' : 's' ?> in the feed<?= $board !== '' ? ' for ' . e($boards[$board]['label'] ?? $board) : '' ?></div>
         <?php if ($mh_offices): ?>
         <div class="tbl-scroll"><table class="sum">
-          <thead><tr><th>Board</th><th>OfficeMlsId</th><th>OfficeName</th><th>OfficeStatus</th><th>Members returned</th></tr></thead>
+          <thead><tr><th>Board</th><th>Office MLS ID</th><th>Office Name</th><th>Status</th><th>Members returned</th></tr></thead>
           <tbody>
           <?php foreach ($mh_offices as $o): $n_m = count(array_filter($fetched ?? [], fn($m) => ($m['OfficeMlsId'] ?? '') === $o['OfficeMlsId'] && ($m['OriginatingSystemName'] ?? '') === $o['OriginatingSystemName'])); ?>
-            <tr><td><?= e(mk_board_label(mk_market_slug((string)$o['OriginatingSystemName']))) ?> (<?= e($o['OriginatingSystemName']) ?>)</td><td><?= e($o['OfficeMlsId']) ?></td><td class="mh"><?= e($o['OfficeName']) ?></td><td><?= e($o['OfficeStatus'] ?? '') ?></td><td><?= $n_m ?></td></tr>
+            <tr><td><?= e(mk_board_label(mk_market_slug((string)$o['OriginatingSystemName']))) ?></td><td><?= e($o['OfficeMlsId']) ?></td><td class="mh"><?= e($o['OfficeName']) ?></td><td><?= e($o['OfficeStatus'] ?? '') ?></td><td><?= $n_m ?></td></tr>
           <?php endforeach; ?>
           </tbody></table></div>
         <?php else: ?>
@@ -402,12 +607,6 @@ $conn->close();
         <?php endif; ?>
       </div>
       <?php endif; ?>
-      <div class="card">
-        <div class="card-title"><i class="ti ti-api"></i> Request</div>
-        <div class="q">GET <?= e($url) ?></div>
-        <p class="hint" style="margin:8px 0 0;">$filter = <?= e($filter) ?><?= $pages > 1 ? ' · ' . $pages . ' pages (followed @odata.nextLink)' : '' ?><?= $mtype !== '' ? ' · then kept MemberType = ' . e($mtype === '(none)' ? '(blank)' : $mtype) . ' on this page' : '' ?></p>
-      </div>
-
       <?php if ($error !== ''): ?>
         <div class="flash err"><?= e($error) ?></div>
       <?php else: ?>
@@ -415,9 +614,13 @@ $conn->close();
           <div class="pre-head" style="flex-wrap:wrap; gap:8px;">
             <div class="card-title" style="margin:0;"><i class="ti ti-list"></i> <?= number_format(count($rows)) ?> record<?= count($rows) === 1 ? '' : 's' ?><?= $hit_cap ? ($mtype !== '' ? ' (the first ' . number_format(APD_MAX_ROWS) . ' fetched; narrow the search)' : ' (limit reached, raise Max rows)') : '' ?></div>
             <?php if ($rows): ?>
-            <div style="display:flex; gap:6px;">
-              <a class="btn-copy" href="<?= e(apd_link(['download' => 'csv'])) ?>"><i class="ti ti-download"></i> Download CSV</a>
-              <a class="btn-copy" href="<?= e(apd_link(['download' => 'json'])) ?>"><i class="ti ti-download"></i> Download JSON</a>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <div class="colpick">
+                <button type="button" class="btn-copy" id="colBtn" aria-expanded="false" aria-controls="colPanel"><i class="ti ti-columns"></i> Columns</button>
+                <div class="colpanel" id="colPanel" hidden></div>
+              </div>
+              <?php // The script adds &cols= with the columns showing; without it the CSV has the default ones. ?>
+              <a class="btn-copy" id="csvLink" href="<?= e(apd_link(['download' => 'csv', 'cols' => null])) ?>" data-base="<?= e(apd_link(['download' => 'csv', 'cols' => null])) ?>"><i class="ti ti-download"></i> Download CSV</a>
             </div>
             <?php endif; ?>
           </div>
@@ -432,35 +635,33 @@ $conn->close();
           </div>
           <?php endif; ?>
           <?php if ($rows): ?>
-          <div class="tbl-scroll">
-            <table class="sum">
-              <thead><tr><?php foreach ($summary_cols as $c): ?><th><?= e($c) ?></th><?php endforeach; ?></tr></thead>
-              <tbody>
-              <?php foreach ($rows as $r): ?>
-                <tr>
-                  <?php foreach ($summary_cols as $c): $v = $r[$c] ?? ''; $v = is_scalar($v) || $v === null ? (string)$v : json_encode($v);
-                        // CREN sends no MemberFullName: show first + last so the row is readable
-                        if ($c === 'MemberFullName' && trim($v) === '') $v = trim(($r['MemberFirstName'] ?? '') . ' ' . ($r['MemberLastName'] ?? '')); ?>
-                    <td class="<?= $c === 'OfficeName' && preg_match('/mont\s*haus/i', $v) ? 'mh' : '' ?>"><?= e($v) ?></td>
-                  <?php endforeach; ?>
-                </tr>
-              <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
+          <div class="tbl-scroll" id="apdTable" style="margin-top:10px;"><noscript><p class="hint" style="padding:12px;">The table needs JavaScript. Download CSV works without it.</p></noscript></div>
+          <script type="application/json" id="apdData"><?= json_encode($table, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) ?></script>
           <?php else: ?>
             <p class="hint">Nothing matched. On a board where this person is at another brokerage, search by email instead of name, or widen to all boards.</p>
           <?php endif; ?>
         </div>
+      <?php endif; ?>
 
-        <div class="card">
-          <div class="pre-head">
-            <div class="card-title" style="margin:0;"><i class="ti ti-code"></i> Raw JSON<?= count($rows) > APD_JSON_ROWS ? ' <span class="hint" style="font-weight:400;">first ' . APD_JSON_ROWS . ' of ' . number_format(count($rows)) . ' records; Download JSON has them all</span>' : '' ?></div>
-            <button type="button" class="btn-copy" id="copyJson">Copy</button>
+      <?php // For debugging: what was asked of Anyprop and what came back, as it came. Closed until opened. ?>
+      <details class="dbg" id="dbg">
+        <summary><i class="ti ti-code"></i> Raw JSON and request <span class="hint">for debugging</span><i class="ti ti-chevron-down chev" aria-hidden="true"></i></summary>
+        <div class="dbg-body">
+          <h3>Request</h3>
+          <div class="q">GET <?= e($url) ?></div>
+          <p class="hint" style="margin:8px 0 0;">$filter = <?= e($filter) ?><?= $pages > 1 ? ' · ' . $pages . ' pages (followed @odata.nextLink)' : '' ?><?= $mtype !== '' ? ' · then kept MemberType = ' . e($mtype === '(none)' ? '(blank)' : $mtype) . ' on this page' : '' ?></p>
+          <?php if ($error === ''): ?>
+          <div class="pre-head" style="margin-top:16px;">
+            <h3 style="margin:0;">Raw JSON<?= count($rows) > APD_JSON_ROWS ? ' <span class="hint" style="font-weight:400; text-transform:none; letter-spacing:0;">first ' . APD_JSON_ROWS . ' of ' . number_format(count($rows)) . ' records; Download JSON has them all</span>' : '' ?></h3>
+            <div style="display:flex; gap:6px;">
+              <?php if ($rows): ?><a class="btn-copy" href="<?= e(apd_link(['download' => 'json', 'cols' => null])) ?>"><i class="ti ti-download"></i> Download JSON</a><?php endif; ?>
+              <button type="button" class="btn-copy" id="copyJson">Copy</button>
+            </div>
           </div>
           <pre class="json" id="json"><?= e($pretty) ?></pre>
+          <?php endif; ?>
         </div>
-      <?php endif; ?>
+      </details>
     <?php endif; ?>
 
   </div>
@@ -478,12 +679,139 @@ $conn->close();
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(function () { cp.textContent = 'Copied'; setTimeout(function () { cp.textContent = 'Copy'; }, 1500); },
       function () { window.getSelection().selectAllChildren(document.getElementById('json')); });
   });
-  // Light syntax colouring of the JSON block (text only, already escaped).
-  var pre = document.getElementById('json');
-  if (pre) pre.innerHTML = pre.innerHTML.replace(/("(?:[^"\\]|\\.)*")(\s*:)?|(\b-?\d+(?:\.\d+)?\b)/g, function (m, str, colon, num) {
-    if (str) return colon ? '<span class="k">' + str + '</span>' + colon : '<span class="s">' + str + '</span>';
-    return '<span class="n">' + num + '</span>';
+  // Light syntax colouring of the JSON block (text only, already escaped), the
+  // first time the debugging section is opened: nobody pays for it otherwise.
+  var dbg = document.getElementById('dbg'), pre = document.getElementById('json'), coloured = false;
+  if (dbg && pre) dbg.addEventListener('toggle', function () {
+    if (!dbg.open || coloured) return;
+    coloured = true;
+    pre.innerHTML = pre.innerHTML.replace(/("(?:[^"\\]|\\.)*")(\s*:)?|(\b-?\d+(?:\.\d+)?\b)/g, function (m, str, colon, num) {
+      if (str) return colon ? '<span class="k">' + str + '</span>' + colon : '<span class="s">' + str + '</span>';
+      return '<span class="n">' + num + '</span>';
+    });
   });
+
+  // ── The results table ──────────────────────────────────────────────────────
+  // The server sends the columns a result can show and each record's values in
+  // that order (#apdData). Here: which columns show (remembered per browser,
+  // per Members / Offices), sorting on a heading, and the Columns menu. The
+  // CSV link is told which columns are showing.
+  (function () {
+    var src = document.getElementById('apdData'), box = document.getElementById('apdTable');
+    if (!src || !box) return;
+    var data = JSON.parse(src.textContent), cols = data.cols, rows = data.rows;
+    var KEY = 'apdCols:' + data.resource;
+    var esc = function (t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    var when = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Denver', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+    var showDate = function (v) { var d = new Date(v); return isNaN(d) ? v : when.format(d); };
+    var cmp = new Intl.Collator('en', { numeric: true, sensitivity: 'base' }).compare;
+
+    // The choice: a list of field names. A field this result does not carry stays in the list, for the next search.
+    var chosen = null;
+    try { var saved = JSON.parse(localStorage.getItem(KEY) || 'null'); if (Array.isArray(saved)) chosen = saved; } catch (e) {}
+    var defaults = function () { return cols.filter(function (c) { return c.on; }).map(function (c) { return c.k; }); };
+    if (!chosen) chosen = defaults();
+    var showing = function () {
+      var v = cols.filter(function (c) { return chosen.indexOf(c.k) !== -1; });
+      return v.length ? v : cols.filter(function (c) { return c.on; });   // never an empty table
+    };
+    var save = function () { try { localStorage.setItem(KEY, JSON.stringify(chosen)); } catch (e) {} };
+
+    var sortKey = null, sortDir = 1;
+    var order = rows.map(function (_, i) { return i; });   // the order the feed sent
+    function sortRows() {
+      order = rows.map(function (_, i) { return i; });
+      if (sortKey === null) return;
+      var ci = cols.findIndex(function (c) { return c.k === sortKey; });
+      if (ci < 0) { sortKey = null; return; }
+      order.sort(function (a, b) {
+        var x = rows[a][ci], y = rows[b][ci];
+        if (x === '' || y === '') return x === y ? a - b : (x === '' ? 1 : -1);   // blanks last, whichever way
+        return (cmp(x, y) || (a - b)) * sortDir;
+      });
+    }
+
+    function draw() {
+      var vis = showing(), idx = vis.map(function (c) { return cols.indexOf(c); });
+      var h = '<table class="sum"><thead><tr>';
+      vis.forEach(function (c) {
+        var on = c.k === sortKey;
+        h += '<th class="' + (on ? 'sorted' : '') + '" aria-sort="' + (on ? (sortDir === 1 ? 'ascending' : 'descending') : 'none') + '"><button type="button" data-k="' + esc(c.k) + '" title="Sort by ' + esc(c.label) + '">'
+           + esc(c.label) + '<i class="ti ti-' + (on ? (sortDir === 1 ? 'chevron-up' : 'chevron-down') : 'selector') + '" aria-hidden="true"></i></button></th>';
+      });
+      h += '</tr></thead><tbody>';
+      for (var n = 0; n < order.length; n++) {
+        var r = rows[order[n]];
+        h += '<tr>';
+        for (var j = 0; j < vis.length; j++) {
+          var c = vis[j], v = r[idx[j]];
+          if (v === '') { h += '<td class="dim">·</td>'; continue; }
+          if (c.kind === 'date') { h += '<td>' + esc(showDate(v)) + '</td>'; continue; }
+          if (c.label === 'Status') { h += '<td><span class="st ' + (/^active$/i.test(v) ? 'active' : (/^inactive$/i.test(v) ? 'inactive' : '')) + '">' + esc(v) + '</span></td>'; continue; }
+          var mh = (c.k === 'OfficeName' && /mont\s*haus/i.test(v)) ? ' class="mh"' : '';
+          h += '<td' + mh + (v.length > 40 ? ' title="' + esc(v) + '"' : '') + '>' + esc(v) + '</td>';
+        }
+        h += '</tr>';
+      }
+      box.innerHTML = h + '</tbody></table>';
+      var csv = document.getElementById('csvLink');
+      if (csv) csv.href = csv.getAttribute('data-base') + '&cols=' + encodeURIComponent(vis.map(function (c) { return c.k; }).join(','));
+    }
+
+    box.addEventListener('click', function (e) {
+      var b = e.target.closest('th button'); if (!b) return;
+      var k = b.getAttribute('data-k');
+      if (sortKey === k) { if (sortDir === 1) sortDir = -1; else { sortKey = null; sortDir = 1; } }   // up, down, then back to the feed's order
+      else { sortKey = k; sortDir = 1; }
+      var left = box.scrollLeft;
+      sortRows(); draw();
+      box.scrollLeft = left;
+    });
+
+    // The Columns menu.
+    var btn = document.getElementById('colBtn'), panel = document.getElementById('colPanel');
+    function drawPanel() {
+      var vis = showing().map(function (c) { return c.k; });
+      var groups = [['main', 'Columns'], ['ids', 'IDs and keys'], ['other', 'Other fields in this result']];
+      var h = '<div class="colhead"><span>' + vis.length + ' of ' + cols.length + ' showing. Your choice is kept for next time.</span><button type="button" id="colReset">Back to the default</button></div>';
+      groups.forEach(function (g) {
+        var list = cols.filter(function (c) { return c.group === g[0]; });
+        if (!list.length) return;
+        h += '<h4>' + g[1] + '</h4><div class="colgrid">';
+        list.forEach(function (c) { h += '<label><input type="checkbox" value="' + esc(c.k) + '"' + (vis.indexOf(c.k) !== -1 ? ' checked' : '') + '> ' + esc(c.label) + '</label>'; });
+        h += '</div>';
+      });
+      panel.innerHTML = h;
+    }
+    function openPanel(open) {
+      panel.hidden = !open; btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) drawPanel();
+    }
+    if (btn && panel) {
+      btn.addEventListener('click', function (e) { e.stopPropagation(); openPanel(panel.hidden); });
+      panel.addEventListener('click', function (e) { e.stopPropagation(); });
+      panel.addEventListener('change', function (e) {
+        var k = e.target.value, here = cols.map(function (c) { return c.k; });
+        var vis = showing().map(function (c) { return c.k; });
+        if (e.target.checked) vis.push(k); else vis = vis.filter(function (x) { return x !== k; });
+        if (!vis.length) { e.target.checked = true; return; }   // the last column stays
+        // what is showing here, plus the earlier choices this result has no data for
+        chosen = vis.concat(chosen.filter(function (x) { return here.indexOf(x) === -1; }));
+        if (sortKey && vis.indexOf(sortKey) === -1) { sortKey = null; sortRows(); }
+        save(); draw(); drawPanel();
+      });
+      panel.addEventListener('click', function (e) {
+        if (e.target.id !== 'colReset') return;
+        chosen = defaults();
+        try { localStorage.removeItem(KEY); } catch (err) {}
+        draw(); drawPanel();
+      });
+      document.addEventListener('click', function () { if (!panel.hidden) openPanel(false); });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !panel.hidden) { openPanel(false); btn.focus(); } });
+    }
+
+    draw();
+  })();
 </script>
 </body>
 </html>

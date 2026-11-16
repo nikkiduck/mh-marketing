@@ -2037,6 +2037,23 @@ and contains() return 200 with an empty list, so member searches are exact
 and an office NAME search pages through the whole Office list and matches
 in PHP (`*` lists every office).
 
+The table (Nikki, 2026-11-16: "quite useful and could be for the other
+admins as well"; the Admin Home card is for every admin): real headers, not
+feed names (`apd_catalog()`: field => header, shown by default, group); a
+click on a heading sorts (up, down, back to the feed's order; blanks last,
+dates by the moment, shown in Mountain time); **Columns** shows or hides any
+field the result carries, remembered per browser per Members / Offices
+(localStorage `apdCols:Member` / `apdCols:Office`). A field with no entry in
+the catalog is still offered, under its feed name spelled out
+(`apd_auto_label()`); `APD_SKIP` lists what is never a column (credentials,
+nested values). The rows go to the page as one JSON block (`#apdData`) and
+the script draws the table, so neither sorting nor the column choice makes a
+request. **Download CSV carries the columns showing** (`?cols=`, the same
+`apd_cell()` values; without it the default ones, which are the columns she
+asked for that morning plus Updated). The request and the raw JSON are in a
+`<details>` that is closed until opened, with Download JSON and Copy. To
+name a new field, add it to `apd_catalog()`: nothing else lists them.
+
 ## Dynamic QR codes (qr.monthaus.com, 2026-09-28)
 
 Printed QR codes encode `https://qr.monthaus.com/<code>`; where each one opens
