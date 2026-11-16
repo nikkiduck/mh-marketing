@@ -1,4 +1,4 @@
--- STATUS: proposed (2026-11-16)
+-- STATUS: already run (2026-11-16, by Nikki in TablePlus; checked from the server the same day)
 --
 -- ============================================================
 -- collateral_paid_direct_v1.sql
