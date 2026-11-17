@@ -1,4 +1,4 @@
-# Generated 2026-11-16 11:22 from git HEAD
+# Generated 2026-11-16 17:18 from git HEAD
 # marketing.monthaus.com deploy manifest
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
@@ -15,7 +15,7 @@ e21f7ff6086fdea2b3fec475c3bf1a73  assets/css/elevation.css
 ee671293d7decbdefb158702e66b6e4c  assets/css/flyer.css
 bc3a09f0c1d9434b199705a14369bc95  assets/css/market.css
 480bf38c8914ca4843d92b88280d01f7  assets/css/mh-theme.css
-b79cd7104892f4dd61f1218c9ebbbc1c  assets/css/portal.css
+fa31d1a724b618fb4c3cada7394cb91f  assets/css/portal.css
 c6cc7da57a568b53f1235798324b811d  assets/css/social.css
 95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
 e539e5bb247a1ef82888690dd966de01  assets/js/market-report.js
@@ -139,7 +139,7 @@ bab7ce78c6827745173aa89859f1ceae  portal/market_flyer.php
 d11b1b570b09764e3a760efe4c66ad9b  portal/market_post.php
 9a09ec5ad2d6fe7e47f548392f60550c  portal/market_render.php
 2ee307bea2efde7ed72a4635fa73ea01  portal/memberships.php
-e7c12aff8a3eacf12427e61920f621a4  portal/orders.php
+e0dbdd52a1b9d675b31b959c2f931d74  portal/orders.php
 5eaa7597de6bd69db039e8ec2ae5bc8b  portal/profile.php
 1ae5a8ab891ed09eedeb1a008d2650f4  portal/qr.php
 71e2c8fc6d638cd0a4b0e7e2cfaa4390  portal/receipt.php

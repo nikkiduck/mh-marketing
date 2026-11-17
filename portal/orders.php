@@ -85,28 +85,27 @@ if ($want > 0 && !$one):
     <?php endif; ?>
   </div>
   <?php else: ?>
-  <div class="pt-gallery one">
-    <figure class="pt-fig">
-      <?php if (!$is_pdf): ?>
-        <a href="<?= ph(portal_url($ctx, '/portal/asset.php', $src)) ?>" target="_blank" rel="noopener">
-          <img src="<?= ph(portal_url($ctx, '/portal/asset.php', !empty($o['proof_thumb']) ? $src + ['thumb' => 1] : $src)) ?>" alt="Proof" loading="lazy">
-        </a>
+  <?php // The proof as a small square thumbnail, cropped to fit, beside its buttons (Nikki, 2026-11-16:
+        // "way too big ... I want to be able to see the Where it is and What it costs cards without
+        // scrolling down"). The picture opens the full file; Open and Download are beside it. ?>
+  <div class="pt-card pt-item pt-proof">
+    <a class="pt-proof-pic" href="<?= ph(portal_url($ctx, '/portal/asset.php', $src)) ?>" target="_blank" rel="noopener" title="<?= $is_pdf ? 'Open the PDF' : 'Open the proof full size' ?>">
+      <?php if (!$is_pdf && empty($o['proof_thumb'])): // an image with no thumbnail made: the image itself, scaled down ?>
+        <span class="pt-pic"><img src="<?= ph(portal_url($ctx, '/portal/asset.php', $src)) ?>" alt="" loading="lazy"></span>
       <?php else: ?>
-        <?= portal_picture($ctx, $src, $img, $o['proof_thumb'] ?? null, '', true) ?>
+        <?= portal_picture($ctx, $src, $img, $o['proof_thumb'] ?? null, '') ?>
       <?php endif; ?>
-      <figcaption>
-        <b>Proof</b>
-        <span class="pt-row" style="margin-top:8px">
-          <?php if ($img !== ''): ?>
-            <a class="pt-btn quiet" href="<?= ph(portal_url($ctx, '/portal/asset.php', $src)) ?>" target="_blank" rel="noopener"><?= $is_pdf ? 'Open PDF' : 'Open full size' ?></a>
-            <a class="pt-btn quiet" href="<?= ph(portal_url($ctx, '/portal/asset.php', $src + ['dl' => 1])) ?>">Download</a>
-          <?php endif; ?>
-          <?php if (trim((string)($o['file_url'] ?? '')) !== ''): ?>
-            <a class="pt-btn quiet" href="<?= ph($o['file_url']) ?>" target="_blank" rel="noopener">Open original files</a>
-          <?php endif; ?>
-        </span>
-      </figcaption>
-    </figure>
+    </a>
+    <div class="pt-item-body">
+      <b>Proof</b>
+      <span class="pt-row">
+        <a class="pt-btn quiet" href="<?= ph(portal_url($ctx, '/portal/asset.php', $src)) ?>" target="_blank" rel="noopener"><?= $is_pdf ? 'Open PDF' : 'Open full size' ?></a>
+        <a class="pt-btn quiet" href="<?= ph(portal_url($ctx, '/portal/asset.php', $src + ['dl' => 1])) ?>">Download</a>
+        <?php if (trim((string)($o['file_url'] ?? '')) !== ''): ?>
+          <a class="pt-btn quiet" href="<?= ph($o['file_url']) ?>" target="_blank" rel="noopener">Open original files</a>
+        <?php endif; ?>
+      </span>
+    </div>
   </div>
   <?php endif; ?>
 

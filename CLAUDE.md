@@ -2229,6 +2229,13 @@ the site). Migration `sql/leadership_v1.sql`.
 
 ## Agent portal (portal/, 2026-10-01)
 
+**A print order's proof is a small thumbnail (2026-11-16).** Nikki: "the
+proof image is way too big ... I want to be able to see the Where it is and
+What it costs cards without scrolling down." On `portal/orders.php?id=` the
+proof is one row (`.pt-proof`): a 96px square, cropped to fit, that opens
+the full file, with Open and Download beside it. Not the full-width
+`.pt-gallery` figure, which stays on an advertising placement's creatives.
+
 ### MH Send under My Tools (2026-10-25)
 
 `portal_send_item()` (inc/portal.php) puts **MH Send** (send.monthaus.com,
