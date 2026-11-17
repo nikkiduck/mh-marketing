@@ -17,6 +17,7 @@ require_once __DIR__ . '/inc/qr.php';               // QR codes card on the Prof
 require_once __DIR__ . '/inc/receipts.php';         // receipt files: collateral orders and advertising placements
 require_once __DIR__ . '/inc/accounting_mail.php';  // Send to Accounting on a collateral order (sql/collateral_accounting_v1.sql)
 require_once __DIR__ . '/inc/creatives.php';        // creative files shown on the agent portal (sql/creatives_v1.sql)
+require_once __DIR__ . '/inc/collateral_shipping.php';   // linked orders share one shipment; the tracking link from a picked carrier (2026-11-16)
 
 /**
  * A posted or stored `medium` reduced to one the column accepts: 'digital',
@@ -948,6 +949,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // the column exists: an unknown column would fail the whole save silently.
     $coll_has_direct = mk_column_exists($conn, 'marketing_collateral_orders', 'paid_direct');
     $coll_direct     = (!empty($_POST['paid_direct']) && in_array($_POST['paid_by'] ?? '', ['broker', 'split'], true)) ? 1 : 0;
+    // Carrier picked on the form (FedEx, UPS, USPS): the tracking link is made from the number and
+    // replaces whatever is in Tracking URL. "Link as entered" leaves the field as typed.
+    if ($action === 'add_collateral_order' || $action === 'update_collateral_order') {
+        $made = mk_tracking_link((string)($_POST['tracking_carrier'] ?? ''), (string)($_POST['tracking_number'] ?? ''));
+        if ($made !== '') $_POST['tracking_url'] = $made;
+    }
 
     if ($action === 'add_collateral_order') {
         $type = trim($_POST['type'] ?? '');
@@ -992,6 +999,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'update_collateral_order') {
         $oid  = (int)($_POST['order_id'] ?? 0);
         $err  = '';
+        $link_was = mk_coll_billed_with($conn, $id, $oid);   // to tell an order being linked now from one already linked
+        $shared   = 0;
         $sets = []; $vals = []; $types = '';
         foreach ($coll_order_fields as $f) {
             $v = trim($_POST[$f] ?? '');
@@ -1036,12 +1045,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!$err) {
             $vals[] = $oid; $vals[] = $id; $types .= 'ii';
             $s = $conn->prepare("UPDATE marketing_collateral_orders SET " . implode(', ', $sets) . " WHERE id=? AND intake_id=?");
-            if ($s) { $s->bind_param($types, ...$vals); $s->execute(); $s->close(); }
+            if ($s) {
+                $s->bind_param($types, ...$vals); $s->execute(); $s->close();
+                // One shipment, entered once: the orders billed together agree on status, tracking and delivery date.
+                $shared = mk_coll_share_shipping($conn, $id, $oid, $link_was);
+            }
             if ($old_proof) mk_delete_creative_files($old_proof['proof_file'] ?? null, $old_proof['proof_thumb'] ?? null);
         } elseif ($proof && !isset($proof['error'])) {
             mk_delete_creative_files($proof['file'], $proof['thumb']);   // nothing was saved
         }
         $q = $err ? '&err=' . rawurlencode($err) : '&saved=1';
+        if (!$err && $shared > 0) $q .= '&note=' . rawurlencode('Status, tracking and delivery date were also updated on the ' . ($shared === 1 ? 'order' : $shared . ' orders') . ' billed with this one.');
         header("Location: agent.php?id={$id}&tab=collateral{$q}"); exit;
     }
 
@@ -2567,6 +2581,8 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     .pay-direct input { margin-top:2px; }
     .pay-direct small { display:block; font-size:11px; color:#9ca3af; font-weight:400; }
     .pay-chip.direct { background:#0f766e; }
+    .ship-with { margin:-4px 0 12px; font-size:12px; color:#4b5563; background:#eef2f7; border-radius:4px; padding:7px 10px; }
+    .ship-with .ti { font-size:14px; vertical-align:-2px; margin-right:2px; }
     .pay-hint.bad { color:#b45309; }
 
     .pay-summary { display:flex; align-items:center; gap:8px; margin:6px 0 2px; flex-wrap:wrap; }
@@ -4307,11 +4323,33 @@ $listings_json = json_encode(array_values(array_filter(array_map(fn($l) => [
     </div>
     <div class="form-row">
       <label>Tracking # <input type="text" name="tracking_number" class="form-input" value="<?= htmlspecialchars($o['tracking_number']??'') ?>"></label>
-      <label class="grow">Tracking URL <input type="url" name="tracking_url" class="form-input" value="<?= htmlspecialchars($o['tracking_url']??'') ?>" placeholder="https://…"></label>
+      <?php // The carrier is picked, never worked out from the number. FedEx, UPS or USPS makes the tracking link
+            // from the number on save; "Link as entered" keeps Tracking URL as typed (inc/collateral_shipping.php).
+            $carrier_now = mk_tracking_carrier_of($o['tracking_url'] ?? '', $o['tracking_number'] ?? ''); ?>
+      <label>Carrier
+        <select name="tracking_carrier" class="form-input" title="FedEx, UPS or USPS: the tracking link is made from the number when you save, replacing what is in Tracking URL">
+          <option value="" <?= $carrier_now === '' ? 'selected' : '' ?>>Link as entered</option>
+          <?php foreach (mk_tracking_carriers() as $ck => $cv): ?>
+            <option value="<?= $ck ?>" <?= $carrier_now === $ck ? 'selected' : '' ?>><?= htmlspecialchars($cv[0]) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </label>
+      <label class="grow">Tracking URL <small style="font-weight:400;color:#9ca3af;text-transform:none;letter-spacing:0;">(made from the number when a carrier is picked)</small>
+        <input type="url" name="tracking_url" class="form-input" value="<?= htmlspecialchars($o['tracking_url']??'') ?>" placeholder="https://…"></label>
       <label class="grow">Final Files URL <input type="url" name="file_url" class="form-input" value="<?= htmlspecialchars($o['file_url']??'') ?>" placeholder="Dropbox / Drive link…"></label>
     </div>
     <?php
       $oid_ref = (int)($o['id'] ?? 0);
+      // One shipment, entered once: say which orders follow this one's status, tracking and delivery date.
+      global $coll_all;
+      $ship_with = $oid_ref && is_array($coll_all) ? mk_coll_group_others($coll_all, $oid_ref) : [];
+      if ($ship_with):
+          $names = [];
+          foreach ($ship_with as $sw) $names[] = mk_coll_type_label((string)$sw['type']) . (trim((string)$sw['label']) !== '' ? ': ' . trim((string)$sw['label']) : '');
+    ?>
+    <p class="ship-with"><i class="ti ti-truck"></i> Same shipment as <strong><?= htmlspecialchars(implode(', ', $names)) ?></strong>.
+       Status, tracking and delivery date saved here are copied there too.</p>
+    <?php endif;
       // Combined purchase: one order holds the invoice amount, the rest point
       // at it. Only offered when editing an existing order — a new one has no
       // id yet, so nothing could point at it.

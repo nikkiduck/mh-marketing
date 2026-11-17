@@ -867,6 +867,38 @@ The guard is scaffolding for the deploy window, not a permanent abstraction —
 once a migration has been applied everywhere, the guard around it can be
 removed.
 
+## Linked collateral orders are one shipment (2026-11-16)
+
+Nikki: "If two pieces of collateral are linked ... I shouldn't have to update
+the shipping status on both." `inc/collateral_shipping.php`:
+
+- **Linked** = the "Billed with" group on one agent (the order holding the
+  cost and the orders pointing at it). Saving any order of a group copies its
+  `status`, `tracking_number`, `tracking_url` and `delivered_at`
+  (`MK_SHIP_FIELDS`) to the others (`mk_coll_share_shipping()`, called by
+  agent.php's `update_collateral_order`). An order that is being linked **in
+  that save** takes the group's four fields instead, so a blank new order
+  cannot reset a shipment that is already on its way. Unlinked, an order is on
+  its own again. The values are stored on every order, so the Collateral tab,
+  the portal and the accounting email need to know nothing about groups.
+- The edit form says "Same shipment as ..." when the order is in a group, and
+  a save that changed another order says so in the flash.
+- **Carrier** on the order form (FedEx, UPS, USPS, or "Link as entered"): a
+  picked carrier makes `tracking_url` from the number on save
+  (`mk_tracking_link()`), replacing what is in the field. The carrier is
+  chosen, never worked out from what the number looks like (no guessing), and
+  it is not stored: the form shows a carrier when the stored link is exactly
+  the one that carrier makes for the stored number, else "Link as entered",
+  which leaves a pasted link alone. A number with no link still opens a web
+  search, on the admin card and on the portal.
+- An invoice split across agents (`order_split.php`) is separate: its orders
+  carry `vendor_invoice_id`, never `billed_with_order_id`, and it fans out its
+  own shipping fields.
+- `tests/test_collateral_shipping.php` covers the link, the carrier shown and
+  the grouping; the database half was checked with two throwaway orders.
+- Open question (asked 2026-11-16): laying the Collateral tab out by order
+  with the items inside it, instead of by item type.
+
 ## File fields that already have a file (agent.php, 2026-11-16)
 
 Nikki: "My eye immediately sees 'No file chosen' and I forget to look to the
