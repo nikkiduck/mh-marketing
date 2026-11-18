@@ -1,7 +1,7 @@
 <?php
 /**
  * inc/ads_body.php — the Digital Ads builder (prototype, 2026-11-09; seven
- * sizes since 2026-11-11; the Layout choice and Compare layouts since
+ * sizes since 2026-11-11; the Layout choice, Full Bleed or Classic, since
  * 2026-11-18): the layout and size switches, then the previews at the ad's
  * own proportions (All sizes: one slide in every size; a single size: its
  * slides one under another), then the controls. Nothing is drawn here but
@@ -22,7 +22,7 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
   <form id="adForm" class="ad-form" method="post" action="<?= $e($export_url) ?>" autocomplete="off">
     <input type="hidden" name="csrf_token" value="<?= $e($csrf) ?>">
     <input type="hidden" name="size" value="970x250">
-    <input type="hidden" name="style" value="classic">
+    <input type="hidden" name="style" value="<?= $e(ADS_STYLE_DEFAULT) ?>">
     <?php foreach ($kinds as $k => $t): foreach (['', '2'] as $sfx): ?>
     <input type="hidden" name="photo<?= $sfx ?>[<?= $e($k) ?>]" value=""><input type="hidden" name="zoom<?= $sfx ?>[<?= $e($k) ?>]" value="1"><input type="hidden" name="fx<?= $sfx ?>[<?= $e($k) ?>]" value="50"><input type="hidden" name="fy<?= $sfx ?>[<?= $e($k) ?>]" value="50">
     <?php endforeach; endforeach; ?>
@@ -31,12 +31,10 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
       <div class="ad-pills" id="adStyles">
         <span class="ad-pills-l">Layout</span>
         <?php foreach ($style_list as $k => $st): ?>
-        <button type="button" class="ad-pill<?= $k === 'classic' ? ' on' : '' ?>" data-style="<?= $e($k) ?>"><?= $e($st['name']) ?></button>
+        <button type="button" class="ad-pill<?= $k === ADS_STYLE_DEFAULT ? ' on' : '' ?>" data-style="<?= $e($k) ?>"><?= $e($st['name']) ?></button>
         <?php endforeach; ?>
-        <button type="button" class="ad-pill ad-pill-cmp" data-style="compare">Compare layouts</button>
       </div>
     </div>
-    <p class="sp-note ad-concept" id="adConcept" hidden>A concept layout: built for the Marquee and the Rectangle so far. The other five sizes follow once a direction is chosen.</p>
     <div class="ad-bar">
       <div class="ad-pills" id="adSizes">
         <button type="button" class="ad-pill on" data-size="all">All sizes</button>
@@ -122,9 +120,9 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
           <div class="sp-look" id="adSide">
             <span class="sp-look-l">Which photo</span>
             <label class="sp-pillopt"><input type="radio" name="_side" value="" checked><span>Left</span></label>
-            <label class="sp-pillopt"><input type="radio" name="_side" value="2"><span>Second (970 × 90, Impact, Mosaic)</span></label>
+            <label class="sp-pillopt"><input type="radio" name="_side" value="2"><span>Right (970 × 90 and Impact)</span></label>
           </div>
-          <div class="sp-look">
+          <div class="sp-look" id="adShare">
             <span class="sp-look-l">Photo width, Marquee</span>
             <?php foreach (ads_shares() as $k => $t): ?>
             <label class="sp-pillopt"><input type="radio" name="share" value="<?= $e($k) ?>"<?= $k === ADS_SHARE_DEFAULT ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
@@ -135,7 +133,7 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
             <label class="sp-zoom">Zoom <input type="range" id="adZoom" min="1" max="3" step="0.02" value="1"></label>
           </div>
           <div class="sp-photos ad-photos" id="adPhotos"><div class="sp-wait">Loading photos…</div></div>
-          <label class="sp-field" style="margin-top:14px">Panel texture (ghosted behind the words)
+          <label class="sp-field" id="adTexture" style="margin-top:14px">Panel texture (ghosted behind the words)
             <select name="texture">
               <?php foreach (ads_textures() as $k => $t): ?>
               <option value="<?= $e($k) ?>"<?= $k === ADS_TEXTURE_DEFAULT ? ' selected' : '' ?>><?= $e($t) ?></option>
@@ -167,8 +165,8 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
   const KINDS = <?= json_encode(array_keys($kinds)) ?>, KIND_NAMES = <?= json_encode($kinds) ?>;
   const SIZES = <?= json_encode($boxes) ?>;   // key → {name, w, h, layout, pw (0 = from the Photo width choice), ph}
   const STYLES = <?= json_encode($style_list) ?>;   // key → {name, sizes}
-  const stylePills = document.getElementById('adStyles'), conceptNote = document.getElementById('adConcept');
-  let style = 'classic';                       // a layout's key, or 'compare': the chosen slide in every layout
+  const stylePills = document.getElementById('adStyles');
+  let style = <?= json_encode(ADS_STYLE_DEFAULT) ?>;   // the layout: bleed (Full Bleed, the photo is the whole ad) or classic
   const stagesEl = document.getElementById('adStages'), sizePills = document.getElementById('adSizes'), slidePills = document.getElementById('adSlides');
   const photos = document.getElementById('adPhotos'), sideRow = document.getElementById('adSide');
   const framer = document.getElementById('adFramer'), fimg = document.getElementById('adFramerImg'), zoomCtl = document.getElementById('adZoom');
@@ -176,7 +174,6 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
   let mode = 'all', act = 'headline', tiles = [], agentTouched = false;
   const HELP = {
     all: 'All sizes: one ZIP with a GIF for every size this layout has, each kept under 1 MB, and a list of what each weighs. It takes up to a minute. Pick one size above to download it alone, as a GIF or as 2x JPG slides for Photoshop.',
-    cmp: 'Comparing layouts. Click the one you like to work in it and download it.',
     one: 'The GIF loops, each slide held the seconds above, and is kept under 1 MB by dropping colors. The slides ZIP holds each slide at twice the size as a JPG, for Photoshop. Each takes about ten seconds.',
   };
 
@@ -184,24 +181,18 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
   const on = k => k === 'headline' || (k === 'price' ? f('frame_price').checked : (f('frame_agent').checked && (f('agent').value !== '0' || f('agent2').value !== '0')));
   const visible = () => KINDS.filter(on);
   const cur = () => mode === 'all' ? '970x250' : mode;                      // the size the framer is shaped for
-  const sizesNow = () => style === 'compare' ? ['970x250', '300x250'] : STYLES[style].sizes;
-  const twoSided = () => style === 'compare' || style === 'mosaic' || (style === 'classic' && (mode === 'all' || SIZES[mode].layout === 'tri'));
+  const sizesNow = () => STYLES[style].sizes;
+  const twoSided = () => style === 'classic' && (mode === 'all' || SIZES[mode].layout === 'tri');   // Classic's sizes with a photo either side of the panel
   const side = () => twoSided() ? (form.querySelector('input[name="_side"]:checked') || {}).value || '' : '';
   const fld = (n, k) => f(n + side() + '[' + (k || act) + ']');
 
   // ── The previews ──
   function buildStages() {
-    let list;
-    if (style === 'compare') {   // the chosen slide in every layout: the marquees one under another, then the rectangles side by side
-      list = [];
-      for (const z of ['970x250', '300x250']) for (const k of Object.keys(STYLES)) list.push({ size: z, style: k, kind: act, label: esc(STYLES[k].name) });
-    } else if (mode === 'all') list = sizesNow().map(s => ({ size: s, style: style, kind: act, label: SIZES[s].name + '  ·  ' + s.replace('x', ' × ') }));
-    else list = visible().map((k, i) => ({ size: mode, style: style, kind: k, label: '<b>' + (i + 1) + '</b> ' + esc(KIND_NAMES[k]) }));
-    stagesEl.classList.toggle('ad-wrap', style === 'compare');
+    const list = mode === 'all' ? sizesNow().map(s => ({ size: s, kind: act, label: SIZES[s].name + '  ·  ' + s.replace('x', ' × ') }))
+                                : visible().map((k, i) => ({ size: mode, kind: k, label: '<b>' + (i + 1) + '</b> ' + esc(KIND_NAMES[k]) }));
     stagesEl.innerHTML = list.map(s => {
       const b = SIZES[s.size];
-      return '<div class="ad-stage' + (style !== 'compare' && mode !== 'all' && s.kind === act ? ' act' : '') + '" data-size="' + s.size + '" data-style="' + s.style + '" data-kind="' + s.kind + '" style="flex:0 1 ' + b.w + 'px" title="'
-           + (style === 'compare' ? 'Click to work in this layout' : (mode === 'all' ? 'Click to work on this size' : 'Click to work on this slide')) + '">'
+      return '<div class="ad-stage' + (mode !== 'all' && s.kind === act ? ' act' : '') + '" data-size="' + s.size + '" data-kind="' + s.kind + '" title="' + (mode === 'all' ? 'Click to work on this size' : 'Click to work on this slide') + '">'
            + '<div class="ad-stage-l">' + s.label + '</div>'
            + '<div class="ad-stage-box" style="max-width:' + b.w + 'px"><iframe title="Preview" width="' + b.w + '" height="' + b.h + '" style="width:' + b.w + 'px;height:' + b.h + 'px" scrolling="no"></iframe><div class="ad-busy"></div></div></div>';
     }).join('');
@@ -215,7 +206,7 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
       const i = vis.indexOf(s.dataset.kind); if (i < 0) return;
       const busy = s.querySelector('.ad-busy'); busy.classList.add('on');
       try {
-        const fd = new FormData(form); fd.set('size', s.dataset.size); fd.set('style', s.dataset.style); fd.set('frame', String(i));
+        const fd = new FormData(form); fd.set('size', s.dataset.size); fd.set('frame', String(i));
         const r = await fetch(RENDER, { method: 'POST', body: fd, credentials: 'same-origin' });
         const html = await r.text();
         if (n === seq && s.isConnected) s.querySelector('iframe').srcdoc = html;
@@ -235,22 +226,20 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
   // ── Size and slide ──
   function setMode(m) {
     if (m !== 'all' && !sizesNow().includes(m)) m = 'all';   // a size this layout is not built for
-    if (style === 'compare') m = 'all';
     mode = m;
-    sizePills.hidden = style === 'compare';
     sizePills.querySelectorAll('.ad-pill').forEach(p => { p.classList.toggle('on', p.dataset.size === m); p.disabled = p.dataset.size !== 'all' && !sizesNow().includes(p.dataset.size); });
     f('size').value = cur();
     form.querySelectorAll('.ad-one').forEach(b => b.disabled = m === 'all');
-    form.querySelector('button[name="export"][value="all"]').disabled = style === 'compare';
     sideRow.hidden = !twoSided();
-    sizeOut.textContent = style === 'compare' ? HELP.cmp : (m === 'all' ? HELP.all : HELP.one); sizeOut.classList.remove('bad');
+    sizeOut.textContent = m === 'all' ? HELP.all : HELP.one; sizeOut.classList.remove('bad');
     shapeFramer(); setActive(act, true);
   }
   function setStyle(k) {
     style = k;
-    f('style').value = k === 'compare' ? 'classic' : k;
+    f('style').value = k;
     stylePills.querySelectorAll('.ad-pill').forEach(p => p.classList.toggle('on', p.dataset.style === k));
-    conceptNote.hidden = k === 'classic' || k === 'compare';
+    // The Photo width choice and the panel texture are Classic's: Full Bleed has no panel.
+    document.getElementById('adShare').hidden = k !== 'classic'; document.getElementById('adTexture').hidden = k !== 'classic';
     setMode(mode);
   }
   stylePills.addEventListener('click', e => { const p = e.target.closest('.ad-pill'); if (p) setStyle(p.dataset.style); });
@@ -267,8 +256,7 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
   slidePills.addEventListener('click', e => { const p = e.target.closest('.ad-pill'); if (p) setActive(p.dataset.kind); });
   stagesEl.addEventListener('click', e => {
     const s = e.target.closest('.ad-stage'); if (!s) return;
-    if (style === 'compare') setStyle(s.dataset.style);
-    else if (mode === 'all') setMode(s.dataset.size); else setActive(s.dataset.kind);
+    if (mode === 'all') setMode(s.dataset.size); else setActive(s.dataset.kind);
   });
 
   // ── Photos ──
@@ -306,8 +294,8 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
   // ── Framing: the same CSS the slide uses, as a control; drag and zoom write the active slide's fields ──
   function shapeFramer() {
     const b = SIZES[cur()], pw = b.pw || Math.round(b.w * (+(form.querySelector('input[name="share"]:checked') || {}).value || 58) / 100);
-    // The layouts whose photo is the whole ad are framed in the whole ad; the others in Classic's photo box, near enough.
-    if (['bleed', 'band', 'paper', 'mono'].includes(style)) framer.style.aspectRatio = b.w + ' / ' + b.h;
+    // Full Bleed's photo is the whole ad, so it is framed in the whole ad; Classic's in its photo box.
+    if (style === 'bleed') framer.style.aspectRatio = b.w + ' / ' + b.h;
     else framer.style.aspectRatio = pw + ' / ' + b.ph;
   }
   function framerLoad() {
@@ -373,6 +361,6 @@ foreach (ads_styles() as $k => $t) $style_list[$k] = ['name' => $t, 'sizes' => a
 
   syncAgent();
   form.querySelectorAll('.ad-only-price').forEach(el => el.hidden = !f('frame_price').checked);
-  setMode('all'); loadPhotos();
+  setStyle(style); loadPhotos();
 })();
 </script>

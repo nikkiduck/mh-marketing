@@ -41,7 +41,7 @@ $ad = [
         ['kind' => 'agent',    'photo_url' => $photos[2], 'photo2_url' => $photos[5]],
     ],
 ];
-// --styles: every other layout at the sizes it is built for (ad-{style}-{size}-{slide}.png), nothing else.
+// --styles: Full Bleed at every size (ad-{style}-{size}-{slide}.png), and Classic's marquee and rectangle with --classic; nothing else.
 if (in_array('--styles', $flags, true)) {
     foreach (ads_styles() as $style => $label) {
         if ($style === 'classic' && !in_array('--classic', $flags, true)) continue;

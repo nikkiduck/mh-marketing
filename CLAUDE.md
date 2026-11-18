@@ -3696,38 +3696,41 @@ sizes, InDesign for one-offs. The prototype, a card on social_media.php
   - Harness: `tests/render_ads_sample.php [outdir] [base] [--png] [--gif]
     [--all] [--size=]`, every size and slide, the two-broker and
     blank-headline variants.
-- **Six concept layouts (2026-11-18, Nikki: "try creating some new layouts
-  for the property ads ... think outside the box design wise").**
-  `inc/ads_styles.php`: `ads_styles()` = Classic (the layouts above, her
-  InDesign set, the default and the only one with every size) plus Full
-  Bleed (`bleed`: the photo is the whole ad, the words in the website's
-  serif on a soft scrim), Lower Third (`band`: one slim translucent band
-  along the bottom carries everything), Paper (`paper`: a card in the
-  website's LIGHT scheme, off-white with slate type and the black logo,
-  floating on the photo), Diagonal (`diag`: photo and panel meet on the
-  angle of the M, a light slate stripe along the cut), Mosaic (`mosaic`:
-  three photos a slide, the slide's own two then the next slides') and
-  Monogram (`mono`: the photo in color through a large M mark,
-  `ADS_M_CLIP` = the mark's polygon as a clip-path, gray and veiled
-  elsewhere). They are CONCEPTS for her to choose from, built for the
-  marquee and the rectangle only (`ads_style_sizes()`); `ads_style_for()`
-  draws any other size Classic, and `ads_render_frame()` hands a slide to
-  `ads_render_style()` when the ad's `style` applies. Shared pieces:
-  `ads_content()` (a slide's words, worked out once), `ads_slide_photos()`,
-  one Presented by block for one or two brokers. Serif type is fitted at
-  .45 em a character (Cormorant runs wider than Jost: at .41 Paper's
-  headline broke mid-word); two typed headline lines never wrap into three.
-  The form posts `style`; file names carry it (`ADN_970-Powder-Ln_bleed_
-  970x250.gif`); Download all sizes makes the sizes the layout has. The
-  page (inc/ads_body.php): a Layout pill row above the sizes and **Compare
-  layouts**, the chosen slide in every layout (marquees, then rectangles
-  side by side; click one to work in it); sizes a layout lacks are disabled
-  and a note says so. The stages' flex class is `ad-wrap`: `.wrap` is the
-  admin shell's page container and indented them. Harness: `--styles
-  [--classic]` renders every layout (970 Powder Lane, the listing of her own
-  Impact ad). Three comparison boards (headline, price, two brokers) are in
-  `Mont Haus Master/Advertising/Layout concepts 2026-11-18/`. Next, once
-  she picks: the other five sizes for the chosen layout(s), drop the rest.
+- **Full Bleed is the property ads' layout (2026-11-18).** Nikki asked for
+  new layouts ("think outside the box design wise"); six concepts were shown
+  at the marquee and the rectangle (Full Bleed, Lower Third, Paper,
+  Diagonal, Mosaic, Monogram: boards in `Mont Haus Master/Advertising/Layout
+  concepts 2026-11-18/`, code in commit d2f1be9) and she chose one: "Let's
+  go with the Full Bleed. Some adjustments may have to be made for
+  readability on the really small ads." The other five were removed.
+  `inc/ads_styles.php`: `ads_styles()` = Full Bleed (`bleed`,
+  `ADS_STYLE_DEFAULT`) and Classic (her InDesign set's layouts, above);
+  `ads_render_frame()` hands a `bleed` slide to `ads_render_style()`. The
+  photo is the whole ad; the words sit on a soft scrim in the website's
+  serif (Cormorant Garamond) over a thin slate rule and the capitals; the
+  white logo in a corner. **All seven sizes**, the whole design per size in
+  `ads_bleed_sizes()`. For readability as the ad shrinks: the serif goes
+  from weight 500 to 600; the scrim reaches further across (the two mobile
+  sizes keep about a quarter of it at the far edge, with a second small
+  scrim behind the logo); the lines under the headline drop away as
+  Classic's do (strips: one-line headline, address, specs; 320x100: two-line
+  headline + specs; 320x50: two lines, the price slide leads with the
+  price and "9 BD | 12 BA | 9,768 SF"); the rule goes below the rectangle.
+  The serif is set with LINING figures: Cormorant's own numerals are
+  old-style and "970 Powder Ln" read as "97o". Serif type is fitted at .45
+  em a character (.47 at weight 600; at .41 a headline broke mid-word); two
+  typed headline lines never wrap into three. Presented by: headshot +
+  label, name, phone, site on the large sizes; the strips put two brokers
+  side by side; on the 320x50 the headshot(s) sit flush left at full height.
+  Full Bleed uses one photo a slide (no right-hand photo), no Photo width
+  choice and no panel texture: the page hides those three controls unless
+  Classic is picked, and frames the photo in the whole ad. A Layout pill
+  row (Full Bleed, Classic) sits above the sizes. File names carry the
+  layout only when it is not the default (`..._classic_970x250.gif`). GIFs
+  for 970 Powder Lane, three slides: 22 KB to 437 KB at 256 colors, the
+  Impact 935 KB at 128. Harness: `--styles` renders Full Bleed at every
+  size (`--classic` adds Classic's marquee and rectangle). Boards of every
+  size: `Mont Haus Master/Advertising/Full Bleed all sizes 2026-11-18/`.
 - Not built yet (the plan, if Nikki goes on): the RoS agents ad, the
   corporate single-image JPG ads with saved taglines, saved ad sets,
   attaching an export to the agent's placement on the Advertising tab, the

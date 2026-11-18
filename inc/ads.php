@@ -74,7 +74,7 @@ function ads_from_request(mysqli $conn, array $ctx, array $in): array|string {
     if ($agent2 && $agent && $agent2['id'] === $agent['id']) $agent2 = null;
     if (!$agent && $agent2) { $agent = $agent2; $agent2 = null; }
     $share = isset(ads_shares()[(string)($in['share'] ?? '')]) ? (string)$in['share'] : ADS_SHARE_DEFAULT;
-    $style = isset(ads_styles()[(string)($in['style'] ?? '')]) ? (string)$in['style'] : 'classic';   // the layout (2026-11-18); a size it is not built for is drawn Classic
+    $style = isset(ads_styles()[(string)($in['style'] ?? '')]) ? (string)$in['style'] : ADS_STYLE_DEFAULT;   // the layout (2026-11-18): Full Bleed unless Classic is asked for
 
     $texture = (string)($in['texture'] ?? ADS_TEXTURE_DEFAULT);
     if (!isset(ads_textures()[$texture])) $texture = ADS_TEXTURE_DEFAULT;
@@ -124,8 +124,8 @@ function ads_from_request(mysqli $conn, array $ctx, array $in): array|string {
     return [
         'size' => $size, 'style' => $style, 'share' => $share, 'texture' => $texture, 'hold' => $hold, 'prefix' => $prefix,
         'listing' => $listing, 'agents' => $ags, 'frames' => $frames, 'preview' => $preview,
-        'name_base' => $prefix . '_' . ads_slug((string)$listing['address']) . ($style !== 'classic' ? '_' . $style : ''),
-        'name' => $prefix . '_' . ads_slug((string)$listing['address']) . ($style !== 'classic' ? '_' . $style : '') . '_' . $size,
+        'name_base' => $prefix . '_' . ads_slug((string)$listing['address']) . ($style !== ADS_STYLE_DEFAULT ? '_' . $style : ''),
+        'name' => $prefix . '_' . ads_slug((string)$listing['address']) . ($style !== ADS_STYLE_DEFAULT ? '_' . $style : '') . '_' . $size,
     ];
 }
 
