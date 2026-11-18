@@ -126,10 +126,10 @@ function flyer_post_from_request(mysqli $conn, array $ctx, array $in): array|str
     $photos = [];
     foreach (array_slice((array)($in['photo'] ?? []), 0, 6) as $i => $ph) {
         $ph = (string)$ph;
-        if (str_starts_with($ph, 'upload:') && ($f = social_upload_file($ctx, substr($ph, 7)))) {
+        if (str_starts_with($ph, 'upload:') && ($f = social_upload_print_file($ctx, substr($ph, 7)))) {   // the print copy goes in the PDF
             $photos[] = ['id' => $ph, 'url' => social_upload_url($ctx, substr($ph, 7), 1600), 'file' => $f];
         } elseif (in_array($ph, $allowed, true)) {
-            $photos[] = ['id' => $ph, 'url' => social_img($ph, $i === 0 ? 2048 : 1600), 'file' => null];
+            $photos[] = ['id' => $ph, 'url' => social_img($ph, 2048), 'file' => null];   // 2048 = the board's own file, untouched
         }
     }
 

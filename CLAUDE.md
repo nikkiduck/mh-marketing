@@ -2758,8 +2758,18 @@ portal/index.php. Each comes back in one edit.
 - PDF: Chromium `--print-to-pdf` (page size from `@page`), same temp dir
   and lock as the Instagram export (`flyer_export_pdf()`); a copy of each
   PDF is kept beside the PNGs in CREATIVES_DIR/social/<intake id>/.
-  Photos: the hero at the site's 2048 rendition (img.php allows 2048 since
-  2026-10-13), the rest at 1600; about 220 dpi on the hero.
+  Photos (Nikki, 2026-11-17, after an agent's flyer printed soft): every
+  board photo is asked for at 2048, which the site's img.php now hands over
+  as the board's own file, not saved a second time. The boards send small
+  files (Vail 1500 px, about 200 dpi on the hero), so the Photos step tells
+  agents to add the photographer's originals (`.fl-tip` in flyer_body.php).
+  An upload is kept three times by `social_store_upload()`: `<id>-print.jpg`
+  (`SOCIAL_UPLOAD_PRINT_PX` = 3300 on the long side, a Letter page at 300
+  dpi, quality 95, never enlarged), `<id>.jpg` at 2000 px for the previews
+  and the Instagram exports, and the 400 px thumbnail. The flyer's PDF reads
+  the print copy (`social_upload_print_file()`, which gives the screen copy
+  for an upload from before that day). Anything else that goes on paper
+  should read the print copy too.
 - QR: `qrencode` (Debian package, installed 2026-10-13 with Nikki's OK) as
   inline SVG, level H, the triangle mark over the centre
   (assets/images/triangle_mark-black.svg). Choices: the listing's page on

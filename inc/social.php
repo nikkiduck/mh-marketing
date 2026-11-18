@@ -50,6 +50,13 @@ require_once __DIR__ . '/social_render.php';
 
 if (!defined('SOCIAL_CHROMIUM')) define('SOCIAL_CHROMIUM', '/usr/bin/chromium');
 const SOCIAL_UPLOAD_MAX = 20 * 1024 * 1024;    // bytes; the server allows 25M
+/**
+ * The long side of an upload's print copy (Nikki, 2026-11-17: keep an agent's
+ * own photo as if it were printed alone on a Letter page at 300 dpi; 11 in x
+ * 300). The MLS photos printed soft on the listing flyer; the photographer's
+ * files are the cure, so they are no longer cut to 2000 px for paper.
+ */
+const SOCIAL_UPLOAD_PRINT_PX = 3300;
 
 /**
  * The context the social endpoints act in (2026-10-28). Normally portal_context():
@@ -301,6 +308,17 @@ function social_upload_file(array $ctx, string $id, bool $thumb = false): ?strin
     return is_file($f) ? (realpath($f) ?: $f) : null;
 }
 
+/**
+ * The print copy of an upload (<id>-print.jpg, up to SOCIAL_UPLOAD_PRINT_PX on
+ * the long side), for anything that goes on paper: the listing flyer's PDF.
+ * An upload from before 2026-11-17 has none and gives its screen copy.
+ */
+function social_upload_print_file(array $ctx, string $id): ?string {
+    if (!preg_match('/^[a-f0-9]{16}$/', $id)) return null;
+    $f = social_upload_dir($ctx) . '/' . $id . '-print.jpg';
+    return is_file($f) ? (realpath($f) ?: $f) : social_upload_file($ctx, $id);
+}
+
 /** The portal URL that serves an upload (400 = thumbnail, else full size). Carries ?preview= like every portal link. */
 function social_upload_url(array $ctx, string $id, int $w): string {
     return social_url($ctx, '/portal/social_asset.php', ['id' => $id, 'w' => $w]);   // social_url: the admin's own context too
@@ -327,6 +345,7 @@ function social_delete_upload(array $ctx, string $id): bool {
     $t = social_upload_file($ctx, $id, true);
     $ok = @unlink($f);
     if ($t) @unlink($t);
+    @unlink(social_upload_dir($ctx) . '/' . $id . '-print.jpg');
     return $ok;
 }
 
@@ -335,15 +354,17 @@ function social_uploads(array $ctx): array {
     $dir = social_upload_dir($ctx);
     if (!is_dir($dir)) return [];
     $files = glob($dir . '/*.jpg') ?: [];
-    $files = array_filter($files, fn($f) => !str_ends_with($f, '-thumb.jpg'));
+    $files = array_filter($files, fn($f) => !str_ends_with($f, '-thumb.jpg') && !str_ends_with($f, '-print.jpg'));
     usort($files, fn($a, $b) => filemtime($b) <=> filemtime($a));
     return array_slice(array_map(fn($f) => basename($f, '.jpg'), $files), 0, 60);
 }
 
 /**
  * Store an agent's own photo from $_FILES[$field]: JPG, PNG or WEBP up to
- * SOCIAL_UPLOAD_MAX, EXIF rotation applied, saved as JPEG at 2000 px on the
- * long side plus a 400 px thumbnail. ['id' => hex] or ['error' => words].
+ * SOCIAL_UPLOAD_MAX, EXIF rotation applied, saved as JPEG three times: the
+ * print copy (<id>-print.jpg, SOCIAL_UPLOAD_PRINT_PX on the long side, never
+ * enlarged), the screen copy at 2000 px (<id>.jpg, what the previews and the
+ * Instagram exports load) and a 400 px thumbnail. ['id' => hex] or ['error' => words].
  */
 function social_store_upload(array $ctx, string $field): array {
     $err = $_FILES[$field]['error'] ?? UPLOAD_ERR_NO_FILE;
@@ -380,10 +401,17 @@ function social_store_upload(array $ctx, string $field): array {
     }
     if (!is_writable($dir)) { imagedestroy($img); return ['error' => 'The photo folder on the server is not writable. Please email ' . PORTAL_MARKETING_EMAIL . '.']; }
     $id = bin2hex(random_bytes(8));
-    $ok = @imagejpeg(mk_photo_scale($img, 2000), "{$dir}/{$id}.jpg", 88);
-    $ok = $ok && @imagejpeg(mk_photo_scale($img, 400), "{$dir}/{$id}-thumb.jpg", 82);
+    // Largest first, each made from the one before and the bigger one freed: a photographer's file is large in memory.
+    $step = function (GdImage $from, int $px): GdImage { $to = mk_photo_scale($from, $px); if ($to !== $from) imagedestroy($from); return $to; };
+    $img = $step($img, SOCIAL_UPLOAD_PRINT_PX);
+    $ok  = @imagejpeg($img, "{$dir}/{$id}-print.jpg", 95);
+    $img = $step($img, 2000);
+    $ok  = $ok && @imagejpeg($img, "{$dir}/{$id}.jpg", 88);
+    $img = $step($img, 400);
+    $ok  = $ok && @imagejpeg($img, "{$dir}/{$id}-thumb.jpg", 82);
     imagedestroy($img);
-    if (!$ok) { @unlink("{$dir}/{$id}.jpg"); @unlink("{$dir}/{$id}-thumb.jpg"); return ['error' => 'The photo could not be saved on the server. Please email ' . PORTAL_MARKETING_EMAIL . '.']; }
+    @chmod("{$dir}/{$id}-print.jpg", 0664);
+    if (!$ok) { @unlink("{$dir}/{$id}.jpg"); @unlink("{$dir}/{$id}-thumb.jpg"); @unlink("{$dir}/{$id}-print.jpg"); return ['error' => 'The photo could not be saved on the server. Please email ' . PORTAL_MARKETING_EMAIL . '.']; }
     @chmod("{$dir}/{$id}.jpg", 0664); @chmod("{$dir}/{$id}-thumb.jpg", 0664);
     return ['id' => $id];
 }

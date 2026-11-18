@@ -42,6 +42,7 @@
         <h2 class="sp-step-h"><span>2</span>Photos</h2>
         <p class="fl-hint">Tap photos in the order you want them: the first is the big one, then two across, then three. Up to six. Tap again to take one out.</p>
         <div class="sp-photos fl-photos" id="flPhotos"><div class="sp-wait">Loading photos…</div></div>
+        <p class="fl-hint fl-tip"><strong>For the best print, add the photographer's original photos.</strong> The MLS photos are small and can look soft on paper. Your own photos are kept at full print quality.</p>
         <div class="sp-drop" id="flDrop">
           <span id="flDropMsg">Or add your own: drop a photo here, or <label class="sp-link" for="flFile">choose one</label>.</span>
           <small>JPG, PNG or WEBP, up to 20 MB.</small>

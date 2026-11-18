@@ -14,8 +14,8 @@
  * they download. Standalone (no portal.php, no database), like
  * inc/social_render.php.
  *
- * Photos: the hero at the site's 2048 rendition, the rest at 1600 (img.php),
- * an upload read from disk for the export (file://). Fonts: the Instagram
+ * Photos: the board's own file (the site's img.php at 2048, which it does not
+ * save again); an upload's print copy read from disk for the export (file://). Fonts: the Instagram
  * template's pair, Jost and Cormorant Garamond, self-hosted, by URL for the
  * preview and embedded for the export. The QR code is an inline
  * SVG made by qrencode (inc/flyer.php) with the Mont Haus triangle mark in
