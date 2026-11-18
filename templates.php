@@ -34,6 +34,7 @@ $groups = [
     ],
     'Print Templates' => [
         ['Listing Flyer', 'template_flyer.php' . $q, 'A printed Letter-size flyer of one of the agent\'s listings: up to six photos, the details, a banner, their contact lines and a QR code.', 'Make a flyer ›', true],
+        ['Listing Brochure', 'template_flyer.php' . ($q !== '' ? $q . '&layout=brochure' : '?layout=brochure'), 'A one-page brochure of one of the agent\'s listings: three photos, the details and the full description.', 'Make a brochure ›', true],   // the flyer's second template (2026-11-17)
     ],
 ];
 

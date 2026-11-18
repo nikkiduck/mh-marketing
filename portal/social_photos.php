@@ -33,5 +33,7 @@ $out = array_map(fn($u) => ['id' => $u, 'thumb' => social_img($u, 400), 'large' 
 foreach (social_uploads($ctx) as $id) {
     $out[] = ['id' => 'upload:' . $id, 'thumb' => social_upload_url($ctx, $id, 400), 'large' => social_upload_url($ctx, $id, 1600), 'own' => true];
 }
-$headline = social_headline_from_remarks((string)($_SESSION['social_remarks'][$l['id']] ?? ''));   // the flyer's suggestion
-echo json_encode(['listing' => $l['id'], 'count' => count($out), 'headline' => $headline, 'photos' => $out], JSON_UNESCAPED_SLASHES);
+$remarks  = (string)($_SESSION['social_remarks'][$l['id']] ?? '');
+$headline = social_headline_from_remarks($remarks);   // the flyer's suggestion
+// `remarks`: the listing's description, for the brochure flyer to start from (2026-11-17).
+echo json_encode(['listing' => $l['id'], 'count' => count($out), 'headline' => $headline, 'remarks' => $remarks, 'photos' => $out], JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);

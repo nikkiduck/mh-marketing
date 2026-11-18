@@ -7,6 +7,12 @@
  * three); a footer with the logo, the agent's name and contact lines, and a
  * QR code.
  *
+ * A second layout, the BROCHURE (Nikki, 2026-11-17: "less for window display
+ * and more as a one-pager"): the same header and footer, three photos (the
+ * big one with two stacked beside it) and the listing's full description in
+ * two columns under them. `$p['layout']` = 'brochure' picks it; the photos
+ * give way to the description, whose type steps down as it gets longer.
+ *
  * One function turns a normalised flyer (see flyer_post_from_request() in
  * inc/flyer.php) into a complete HTML document of exactly 612 x 792 pt. The
  * SAME document is the live preview on the portal (an iframe's srcdoc) and
@@ -24,6 +30,7 @@
 
 const FLYER_W = 612;   // pt
 const FLYER_H = 792;
+const FLYER_DESC_MAX = 3000;   // characters of description the brochure takes (the longest Mont Haus listing on 2026-11-17 was 2,820)
 
 /** The photo grid for N photos: the hero first, then rows of two and three (the template's six). */
 function flyer_photo_layout(int $n): array {
@@ -70,8 +77,17 @@ function flyer_render(array $p, ?string $base = null, bool $export = false): str
     $logo  = $base . '/assets/images/MH_vert-stack_black.svg';
     $mark  = $base . '/assets/images/triangle_mark-black.svg';
 
+    $brochure = (string)($p['layout'] ?? '') === 'brochure';
     $photos = array_values(array_filter((array)($p['photos'] ?? []), fn($ph) => (string)($ph['url'] ?? '') !== ''));
+    if ($brochure) $photos = array_slice($photos, 0, 3);
     $layout = flyer_photo_layout(count($photos));
+    // The brochure's description: paragraphs kept, runs of blank lines closed up; the type steps down with its length
+    // so that FLYER_DESC_MAX characters still fit above the footer with the photos at their smallest.
+    $desc = $brochure ? trim(preg_replace("/\n{3,}/", "\n\n", preg_replace("/[ \t]+\n/", "\n", str_replace("\r", '', (string)($p['description'] ?? ''))))) : '';
+    $dn   = mb_strlen($desc);
+    $descPt = $dn <= 900 ? '10.5' : ($dn <= 1400 ? '10' : ($dn <= 1900 ? '9.5' : ($dn <= 2400 ? '9' : '8.5')));
+    $bcols  = count($photos) > 1 ? '1.62fr 1fr' : '1fr';
+    $brows  = count($photos) > 2 ? '1fr 1fr' : '1fr';
 
     $css = <<<CSS
 @font-face{font-family:'Jost';font-style:normal;font-weight:100 900;src:url({$fJost}) format('woff2')}
@@ -97,6 +113,12 @@ body{width:{$W}pt;height:{$H}pt;overflow:hidden;background:#fff;color:#231F20;fo
 .photos{flex:1;min-height:0;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:{$layout['rows']};gap:10pt;margin-top:18pt}
 .photos .ph{min-height:0;min-width:0;overflow:hidden;background:#dfe3e8}
 .photos img{display:block;width:100%;height:100%;object-fit:cover}
+.bphotos{flex:1 1 0;min-height:170pt;display:grid;grid-template-columns:{$bcols};grid-template-rows:{$brows};gap:10pt;margin-top:18pt}
+.bphotos .ph{min-height:0;min-width:0;overflow:hidden;background:#dfe3e8}
+.bphotos .ph:first-child{grid-row:1 / -1}
+.bphotos img{display:block;width:100%;height:100%;object-fit:cover}
+.desc{flex:0 1 auto;min-height:0;overflow:hidden;margin:16pt 0 0;columns:2;column-gap:24pt;font-size:{$descPt}pt;font-weight:300;line-height:1.5;white-space:pre-line}
+.desc.one{columns:1}
 .foot{flex:none;border-top:.75pt solid #231F20;margin-top:18pt;padding-top:16pt;display:flex;align-items:flex-start;gap:14pt}
 .foot .logo{height:74pt;width:auto;flex:none}
 .foot .who{flex:1;min-width:0;padding-left:12pt}
@@ -148,6 +170,16 @@ CSS;
         $grid .= '<div class="ph" style="grid-column:' . $col . ';grid-row:' . $row . '"><img src="' . $e($src) . '" alt=""></div>';
     }
     $gridHtml = $grid !== '' ? '<div class="photos">' . $grid . '</div>' : '<div class="photos"></div>';
+    if ($brochure) {
+        $cells = '';
+        foreach ($photos as $ph) {
+            $src = ($export && !empty($ph['file'])) ? 'file://' . $ph['file'] : (string)$ph['url'];
+            $cells .= '<div class="ph"><img src="' . $e($src) . '" alt=""></div>';
+        }
+        $notesHtml = '';
+        $gridHtml  = '<div class="bphotos">' . $cells . '</div>'
+                   . ($desc !== '' ? '<p class="desc' . ($dn <= 320 ? ' one' : '') . '">' . $e($desc) . '</p>' : '');
+    }
 
     $a = (array)($p['agent'] ?? []);
     $lines = array_filter([(string)($a['phone'] ?? ''), 'monthaus.com', (string)($a['email'] ?? '')], fn($s) => trim($s) !== '');

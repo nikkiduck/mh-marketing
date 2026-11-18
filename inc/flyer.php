@@ -101,6 +101,11 @@ function flyer_qr_svg(string $url): string {
     return $svg;
 }
 
+/** How many photos a template takes: six on the display flyer, three on the brochure. */
+function flyer_photo_max(string $layout): int {
+    return $layout === 'brochure' ? 3 : 6;
+}
+
 /** The listing's photos the form may offer, as the Instagram tool lists them (site photos, then uploads). */
 function flyer_photo_choices(mysqli $conn, array $ctx, array $l): array {
     $urls = social_photos((string)$l['market'], (string)$l['listing_key']);
@@ -121,10 +126,11 @@ function flyer_post_from_request(mysqli $conn, array $ctx, array $in): array|str
     $l = social_listing($conn, $ctx, (string)($in['listing'] ?? ''));
     if (!$l) return 'Choose one of your listings to see your flyer.';
 
+    $layout  = (string)($in['layout'] ?? '') === 'brochure' ? 'brochure' : 'display';   // the two templates (2026-11-17)
     $allowed = (array)($_SESSION['social_photos'][$l['id']] ?? []);
     if ((string)$l['primary_photo'] !== '') $allowed[] = (string)$l['primary_photo'];
     $photos = [];
-    foreach (array_slice((array)($in['photo'] ?? []), 0, 6) as $i => $ph) {
+    foreach (array_slice((array)($in['photo'] ?? []), 0, flyer_photo_max($layout)) as $i => $ph) {
         $ph = (string)$ph;
         if (str_starts_with($ph, 'upload:') && ($f = social_upload_print_file($ctx, substr($ph, 7)))) {   // the print copy goes in the PDF
             $photos[] = ['id' => $ph, 'url' => social_upload_url($ctx, substr($ph, 7), 1600), 'file' => $f];
@@ -154,6 +160,8 @@ function flyer_post_from_request(mysqli $conn, array $ctx, array $in): array|str
 
     return [
         'listing' => $l,
+        'layout'  => $layout,
+        'description' => mb_substr(trim((string)($in['description'] ?? '')), 0, FLYER_DESC_MAX),   // the brochure's; the display flyer has `notes`
         'title'   => $txt('title', 80),
         'address' => $txt('address', 90, social_short_address((string)$l['address']) . (trim((string)$l['city']) !== '' ? ', ' . trim((string)$l['city']) : '')),   // St, Rd, Ave, #unit (Nikki, 2026-10-13)
         'price'   => $txt('price', 40, (string)$l['price_text']),
@@ -178,7 +186,7 @@ function flyer_post_from_request(mysqli $conn, array $ctx, array $in): array|str
 /** "1100-n-frontage-rd-w-1513-flyer-20261013.pdf" */
 function flyer_filename(array $p): string {
     $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', (string)$p['listing']['address']), '-')) ?: 'listing';
-    return mb_substr($slug, 0, 60) . '-flyer-' . date('Ymd') . '.pdf';
+    return mb_substr($slug, 0, 60) . ((string)($p['layout'] ?? '') === 'brochure' ? '-brochure-' : '-flyer-') . date('Ymd') . '.pdf';
 }
 
 /**

@@ -37,7 +37,7 @@ portal_header($ctx, 'Listing Flyer', 'social');   // under Templates in the menu
 <link rel="stylesheet" href="/assets/css/flyer.css?v=<?= (int)@filemtime(__DIR__ . '/../assets/css/flyer.css') ?>">
   <p class="pt-soon">Print Templates</p>
   <h1 class="pt-h1">Listing Flyer</h1>
-  <p class="pt-lead">A printed flyer of one of your listings, Letter size. Pick the listing and up to six photos, check the text, and download the PDF.</p>
+  <p class="pt-lead">A printed flyer of one of your listings, Letter size. Pick a template, the listing and its photos, check the text, and download the PDF.</p>
   <p class="tp-back"><a href="<?= ph(portal_url($ctx, '/portal/templates.php')) ?>">‹ All templates</a></p>
 <?php include __DIR__ . '/../inc/flyer_body.php';   // the form and its script, shared with the admin side (2026-10-21)
 portal_footer();

@@ -18,6 +18,16 @@
     <form id="flForm" class="sp-form" method="post" action="<?= ph($export_url) ?>" autocomplete="off">
       <input type="hidden" name="csrf_token" value="<?= ph($_SESSION['csrf_token']) ?>">
       <div id="flOrder"></div>
+      <?php // The two templates (Nikki, 2026-11-17): the display flyer, and the brochure with three photos and the full description. ?layout=brochure opens on the second.
+      $fl_layout = (string)($_GET['layout'] ?? '') === 'brochure' ? 'brochure' : 'display'; ?>
+      <input type="hidden" name="layout" value="<?= $fl_layout ?>">
+      <section class="sp-step">
+        <h2 class="sp-step-h">Template</h2>
+        <div class="fl-tabs fl-layouts">
+          <button type="button" class="fl-tab<?= $fl_layout === 'display' ? ' on' : '' ?>" data-layout="display">Display Flyer<em>Up to six photos, for a window or a sign</em></button>
+          <button type="button" class="fl-tab<?= $fl_layout === 'brochure' ? ' on' : '' ?>" data-layout="brochure">Brochure<em>Three photos and the full description</em></button>
+        </div>
+      </section>
 
       <section class="sp-step">
         <h2 class="sp-step-h"><span>1</span>Listing</h2>
@@ -50,7 +60,7 @@
           <button type="button" class="fl-tab on" role="tab" data-tab="mls" aria-selected="true">MLS photos<em></em></button>
           <button type="button" class="fl-tab" role="tab" data-tab="own" aria-selected="false">Upload your own<em></em></button>
         </div>
-        <p class="fl-hint">Tap photos in the order you want them: the first is the big one, then two across, then three. Up to six, from either tab. Tap again to take one out.</p>
+        <p class="fl-hint" id="flOrderHint"></p>
         <div class="fl-pane" id="flPaneMls" role="tabpanel">
           <div class="sp-photos fl-photos" id="flPhotos"><div class="sp-wait">Loading photos…</div></div>
         </div>
@@ -88,7 +98,9 @@
               <select name="banner_color"><?php foreach (flyer_banner_colors() as $k => $hex): ?><option value="<?= ph($k) ?>"><?= ph(flyer_banner_color_label($k)) ?></option><?php endforeach; ?></select>
             </label>
           </div>
-          <label class="sp-field">Notes under the details (optional) <textarea name="notes" maxlength="900" rows="3" placeholder="A few lines about the home, or leave this empty."></textarea></label>
+          <label class="sp-field" id="flNotesWrap">Notes under the details (optional) <textarea name="notes" maxlength="900" rows="3" placeholder="A few lines about the home, or leave this empty."></textarea></label>
+          <label class="sp-field" id="flDescWrap" hidden>Description <textarea name="description" maxlength="<?= FLYER_DESC_MAX ?>" rows="12" placeholder="The description of the home. It starts as the one on the MLS; edit it as you like."></textarea>
+            <small class="fl-desc-note" id="flDescNote"></small></label>
           <h3 class="sp-sub">Contact</h3>
           <div class="fl-three">
             <label class="sp-field">Name <input name="agent_name" maxlength="60" value="<?= ph($agent['name']) ?>"></label>
@@ -129,12 +141,40 @@
   const listing = () => L.find(l => l.id === f('listing').value);
   let picked = [];   // photo ids in order
 
+  // ── The two templates: the display flyer takes six photos and short notes, the brochure three and the full description ──
+  const DESC_MAX = <?= FLYER_DESC_MAX ?>, desc = f('description'), descNote = document.getElementById('flDescNote');
+  const maxPhotos = () => f('layout').value === 'brochure' ? 3 : 6;
+  function setLayout(name) {
+    const b = name === 'brochure';
+    f('layout').value = b ? 'brochure' : 'display';
+    form.querySelectorAll('.fl-layouts .fl-tab').forEach(t => t.classList.toggle('on', t.dataset.layout === f('layout').value));
+    document.getElementById('flNotesWrap').hidden = b;
+    document.getElementById('flDescWrap').hidden = !b;
+    document.getElementById('flOrderHint').textContent = b
+      ? 'Tap photos in the order you want them: the first is the big one, the next two sit beside it. Up to three, from either tab. Tap again to take one out.'
+      : 'Tap photos in the order you want them: the first is the big one, then two across, then three. Up to six, from either tab. Tap again to take one out.';
+    if (picked.length > maxPhotos()) picked = picked.slice(0, maxPhotos());
+  }
+  // The MLS description, cut at the end of a sentence when it is longer than the page takes.
+  function fitDesc(t) {
+    t = String(t || '').trim(); descNote.textContent = '';
+    if (t.length <= DESC_MAX) return t;
+    const head = t.slice(0, DESC_MAX), end = Math.max(head.lastIndexOf('. '), head.lastIndexOf('! '), head.lastIndexOf('.\n'));
+    descNote.textContent = 'The MLS description is longer than the page holds, so the end was left off. Edit it as you like.';
+    return end > DESC_MAX / 2 ? head.slice(0, end + 1) : head;
+  }
+  form.querySelector('.fl-layouts').addEventListener('click', e => {
+    const t = e.target.closest('[data-layout]'); if (!t || t.dataset.layout === f('layout').value) return;
+    setLayout(t.dataset.layout); syncOrder(); update();
+  });
+
   const DEFAULT_BANNER = <?= json_encode(array_combine(array_column($listings, 'id'), array_map('flyer_default_banner', $listings)) ?: new stdClass) ?>;
   const bannerSel = document.getElementById('flBanner'), bannerCustom = document.getElementById('flBannerCustom');
   function showBanner() { bannerCustom.hidden = bannerSel.value !== '__custom'; }
   function fill(l) {
     if (!l) return;
     f('title').value = ''; f('title').dataset.touched = '';   // the suggestion arrives with the photos
+    desc.value = ''; desc.dataset.touched = ''; descNote.textContent = '';   // so does the description
     bannerSel.value = DEFAULT_BANNER[l.id] || '__none'; showBanner();
     f('address').value = l.headline + (l.city ? ', ' + l.city : '');   // l.headline = the short address (St, Rd, #unit)
     f('price').value = l.price_text;
@@ -186,7 +226,7 @@
     const el = e.target.closest('.fl-photo'); if (!el) return;
     const id = el.dataset.id, i = picked.indexOf(id);
     if (i >= 0) picked.splice(i, 1);
-    else if (picked.length < 6) picked.push(id);
+    else if (picked.length < maxPhotos()) picked.push(id);
     else return;
     syncOrder(); update();
   });
@@ -197,6 +237,7 @@
     let j = { photos: [] };
     try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
     const all = j.photos || [], mls = all.filter(p => !p.own);
+    if (!desc.dataset.touched) desc.value = fitDesc(j.remarks);   // the brochure's description starts as the listing's own
     own.innerHTML = all.filter(p => p.own).map(tile).join('');   // the agent's earlier uploads, whichever listing is chosen
     if (!mls.length) {
       photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Upload your own in the other tab.</div>';
@@ -205,7 +246,7 @@
     // A headline from the opening of the listing description, unless the agent has typed one.
     if (j.headline && !f('title').dataset.touched) f('title').value = j.headline;
     photos.innerHTML = mls.map(tile).join('');
-    picked = j.photos.filter(p => !p.own).slice(0, 6).map(p => p.id);   // the first six board photos to start
+    picked = mls.slice(0, maxPhotos()).map(p => p.id);   // the first board photos to start: six, or the brochure's three
     syncOrder(); update();
   }
   async function uploadAll(files) {   // several at once, one after the other
@@ -224,7 +265,7 @@
     own.insertAdjacentHTML('afterbegin', tile({ id: j.id, thumb: j.thumb, own: true }));
     // A new upload goes on the flyer: in the place of the first MLS photo still on it (the big one first), else at the end while there is room.
     const at = picked.findIndex(id => id.indexOf('upload:') !== 0);
-    if (at >= 0) picked[at] = j.id; else if (picked.length < 6) picked.push(j.id);
+    if (at >= 0) picked[at] = j.id; else if (picked.length < maxPhotos()) picked.push(j.id);
     syncOrder(); update();
   }
   fileIn.addEventListener('change', e => uploadAll(e.target.files));
@@ -236,6 +277,7 @@
   form.addEventListener('input', e => {
     if (e.target.name === 'listing') { fill(listing()); loadPhotos(); return; }
     if (e.target.name === 'title') f('title').dataset.touched = '1';
+    if (e.target.name === 'description') { desc.dataset.touched = '1'; descNote.textContent = ''; }
     if (e.target.name === 'banner') showBanner();
     update();
   });
@@ -245,6 +287,7 @@
   form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), 15000); });
 
   new ResizeObserver(scale).observe(stage); scale();
+  setLayout(f('layout').value);
   fill(listing());
   loadPhotos();
 })();

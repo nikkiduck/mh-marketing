@@ -21,7 +21,8 @@ $groups = [
         ['Market Snapshot', '/portal/market_post.php', 'One place\'s month on a card: the median sale price, closed sales, days on market and months of supply. A post or a story.', 'Make a snapshot ›'],   // from the Market Report (2026-10-18)
     ],
     'Print Templates' => [
-        ['Listing Flyer', '/portal/flyer.php', 'A printed Letter-size flyer: up to six photos, the details, a banner, your contact lines and a QR code. Download the PDF.', 'Make a flyer ›'],
+        ['Listing Flyer', '/portal/flyer.php', 'A printed Letter-size flyer for a window or a sign: up to six photos, the details, a banner, your contact lines and a QR code. Download the PDF.', 'Make a flyer ›'],
+        ['Listing Brochure', '/portal/flyer.php?layout=brochure', 'A one-page brochure of a listing: three photos, the details and the full description, with your contact lines and a QR code. Download the PDF.', 'Make a brochure ›'],   // the flyer's second template (2026-11-17)
     ],
 ];
 
@@ -34,7 +35,7 @@ portal_header($ctx, 'Templates', 'social');
   <h2 class="tp-group"><?= ph($heading) ?></h2>
   <div class="pt-cards">
     <?php foreach ($cards as [$title, $path, $sub, $go]): ?>
-    <a class="pt-card" href="<?= ph(portal_url($ctx, $path)) ?>">
+    <a class="pt-card" href="<?= ph(portal_url($ctx, (string)strtok($path, '?'), (function ($p) { parse_str((string)parse_url($p, PHP_URL_QUERY), $q); return $q; })($path))) ?>">
       <h3 class="pt-card-h"><?= ph($title) ?></h3>
       <p class="pt-card-sub"><?= ph($sub) ?></p>
       <span class="pt-card-go"><?= ph($go) ?></span>

@@ -2777,6 +2777,22 @@ portal/index.php. Each comes back in one edit.
   the place of the first MLS photo still on the flyer (the big one first),
   so uploading the originals swaps the MLS photos out; several files can be
   dropped at once. A listing with no feed photos opens on the upload tab.
+- **Two templates in the one tool (Nikki, 2026-11-17):** the Display Flyer
+  above, and the BROCHURE, "less for window display and more as a
+  one-pager": the same header and footer, three photos (the big one with
+  two stacked beside it) and the listing's full description in two columns.
+  The form's Template tabs set the hidden `layout` field (`display` |
+  `brochure`); `?layout=brochure` opens on the brochure, which is how the
+  "Listing Brochure" card on both Templates pages links to it.
+  `flyer_photo_max()` is six or three. The brochure has its own
+  `description` field (the display flyer keeps `notes`), which starts as the
+  listing's remarks: social_photos.php sends `remarks`, kept whole in the
+  session (4,000 characters), cut at a sentence end when longer than
+  `FLYER_DESC_MAX` (3,000). In flyer_render.php the photos give way to the
+  description (`.bphotos` flexes, 170 pt at least) and the type steps down
+  from 10.5 to 8.5 pt with its length, so 3,000 characters still fit;
+  a change to either number means rendering the longest case again. The
+  PDF is named `...-brochure-<date>.pdf`.
 - QR: `qrencode` (Debian package, installed 2026-10-13 with Nikki's OK) as
   inline SVG, level H, the triangle mark over the centre
   (assets/images/triangle_mark-black.svg). Choices: the listing's page on

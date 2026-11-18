@@ -18,6 +18,9 @@
 .fl-tab.on { border-color: var(--gold-deep); background: var(--gold-deep); color: #fff; }
 .fl-tab em { display: block; font-style: normal; font-size: 13px; font-weight: 400; opacity: .85; min-height: 1.2em; }
 .fl-tab:focus-visible { outline: 2px solid var(--gold-deep); outline-offset: 2px; }
+.fl-layouts { margin-bottom: 0; }
+.fl-desc-note { display: block; color: var(--muted); font-size: 13px; margin-top: 4px; }
+.fl-desc-note:empty { display: none; }
 .fl-drop { margin: 0 0 12px; padding: 26px 16px; text-align: center; font-size: 17px; color: var(--text); }
 .fl-photos { gap: 8px; }
 .fl-photo { position: relative; padding: 0; border: 0; background: none; cursor: pointer; font: inherit; }

@@ -239,10 +239,10 @@ function social_photos(string $market, string $key): array {
         $u = (string)($p['url'] ?? '');
         if ($u !== '' && !in_array($u, $urls, true)) $urls[] = $u;
     }
-    // The public remarks ride along (2026-10-13), for the flyer's headline suggestion.
+    // The public remarks ride along (2026-10-13), for the flyer's headline suggestion and, whole, the brochure's description (2026-11-17).
     $rem = (array)($_SESSION['social_remarks'] ?? []);
     unset($rem[$sk]);
-    $rem[$sk] = mb_substr(trim((string)($j['remarks'] ?? '')), 0, 600);
+    $rem[$sk] = mb_substr(trim((string)($j['remarks'] ?? '')), 0, 4000);
     $_SESSION['social_remarks'] = array_slice($rem, -12, null, true);
     if ($urls) {
         $all = (array)($_SESSION['social_photos'] ?? []);
