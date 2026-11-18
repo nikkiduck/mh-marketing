@@ -21,8 +21,8 @@ $groups = [
         ['Market Snapshot', '/portal/market_post.php', 'One place\'s month on a card: the median sale price, closed sales, days on market and months of supply. A post or a story.', 'Make a snapshot ›'],   // from the Market Report (2026-10-18)
     ],
     'Print Templates' => [
-        ['Listing Flyer', '/portal/flyer.php', 'A printed Letter-size flyer for a window or a sign: up to six photos, the details, a banner, your contact lines and a QR code. Download the PDF.', 'Make a flyer ›'],
-        ['Listing Brochure', '/portal/flyer.php?layout=brochure', 'A one-page brochure of a listing: three photos, the details and the full description, with your contact lines and a QR code. Download the PDF.', 'Make a brochure ›'],   // the flyer's second template (2026-11-17)
+        ['Listing Flyer', '/portal/flyer.php', 'A printed letter-sized flyer for a window or a sign: up to six photos, the details, your contact info and a QR code. Download the PDF.', 'Make a flyer ›'],
+        ['One-Page Brochure', '/portal/flyer.php?layout=brochure', 'A single-sided brochure of a listing: three photos, the details and the full description, with your contact info and a QR code. Download the PDF.', 'Make a brochure ›'],   // the flyer's second template (2026-11-17)
     ],
 ];
 

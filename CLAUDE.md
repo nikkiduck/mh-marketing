@@ -2783,7 +2783,7 @@ portal/index.php. Each comes back in one edit.
   two stacked beside it) and the listing's full description in two columns.
   The form's Template tabs set the hidden `layout` field (`display` |
   `brochure`); `?layout=brochure` opens on the brochure, which is how the
-  "Listing Brochure" card on both Templates pages links to it.
+  "One-Page Brochure" card on both Templates pages links to it (Nikki named the card and the tab, 2026-11-18).
   `flyer_photo_max()` is six or three. The brochure has its own
   `description` field (the display flyer keeps `notes`), which starts as the
   listing's remarks: social_photos.php sends `remarks`, kept whole in the

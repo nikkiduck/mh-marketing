@@ -25,7 +25,7 @@
         <h2 class="sp-step-h">Template</h2>
         <div class="fl-tabs fl-layouts">
           <button type="button" class="fl-tab<?= $fl_layout === 'display' ? ' on' : '' ?>" data-layout="display">Display Flyer<em>Up to six photos, for a window or a sign</em></button>
-          <button type="button" class="fl-tab<?= $fl_layout === 'brochure' ? ' on' : '' ?>" data-layout="brochure">Brochure<em>Three photos and the full description</em></button>
+          <button type="button" class="fl-tab<?= $fl_layout === 'brochure' ? ' on' : '' ?>" data-layout="brochure">One-Page Brochure<em>Three photos and the full description</em></button>
         </div>
       </section>
 
@@ -52,7 +52,7 @@
         <?php // The note sits ABOVE the heading and the two sources are tabs (Nikki, 2026-11-17: nobody should miss that their own photos print better). ?>
         <div class="fl-tip">
           <strong>For the best print, upload the photographer's original photos.</strong>
-          The MLS photos are small and can look soft on paper. Photos you upload are kept at full print quality.
+          The MLS photos are small and can appear low-quality when printed. Photos you upload are kept at full print quality.
           <button type="button" class="fl-tip-go" data-tab="own">Upload your own ›</button>
         </div>
         <h2 class="sp-step-h"><span>2</span>Photos</h2>
@@ -67,7 +67,7 @@
         <div class="fl-pane" id="flPaneOwn" role="tabpanel" hidden>
           <div class="sp-drop fl-drop" id="flDrop">
             <span id="flDropMsg">Drop your photos here, or <label class="sp-link" for="flFile">choose them</label>.</span>
-            <small>JPG, PNG or WEBP, up to 20 MB each. The photographer's full-size files print best.</small>
+            <small>JPG, PNG or WEBP, up to 20 MB each. Original, full-size files print best.</small>
             <input type="file" id="flFile" accept="image/jpeg,image/png,image/webp,image/*" multiple hidden>
           </div>
           <div class="sp-photos fl-photos" id="flOwn"></div>
@@ -113,7 +113,7 @@
 
       <div class="sp-actions">
         <button type="submit" class="sp-btn">Download PDF</button>
-        <p class="sp-help">The download is a Letter-size PDF (8.5 × 11 in), ready to print or email.</p>
+        <p class="sp-help">The download is a letter-sized PDF (8.5 × 11 in), ready to print or email.</p>
       </div>
     </form>
 
