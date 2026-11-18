@@ -2770,6 +2770,13 @@ portal/index.php. Each comes back in one edit.
   the print copy (`social_upload_print_file()`, which gives the screen copy
   for an upload from before that day). Anything else that goes on paper
   should read the print copy too.
+  The Photos step (same day): the print note is a box ABOVE the "Photos"
+  heading (`.fl-tip`), and the two sources are tabs, "MLS photos" and
+  "Upload your own" (`.fl-tab`, `showTab()`), each showing how many of its
+  photos are on the flyer; the six picks may mix both. A new upload takes
+  the place of the first MLS photo still on the flyer (the big one first),
+  so uploading the originals swaps the MLS photos out; several files can be
+  dropped at once. A listing with no feed photos opens on the upload tab.
 - QR: `qrencode` (Debian package, installed 2026-10-13 with Nikki's OK) as
   inline SVG, level H, the triangle mark over the centre
   (assets/images/triangle_mark-black.svg). Choices: the listing's page on

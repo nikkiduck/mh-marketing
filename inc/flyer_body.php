@@ -39,14 +39,28 @@
       </section>
 
       <section class="sp-step">
+        <?php // The note sits ABOVE the heading and the two sources are tabs (Nikki, 2026-11-17: nobody should miss that their own photos print better). ?>
+        <div class="fl-tip">
+          <strong>For the best print, upload the photographer's original photos.</strong>
+          The MLS photos are small and can look soft on paper. Photos you upload are kept at full print quality.
+          <button type="button" class="fl-tip-go" data-tab="own">Upload your own ›</button>
+        </div>
         <h2 class="sp-step-h"><span>2</span>Photos</h2>
-        <p class="fl-hint">Tap photos in the order you want them: the first is the big one, then two across, then three. Up to six. Tap again to take one out.</p>
-        <div class="sp-photos fl-photos" id="flPhotos"><div class="sp-wait">Loading photos…</div></div>
-        <p class="fl-hint fl-tip"><strong>For the best print, add the photographer's original photos.</strong> The MLS photos are small and can look soft on paper. Your own photos are kept at full print quality.</p>
-        <div class="sp-drop" id="flDrop">
-          <span id="flDropMsg">Or add your own: drop a photo here, or <label class="sp-link" for="flFile">choose one</label>.</span>
-          <small>JPG, PNG or WEBP, up to 20 MB.</small>
-          <input type="file" id="flFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
+        <div class="fl-tabs" role="tablist">
+          <button type="button" class="fl-tab on" role="tab" data-tab="mls" aria-selected="true">MLS photos<em></em></button>
+          <button type="button" class="fl-tab" role="tab" data-tab="own" aria-selected="false">Upload your own<em></em></button>
+        </div>
+        <p class="fl-hint">Tap photos in the order you want them: the first is the big one, then two across, then three. Up to six, from either tab. Tap again to take one out.</p>
+        <div class="fl-pane" id="flPaneMls" role="tabpanel">
+          <div class="sp-photos fl-photos" id="flPhotos"><div class="sp-wait">Loading photos…</div></div>
+        </div>
+        <div class="fl-pane" id="flPaneOwn" role="tabpanel" hidden>
+          <div class="sp-drop fl-drop" id="flDrop">
+            <span id="flDropMsg">Drop your photos here, or <label class="sp-link" for="flFile">choose them</label>.</span>
+            <small>JPG, PNG or WEBP, up to 20 MB each. The photographer's full-size files print best.</small>
+            <input type="file" id="flFile" accept="image/jpeg,image/png,image/webp,image/*" multiple hidden>
+          </div>
+          <div class="sp-photos fl-photos" id="flOwn"></div>
         </div>
       </section>
 
@@ -109,7 +123,7 @@
   const form = document.getElementById('flForm'), frame = document.getElementById('flFrame'), stage = document.getElementById('flStage'),
         photos = document.getElementById('flPhotos'), busy = document.getElementById('flBusy'), order = document.getElementById('flOrder'),
         drop = document.getElementById('flDrop'), dropMsg = document.getElementById('flDropMsg'), fileIn = document.getElementById('flFile'),
-        qrSel = document.getElementById('flQr');
+        qrSel = document.getElementById('flQr'), own = document.getElementById('flOwn'), step = photos.closest('.sp-step');
   const f = n => form.elements[n];
   const esc = s => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
   const listing = () => L.find(l => l.id === f('listing').value);
@@ -148,17 +162,27 @@
 
   // ── Photos in order ──
   function tile(p) {
-    return '<button type="button" class="fl-photo' + (p.own ? ' own' : '') + '" data-id="' + esc(p.id) + '"><img src="' + esc(p.thumb) + '" alt="" loading="lazy"><i></i>' + (p.own ? '<b>Yours</b>' : '') + '</button>';
+    return '<button type="button" class="fl-photo' + (p.own ? ' own' : '') + '" data-id="' + esc(p.id) + '"><img src="' + esc(p.thumb) + '" alt="" loading="lazy"><i></i></button>';
   }
+  // The two sources as tabs: the board's photos, and the agent's own. Each tab shows how many of its photos are on the flyer.
+  function showTab(name) {
+    step.querySelectorAll('.fl-tab').forEach(t => { const on = t.dataset.tab === name; t.classList.toggle('on', on); t.setAttribute('aria-selected', on ? 'true' : 'false'); });
+    document.getElementById('flPaneMls').hidden = name !== 'mls';
+    document.getElementById('flPaneOwn').hidden = name !== 'own';
+  }
+  step.addEventListener('click', e => { const t = e.target.closest('[data-tab]'); if (t) showTab(t.dataset.tab); });
   function syncOrder() {
     order.innerHTML = picked.map(id => '<input type="hidden" name="photo[]" value="' + esc(id) + '">').join('');
-    photos.querySelectorAll('.fl-photo').forEach(el => {
+    step.querySelectorAll('.fl-photo').forEach(el => {
       const i = picked.indexOf(el.dataset.id);
       el.classList.toggle('on', i >= 0);
       el.querySelector('i').textContent = i >= 0 ? String(i + 1) : '';
     });
+    const mine = picked.filter(id => id.indexOf('upload:') === 0).length;
+    step.querySelector('.fl-tab[data-tab="mls"] em').textContent = picked.length - mine ? (picked.length - mine) + ' on flyer' : '';
+    step.querySelector('.fl-tab[data-tab="own"] em').textContent = mine ? mine + ' on flyer' : '';
   }
-  photos.addEventListener('click', e => {
+  step.addEventListener('click', e => {
     const el = e.target.closest('.fl-photo'); if (!el) return;
     const id = el.dataset.id, i = picked.indexOf(id);
     if (i >= 0) picked.splice(i, 1);
@@ -172,15 +196,20 @@
     const u = new URL(PHOTOS, location.origin); u.searchParams.set('listing', l.id);
     let j = { photos: [] };
     try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
-    if (!j.photos || !j.photos.length) {
-      photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Add your own below.</div>';
-      picked = []; syncOrder(); update(); return;
+    const all = j.photos || [], mls = all.filter(p => !p.own);
+    own.innerHTML = all.filter(p => p.own).map(tile).join('');   // the agent's earlier uploads, whichever listing is chosen
+    if (!mls.length) {
+      photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Upload your own in the other tab.</div>';
+      picked = []; showTab('own'); syncOrder(); update(); return;
     }
     // A headline from the opening of the listing description, unless the agent has typed one.
     if (j.headline && !f('title').dataset.touched) f('title').value = j.headline;
-    photos.innerHTML = j.photos.map(tile).join('');
+    photos.innerHTML = mls.map(tile).join('');
     picked = j.photos.filter(p => !p.own).slice(0, 6).map(p => p.id);   // the first six board photos to start
     syncOrder(); update();
+  }
+  async function uploadAll(files) {   // several at once, one after the other
+    for (const file of Array.from(files || [])) await upload(file);
   }
   async function upload(file) {
     if (!file) return;
@@ -191,16 +220,17 @@
     catch (e) { j = { error: 'The upload did not go through. Please try again.' }; }
     drop.classList.remove('busy'); fileIn.value = '';
     if (j.error) { dropMsg.textContent = j.error; return; }
-    dropMsg.innerHTML = 'Added. Drop another, or <label class="sp-link" for="flFile">choose one</label>.';
-    photos.querySelector('.sp-wait')?.remove();
-    photos.insertAdjacentHTML('afterbegin', tile({ id: j.id, thumb: j.thumb, own: true }));
-    if (picked.length < 6) picked.push(j.id);
+    dropMsg.innerHTML = 'Added to your flyer. Drop more here, or <label class="sp-link" for="flFile">choose them</label>.';
+    own.insertAdjacentHTML('afterbegin', tile({ id: j.id, thumb: j.thumb, own: true }));
+    // A new upload goes on the flyer: in the place of the first MLS photo still on it (the big one first), else at the end while there is room.
+    const at = picked.findIndex(id => id.indexOf('upload:') !== 0);
+    if (at >= 0) picked[at] = j.id; else if (picked.length < 6) picked.push(j.id);
     syncOrder(); update();
   }
-  fileIn.addEventListener('change', e => upload(e.target.files[0]));
+  fileIn.addEventListener('change', e => uploadAll(e.target.files));
   ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
   ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
-  drop.addEventListener('drop', e => upload(e.dataTransfer.files[0]));
+  drop.addEventListener('drop', e => uploadAll(e.dataTransfer.files));
 
   // ── Wiring ──
   form.addEventListener('input', e => {
