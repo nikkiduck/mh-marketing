@@ -20,11 +20,11 @@ made there does not reach here.
 Nikki: "Agent Roster page should be just for agent management."
 
 - **`index.php` is Admin Home**, the landing page after sign-in: one card per
-  area (Agent Roster, Social Media, MH Send, Market Reports, Hot Sheets,
-  Templates, QR Codes, Agent Billing, Brand Guidelines, Portal Users, What's
-  New, Anyprop Feed (2026-11-16): her order), from the
+  area (Agent Roster, Social Media, Digital Ads (2026-11-18), MH Send, Market
+  Reports, Hot Sheets, Templates, QR Codes, Agent Billing, Brand Guidelines,
+  Portal Users, What's New, Anyprop Feed (2026-11-16): her order), from the
   `$cards` list in that file. A card whose page a role cannot open is not
-  drawn (Social Media, MH Send, Portal Users, What's New: super admin; Anyprop
+  drawn (Social Media, Digital Ads, MH Send, Portal Users, What's New: super admin; Anyprop
   Feed is for every admin). The Pipeline
   count that sat on the roster's Hot Sheets button is on the Hot Sheets card.
 - **The Agent Roster is `agents.php`** (it was `index.php` until that day; an
@@ -3597,6 +3597,15 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   what the frame will carry.
 
 ### Digital Ads (PROTOTYPE, super admin only, 2026-11-09)
+
+**Its own area since 2026-11-18** (Nikki: "move this Digital Ads section out
+of Social Media and into its own section in Admin ... It doesn't belong in
+Social Media"): a Digital Ads card on Admin Home (`index.php`, super admin),
+no card on social_media.php, and `template_ad.php` has no Social Media
+button and marks no nav link. It still passes `plan_gate()` and borrows the
+plan tools' listings, brokers and photo endpoint (inc/plan.php): shared
+code, not a place in Social Media. Where the notes below say "a card on
+social_media.php", that is how it started.
 
 Nikki's question: could the portal replace InDesign for the newspapers' web
 ads (Vail Daily, Aspen Daily News: property ads as 2 to 5 slide animated

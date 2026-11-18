@@ -3,12 +3,13 @@
  * index.php — Admin Home: the landing page of the admin side (Nikki,
  * 2026-11-14: "Agent Roster page should be just for agent management").
  *
- * One card per area, in the order she gave: Agent Roster, Social Media, MH
- * Send, Market Reports, Hot Sheets, Templates, QR Codes, Agent Billing, Brand
+ * One card per area, in the order she gave: Agent Roster, Social Media,
+ * Digital Ads (2026-11-18), MH Send, Market Reports, Hot Sheets, Templates, QR Codes, Agent Billing, Brand
  * Guidelines, Portal Users, What's New, Anyprop Feed. These used to be the row of buttons in the
  * roster's header; the roster is agents.php now and keeps only the agent
- * management ones. A card a role cannot open is not drawn (Social Media, MH
- * Send, Portal Users and What's New are super admin only, as their pages are).
+ * management ones. A card a role cannot open is not drawn (Social Media,
+ * Digital Ads, MH Send, Portal Users and What's New are super admin only, as
+ * their pages are).
  *
  * This file was the roster until 2026-11-14. Its forms posted here, so a POST
  * from a page somebody still had open is passed on to agents.php as it is
@@ -44,6 +45,7 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $cards = [
     ['Agent Roster',     'agents.php',                 'users',           'Every agent: profiles, onboarding, website approval, leadership and staff.', false, true],
     ['Social Media',     'social_media.php',           'brand-instagram', 'The Social Media Plan, the weekly plans and the tools that make each piece.', false, $super],
+    ['Digital Ads',      'template_ad.php',            'ad-2',            'Property ads for the Vail Daily and Aspen Daily News sites: every size as a looping GIF under 1 MB.', false, $super],   // its own area (Nikki, 2026-11-18: "it doesn't belong in Social Media")
     ['MH Send',          'https://send.monthaus.com/', 'send',            'B2Bs, Client Emails and mailing lists. Same Microsoft sign-in.', true, $super],
     ['Market Reports',   'market_report.php',          'chart-bar',       'The monthly market report and the snapshot cards.', false, true],
     ['Hot Sheets',       'hot_sheet_preview.php',      'mail',            'This week\'s Hot Sheets by area, the subscribers and the Pipeline deals to review.', false, true],

@@ -4,6 +4,9 @@
  * ad for the newspapers' web sites as an animated GIF of up to three slides
  * (headline, headline + price, Presented by), in seven sizes since
  * 2026-11-11, each under 1 MB, plus the slides as 2x JPGs for Photoshop. Super admin only; see inc/ads.php.
+ * Its own area, reached from the Digital Ads card on Admin Home (Nikki,
+ * 2026-11-18: "it doesn't belong in Social Media"); it was a card on
+ * social_media.php until then.
  */
 require_once __DIR__ . '/inc/ads.php';
 require_once __DIR__ . '/inc/admin_tool_shell.php';
@@ -18,10 +21,7 @@ $render_url = 'ad_render.php'; $export_url = 'ad_export.php'; $photos_url = 'pla
 admin_tool_header([
     'title'   => 'Digital Ads',
     'hint'    => 'Prototype. A property ad for the Vail Daily and Aspen Daily News sites in seven sizes: two or three slides as a looping GIF under 1 MB, or the slides as 2x JPGs for Photoshop. Two layouts: Full Bleed and Classic.',
-    'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
-               . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
-    'styles'  => ['/assets/css/social.css'],
-    'active'  => 'social',
+    'styles'  => ['/assets/css/social.css'],   // no header buttons and no nav link marked: its own area, reached from Admin Home (the main nav has the way back)
     'css'     => plan_admin_css() . '
     .wrap { max-width:1180px; }
     .ad-bar { display:flex; flex-wrap:wrap; gap:10px 24px; align-items:center; justify-content:space-between; margin:0 0 14px; }

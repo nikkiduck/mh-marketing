@@ -1,7 +1,8 @@
 <?php
 /**
  * inc/ads.php — Digital Ads (PROTOTYPE, Nikki, 2026-11-09), super admin
- * only, on the Social Media Plan's foundation (inc/plan.php: the gate, the
+ * only, its own area on Admin Home since 2026-11-18 (not part of Social
+ * Media), on the Social Media Plan's foundation (inc/plan.php: the gate, the
  * listings in the feed, the approved brokers, the photo tiles and the photo
  * check) with its own renderer (inc/ads_render.php) and its own exports:
  *
