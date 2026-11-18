@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-18 07:42 from git HEAD
+# Generated 2026-11-18 07:53 from git HEAD
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
 6790f0884a86826848ab322237eb4888  agent.php
@@ -46,11 +46,11 @@ b1fa95c4caeb473dd37442585b7be32b  hot_sheet_preview.php
 8cf7fab783d903989871994744bd76a0  inc/_onboarding.php
 1416650f629297e360a8ec92e459e0a8  inc/accounting_mail.php
 2abf6795b6c6e935c631d9671264f252  inc/admin_tool_shell.php
-4a28bc81a22581885444a9d7600d9258  inc/ads.php
-e7f73ef7ca08c5c4469ff1385ce54042  inc/ads_body.php
+059f9fa9d1d946819c3dff785df0f947  inc/ads.php
+79a6507a3751d360f06f575394a71a16  inc/ads_body.php
 a43e403a3f5653dcd4f615ca794ef496  inc/ads_export.php
 b42067ebe2d8df088bf90b1246763304  inc/ads_render.php
-99c3c44025232268ef7c9ae16d03368c  inc/ads_styles.php
+ef74877a2db0cc7b8ed515dffdecffbe  inc/ads_styles.php
 8473657b195294f793ca1a40e97e7fbb  inc/agent_lifecycle.php
 48abe9e2a29376911e0ede45deee6a3b  inc/agent_roster.php
 18900b404a17903d1b7c5e61088cd704  inc/auth.php
@@ -64,8 +64,8 @@ ed63e93008d91724efd27d9a7df2b035  inc/captions.php
 754564325f3942d3d6f1b5bd0fec37b0  inc/cutout.php
 5f5893a7287969d02e3f8217ace72853  inc/elevation.php
 477e7b2d847a03f22170de37548dfcdc  inc/financials.php
-ba658b088154057b6cd5ed363d91ae2b  inc/flyer.php
-f6a540f70613c2128f4d80363de704c0  inc/flyer_body.php
+2b0dfe67df8ea8ebe708e1cc8a8d8551  inc/flyer.php
+a7b258b4d71fc95388a7d804fef9df40  inc/flyer_body.php
 2b7eef25408ec9db923907dfa0770f45  inc/flyer_render.php
 fa61dffd5307596dc49fca1ae494e32c  inc/former_slugs.php
 1281b60e50fecc8f6aa04f7f56ab4fbe  inc/fub.php
@@ -168,7 +168,7 @@ d32fb45754344f76329c3572f81a964b  social_media.php
 ca92c2f52d13cda06fafbebe78780a35  social_plan.php
 c9202493f2fb27ab99b920d1d5f9428c  sql/collateral_accounting_v1.sql
 eb3796e665df961466dae47af0e4a032  subscribers.php
-d7d249a77eaf61a537a576b3fd43b0c6  template_ad.php
+9a32f18726f399ea7cce6c97367287f2  template_ad.php
 31f0f091fef8f29c9d4dc5aea10b1ffd  template_branding.php
 fa70ecf2e98157cc6ffccd30f9ae3d60  template_broker.php
 cc3066d6d79a0a78fa47a82575240194  template_flyer.php
