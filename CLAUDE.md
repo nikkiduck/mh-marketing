@@ -3740,6 +3740,39 @@ sizes, InDesign for one-offs. The prototype, a card on social_media.php
   Impact 935 KB at 128. Harness: `--styles` renders Full Bleed at every
   size (`--classic` adds Classic's marquee and rectangle). Boards of every
   size: `Mont Haus Master/Advertising/Full Bleed all sizes 2026-11-18/`.
+- **Full Bleed as InDesign files (2026-11-18, Nikki: "export the files/sizes
+  you just created ... as an InDesign idml file so I can tweak locally").**
+  `tests/export_ads_idml.php <outdir> <links-uri>` (run on the server) writes
+  one IDML per size, each with four pages (headline, price, one broker, two
+  brokers) of the 970 Powder Lane sample, everything native and editable: the
+  photo in a full-page frame, the scrims as rectangles in the swatch MH Scrim
+  Ink with Gradient Feathers whose stops are the web version's, live text in
+  paragraph styles (Ad Headline, Ad Details, Ad Price, Ad Label, Ad Name, Ad
+  Phone, Ad Site), the rule as a 1 px rectangle, her own vector logo
+  (MH-stack-logo_white_1.ai) placed, headshots in frames. **No layout is
+  redone by hand:** each slide's HTML is opened in headless Chromium with a
+  script that reads every element's box, type and first BASELINE
+  (`--dump-dom`), and a text frame's first baseline is fixed there
+  (FirstBaselineOffset FixedHeight) with each paragraph's leading the
+  measured distance from the baseline before it. The package is
+  `tests/idml_skeleton/` (the Resources, parent spread and XML of an IDML her
+  InDesign exported, the one the Market Snapshot IDML was built on) plus the
+  spreads and stories. Learned: `PagesPerDocument` stays 1 (4 added three
+  blank pages in front); the parent pages are resized to the ad; spaces are
+  collapsed as the browser draws them; the board's JPEGs are 96 ppi, so an
+  image's GraphicBounds are pixels x 72 / ppi; a Gradient Feather's Angle is
+  0 to the right, 90 up, 180 to the left, GradientStart in spread
+  coordinates. **Checked in InDesign 2027 on her Mac** by AppleScript `do
+  script` (each IDML opened with no window: 11 links normal, no font
+  missing, nothing overset, pages exported as JPGs and compared with the web
+  slides), which then wrote the delivered files itself: `Mont Haus
+  Master/Advertising/Full Bleed InDesign/` holds the seven `.idml`
+  (InDesign's own export) and `.indd` and the `Links` folder. The first
+  `do script` waits on macOS's Automation prompt until she allows it.
+  Cormorant Garamond is on her Mac through Adobe Fonts, Jost as installed
+  files. **InDesign quirk:** an IDML whose page is 50 px high reopens with a
+  Document Setup height of 15552 pt (its own export does too) while the
+  pages stay 320 x 50; the .indd is right.
 - Not built yet (the plan, if Nikki goes on): the RoS agents ad, the
   corporate single-image JPG ads with saved taglines, saved ad sets,
   attaching an export to the agent's placement on the Advertising tab, the
