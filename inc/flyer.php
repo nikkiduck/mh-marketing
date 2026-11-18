@@ -73,11 +73,18 @@ function flyer_default_banner(array $l): string {
     return '__none';
 }
 
-/** The QR choices: the listing's page, each of the account's active dynamic codes, none. [key => [label, url]] */
+/**
+ * The QR choices (Nikki, 2026-11-18): the listing's page (the default), the
+ * account's profile page on the website, each of its active dynamic codes,
+ * "Other" (an address typed on the form, checked by flyer_qr_custom_url()),
+ * none. [key => [label, url]]
+ */
 function flyer_qr_options(mysqli $conn, array $ctx, ?array $listing): array {
     $opts = [];
     $lurl = trim((string)($listing['url'] ?? ''));
-    if ($lurl !== '') $opts['listing'] = ['This listing\'s page on monthaus.com', $lurl];
+    if ($lurl !== '') $opts['listing'] = ['Listing page', $lurl];
+    $slug = trim((string)($ctx['acct']['slug'] ?? ''));
+    if ($slug !== '') $opts['profile'] = ['My profile page', qr_profile_url($slug)];
     if (mk_table_exists($conn, 'qr_codes')) {
         $in = implode(',', array_map('intval', $ctx['ids']));
         $r  = $conn->query("SELECT id, code, label FROM qr_codes WHERE intake_id IN ({$in}) AND is_active = 1 ORDER BY label, id");
@@ -85,8 +92,21 @@ function flyer_qr_options(mysqli $conn, array $ctx, ?array $listing): array {
             $opts['code:' . (int)$q['id']] = ['QR code: ' . ($q['label'] !== '' ? $q['label'] : $q['code']), qr_public_url((string)$q['code'])];
         }
     }
+    $opts['custom'] = ['Other (enter a web address)', ''];
     $opts['none'] = ['No QR code', ''];
     return $opts;
+}
+
+/**
+ * The address typed for the "Other" QR choice, or '' when it is not one a
+ * code may open: https:// is added when no scheme was typed, then the dynamic
+ * codes' own rule applies (qr_dest_error(): https, a real host, no username).
+ */
+function flyer_qr_custom_url(string $typed): string {
+    $u = trim($typed);
+    if ($u === '') return '';
+    if (!preg_match('~^[a-z][a-z0-9+.-]*://~i', $u)) $u = 'https://' . $u;
+    return qr_dest_error($u) === '' ? $u : '';
 }
 
 /** The QR code for a URL as an inline SVG (black modules, no margin), '' when qrencode is missing or fails. */
@@ -156,7 +176,7 @@ function flyer_post_from_request(mysqli $conn, array $ctx, array $in): array|str
     $qrs   = flyer_qr_options($conn, $ctx, $l);
     $qk    = (string)($in['qr'] ?? '');
     if (!isset($qrs[$qk])) $qk = array_key_first($qrs);
-    $qurl  = $qrs[$qk][1];
+    $qurl  = $qk === 'custom' ? flyer_qr_custom_url((string)($in['qr_url'] ?? '')) : $qrs[$qk][1];
 
     return [
         'listing' => $l,

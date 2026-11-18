@@ -2795,9 +2795,13 @@ portal/index.php. Each comes back in one edit.
   PDF is named `...-brochure-<date>.pdf`.
 - QR: `qrencode` (Debian package, installed 2026-10-13 with Nikki's OK) as
   inline SVG, level H, the triangle mark over the centre
-  (assets/images/triangle_mark-black.svg). Choices: the listing's page on
-  the site (hs_listing_state.url, default), each of the account's active
-  dynamic codes (qr_codes → qr_public_url()), or none.
+  (assets/images/triangle_mark-black.svg). Choices (`flyer_qr_options()`;
+  Nikki, 2026-11-18): the listing's page on the site (hs_listing_state.url,
+  default), "My profile page" (`qr_profile_url()` of the account's slug),
+  each of the account's active dynamic codes (qr_codes → qr_public_url()),
+  "Other" (an address typed in the `qr_url` field, https:// added when no
+  scheme is typed, then held to the dynamic codes' rule `qr_dest_error()`
+  by `flyer_qr_custom_url()`; an address that fails gives no code), or none.
 - Everything posted is checked in `flyer_post_from_request()`: the
   account's listing, photos from the site's list for it or the account's
   uploads (six at most), the QR choice from `flyer_qr_options()`, lengths.

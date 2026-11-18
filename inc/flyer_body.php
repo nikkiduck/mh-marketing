@@ -107,7 +107,9 @@
             <label class="sp-field">Phone <input name="agent_phone" maxlength="30" value="<?= ph($agent['phone']) ?>"></label>
             <label class="sp-field">Email <input name="agent_email" maxlength="80" value="<?= ph($agent['email']) ?>"></label>
           </div>
-          <label class="sp-field">QR code <select name="qr" id="flQr"></select></label>
+          <label class="sp-field">QR code opens <select name="qr" id="flQr"></select></label>
+          <label class="sp-field" id="flQrUrlWrap" hidden>Web address <input name="qr_url" inputmode="url" autocapitalize="off" spellcheck="false" maxlength="1000" placeholder="https://">
+            <small class="fl-desc-note" id="flQrNote"></small></label>
         </div>
       </section>
 
@@ -181,7 +183,18 @@
     f('beds').value = l.beds && +l.beds > 0 ? String(+l.beds) : '';
     f('baths').value = l.baths && +l.baths > 0 ? String(+l.baths) : '';
     f('sqft').value = l.sqft && +l.sqft > 0 ? (+l.sqft).toLocaleString('en-US') : '';
+    const was = qrSel.value;   // the choice stays when the next listing offers it too (the profile page, Other, a dynamic code)
     qrSel.innerHTML = Object.entries(QR[l.id] || {}).map(([k, v]) => '<option value="' + esc(k) + '">' + esc(v) + '</option>').join('');
+    if (was && was !== 'listing' && (QR[l.id] || {})[was] !== undefined) qrSel.value = was;
+    showQr();
+  }
+  // "Other": a field for the address, and a word when what is typed cannot be made into a code (the server applies the same rule).
+  function showQr() {
+    const on = qrSel.value === 'custom', v = f('qr_url').value.trim();
+    document.getElementById('flQrUrlWrap').hidden = !on;
+    const full = /^[a-z][a-z0-9+.-]*:\/\//i.test(v) ? v : 'https://' + v;
+    document.getElementById('flQrNote').textContent = !on || v === '' ? (on ? 'Type the full address the code should open.' : '')
+      : (/^https:\/\/[a-z0-9]([a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}([\/?#:].*)?$/i.test(full) ? '' : 'That is not an address a code can open. It should look like https://example.com/page');
   }
   let timer, seq = 0;
   function update() { clearTimeout(timer); timer = setTimeout(render, 300); }
@@ -279,6 +292,7 @@
     if (e.target.name === 'title') f('title').dataset.touched = '1';
     if (e.target.name === 'description') { desc.dataset.touched = '1'; descNote.textContent = ''; }
     if (e.target.name === 'banner') showBanner();
+    if (e.target.name === 'qr' || e.target.name === 'qr_url') showQr();
     update();
   });
   form.addEventListener('keydown', e => {
