@@ -3692,6 +3692,38 @@ sizes, InDesign for one-offs. The prototype, a card on social_media.php
   - Harness: `tests/render_ads_sample.php [outdir] [base] [--png] [--gif]
     [--all] [--size=]`, every size and slide, the two-broker and
     blank-headline variants.
+- **Six concept layouts (2026-11-18, Nikki: "try creating some new layouts
+  for the property ads ... think outside the box design wise").**
+  `inc/ads_styles.php`: `ads_styles()` = Classic (the layouts above, her
+  InDesign set, the default and the only one with every size) plus Full
+  Bleed (`bleed`: the photo is the whole ad, the words in the website's
+  serif on a soft scrim), Lower Third (`band`: one slim translucent band
+  along the bottom carries everything), Paper (`paper`: a card in the
+  website's LIGHT scheme, off-white with slate type and the black logo,
+  floating on the photo), Diagonal (`diag`: photo and panel meet on the
+  angle of the M, a light slate stripe along the cut), Mosaic (`mosaic`:
+  three photos a slide, the slide's own two then the next slides') and
+  Monogram (`mono`: the photo in color through a large M mark,
+  `ADS_M_CLIP` = the mark's polygon as a clip-path, gray and veiled
+  elsewhere). They are CONCEPTS for her to choose from, built for the
+  marquee and the rectangle only (`ads_style_sizes()`); `ads_style_for()`
+  draws any other size Classic, and `ads_render_frame()` hands a slide to
+  `ads_render_style()` when the ad's `style` applies. Shared pieces:
+  `ads_content()` (a slide's words, worked out once), `ads_slide_photos()`,
+  one Presented by block for one or two brokers. Serif type is fitted at
+  .45 em a character (Cormorant runs wider than Jost: at .41 Paper's
+  headline broke mid-word); two typed headline lines never wrap into three.
+  The form posts `style`; file names carry it (`ADN_970-Powder-Ln_bleed_
+  970x250.gif`); Download all sizes makes the sizes the layout has. The
+  page (inc/ads_body.php): a Layout pill row above the sizes and **Compare
+  layouts**, the chosen slide in every layout (marquees, then rectangles
+  side by side; click one to work in it); sizes a layout lacks are disabled
+  and a note says so. The stages' flex class is `ad-wrap`: `.wrap` is the
+  admin shell's page container and indented them. Harness: `--styles
+  [--classic]` renders every layout (970 Powder Lane, the listing of her own
+  Impact ad). Three comparison boards (headline, price, two brokers) are in
+  `Mont Haus Master/Advertising/Layout concepts 2026-11-18/`. Next, once
+  she picks: the other five sizes for the chosen layout(s), drop the rest.
 - Not built yet (the plan, if Nikki goes on): the RoS agents ad, the
   corporate single-image JPG ads with saved taglines, saved ad sets,
   attaching an export to the agent's placement on the Advertising tab, the

@@ -17,7 +17,7 @@ $render_url = 'ad_render.php'; $export_url = 'ad_export.php'; $photos_url = 'pla
 
 admin_tool_header([
     'title'   => 'Digital Ads',
-    'hint'    => 'Prototype. A property ad for the Vail Daily and Aspen Daily News sites in seven sizes: two or three slides as a looping GIF under 1 MB, or the slides as 2x JPGs for Photoshop.',
+    'hint'    => 'Prototype. A property ad for the Vail Daily and Aspen Daily News sites in seven sizes: two or three slides as a looping GIF under 1 MB, or the slides as 2x JPGs for Photoshop. Six concept layouts beside the Classic one.',
     'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],
@@ -32,6 +32,11 @@ admin_tool_header([
     .ad-pill.on { border-color:#4a5566; background:#4a5566; color:#fff; }
     .ad-pill b { font-weight:600; opacity:.7; margin-right:2px; }
     .ad-stages { display:grid; gap:14px; margin:0 0 22px; }
+    .ad-stages.ad-wrap { display:flex; flex-wrap:wrap; gap:16px 14px; }
+    .ad-stages.ad-wrap .ad-stage { max-width:100%; min-width:0; }
+    .ad-pill:disabled { opacity:.35; cursor:not-allowed; }
+    .ad-pill-cmp { border-style:dashed; margin-left:8px; }
+    .ad-concept { margin:-4px 0 14px; }
     .ad-stage { cursor:pointer; }
     .ad-stage-l { font-size:12px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; color:#6b7a8f; margin:0 0 6px; display:flex; align-items:center; gap:8px; }
     .ad-stage-l b { display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:#dfe3e8; color:#1f242c; font-size:12px; }

@@ -30,6 +30,7 @@
  * data locally: tests/render_ads_sample.php.
  */
 require_once __DIR__ . '/social_render.php';   // social_font_css(), social_short_address(), social_num(), social_price_text()
+require_once __DIR__ . '/ads_styles.php';      // the other layouts (2026-11-18): ads_styles(), ads_style_for(), ads_render_style()
 
 /** The GIF has to come in under this (the newspapers' 1 MB cap); the export drops colours until it does. */
 const ADS_GIF_MAX = 1000000;
@@ -214,6 +215,7 @@ function ads_specs_parts(array $l): array {
  * headshot from disk (file://) where a file is known and embeds the fonts.
  */
 function ads_render_frame(array $ad, int $i, ?string $base = null, bool $export = false): string {
+    if (ads_style_for($ad) !== 'classic') return ads_render_style($ad, $i, $base, $export);   // one of the other layouts, at a size it is built for
     $base = rtrim($base ?? (defined('SITE_URL') ? SITE_URL : ''), '/');
     $e    = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
     $S    = ads_size((string)($ad['size'] ?? '970x250'));

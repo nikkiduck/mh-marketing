@@ -139,7 +139,7 @@ function ads_export_gif(array $ad): ?array {
     foreach (ads_gif_steps() as [$colors, $dither]) {
         $gif = ads_build_gif($pngs, (float)$ad['hold'], $colors, $dither);
         if ($gif === null) return null;
-        $best = ['gif' => $gif, 'bytes' => strlen($gif), 'colors' => $colors, 'dither' => $dither, 'how' => $colors . ' colours' . ($dither ? '' : ', no dither'),
+        $best = ['gif' => $gif, 'bytes' => strlen($gif), 'colors' => $colors, 'dither' => $dither, 'how' => $colors . ' colors' . ($dither ? '' : ', no dither'),
                  'fits' => strlen($gif) <= ADS_GIF_MAX, 'frames' => count($pngs)];
         if ($best['fits']) break;
     }
@@ -158,7 +158,7 @@ function ads_export_all_zip(array $ad): ?string {
     if ($zip->open($tmp, ZipArchive::OVERWRITE) !== true) { @unlink($tmp); return null; }
     set_time_limit(600);
     $list = [];
-    foreach (ads_sizes() as $size => $S) {
+    foreach (ads_style_sizes((string)($ad['style'] ?? 'classic')) as $size) {   // the sizes the ad's layout is built for
         $a = ads_for_size($ad, $size);
         $g = ads_export_gif($a);
         if ($g === null) { $zip->close(); @unlink($tmp); return null; }
