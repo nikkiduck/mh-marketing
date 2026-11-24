@@ -192,4 +192,31 @@ portal_header($ctx, 'Home', 'home');
     </a>
   </div>
 
+<?php /* MH Send (Nikki, 2026-11-24: "include a MH Send section ... at the bottom of their portal home page"): the places the
+         MH Send menu lists, as cards, each in a new window. Shown to whoever has the MH Send menu (portal_send_access()). */
+$sa = portal_send_access($ctx);
+if ($sa['emails']): ?>
+  <h2 class="pt-h2 pt-home-h">MH Send</h2>
+  <div class="pt-cards">
+    <?php if ($sa['b2b']): ?>
+    <a class="pt-card" href="<?= ph($sa['b2b_url']) ?>" target="_blank" rel="noopener">
+      <h2 class="pt-card-h">B2Bs</h2>
+      <p class="pt-card-sub">Announcements to the Aspen and Vail broker networks: new listings, open houses, price changes and more.</p>
+      <span class="pt-card-go">Open B2Bs &#8599;</span>
+    </a>
+    <?php endif; ?>
+    <a class="pt-card" href="<?= ph($sa['emails_url']) ?>" target="_blank" rel="noopener">
+      <h2 class="pt-card-h">Client Emails</h2>
+      <p class="pt-card-sub">Write an email to your own clients in the builder, keep your lists, send it and see what came of it.</p>
+      <span class="pt-card-go">Open Client Emails &#8599;</span>
+    </a>
+    <?php if ($sa['blog']): ?>
+    <a class="pt-card" href="<?= ph($sa['blog_url']) ?>" target="_blank" rel="noopener">
+      <h2 class="pt-card-h">Blog</h2>
+      <p class="pt-card-sub">Your own blog on monthaus.com: write posts, send to your subscribers, and share on social media.</p>
+      <span class="pt-card-go">Open your blog &#8599;</span>
+    </a>
+    <?php endif; ?>
+  </div>
+<?php endif; ?>
 <?php portal_footer();

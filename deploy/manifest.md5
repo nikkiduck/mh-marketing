@@ -92,7 +92,7 @@ d741fec25850f0da5208d55ba77b08c5  inc/plan_agent_render.php
 a2a2781fa0b3d73dc052ac9071ceb111  inc/plan_body.php
 a2299b1b7c24795c470eac1d77a03df7  inc/plan_render.php
 6906c7e7906d185e23cc994df8881471  inc/plan_store.php
-40dbe8aab73965841129301ee79c2bd7  inc/portal.php
+c1e1916b810029c81c9e01d6836bf600  inc/portal.php
 46c31499e8af5f928e0b9ec282966570  inc/portal_hotsheets.php
 e95a776269b03da9987c013db93112dc  inc/qr.php
 68873098d2d9819e61c4891917b4275d  inc/receipts.php
@@ -135,7 +135,7 @@ db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 03b2a77e2a597f13fc056728330747f0  portal/general.php
 1a848496d229059a6f0a0990bd565175  portal/hotsheets.php
-352e27a83696d2a252ff96ece8e270e4  portal/index.php
+c519799307c00a06f58c935d8a527616  portal/index.php
 7eb83c3fc68c3e762f9578680ff9f245  portal/market.php
 6e25e50cfac2e6689da36e4ead4aee68  portal/market_export.php
 bab7ce78c6827745173aa89859f1ceae  portal/market_flyer.php

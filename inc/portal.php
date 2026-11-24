@@ -617,12 +617,55 @@ function portal_nav_group(string $active): string {
 function portal_send_access(array $ctx): array {
     $on     = defined('MH_SEND_LINK') && MH_SEND_LINK;
     $boards = defined('MH_SEND_BOARDS') ? MH_SEND_BOARDS : ['aspen', 'vail'];
+    $emails = $on && defined('MH_SEND_CLIENT_EMAILS') && MH_SEND_CLIENT_EMAILS;
+    $base   = defined('MH_SEND_HOME_URL') ? rtrim((string)MH_SEND_HOME_URL, '/') : 'https://send.monthaus.com';
     return [
         'b2b'        => $on && (bool)array_intersect($boards, $ctx['markets'] ?? []),
-        'emails'     => $on && defined('MH_SEND_CLIENT_EMAILS') && MH_SEND_CLIENT_EMAILS,
+        'emails'     => $emails,
+        // Blog (2026-11-24): only when it would open for this person, which MH Send knows and says (portal_send_blog()).
+        'blog'       => $emails && portal_send_blog($ctx),
         'b2b_url'    => defined('MH_SEND_URL') ? MH_SEND_URL : 'https://send.monthaus.com/b2b/',
         'emails_url' => defined('MH_SEND_EMAILS_URL') ? MH_SEND_EMAILS_URL : 'https://send.monthaus.com/newsletters.php',
+        'home_url'   => $base . '/',
+        'blog_url'   => $base . '/blog.php',
     ];
+}
+
+/**
+ * Would Blog open for this person in MH Send? MH Send owns the answer (its blog.php: blogs open to every agent, a
+ * Send admin's switch, or this agent's own blog set up) and publishes it at api/blog_state.php, {open, keys}, which
+ * is asked for with SEND_ROSTER_TOKEN (the token MH Send presents to our feeds, so both sides hold it) and kept for
+ * five minutes in a file. Nothing is decided here: no switch of our own to keep in step with theirs (Nikki,
+ * 2026-11-24: the menu "include ... Blog below client emails"). When MH Send does not answer, the last answer
+ * stands; with none ever, no Blog link: a link must never land an agent on a refusal.
+ */
+function portal_send_blog(array $ctx): bool {
+    static $state = null;
+    if ($state === null) {
+        $state = ['open' => false, 'keys' => []];
+        $dir  = is_dir('/var/log/mh-marketing') && is_writable('/var/log/mh-marketing') ? '/var/log/mh-marketing' : sys_get_temp_dir();
+        $file = (defined('MH_SEND_BLOG_CACHE') ? (string)MH_SEND_BLOG_CACHE : $dir . '/send_blog_state.json');
+        $have = is_file($file) ? json_decode((string)@file_get_contents($file), true) : null;
+        if (is_array($have)) $state = $have;
+        if (!is_array($have) || filemtime($file) < time() - 300) {
+            $token = defined('SEND_ROSTER_TOKEN') ? (string)SEND_ROSTER_TOKEN : '';
+            $url = (defined('MH_SEND_HOME_URL') ? rtrim((string)MH_SEND_HOME_URL, '/') : 'https://send.monthaus.com') . '/api/blog_state.php';
+            $j = null;
+            if (strlen($token) >= 24 && function_exists('curl_init')) {
+                $ch = curl_init($url);
+                curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_TIMEOUT => 4, CURLOPT_CONNECTTIMEOUT => 2, CURLOPT_HTTPHEADER => ['Authorization: Bearer ' . $token, 'Accept: application/json']]);
+                $body = curl_exec($ch);
+                if ((int)curl_getinfo($ch, CURLINFO_HTTP_CODE) === 200 && is_string($body)) $j = json_decode($body, true);
+                curl_close($ch);
+            }
+            if (is_array($j) && array_key_exists('open', $j)) {
+                $state = ['open' => !empty($j['open']), 'keys' => array_values(array_filter(array_map('strval', (array)($j['keys'] ?? []))))];
+                @file_put_contents($file, json_encode($state), LOCK_EX); @chmod($file, 0664);
+            } elseif (is_file($file)) @touch($file, time() - 240);   // no answer: the last one stands, and MH Send is asked again in a minute, not on every page
+        }
+    }
+    if (($ctx['acct']['entity_type'] ?? 'agent') === 'team') return false;   // a blog is an agent's own
+    return !empty($state['open']) || in_array((string)($ctx['acct']['slug'] ?? ''), (array)$state['keys'], true);
 }
 
 function portal_send_item(array $ctx): array {
@@ -636,8 +679,11 @@ function portal_send_item(array $ctx): array {
     // "B2Bs" and "Client Emails" for Aspen and Vail members, "Client Emails" alone for everyone else. B2B is
     // for those two boards; the email system is for agents on every board. It replaces both B2B Portal links.
     if ($a['emails']) {
-        $subs = $b2b ? ['send_b2b' => ['B2Bs', $b2b_url]] : [];
+        // Home first, Blog after Client Emails (Nikki, 2026-11-24): MH Send's own home shows the same places as cards.
+        $subs = ['send_home' => ['Home', $a['home_url']]];
+        if ($b2b) $subs['send_b2b'] = ['B2Bs', $b2b_url];
         $subs['send_emails'] = ['Client Emails', $a['emails_url']];
+        if ($a['blog']) $subs['send_blog'] = ['Blog', $a['blog_url']];
         return ['send' => ['MH Send', null, $subs]];
     }
     if (!$b2b) return [];

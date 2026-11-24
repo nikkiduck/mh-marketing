@@ -2301,6 +2301,16 @@ same breath as `NEWSLETTER_AGENTS_OPEN` in send.monthaus.com's server
 config, never before (the link would land agents on a refusal). While it is
 off the menu is exactly as before.
 
+**Home and Blog in the MH Send menu, and an MH Send section on the portal home (Nikki, 2026-11-24).** The menu is
+**Home** (send.monthaus.com's own home, which shows the same places as cards), **B2Bs** (Aspen and Vail), **Client
+Emails**, and **Blog** below it. The portal home (portal/index.php) ends with an **MH Send** section: a card for B2Bs,
+Client Emails and Blog, each in a new window, for whoever has the menu. **Blog is shown only when it would open for
+that person**, and MH Send owns the answer: `portal_send_blog()` asks its `api/blog_state.php` ({open, keys}; Bearer
+`SEND_ROSTER_TOKEN`), keeps it five minutes (`send_blog_state.json` in the system temp folder: /var/log/mh-marketing
+is not writable by Apache), and says yes when blogs are open to every agent (a Send admin's switch on MH Send's
+blog.php) or the agent's own slug has a blog; never for a team. There is NO switch for it here: do not add one. With
+no answer ever from MH Send there is no Blog link. `MH_SEND_HOME_URL` overrides the address.
+
 Plan and status: `docs/AGENT_PORTAL_PLAN.md`. Built so far: Phases 0, 1, 2
 (creative uploads, 2026-10-06) and the Advertising / Print orders pages.
 - `inc/portal.php` `portal_context()` is the ONLY way a portal page learns
