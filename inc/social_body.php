@@ -83,7 +83,7 @@ if (!$sp_general && $listings) {
           <?php endforeach; ?>
         </div>
         <div class="sp-look">
-          <span class="sp-look-l">Badge</span>
+          <span class="sp-look-l">Badge place</span>
           <?php foreach (social_badge_places() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="badge" value="<?= ph($k) ?>"<?= $k === 'left' ? ' checked' : '' ?>><span><?= ph($t) ?></span></label>
           <?php endforeach; ?>
@@ -112,12 +112,29 @@ if (!$sp_general && $listings) {
 
       <section class="sp-step">
         <h2 class="sp-step-h"><span><?= $sp_general ? 2 : 3 ?></span>Photo</h2>
-        <p class="sp-hint" id="spPhotoHint" data-other="Choose a stock photo or upload your own below." data-listing="Choose a listing photo or upload your own below.">Choose a listing photo or upload your own below.</p>
-        <div class="sp-photos" id="spPhotos"><div class="sp-wait">Loading photos…</div></div>
-        <div class="sp-drop" id="spDrop">
-          <span id="spDropMsg" data-listing="Or use your own: drop a photo here, or <label class=&quot;sp-link&quot; for=&quot;spFile&quot;>choose one</label>." data-other="Upload your own photo: drop it here, or <label class=&quot;sp-link&quot; for=&quot;spFile&quot;>choose one</label>.">Or use your own: drop a photo here, or <label class="sp-link" for="spFile">choose one</label>.</span>
-          <small>JPG, PNG or WEBP, up to 20 MB.</small>
-          <input type="file" id="spFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
+        <?php // Tabs (Nikki, 2026-11-24): the listing tool opens on the MLS photos, General Social on the upload, because
+        // that is what people come for; the stock library is a tab of its own, folded into its regions.
+        $sp_tabs = $sp_general ? ['own' => 'Upload Your Own', 'stock' => 'Stock Library']
+                               : ['mls' => 'MLS Photos', 'own' => 'Upload Your Own', 'stock' => 'Stock Library']; ?>
+        <div class="sp-tabs" id="spTabs" role="tablist">
+          <?php foreach ($sp_tabs as $k => $t): ?>
+          <button type="button" class="sp-tab<?= $k === array_key_first($sp_tabs) ? ' on' : '' ?>" role="tab" data-tab="<?= ph($k) ?>" aria-selected="<?= $k === array_key_first($sp_tabs) ? 'true' : 'false' ?>"><?= ph($t) ?></button>
+          <?php endforeach; ?>
+        </div>
+        <div id="spPhotos">
+          <?php if (!$sp_general): ?>
+          <div class="sp-pane" data-pane="mls"><div class="sp-photos" id="spPaneMls"><div class="sp-wait">Loading photos…</div></div></div>
+          <?php endif; ?>
+          <div class="sp-pane" data-pane="own"<?= $sp_general ? '' : ' hidden' ?>>
+            <div class="sp-drop" id="spDrop">
+              <label class="sp-btn sp-btn-sm sp-upbtn" for="spFile">Choose a Photo</label>
+              <span id="spDropMsg" data-idle="From your phone or computer. On a computer you can also drop a photo here.">From your phone or computer. On a computer you can also drop a photo here.</span>
+              <small>JPG, PNG or WEBP, up to 20 MB.</small>
+              <input type="file" id="spFile" accept="image/jpeg,image/png,image/webp,image/*" hidden>
+            </div>
+            <div class="sp-photos" id="spPaneOwn"></div>
+          </div>
+          <div class="sp-pane" data-pane="stock" hidden><div class="sp-photos" id="spPaneStock"><div class="sp-wait">Loading photos…</div></div></div>
         </div>
         <div class="sp-framing">
           <div class="sp-framer empty" id="spFramer" style="aspect-ratio:1080 / <?= social_photo_height(array_key_first($templates)) ?>"><img id="spFramerImg" alt="" draggable="false"><span class="sp-framer-hint">Drag to move</span></div>
@@ -130,14 +147,20 @@ if (!$sp_general && $listings) {
         <h2 class="sp-step-h"><span><?= $sp_general ? 3 : 4 ?></span>Text</h2>
         <div class="sp-fields">
           <div class="sp-two">
-            <label class="sp-field">Label on the photo
+            <label class="sp-field">Badge
               <select name="label" id="spLabel">
                 <?php foreach ($labels as $lb): ?><option value="<?= ph($lb) ?>"<?= $lb === 'Featured Listing' ? ' selected' : '' ?>><?= ph($lb) ?></option><?php endforeach; ?>
-                <option value="__none">No label</option>
+                <option value="__none">No badge</option>
                 <option value="__custom">Custom…</option>
               </select>
             </label>
-            <label class="sp-field" id="spCustomWrap" hidden>Your label <input name="label_custom" maxlength="28" placeholder="Price Improvement"></label>
+            <label class="sp-field" id="spCustomWrap" hidden>Your badge text <input name="label_custom" maxlength="28" placeholder="Price Improvement"></label>
+          </div>
+          <div class="sp-look sp-badgecolor" id="spBadgeColor">
+            <span class="sp-look-l">Badge color</span>
+            <?php foreach (social_badge_colors() as $k => [$t, $bg]): ?>
+            <label class="sp-pillopt"><input type="radio" name="badge_color" value="<?= ph($k) ?>"<?= $k === 'slate' ? ' checked' : '' ?>><span><i class="sp-swatch" style="background:<?= ph($bg) ?>"></i><?= ph($t) ?></span></label>
+            <?php endforeach; ?>
           </div>
           <div class="sp-only-openhouse sp-when" hidden>
             <label class="sp-field">Date <input type="date" name="oh_date" value="<?= ph($next_sat) ?>"></label>
@@ -189,6 +212,7 @@ if (!$sp_general && $listings) {
     </aside>
   </div>
 
+<script src="/assets/js/template-save.js?v=<?= (int)@filemtime(__DIR__ . '/../assets/js/template-save.js') ?>"></script>
 <script>
 (function () {
   const L = <?= json_encode($listings, JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS) ?>;
@@ -231,7 +255,7 @@ if (!$sp_general && $listings) {
   const isOH = t => t.indexOf('openhouse') !== -1, isFull = t => t.indexOf('photo') === 0 || t.indexOf('square') === 0 || t.indexOf('story') === 0;
   const form = document.getElementById('spForm'), frame = document.getElementById('spFrame'),
         stage = document.getElementById('spStage'), photos = document.getElementById('spPhotos'),
-        busy = document.getElementById('spBusy'),
+        busy = document.getElementById('spBusy'), tabs = document.getElementById('spTabs'),
         drop = document.getElementById('spDrop'), dropMsg = document.getElementById('spDropMsg'),
         fileIn = document.getElementById('spFile'),
         framer = document.getElementById('spFramer'), fimg = document.getElementById('spFramerImg'),
@@ -256,10 +280,9 @@ if (!$sp_general && $listings) {
     const t = f('type').value;
     form.querySelectorAll('.sp-only-openhouse').forEach(el => el.hidden = !isOH(t));
     form.querySelectorAll('.sp-only-listing').forEach(el => el.hidden = isOther());
-    dropMsg.innerHTML = isOther() ? dropMsg.dataset.other : dropMsg.dataset.listing;
-    const hint = document.getElementById('spPhotoHint'); hint.textContent = isOther() ? hint.dataset.other : hint.dataset.listing;
     form.querySelectorAll('.sp-only-long').forEach(el => el.hidden = isFull(t));
     customWrap.hidden = labelSel.value !== '__custom';
+    document.getElementById('spBadgeColor').hidden = labelSel.value === '__none';   // no badge, no color to pick
     framer.style.aspectRatio = '1080 / ' + PHOTO_H[t];
   }
   // The default label follows the template and the listing (a rental's is Featured
@@ -301,39 +324,54 @@ if (!$sp_general && $listings) {
     return '<label class="sp-photo' + (p.own ? ' own' : '') + '"' + (p.caption ? ' title="' + esc(p.caption) + '"' : '') + '><input type="radio" name="photo" value="' + esc(p.id) + '" data-large="' + esc(p.large) + '"' +
            (checked ? ' checked' : '') + '><img src="' + esc(p.thumb) + '" alt="' + esc(p.caption || '') + '" loading="lazy">' + (p.own ? '<i>Yours</i><button type="button" class="sp-del" data-id="' + esc(p.id) + '" title="Remove this photo" aria-label="Remove this photo">×</button>' : '') + '</label>';
   }
+  // The Photo step's tabs (2026-11-24): MLS Photos (the listing tool, shown first), Upload Your Own (first on
+  // General Social), Stock Library. Every pane's tiles are one radio group, so the choice holds across tabs.
+  const pane = k => photos.querySelector('#spPane' + k[0].toUpperCase() + k.slice(1));
+  const TAB_DEFAULT = tabs.querySelector('.sp-tab').dataset.tab;
+  function showTab(k) {
+    tabs.querySelectorAll('.sp-tab').forEach(b => { const on = b.dataset.tab === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+    photos.querySelectorAll('.sp-pane').forEach(p => p.hidden = p.dataset.pane !== k);
+  }
+  tabs.addEventListener('click', e => { const b = e.target.closest('.sp-tab'); if (b) showTab(b.dataset.tab); });
   async function loadPhotos(selectId) {
     const l = listing(); if (!l && !isOther()) return;
-    photos.innerHTML = '<div class="sp-wait">Loading photos…</div>';
-    const u = new URL(PHOTOS, location.origin); u.searchParams.set('listing', isOther() ? '__none' : l.id);
+    const u = new URL(PHOTOS, location.origin); u.searchParams.set('listing', isOther() ? '__none' : l.id); u.searchParams.set('stock', '1');
     let j = { photos: [] };
     try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
     const all = j.photos || [];
-    if (!all.length && !isOther()) {
-      photos.innerHTML = '<div class="sp-wait">This listing has no photos in the feed yet. Add your own below.</div>';
-      framerSet(''); update(); return;
-    }
-    // In groups (2026-10-18): the person's own uploads first, then the listing's photos or the stock library.
-    const mine = all.filter(p => p.own), rest = all.filter(p => !p.own);
-    // Own photos last, beside the upload box (Nikki, 2026-10-18). The stock library is grouped by
-    // region, one heading each, in the order the server sends them (Nikki, 2026-10-19).
+    const mine = all.filter(p => p.own), stock = all.filter(p => p.stock), mls = all.filter(p => !p.own && !p.stock);
+    // What is chosen: the photo just added or kept; else the listing's first photo; else the Mont Haus
+    // mountains (General Social) until the person picks or uploads one.
+    const first = (selectId && all.concat([PLACEHOLDER]).find(p => p.id === selectId)) ? selectId
+                : (isOther() ? PLACEHOLDER.id : (mls[0] || mine[0] || {}).id);
+    if (pane('mls')) pane('mls').innerHTML = mls.length ? mls.map(p => photoTile(p, p.id === first)).join('')
+        : '<div class="sp-wait">This listing has no photos in the feed yet. Use Upload Your Own.</div>';
+    pane('own').innerHTML = mine.length ? '<div class="sp-group">Your photos</div>' + mine.map(p => photoTile(p, p.id === first)).join('') : '';
+    // The stock library folds into its regions, in the order the server sends them (2026-10-19); every region
+    // starts closed (Nikki, 2026-11-24: too much to scroll through) but the one holding a photo the person chose.
     const byRegion = [];
-    for (const p of (isOther() ? [PLACEHOLDER].concat(rest) : [])) {
+    for (const p of (isOther() ? [PLACEHOLDER] : []).concat(stock)) {
       const g = byRegion.find(x => x[0] === p.group);
       if (g) g[1].push(p); else byRegion.push([p.group || 'Mont Haus stock photos', [p]]);
     }
-    const groups = isOther()
-      ? byRegion.concat([['Your photos', mine]])
-      : [['Listing photos', rest], ['Your photos', mine]];
-    const first = selectId || (isOther() ? PLACEHOLDER.id : (rest[0] || mine[0] || {}).id);
-    let html = '';
-    for (const [name, list] of groups) {
-      if (!list.length) continue;
-      html += '<div class="sp-group">' + esc(name) + '</div>' + list.map(p => photoTile(p, p.id === first)).join('');
-    }
-    photos.innerHTML = html;
+    pane('stock').innerHTML = byRegion.map(([name, list], gi) => {
+      const open = first !== PLACEHOLDER.id && list.some(p => p.id === first);
+      return '<button type="button" class="sp-group sp-grp" data-grp="' + gi + '" aria-expanded="' + open + '">' + esc(name) + ' <b>' + list.length + '</b></button>'
+           + list.map(p => photoTile(p, p.id === first).replace('<label class="sp-photo', '<label data-grp="' + gi + '"' + (open ? '' : ' hidden') + ' class="sp-photo')).join('');
+    }).join('');
+    // A new listing or template starts on the first tab; a photo just added or removed keeps the tab in view.
+    if (!selectId) showTab(TAB_DEFAULT);
+    else if (mine.some(p => p.id === first)) showTab('own');
     const sel = all.concat([PLACEHOLDER]).find(p => p.id === first);
     framerSet(sel ? sel.large : ''); update();
   }
+  // A region's header folds or unfolds its photos.
+  photos.addEventListener('click', e => {
+    const h = e.target.closest('.sp-grp'); if (!h) return;
+    const open = h.getAttribute('aria-expanded') !== 'true';
+    h.setAttribute('aria-expanded', String(open));
+    photos.querySelectorAll('.sp-photo[data-grp="' + h.dataset.grp + '"]').forEach(t => t.hidden = !open);
+  });
   async function upload(file) {
     if (!file) return;
     drop.classList.add('busy'); dropMsg.textContent = 'Uploading ' + file.name + '…';
@@ -344,7 +382,7 @@ if (!$sp_general && $listings) {
     drop.classList.remove('busy');
     fileIn.value = '';
     if (j.error) { dropMsg.textContent = j.error; return; }
-    dropMsg.innerHTML = 'Added. Drop another, or <label class="sp-link" for="spFile">choose one</label>.';
+    dropMsg.textContent = 'Added, and chosen for your post. ' + dropMsg.dataset.idle;
     loadPhotos(j.id);   // redraw the groups with the new upload selected
   }
   fileIn.addEventListener('change', e => upload(e.target.files[0]));
@@ -437,6 +475,7 @@ if (!$sp_general && $listings) {
     if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'submit') e.preventDefault();
   });
   form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), 10000); });
+  mhTemplateSave(form);   // iPhone and iPad: the picture with a Save to Photos button (assets/js/template-save.js)
 
   new ResizeObserver(scale).observe(stage); scale();
   setType();

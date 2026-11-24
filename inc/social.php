@@ -487,15 +487,15 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
     if (str_starts_with($photo, 'upload:') && ($f = social_upload_file($ctx, substr($photo, 7)))) {
         $photo_url  = social_upload_url($ctx, substr($photo, 7), 1600);
         $photo_file = $f;
+    } elseif (str_starts_with($photo, 'stock:') && ($f = social_stock_file(substr($photo, 6)))) {
+        // One of the stock photos (2026-10-15; on a listing post too since 2026-11-24, its Stock Library tab).
+        $photo_url  = social_stock_url(substr($photo, 6), 2048);
+        $photo_file = $f;
     } elseif ($l) {
         $allowed = (array)($_SESSION['social_photos'][$l['id']] ?? []);
         if ((string)$l['primary_photo'] !== '') $allowed[] = (string)$l['primary_photo'];
         if (!in_array($photo, $allowed, true)) $photo = (string)$l['primary_photo'];
         $photo_url = $photo !== '' ? social_img($photo, 1600) : '';
-    } elseif (str_starts_with($photo, 'stock:') && ($f = social_stock_file(substr($photo, 6)))) {
-        // Other: one of the stock mountain photos (2026-10-15).
-        $photo_url  = social_stock_url(substr($photo, 6), 2048);
-        $photo_file = $f;
     } else {
         // Other: the Mont Haus mountains placeholder (assets/images/social-placeholder.jpg) until a photo is picked.
         $photo = 'placeholder';
@@ -530,6 +530,7 @@ function social_post_from_request(mysqli $conn, array $ctx, array $in): array|st
         'logo'       => $logo,
         'logo_kind'  => isset(social_logo_kinds()[(string)($in['logo_kind'] ?? '')]) ? (string)$in['logo_kind'] : 'full',   // the stack or the M mark
         'badge'      => isset(social_badge_places()[(string)($in['badge'] ?? '')]) ? (string)$in['badge'] : ($format === 'story' && $logo !== 'top' ? 'right' : 'left'),   // the label's corner
+        'badge_color' => isset(social_badge_colors()[(string)($in['badge_color'] ?? '')]) ? (string)$in['badge_color'] : 'slate',   // the badge's color (2026-11-24)
         'layout'     => $layout,
         'format'     => $format,
         'listing'    => $l,

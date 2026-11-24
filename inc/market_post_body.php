@@ -69,6 +69,11 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
   .mp-photo input:checked + img, .mp-photo input:checked + .mp-none { border-color: var(--gold-deep, #4a5569); }
   .mp-photo input:focus-visible + img, .mp-photo input:focus-visible + .mp-none { outline: 2px solid var(--gold-deep, #4a5569); outline-offset: 2px; }
   .mp-group { grid-column: 1 / -1; font-size: 13px; font-weight: 500; letter-spacing: .08em; text-transform: uppercase; color: var(--muted, #6b7a8f); margin: 8px 0 -2px; }
+  .mp-grp { display: flex; align-items: center; gap: 9px; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line, #dfe3e8); padding: 10px 0; margin: 0; cursor: pointer; text-align: left; font-family: inherit; }
+  .mp-grp::before { content: ""; flex: 0 0 auto; width: 7px; height: 7px; margin-left: 3px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
+  .mp-grp[aria-expanded="true"]::before { transform: rotate(45deg); }
+  .mp-grp b { font-weight: 400; opacity: .65; letter-spacing: 0; text-transform: none; }
+  .mp-photos [hidden] { display: none !important; }
   .mp-photo:hover .sp-del, .mp-photo .sp-del:focus-visible { opacity: 1; }   /* the x on an own photo, as on the Instagram grid */
   .mp-photo small { display: block; margin-top: 5px; font-size: 12.5px; line-height: 1.25; color: var(--muted, #6b7a8f); }
   .mp-photo input:checked ~ small { color: var(--gold-deep, #4a5569); font-weight: 500; }
@@ -155,10 +160,11 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
         <div class="sp-look"><span class="sp-look-l">Background photo</span></div>
         <div class="mp-photos" id="mpPhotos">
           <label class="mp-photo"><input type="radio" name="backdrop" value=""<?= ($suggest[$market] ?? '') === '' ? ' checked' : '' ?>><span class="mp-none"></span><small>None</small></label>
-          <?php foreach ($stock_groups as $region => $list): ?>
-          <div class="mp-group"><?= $e($region) ?></div>
+          <?php // Each region folds under its header (Nikki, 2026-11-24: too much to scroll through); the one holding the suggested photo starts open.
+          $gi = 0; foreach ($stock_groups as $region => $list): $gi++; $open = isset($list[$suggest[$market] ?? '']); ?>
+          <button type="button" class="mp-group mp-grp" data-grp="<?= $gi ?>" aria-expanded="<?= $open ? 'true' : 'false' ?>"><?= $e($region) ?> <b><?= count($list) ?></b></button>
           <?php foreach ($list as $name => $caption): ?>
-          <label class="mp-photo" title="<?= $e($caption) ?>"><input type="radio" name="backdrop" value="<?= $e($name) ?>"<?= ($suggest[$market] ?? '') === $name ? ' checked' : '' ?>><img src="<?= $e($stock_thumb($name)) ?>" alt="<?= $e($caption) ?>" loading="lazy"><small><?= $e(market_stock_location($name, $caption)) ?></small></label>
+          <label class="mp-photo" data-grp="<?= $gi ?>"<?= $open ? '' : ' hidden' ?> title=""<?= $e($caption) ?>"><input type="radio" name="backdrop" value="<?= $e($name) ?>"<?= ($suggest[$market] ?? '') === $name ? ' checked' : '' ?>><img src="<?= $e($stock_thumb($name)) ?>" alt="<?= $e($caption) ?>" loading="lazy"><small><?= $e(market_stock_location($name, $caption)) ?></small></label>
           <?php endforeach; endforeach; ?>
           <div class="mp-group mp-own-h"<?= $uploads ? '' : ' hidden' ?>>Your photos</div>
           <?php foreach ($uploads as $id): ?>
@@ -191,6 +197,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
     </aside>
   </div>
 
+<script src="/assets/js/template-save.js?v=<?= (int)@filemtime(__DIR__ . '/../assets/js/template-save.js') ?>"></script>
 <script>
 (function () {
   const RENDER = <?= json_encode($render_url) ?>;
@@ -242,8 +249,14 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
     const m = form.querySelector('#mpMarket option:checked');
     const want = m ? m.dataset.suggest : '';
     const tile = photos.querySelector('input[name="backdrop"][value="' + want.replace(/"/g, '') + '"]');
-    if (tile) tile.checked = true;
+    if (tile) { tile.checked = true; const g = tile.closest('.mp-photo').dataset.grp; if (g) fold(g, true); }   // its region opens with it
   }
+  // A region's header folds or unfolds its photos (2026-11-24).
+  function fold(g, open) {
+    photos.querySelector('.mp-grp[data-grp="' + g + '"]').setAttribute('aria-expanded', String(open));
+    photos.querySelectorAll('.mp-photo[data-grp="' + g + '"]').forEach(t => t.hidden = !open);
+  }
+  photos.addEventListener('click', e => { const h = e.target.closest('.mp-grp'); if (h) fold(h.dataset.grp, h.getAttribute('aria-expanded') !== 'true'); });
   // ── Your own photos (2026-10-19): the Instagram tool's uploads, shared. A new one lands under Your photos and is chosen;
   //    the x removes it (a confirm first) and falls back to None when it was the one in use. ──
   const UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>;
@@ -297,6 +310,7 @@ foreach ($defs as $k => $d) if (!empty($d['photo']) && isset($stock[$d['photo']]
     update();
   });
   form.addEventListener('submit', () => { busy.classList.add('on'); setTimeout(() => busy.classList.remove('on'), 10000); });
+  if (window.mhTemplateSave) mhTemplateSave(form);   // iPhone and iPad: the picture with a Save to Photos button
   new ResizeObserver(scale).observe(stage); scale();
   syncStats();
   render();

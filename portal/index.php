@@ -173,7 +173,7 @@ portal_header($ctx, 'Home', 'home');
       <p class="pt-card-sub">The month in every market Mont Haus serves: medians, sales, days on market and supply by county, with two years of trend.</p>
       <span class="pt-card-go">Read the report ›</span>
     </a>
-    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/social.php')) ?>">
+    <a class="pt-card" href="<?= ph(portal_url($ctx, '/portal/templates.php')) ?>">
       <h2 class="pt-card-h">Templates</h2>
       <p class="pt-card-sub">Social templates: Instagram posts and stories for your listings, and a market snapshot card. Print templates: a listing flyer.</p>
       <span class="pt-card-go">See the templates ›</span>

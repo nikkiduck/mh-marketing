@@ -14,13 +14,20 @@ social_gate();
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 
+// The stock library as tiles, by region. A listing's photos carry it too when asked (?stock=1: the Listing
+// Post/Story's Stock Library tab, 2026-11-24; the flyer never asks).
+$stock_tiles = function (): array {
+    $t = [];
+    foreach (social_stock_grouped() as $region => $list) {
+        foreach ($list as $name => $caption) $t[] = ['id' => 'stock:' . $name, 'thumb' => social_stock_url($name, 400), 'large' => social_stock_url($name, 2048), 'own' => false, 'stock' => true, 'caption' => $caption, 'group' => $region];
+    }
+    return $t;
+};
 if ((string)($_GET['listing'] ?? '') === '__none') {   // the Other kind: the agent's uploads only (2026-10-15)
     $out = [];
     foreach (social_uploads($ctx) as $id) $out[] = ['id' => 'upload:' . $id, 'thumb' => social_upload_url($ctx, $id, 400), 'large' => social_upload_url($ctx, $id, 1600), 'own' => true];
     // Then the Mont Haus stock library, each with its caption for the tooltip (2026-10-15), by region (2026-10-19).
-    foreach (social_stock_grouped() as $region => $list) {
-        foreach ($list as $name => $caption) $out[] = ['id' => 'stock:' . $name, 'thumb' => social_stock_url($name, 400), 'large' => social_stock_url($name, 2048), 'own' => false, 'caption' => $caption, 'group' => $region];
-    }
+    $out = array_merge($out, $stock_tiles());
     echo json_encode(['listing' => '', 'count' => count($out), 'headline' => '', 'photos' => $out], JSON_UNESCAPED_SLASHES);
     exit;
 }
@@ -33,6 +40,7 @@ $out = array_map(fn($u) => ['id' => $u, 'thumb' => social_img($u, 400), 'large' 
 foreach (social_uploads($ctx) as $id) {
     $out[] = ['id' => 'upload:' . $id, 'thumb' => social_upload_url($ctx, $id, 400), 'large' => social_upload_url($ctx, $id, 1600), 'own' => true];
 }
+if (!empty($_GET['stock'])) $out = array_merge($out, $stock_tiles());
 $remarks  = (string)($_SESSION['social_remarks'][$l['id']] ?? '');
 $headline = social_headline_from_remarks($remarks);   // the flyer's suggestion
 // `remarks`: the listing's description, for the brochure flyer to start from (2026-11-17).

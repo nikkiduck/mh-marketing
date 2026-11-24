@@ -34,7 +34,7 @@
 .sp-step { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 20px; margin: 0 0 16px; }
 .sp-step-h { font-family: var(--serif); font-size: 26px; font-weight: 500; margin: 0 0 14px; display: flex; align-items: center; gap: 12px; }
 .sp-step-h span { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 50%;
-                  background: var(--ink); color: var(--gold); font-family: var(--sans); font-size: 15px; font-weight: 500; }
+                  background: var(--ink); color: #fff; font-family: var(--sans); font-size: 15px; font-weight: 500; }   /* white (Nikki, 2026-11-24): the accent went dark on dark with the slate scheme */
 
 /* Template choices: radio cards. Look: two pills. */
 .sp-choices { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -53,8 +53,40 @@
 .sp-look-l { color: var(--muted); font-size: 15px; margin-right: 4px; }
 .sp-pillopt span { display: inline-block; padding: 7px 16px; border: 2px solid var(--line); border-radius: 999px; font-size: 15px; white-space: nowrap; }
 .sp-pillopt input:checked + span { border-color: var(--gold-deep); background: #eceff3; color: var(--gold-deep); font-weight: 500; }
+/* The badge's color pills: a dot of the color before its name (2026-11-24). */
+.sp-swatch { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin: 0 6px -1px 0; border: 1px solid rgba(31,36,44,.3); }
+/* Phones (Nikki, 2026-11-24): smaller pills, so a row of choices stays on one line where it can. */
+@media (max-width: 559px) {
+  .sp-step { padding: 16px 14px 18px; }
+  .sp-look { gap: 5px; margin-top: 12px; }
+  .sp-look-l { font-size: 13px; margin-right: 1px; }
+  .sp-pillopt span { padding: 4px 8px; border-width: 1.5px; font-size: 13px; }
+  .sp-badgecolor .sp-look-l { flex-basis: 100%; }   /* four colors: the label on its own line, the pills on one */
+  .sp-swatch { width: 10px; height: 10px; margin-right: 4px; }
+}
 
 /* Photo picker, the drop zone, the framing box */
+/* The Photo step's tabs (2026-11-24): MLS Photos / Upload Your Own / Stock Library. */
+.sp-tabs { display: flex; gap: 0; margin: 0 0 14px; border-bottom: 1px solid var(--line); }
+.sp-tab { flex: 0 1 auto; font: inherit; font-size: 15px; color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent; margin-bottom: -1px;
+          padding: 8px 14px 9px; cursor: pointer; white-space: nowrap; }
+.sp-tab:hover { color: var(--text); }
+.sp-tab.on { color: var(--gold-deep); font-weight: 500; border-bottom-color: var(--gold-deep); }
+.sp-tab:focus-visible { outline: 2px solid var(--gold-deep); outline-offset: -2px; }
+@media (max-width: 559px) { .sp-tabs { justify-content: space-between; } .sp-tab { font-size: 14px; padding: 8px 6px 9px; } }
+.sp-pane .sp-drop { margin-top: 0; text-align: center; padding: 22px 16px; background: #f6f7f9; }
+.sp-pane .sp-drop > span { display: block; margin-top: 10px; }
+.sp-upbtn { display: inline-block; }
+.sp-pane .sp-drop + .sp-photos:not(:empty) { margin-top: 14px; }
+/* A stock region's header folds its photos (as on the Social Media Plan tools). */
+.sp-pane .sp-grp { display: flex; align-items: center; gap: 9px; width: 100%; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 10px 0; margin: 0; cursor: pointer; text-align: left; font-family: inherit; }
+.sp-pane .sp-grp::before { content: ""; flex: 0 0 auto; width: 7px; height: 7px; margin-left: 3px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(-45deg); transition: transform .15s; }
+.sp-pane .sp-grp[aria-expanded="true"]::before { transform: rotate(45deg); }
+.sp-pane .sp-grp b { font-weight: 400; opacity: .65; letter-spacing: 0; text-transform: none; }
+.sp-pane .sp-grp:hover { color: var(--text); }
+.sp-pane .sp-photos:has(.sp-grp) { row-gap: 0; }
+.sp-pane .sp-photos:has(.sp-grp) .sp-photo { margin: 8px 0 0; }
+.sp-photos [hidden] { display: none !important; }
 .sp-hint { color: var(--muted); font-size: 14px; margin: -4px 0 12px; }
 .sp-photos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 @media (min-width: 560px) { .sp-photos { grid-template-columns: repeat(4, 1fr); } }
@@ -145,3 +177,12 @@
 .sp-capcount { font-size: 12.5px; color: var(--muted, #6b7280); margin-right: auto; }
 .sp-capcount.over { color: #b3261e; font-weight: 600; }
 #spCaption { font-size: 13.5px; line-height: 1.5; }
+
+/* Save on an iPhone or iPad (assets/js/template-save.js, 2026-11-24): the finished picture with a Save to Photos
+   button that opens the share sheet, because a plain download lands in Files there, not in Photos. */
+.sv-over { position: fixed; inset: 0; z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+           padding: 20px 20px calc(20px + env(safe-area-inset-bottom)); background: rgba(31,36,44,.94); color: #fff; text-align: center; }
+.sv-over img { max-width: 100%; max-height: 58vh; border-radius: 8px; box-shadow: 0 6px 24px rgba(0,0,0,.4); -webkit-touch-callout: default; }
+.sv-over p { margin: 0; font-size: 14.5px; line-height: 1.45; max-width: 320px; color: #e3e8ee; }
+.sv-over .sp-btn { background: #fff; color: #1f242c; }
+.sv-close { font: inherit; font-size: 15px; color: #e3e8ee; background: none; border: 0; padding: 8px 14px; text-decoration: underline; cursor: pointer; }

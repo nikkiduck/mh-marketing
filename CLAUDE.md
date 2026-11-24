@@ -2560,6 +2560,33 @@ Market Snapshot, which shares `social_marks()`) was offered for one evening
 and removed on 2026-10-29 (Nikki: no different enough from the plain one);
 a posted `mark=faint` falls back to the triangle.
 
+### The builder's form since 2026-11-24 (Nikki; inc/social_body.php, both tools, portal and admin)
+
+- **Photo step = tabs.** Listing Post/Story: MLS Photos (shown first), Upload
+  Your Own, Stock Library. General Social: Upload Your Own (shown first:
+  that is what people come for), Stock Library. One radio group across the
+  panes. The listing tool asks social_photos.php for `?stock=1` (the flyer
+  does not), and `social_post_from_request()` takes a `stock:` photo on a
+  listing post too.
+- **The stock library is folded into its regions everywhere** (here, the
+  Market Snapshot's background photos, the plan tools since 2026-11-05):
+  every region closed except the one holding the chosen or suggested photo.
+- **Badge** is the word on screen for the label pill (field "Badge", "No
+  badge", "Your badge text", step 1's "Badge place"); the code still says
+  label. **Badge color** (`badge_color`, `social_badge_colors()` in
+  social_render.php): Slate (default, the look's own), Charcoal, White, Brick.
+- Phones (under 560px): smaller pills so a row stays on one line where it
+  can; step numbers are white.
+- **Saving on an iPhone or iPad** (assets/js/template-save.js, also on the
+  Market Snapshot): a page cannot write to Photos and iOS Chrome's download
+  lands in Files, so there Download fetches the PNG and shows it with a
+  Save to Photos button (the share sheet, opened by that second tap; the
+  2026-10-12 Share button asked for the sheet with no fresh tap and
+  errored) and "touch and hold" as the fallback. Other browsers download as
+  before; any failure sends the form the plain way.
+- The Home page's Templates card opens portal/templates.php (it pointed at
+  the listing tool, which is how agents "skipped" the Templates page).
+
 ### General Social (portal/general.php, 2026-10-28)
 
 A post that is not about a listing, split out of the listing tool's "Other

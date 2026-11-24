@@ -182,6 +182,19 @@ function social_themes(): array {
     return ['dark' => 'Dark', 'light' => 'Light'];
 }
 
+/**
+ * The badge's colors (Nikki, 2026-11-24: "add the behavior to change the color"): key => [name, fill, text].
+ * Slate is the look's own badge tone and the default; the same four on the dark and the light look.
+ */
+function social_badge_colors(): array {
+    return [
+        'slate'    => ['Slate',    '#4A5566', '#FFFFFF'],
+        'charcoal' => ['Charcoal', '#1F242C', '#FFFFFF'],
+        'white'    => ['White',    '#FFFFFF', '#1F242C'],
+        'brick'    => ['Brick',    '#8A2B2B', '#FFFFFF'],
+    ];
+}
+
 /** The ready-made labels for the pill on the photo (the form adds "No label" and "Custom"). */
 function social_labels(): array {
     return ['Featured Listing', 'Just Listed', 'New Price', 'Under Contract', 'Just Sold', 'Featured Rental', 'Coming Soon', 'Open House'];
@@ -406,6 +419,8 @@ function social_render(array $p, ?string $base = null, bool $export = false): st
 
     // The two looks (social_palette(), shared with the plan templates since 2026-11-02).
     $c = social_palette($theme, $base);
+    // The badge's color, when one is picked (2026-11-24); otherwise the look's own.
+    if (isset(social_badge_colors()[(string)($p['badge_color'] ?? '')])) [, $c['pill'], $c['pilltext']] = social_badge_colors()[(string)$p['badge_color']];
     if ($opt['color'] !== 'auto') { $c['logo'] = $base . '/assets/images/MH_vert-stack_' . $opt['color'] . '.svg'; $c['mark'] = $base . '/assets/images/M-mark_' . $opt['color'] . '.svg'; }
     if ($opt['text_shadow'] !== null) $c['shadow'] = social_shadow_css($opt['text_shadow']);
 
