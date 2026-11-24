@@ -1,5 +1,5 @@
 # marketing.monthaus.com deploy manifest
-# Generated 2026-11-18 07:58 from git HEAD
+# Generated 2026-11-24 from git HEAD
 89dc743825632527a5d23c030e2b1bfd  ad_export.php
 568c9320faac600845db927aa32d99c9  ad_render.php
 6790f0884a86826848ab322237eb4888  agent.php
@@ -16,10 +16,11 @@ e21f7ff6086fdea2b3fec475c3bf1a73  assets/css/elevation.css
 bc3a09f0c1d9434b199705a14369bc95  assets/css/market.css
 480bf38c8914ca4843d92b88280d01f7  assets/css/mh-theme.css
 fa31d1a724b618fb4c3cada7394cb91f  assets/css/portal.css
-c6cc7da57a568b53f1235798324b811d  assets/css/social.css
+606547f6c7702acd6a8774dc5c53a35d  assets/css/social.css
 95da7276160a3d0c1d095d7c681311a8  assets/images/email/header-aspen-slate.jpg
 e539e5bb247a1ef82888690dd966de01  assets/js/market-report.js
 a6f26b13856ee0b10270c907e0bc81bd  assets/js/mh-qr.js
+7ec9f2a3600f47597f10fa621353deca  assets/js/template-save.js
 53ab4853594e50288b02cc6d7edc8cb9  billing.php
 7605617b1ef8bbae04057924ab75c01d  caption_save.php
 f76d4556e5309670d33806d0b4c71885  change_password.php
@@ -82,7 +83,7 @@ cd150c0f63e16e48d683bc55d6779d13  inc/market_data.php
 b83c819a5863ec1048f88c857ed3675e  inc/market_feed.php
 dd828c19260e7fae118a7a8c281f2ec0  inc/market_flyer_render.php
 a0bb1b42388bd0a60acd9eb694130b0a  inc/market_page.php
-a8a9e020b0a4a7401e97f3261efdd89c  inc/market_post_body.php
+76b983691747878438186bfeaf4c3851  inc/market_post_body.php
 5d461821bd57dfba63e198c4244d2eed  inc/market_report_body.php
 d5901571211e70f8128ab96893c8bc5e  inc/photos.php
 600643feb5c7758e5152774fa64b5b63  inc/pipeline.php
@@ -98,9 +99,9 @@ e95a776269b03da9987c013db93112dc  inc/qr.php
 a3981c4f73d7aeeb99f132002f3ab4a5  inc/roster_alerts.php
 37a433c2e199c8b974b78eaa958707cf  inc/schema.php
 74aa0b20783093705cf5507c4526dd5b  inc/site_sync.php
-f790a66f0736ddb6e4b15777fc31f451  inc/social.php
-65634ddcb51f94c9846aa43f2efa824a  inc/social_body.php
-cc9409116f2c2e72bf174d91209dd451  inc/social_render.php
+4b03c257759a2264dbb40c806aa334bb  inc/social.php
+157f59a418e26a5ed916585164f96050  inc/social_body.php
+228fc28d7df0fc2b057d42bda679974b  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 7a36f2831fc80bb7153aae9c63aad9f8  inc/whats_new.php
 32b5246e79342bed8c7f63f6c45f12c8  index.php
@@ -134,7 +135,7 @@ db23d66a8116c2f179a76d4ceb1c9ed0  portal/flyer_export.php
 aff8fb917f9a92e9cd1a9db8c2d37652  portal/flyer_render.php
 03b2a77e2a597f13fc056728330747f0  portal/general.php
 1a848496d229059a6f0a0990bd565175  portal/hotsheets.php
-dc7fe5a9f8c2be7eb080dfafd48084d2  portal/index.php
+352e27a83696d2a252ff96ece8e270e4  portal/index.php
 7eb83c3fc68c3e762f9578680ff9f245  portal/market.php
 6e25e50cfac2e6689da36e4ead4aee68  portal/market_export.php
 bab7ce78c6827745173aa89859f1ceae  portal/market_flyer.php
@@ -149,7 +150,7 @@ c100b7be0bbc3fa29c94576a1acb1f72  portal/social.php
 01f01050d97dfb06402d6d35b99a238e  portal/social_asset.php
 70b7ebf3bddbcd4e6ec35bfec1322b8b  portal/social_delete.php
 23061b2b38ab6d637aa86c304f171d78  portal/social_export.php
-259c3c6d605e311d656368b5cfa1fcc7  portal/social_photos.php
+41932e1069d7188ea44e3d009f4ae070  portal/social_photos.php
 9bacb7970835708f8daf70c93192c5d0  portal/social_render.php
 6639aad2bfc0f75d2efb6d2e6f80285d  portal/social_upload.php
 7da856d11afb908a4a11c8aced958bfc  portal/spend.php

@@ -1545,7 +1545,7 @@ no `/var/log/syslog`).
 **Uploading is per file and easy to get partly wrong.** `deploy/manifest.md5`
 lists every `.php` under the root, `inc/`, `api/`, `cron/` and `portal/`,
 plus `assets/css/{market,mh-theme,portal,social}.css` and
-`assets/js/{market-report,mh-qr}.js`. It deliberately omits `inc/db.php`,
+`assets/js/{market-report,mh-qr,template-save}.js`. It deliberately omits `inc/db.php`,
 `inc/sso_config.php`, `agent-photos/` and `assets/vendor/`, whose server copies
 are meant to differ. Regenerate it from the working folder, then on the server:
 
