@@ -15,7 +15,7 @@ $vd_listings = plan_listings($conn);
 $vd_agents   = plan_agents($conn);
 $vd_clips    = video_clips($ctx);
 $csrf = (string)$_SESSION['csrf_token'];
-$render_url = 'video_render.php'; $export_url = 'video_export.php'; $clip_url = 'video_clip.php'; $photos_url = 'plan_photos.php';
+$render_url = 'video_render.php'; $export_url = 'video_export.php'; $clip_url = 'video_clip.php'; $logo_url = 'video_team_logo.php'; $photos_url = 'plan_photos.php';
 
 admin_tool_header([
     'title'   => 'Video',

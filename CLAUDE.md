@@ -3685,6 +3685,20 @@ licensed track cannot be baked in; it is added in Instagram.
   next, drawn where the Text place puts the opening text. The opening text
   leaves before the first photo that has its own text and does not come
   back; when that is the first photo it is not drawn at all. Photos only.
+- **Presented by: two, and teams** (Nikki, 2026-11-26). The card takes up
+  to two presenters (`agent`, `agent2`), each a roster broker or a team
+  (`t:{key}`, the site's list, `mk_site_teams()`); two sit side by side
+  under one "Presented by". `video_listing_presenters()` fills them from the
+  listing: a team it names stands alone, else our brokers it names, in
+  order. A team shows its LOGO where a headshot goes, under the Mont Haus
+  logo, never in place of it. **Team logos are a stopgap store**:
+  `video_team_logo.php` uploads one a team to
+  CREATIVES_DIR/video/team-logos/{key}.{ext} + {key}.json ({ext, dark});
+  `dark` is ticked by the person uploading (a dark logo is shown in white:
+  greyed, inverted, screened onto the card) and never worked out from the
+  file. Both teams' logos were put there by hand from MH Send's files that
+  day. Nikki is thinking about a Teams screen on marketing: a team's logo
+  belongs there, once, for every template; move this store then.
 - `inc/video_render.php` (standalone): `video_timeline()` and
   `video_motion()` are the ONE record of the timing and the movement. The
   layers and the closing card are HTML (`video_layer_html()`), screenshotted

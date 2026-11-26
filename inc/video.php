@@ -112,6 +112,89 @@ function video_clip_public(array $c): array {
             'text' => $c['name'] . '  ·  ' . video_seconds_text((float)$c['duration']) . '  ·  ' . $c['w'] . ' × ' . $c['h'] . '  ·  ' . video_bytes_text((int)$c['bytes'])];
 }
 
+// ── Team logos (the quick version, Nikki 2026-11-26) ─────────────────────────
+//
+// A team (the site's list, mk_site_teams(): Weber Boxer Group, Coates Horn
+// Team) can stand in Presented by, with its logo where a headshot goes. The
+// logo is uploaded on the Video page and kept, one a team, in
+// CREATIVES_DIR/video/team-logos/{key}.{ext} beside {key}.json
+// ({ext, dark}). `dark` is said by the person uploading, never worked out
+// from the picture: a dark logo is shown in white on the card. This store is
+// a stopgap for a Teams screen that would hold a team's logo once for every
+// template; move it there when that is built.
+
+const VIDEO_LOGO_TYPES = ['png' => 'image/png', 'jpg' => 'image/jpeg', 'webp' => 'image/webp', 'svg' => 'image/svg+xml'];
+const VIDEO_LOGO_MAX_BYTES = 2 * 1048576;
+
+function video_team(string $key): ?array {
+    foreach (mk_site_teams() as $t) if ($t['key'] === $key) return $t;
+    return null;
+}
+
+function video_team_logo_dir(bool $make = false): string {
+    if (!defined('CREATIVES_DIR')) return '';
+    $dir = rtrim(CREATIVES_DIR, '/') . '/video/team-logos';
+    if (!is_dir($dir) && (!$make || !@mkdir($dir, 02775, true))) return '';
+    return $dir;
+}
+
+/** A team's logo: ['file', 'ext', 'dark', 'v' (changes when the file does)], or null. */
+function video_team_logo(string $key): ?array {
+    if (!video_team($key) || ($dir = video_team_logo_dir()) === '') return null;
+    $m = is_readable("{$dir}/{$key}.json") ? json_decode((string)file_get_contents("{$dir}/{$key}.json"), true) : null;
+    $ext = is_array($m) ? (string)($m['ext'] ?? '') : '';
+    if (!isset(VIDEO_LOGO_TYPES[$ext]) || !is_file("{$dir}/{$key}.{$ext}")) return null;
+    return ['file' => "{$dir}/{$key}.{$ext}", 'ext' => $ext, 'dark' => !empty($m['dark']), 'v' => (int)filemtime("{$dir}/{$key}.{$ext}")];
+}
+
+/** Keep an uploaded logo ($_FILES entry) for a team. ['ok' => true] or ['error' => sentence]. */
+function video_team_logo_store(string $key, array $up, bool $dark): array {
+    if (!video_team($key)) return ['error' => 'Choose a team first.'];
+    if (($up['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !is_uploaded_file((string)($up['tmp_name'] ?? ''))) {
+        return ['error' => in_array($up['error'] ?? 0, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) ? 'That file is too large: a logo can be up to 2 MB.' : 'The logo did not arrive. Please try again.'];
+    }
+    if ((int)$up['size'] > VIDEO_LOGO_MAX_BYTES) return ['error' => 'That file is too large: a logo can be up to 2 MB.'];
+    $tmp = (string)$up['tmp_name'];
+    $info = @getimagesize($tmp);
+    $ext = $info ? ([IMAGETYPE_PNG => 'png', IMAGETYPE_JPEG => 'jpg', IMAGETYPE_WEBP => 'webp'][$info[2]] ?? '') : '';
+    if ($ext === '') {
+        // An SVG: text that opens as an svg and carries nothing that runs.
+        $text = (string)file_get_contents($tmp);
+        if (preg_match('/<svg[\s>]/i', substr($text, 0, 4000)) && !preg_match('/<script|\bon[a-z]+\s*=|javascript:|<foreignObject|<iframe/i', $text)) $ext = 'svg';
+    }
+    if ($ext === '') return ['error' => 'That file is not a logo this tool can use. PNG, JPG and SVG work.'];
+    if (($dir = video_team_logo_dir(true)) === '') return ['error' => 'The logo could not be saved. Please try again.'];
+    video_team_logo_remove($key);
+    if (!move_uploaded_file($tmp, "{$dir}/{$key}.{$ext}")) return ['error' => 'The logo could not be saved. Please try again.'];
+    @chmod("{$dir}/{$key}.{$ext}", 0664);
+    file_put_contents("{$dir}/{$key}.json", json_encode(['ext' => $ext, 'dark' => $dark])); @chmod("{$dir}/{$key}.json", 0664);
+    return ['ok' => true];
+}
+
+function video_team_logo_remove(string $key): void {
+    if (!video_team($key) || ($dir = video_team_logo_dir()) === '') return;
+    foreach (array_keys(VIDEO_LOGO_TYPES) as $ext) @unlink("{$dir}/{$key}.{$ext}");
+    @unlink("{$dir}/{$key}.json");
+}
+
+/**
+ * Who a listing is presented by, as the form's two dropdowns take it:
+ * ['t:{team key}' | '{agent id}' | '0', same]. A team the listing names
+ * stands alone; otherwise our brokers it names, in the order named, two at
+ * most. (By name, as ads_agent_for_listing(): plan_listings() has already
+ * cut the agent words down to our own side.)
+ */
+function video_listing_presenters(array $l, array $agents): array {
+    $words = strtolower((string)($l['agent'] ?? ''));
+    if ($words === '') return ['0', '0'];
+    foreach (mk_site_teams() as $t) if (str_contains($words, strtolower($t['name']))) return ['t:' . $t['key'], '0'];
+    $found = [];
+    foreach ($agents as $a) { $at = strpos($words, strtolower($a['name'])); if ($at !== false) $found[(int)$a['id']] = $at; }
+    asort($found);
+    $ids = array_map('strval', array_slice(array_keys($found), 0, 2));
+    return [$ids[0] ?? '0', $ids[1] ?? '0'];
+}
+
 /** "0:42". */
 function video_seconds_text(float $s): string { $s = (int)round($s); return intdiv($s, 60) . ':' . str_pad((string)($s % 60), 2, '0', STR_PAD_LEFT); }
 
@@ -175,19 +258,34 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
     $v['end'] = !empty($in['end']);
     $v['end_address'] = '';
     $v['end_site'] = '';
+    $v['end_extra'] = '';
     $v['agent'] = null;
+    $v['agent2'] = null;
     if ($v['end']) {
         $v['end_address'] = mb_substr(trim(implode("\n", array_slice(array_values(array_filter(array_map('trim', explode("\n", str_replace("\r", '', (string)($in['end_address'] ?? '')))), 'strlen')), 0, 2))), 0, 90);
         $v['end_site'] = $one('end_site', 40);
-        $by = ['name' => $one('end_name', 50), 'phone' => $one('end_phone', 40), 'extra' => $one('end_extra', 50), 'headshot_url' => '', 'headshot_file' => null];
-        $a = !empty($in['end_headshot']) ? (plan_agents($conn)[(int)($in['agent'] ?? 0)] ?? null) : null;
-        if ($a) {
-            $u = $a['face_url'] !== '' ? $a['face_url'] : $a['headshot_url'];
-            $f = $u !== '' ? mk_photo_file($u) : '';
-            $by['headshot_url'] = $u;
-            $by['headshot_file'] = ($f !== '' && is_file($f)) ? (realpath($f) ?: $f) : null;
-        }
-        if ($by['name'] !== '' || $by['phone'] !== '' || $by['extra'] !== '' || $by['headshot_url'] !== '') $v['agent'] = $by;
+        $v['end_extra'] = $one('end_extra', 50);
+        // Up to two presenters (Nikki, 2026-11-26: "the option for 2 agents ... Jackson Horn and Kim Coates"). Each is a
+        // broker on the roster or a team ('t:{key}'); the choice supplies only the picture (a square headshot, or the
+        // team's logo), the name and phone are what the boxes hold.
+        $shots = !empty($in['end_headshot']);
+        $who = function (string $pick, string $name, string $phone) use ($conn, $shots): ?array {
+            $by = ['name' => $name, 'phone' => $phone, 'headshot_url' => '', 'headshot_file' => null, 'logo' => false, 'dark' => false];
+            if ($shots && str_starts_with($pick, 't:')) {
+                $key = substr($pick, 2);
+                if ($lg = video_team_logo($key)) $by = ['headshot_url' => 'video_team_logo.php?team=' . rawurlencode($key) . '&v=' . $lg['v'], 'headshot_file' => $lg['file'], 'logo' => true, 'dark' => $lg['dark']] + $by;
+            } elseif ($shots && ($a = plan_agents($conn)[(int)$pick] ?? null)) {
+                $u = $a['face_url'] !== '' ? $a['face_url'] : $a['headshot_url'];
+                $f = $u !== '' ? mk_photo_file($u) : '';
+                $by['headshot_url'] = $u;
+                $by['headshot_file'] = ($f !== '' && is_file($f)) ? (realpath($f) ?: $f) : null;
+            }
+            return ($by['name'] !== '' || $by['phone'] !== '' || $by['headshot_url'] !== '') ? $by : null;
+        };
+        $both = array_values(array_filter([$who((string)($in['agent'] ?? '0'), $one('end_name', 50), $one('end_phone', 40)),
+                                           $who((string)($in['agent2'] ?? '0'), $one('end_name2', 50), $one('end_phone2', 40))]));
+        $v['agent'] = $both[0] ?? null;
+        $v['agent2'] = $both[1] ?? null;
     }
     $v['name'] = 'MH_' . ($listing && trim((string)$listing['address']) !== '' ? ads_slug((string)$listing['address']) : ($kind === 'clip' ? 'clip' : 'listing')) . '_video';
     return $v;

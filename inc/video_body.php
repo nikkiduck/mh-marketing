@@ -7,10 +7,22 @@
  *
  * Expects: $ctx, $csrf, $vd_listings (plan_listings()), $vd_agents
  * (plan_agents()), $vd_clips (video_clips()), and the endpoint URLs
- * ($render_url, $export_url, $clip_url, $photos_url).
+ * ($render_url, $export_url, $clip_url, $logo_url, $photos_url).
  */
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $vd_phones = ads_agent_phones($conn);
+$vd_teams = mk_site_teams();
+// The options of both Presented by dropdowns: nobody, the teams (a team with a logo on file shows the logo and needs no name), the brokers.
+$vd_by_options = function () use ($vd_teams, $vd_agents, $vd_phones, $e): string {
+    $h = '<option value="0" data-name="" data-phone="">Nobody</option>';
+    if ($vd_teams) {
+        $h .= '<optgroup label="Teams">';
+        foreach ($vd_teams as $t) { $has = video_team_logo($t['key']) !== null; $h .= '<option value="t:' . $e($t['key']) . '" data-team="' . $e($t['key']) . '" data-team-name="' . $e($t['name']) . '" data-logo="' . ($has ? 1 : 0) . '" data-name="' . $e($has ? '' : $t['name']) . '" data-phone="">' . $e($t['name']) . '</option>'; }
+        $h .= '</optgroup><optgroup label="Brokers">';
+    }
+    foreach ($vd_agents as $a) $h .= '<option value="' . (int)$a['id'] . '" data-name="' . $e($a['name']) . '" data-phone="' . $e($vd_phones[$a['id']] ?? '') . '">' . $e($a['name']) . (isset($vd_phones[$a['id']]) ? ' · ' . $e($vd_phones[$a['id']]) : ' · no phone on the profile') . '</option>';
+    return $h . ($vd_teams ? '</optgroup>' : '');
+};
 $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listing' : ((int)$l['is_rental'] ? 'Featured Rental' : 'Featured Listing'));
 ?>
 <form id="vdForm" method="post" action="<?= $e($export_url) ?>" autocomplete="off">
@@ -37,7 +49,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
             <?php $first = true; foreach (plan_listing_groups($vd_listings) as $gname => $group): ?>
             <optgroup label="<?= $e($gname) ?>">
               <?php foreach ($group as $l): ?>
-              <option value="<?= $e($l['id']) ?>" data-agent="<?= (int)ads_agent_for_listing($l, $vd_agents) ?>" data-label="<?= $e($vd_label($l)) ?>" data-headline="<?= $e($l['headline']) ?>" data-end="<?= $e(trim((string)$l['address']) !== '' ? social_short_address((string)$l['address']) . ($l['town'] !== '' ? "\n" . $l['town'] : '') : '') ?>"
+              <option value="<?= $e($l['id']) ?>" <?php [$p1, $p2] = video_listing_presenters($l, $vd_agents); ?>data-agent="<?= $e($p1) ?>" data-agent2="<?= $e($p2) ?>" data-label="<?= $e($vd_label($l)) ?>" data-headline="<?= $e($l['headline']) ?>" data-end="<?= $e(trim((string)$l['address']) !== '' ? social_short_address((string)$l['address']) . ($l['town'] !== '' ? "\n" . $l['town'] : '') : '') ?>"
                       data-line1="<?= $e($l['town']) ?>" data-line2="<?= $e($l['closed'] && $l['close_price'] !== null ? social_price_text($l['close_price']) : $l['price_text']) ?>" data-line3="<?= $e($l['specs_text']) ?>"<?= $first ? ' selected' : '' ?>><?= $e(implode('  ·  ', array_filter([($l['address'] !== '' ? $l['address'] : 'Address withheld') . ', ' . $l['city'], $l['price_text'], social_status_words((string)$l['status']), $l['agent']]))) ?></option>
               <?php $first = false; endforeach; ?>
             </optgroup>
@@ -175,17 +187,26 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
             <textarea name="end_address" rows="2" maxlength="90"></textarea>
           </label>
           <label class="sp-field" id="vdAgentField" style="margin-top:12px">Presented by
-            <select name="agent" id="vdAgent">
-              <option value="0" data-name="" data-phone="">Nobody</option>
-              <?php foreach ($vd_agents as $a): ?>
-              <option value="<?= (int)$a['id'] ?>" data-name="<?= $e($a['name']) ?>" data-phone="<?= $e($vd_phones[$a['id']] ?? '') ?>"><?= $e($a['name']) ?><?= isset($vd_phones[$a['id']]) ? ' · ' . $e($vd_phones[$a['id']]) : ' · no phone on the profile' ?></option>
-              <?php endforeach; ?>
-            </select>
+            <select name="agent" id="vdAgent"><?= $vd_by_options() ?></select>
           </label>
-          <label class="sp-check"><input type="checkbox" name="end_headshot" value="1" checked> Show the headshot</label>
           <div class="sp-two" style="margin-top:12px">
             <label class="sp-field">Name <input name="end_name" maxlength="50"></label>
             <label class="sp-field">Phone <input name="end_phone" maxlength="40"></label>
+          </div>
+          <label class="sp-field" style="margin-top:12px">And (a second broker, optional)
+            <select name="agent2" id="vdAgent2"><?= $vd_by_options() ?></select>
+          </label>
+          <div class="sp-two" id="vdBy2" style="margin-top:12px" hidden>
+            <label class="sp-field">Name <input name="end_name2" maxlength="50"></label>
+            <label class="sp-field">Phone <input name="end_phone2" maxlength="40"></label>
+          </div>
+          <label class="sp-check" style="margin-top:12px"><input type="checkbox" name="end_headshot" value="1" checked> Show the headshot or team logo</label>
+          <div class="vd-up" id="vdTeamLogo" hidden>
+            <input type="file" id="vdLogoFile" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml" hidden>
+            <button type="button" class="sp-btn sp-btn-soft" id="vdLogoUp">Upload a team logo</button>
+            <button type="button" class="sp-btn sp-btn-soft" id="vdLogoDel" hidden>Remove the logo</button>
+            <label class="sp-check" style="margin:0"><input type="checkbox" id="vdLogoDark" checked> It is a dark logo: show it in white</label>
+            <p class="sp-help" id="vdLogoMsg" style="flex-basis:100%;margin:0"></p>
           </div>
           <div class="sp-two" style="margin-top:12px">
             <label class="sp-field">More contact text (optional) <input name="end_extra" maxlength="50" placeholder="An email or an Instagram name"></label>
@@ -213,7 +234,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const f = n => form.querySelector('[name="' + n + '"]');
   const val = n => (form.querySelector('[name="' + n + '"]:checked') || f(n) || {}).value || '';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>;
+  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>;
   const CSRF = <?= json_encode($csrf) ?>, MAXP = <?= VIDEO_MAX_PHOTOS ?>, CHUNK = <?= VIDEO_CHUNK_BYTES ?>, MAXBYTES = <?= VIDEO_CLIP_MAX_BYTES ?>;
   const XF = <?= json_encode(VIDEO_XF / VIDEO_FPS) ?>, ENDS = <?= json_encode(VIDEO_END_SECONDS) ?>;
   const stage = document.getElementById('vdStage'), frame = document.getElementById('vdFrame'), result = document.getElementById('vdResult');
@@ -222,7 +243,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const photosEl = document.getElementById('vdPhotos'), picked = document.getElementById('vdPicked');
   const msg = document.getElementById('vdMsg'), bar = document.getElementById('vdBar'), make = document.getElementById('vdMake'), dl = document.getElementById('vdDownload');
   const listing = document.getElementById('vdListing'), clipSel = document.getElementById('vdClip'), upMsg = document.getElementById('vdUpMsg');
-  let order = [], caps = {}, agentTouched = false, byTouched = false, addrTouched = false, busy = false;
+  let order = [], caps = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
   const isClip = () => val('kind') === 'clip';
 
   // ── The preview ──
@@ -303,13 +324,58 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       f('label').value = Array.from(f('label').options).some(x => x.value === d.label) ? d.label : '';
     }
     if (!addrTouched) f('end_address').value = d.end || '';
-    if (!agentTouched) { f('agent').value = f('agent').querySelector('option[value="' + (d.agent || '0') + '"]') ? (d.agent || '0') : '0'; if (!byTouched) fromAgent(); }
+    if (!agentTouched) {
+      const set = (n, v) => { f(n).value = f(n).querySelector('option[value="' + (v || '0') + '"]') ? (v || '0') : '0'; };
+      set('agent', d.agent); set('agent2', d.agent2);
+      if (!byTouched) fromAgent(1);
+      if (!by2Touched) fromAgent(2);
+      syncBy();
+    }
   }
-  // The broker picked fills the card's name and phone; both stay editable.
-  function fromAgent() {
-    const d = (f('agent').selectedOptions[0] || { dataset: {} }).dataset;
-    f('end_name').value = d.name || ''; f('end_phone').value = d.phone || '';
+  // The presenter picked fills that side's name and phone; both stay editable.
+  function fromAgent(k) {
+    const d = (f(k === 2 ? 'agent2' : 'agent').selectedOptions[0] || { dataset: {} }).dataset;
+    f(k === 2 ? 'end_name2' : 'end_name').value = d.name || ''; f(k === 2 ? 'end_phone2' : 'end_phone').value = d.phone || '';
   }
+  // The second side's boxes show once someone is picked there; the team logo row when either side is a team.
+  const logoMsg = document.getElementById('vdLogoMsg');
+  function teamPicked() { return [f('agent'), f('agent2')].map(s => s.selectedOptions[0]).find(o => o && o.dataset.team) || null; }
+  function syncBy() {
+    document.getElementById('vdBy2').hidden = f('agent2').value === '0';
+    const t = teamPicked();
+    document.getElementById('vdTeamLogo').hidden = !t;
+    if (t) {
+      const has = t.dataset.logo === '1';
+      document.getElementById('vdLogoUp').textContent = has ? 'Replace the team logo' : 'Upload a team logo';
+      document.getElementById('vdLogoDel').hidden = !has;
+      logoMsg.classList.remove('bad');
+      logoMsg.textContent = has ? t.dataset.teamName + ' has a logo on file.' : t.dataset.teamName + ' has no logo yet: the card shows the name alone. PNG, JPG or SVG, up to 2 MB.';
+    }
+  }
+  // A team's logo, kept for every later video.
+  async function teamLogo(fd) {
+    const t = teamPicked(); if (!t) return;
+    fd.set('csrf_token', CSRF); fd.set('team', t.dataset.team);
+    let j;
+    try { j = await (await fetch(LOGO, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); }
+    catch (e) { j = { error: 'The logo could not be sent. Please try again.' }; }
+    if (j.error) { logoMsg.textContent = j.error; logoMsg.classList.add('bad'); return; }
+    form.querySelectorAll('option[data-team="' + t.dataset.team + '"]').forEach(o => { o.dataset.logo = j.has ? '1' : '0'; o.dataset.name = j.has ? '' : o.dataset.teamName; });
+    if (f('agent').selectedOptions[0].dataset.team && !byTouched) fromAgent(1);
+    if (f('agent2').selectedOptions[0].dataset.team && !by2Touched) fromAgent(2);
+    syncBy(); update();
+  }
+  const logoFile = document.getElementById('vdLogoFile');
+  document.getElementById('vdLogoUp').addEventListener('click', () => logoFile.click());
+  logoFile.addEventListener('change', () => {
+    const fl = logoFile.files[0]; logoFile.value = ''; if (!fl) return;
+    const fd = new FormData(); fd.set('logo', fl); fd.set('dark', document.getElementById('vdLogoDark').checked ? '1' : '0');
+    teamLogo(fd);
+  });
+  document.getElementById('vdLogoDel').addEventListener('click', () => {
+    if (!confirm('Remove this team\'s logo? It comes off every later video too.')) return;
+    const fd = new FormData(); fd.set('remove', '1'); teamLogo(fd);
+  });
   function syncKind() {
     const c = isClip();
     document.getElementById('vdPhotosStep').hidden = c; document.getElementById('vdClipStep').hidden = !c;
@@ -321,7 +387,8 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     const n = e.target.name;
     if (n === 'kind') { syncKind(); return; }
     if (n === 'listing') { fromListing(); if (!isClip()) { loadPhotos(); return; } }
-    if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(); }
+    if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(1); syncBy(); }
+    if (n === 'agent2') { agentTouched = true; by2Touched = false; fromAgent(2); syncBy(); }
     if (n === 'end') document.getElementById('vdEndFields').hidden = !f('end').checked;
     if (n === 'clip') { f('clip_start').value = 0; }
     update();
@@ -329,8 +396,9 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   form.addEventListener('input', e => {
     const n = e.target.name;
     if (n === 'end_name' || n === 'end_phone') byTouched = true;
+    if (n === 'end_name2' || n === 'end_phone2') by2Touched = true;
     if (n === 'end_address') addrTouched = true;
-    if (['headline', 'line1', 'line2', 'line3', 'clip_start', 'clip_length', 'end_address', 'end_name', 'end_phone', 'end_extra', 'end_site'].includes(n)) update();
+    if (['headline', 'line1', 'line2', 'line3', 'clip_start', 'clip_length', 'end_address', 'end_name', 'end_phone', 'end_name2', 'end_phone2', 'end_extra', 'end_site'].includes(n)) update();
   });
 
   // ── Uploading a clip, in pieces (a phone clip is far over PHP's upload limits) ──

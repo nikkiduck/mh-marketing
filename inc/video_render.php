@@ -28,9 +28,10 @@
  *   captions [photo's place => its own text] (video_captions()),
  *   label, headline (Enter = a new line), lines [3], words_show open|all,
  *   the look (video_look(): layout, logo, logo_kind, mark, badge,
- *   badge_color), end (bool), end_address, end_site, agent [name, phone,
- *   extra, headshot_url, headshot_file] | null (any part may be blank: the
- *   card's contact is typed on the form), name (the file name, no extension).
+ *   badge_color), end (bool), end_address, end_site, end_extra, agent and
+ *   agent2 [name, phone, headshot_url, headshot_file, logo (the picture is a
+ *   team's logo), dark (show it in white)] | null (any part may be blank:
+ *   the card's contact is typed on the form), name (the file name, no extension).
  */
 require_once __DIR__ . '/social_render.php';
 
@@ -220,7 +221,15 @@ function video_layer_css(): string {
          . ".L-end .rule{width:92px;height:2px;background:{$c['accent']};margin:70px 0 56px}"
          . ".L-end .addr{font-weight:500;font-size:32px;line-height:1.45;letter-spacing:.2em;text-transform:uppercase;color:{$c['accent']}}"
          . ".L-end .by{margin-top:78px;display:flex;flex-direction:column;align-items:center}"
-         . ".L-end .by img{width:230px;height:230px;object-fit:cover;display:block;margin-bottom:34px}"   // square, never a circle
+         . ".L-end .by img.shot{width:230px;height:230px;object-fit:cover;display:block;margin-bottom:34px}"   // square, never a circle
+         // A team's logo where a headshot goes. A dark logo (said at upload) is turned to white: greyed, inverted, and screened onto the card so a white ground drops out.
+         . ".L-end .by img.tlogo{display:block;max-width:600px;max-height:210px;width:auto;height:auto;margin-bottom:34px}.L-end .by img.tlogo.inv{filter:grayscale(1) invert(1) contrast(1.15);mix-blend-mode:screen}"
+         // Two presenters: side by side, each with its own picture, name and phone, under one "Presented by".
+         . ".L-end .by.two{margin-top:64px}.L-end .by.two .pair{display:flex;justify-content:center;align-items:flex-start;gap:44px;margin-top:30px}"
+         . ".L-end .by.two .who{width:430px;display:flex;flex-direction:column;align-items:center}"
+         . ".L-end .by.two img.shot{width:200px;height:200px;margin-bottom:26px}.L-end .by.two img.tlogo{max-width:400px;max-height:200px;margin-bottom:26px}"
+         . ".L-end .by.two b{font-size:50px;margin-top:0}.L-end .by.two .who span{font-size:29px}"
+         . ".L-end .by .more{font-size:30px;letter-spacing:.04em;margin-top:26px}"
          . ".L-end .by small{font-size:23px;letter-spacing:.24em;text-transform:uppercase;color:{$c['muted']}}"
          . ".L-end .by b{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:68px;line-height:1.15;margin-top:10px}"
          . ".L-end .by span{font-size:34px;letter-spacing:.08em;margin-top:8px;font-variant-numeric:lining-nums}"
@@ -291,14 +300,24 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
     $h = '<img class="logo" src="' . $e($logo) . '" alt="Mont Haus International Realty">';
     $addr = trim((string)($v['end_address'] ?? ''));
     if ($addr !== '') $h .= '<div class="rule"></div><div class="addr">' . nl2br($e($addr), false) . '</div>';
-    $a = $v['agent'] ?? null;
-    if ($a) {
-        $shot = ($export && !empty($a['headshot_file'])) ? 'file://' . $a['headshot_file'] : (string)($a['headshot_url'] ?? '');
+    // Who presents it: one (picture, "Presented by", name, phone) or two side by side under one "Presented by".
+    $pic = function (array $a) use ($export, $e): string {
+        $src = ($export && !empty($a['headshot_file'])) ? 'file://' . $a['headshot_file'] : (string)($a['headshot_url'] ?? '');
+        if ($src === '') return '';
+        return !empty($a['logo']) ? '<img class="tlogo' . (!empty($a['dark']) ? ' inv' : '') . '" src="' . $e($src) . '" alt="">' : '<img class="shot" src="' . $e($src) . '" alt="">';
+    };
+    $phone = fn(array $a) => trim((string)($a['phone'] ?? '')) !== '' ? '<span>' . $e(trim((string)$a['phone'])) . '</span>' : '';
+    $a = $v['agent'] ?? null; $b = $v['agent2'] ?? null;
+    $extra = trim((string)($v['end_extra'] ?? ($a['extra'] ?? '')));
+    $more = $extra !== '' ? '<span class="more">' . $e($extra) . '</span>' : '';
+    if ($a && $b) {
+        $col = fn(array $x) => '<div class="who">' . $pic($x) . (trim((string)($x['name'] ?? '')) !== '' ? '<b>' . $e(trim((string)$x['name'])) . '</b>' : '') . $phone($x) . '</div>';
+        $h .= '<div class="by two"><small>Presented by</small><div class="pair">' . $col($a) . $col($b) . '</div>' . $more . '</div>';
+    } elseif ($a) {
         $name = trim((string)($a['name'] ?? ''));
-        $h .= '<div class="by">' . ($shot !== '' ? '<img src="' . $e($shot) . '" alt="">' : '')
-            . ($name !== '' ? '<small>Presented by</small><b>' . $e($name) . '</b>' : '')
-            . (trim((string)($a['phone'] ?? '')) !== '' ? '<span>' . $e($a['phone']) . '</span>' : '')
-            . (trim((string)($a['extra'] ?? '')) !== '' ? '<span>' . $e($a['extra']) . '</span>' : '') . '</div>';
+        $h .= '<div class="by">' . $pic($a) . ($name !== '' ? '<small>Presented by</small><b>' . $e($name) . '</b>' : '') . $phone($a) . $more . '</div>';
+    } elseif ($more !== '') {
+        $h .= '<div class="by">' . $more . '</div>';
     }
     // The site line is the caller's ('end_site'); a video made before it was a field says monthaus.com.
     $site = array_key_exists('end_site', $v) ? trim((string)$v['end_site']) : 'monthaus.com';
