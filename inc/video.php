@@ -156,19 +156,31 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
     $v['headline'] = mb_substr(trim(implode("\n", array_slice(array_map('trim', explode("\n", str_replace("\r", '', (string)($in['headline'] ?? '')))), 0, 2))), 0, 70);
     $v['lines'] = [$one('line1', 60), $one('line2', 60), $one('line3', 60)];
     $v['words_show'] = isset(video_words_shows()[(string)($in['words_show'] ?? '')]) ? (string)$in['words_show'] : 'open';
+    foreach (['layout', 'logo', 'logo_kind', 'mark', 'badge', 'badge_color'] as $k) $v[$k] = (string)($in[$k] ?? '');
+    $v = array_merge($v, video_look($v));
 
+    // The closing card. Everything on it is what the form holds (Nikki,
+    // 2026-11-26: "make the contact details editable, as well as the choice
+    // for headshot or no headshot"): the page fills the boxes from the listing
+    // and the broker picked, and a cleared box leaves that part off, so a card
+    // can be left bare for Instagram's own stickers. The broker picked only
+    // supplies the headshot here.
     $v['end'] = !empty($in['end']);
     $v['end_address'] = '';
+    $v['end_site'] = '';
     $v['agent'] = null;
     if ($v['end']) {
-        if ($listing && trim((string)$listing['address']) !== '') $v['end_address'] = social_short_address((string)$listing['address']) . ($listing['town'] !== '' ? "\n" . $listing['town'] : '');
-        $a = plan_agents($conn)[(int)($in['agent'] ?? 0)] ?? null;
+        $v['end_address'] = mb_substr(trim(implode("\n", array_slice(array_values(array_filter(array_map('trim', explode("\n", str_replace("\r", '', (string)($in['end_address'] ?? '')))), 'strlen')), 0, 2))), 0, 90);
+        $v['end_site'] = $one('end_site', 40);
+        $by = ['name' => $one('end_name', 50), 'phone' => $one('end_phone', 40), 'extra' => $one('end_extra', 50), 'headshot_url' => '', 'headshot_file' => null];
+        $a = !empty($in['end_headshot']) ? (plan_agents($conn)[(int)($in['agent'] ?? 0)] ?? null) : null;
         if ($a) {
             $u = $a['face_url'] !== '' ? $a['face_url'] : $a['headshot_url'];
             $f = $u !== '' ? mk_photo_file($u) : '';
-            $v['agent'] = ['name' => $a['name'], 'phone' => ads_agent_phones($conn)[$a['id']] ?? '', 'headshot_url' => $u,
-                           'headshot_file' => ($f !== '' && is_file($f)) ? (realpath($f) ?: $f) : null];
+            $by['headshot_url'] = $u;
+            $by['headshot_file'] = ($f !== '' && is_file($f)) ? (realpath($f) ?: $f) : null;
         }
+        if ($by['name'] !== '' || $by['phone'] !== '' || $by['extra'] !== '' || $by['headshot_url'] !== '') $v['agent'] = $by;
     }
     $v['name'] = 'MH_' . ($listing && trim((string)$listing['address']) !== '' ? ads_slug((string)$listing['address']) : ($kind === 'clip' ? 'clip' : 'listing')) . '_video';
     return $v;

@@ -19,7 +19,7 @@ $render_url = 'video_render.php'; $export_url = 'video_export.php'; $clip_url = 
 
 admin_tool_header([
     'title'   => 'Video',
-    'hint'    => 'A story or reel as a video: a listing\'s photos in motion, or a video clip you upload, with the logo, the words and a closing card. It downloads as an MP4; add music in Instagram when you post.',
+    'hint'    => 'A story or reel as a video: a listing\'s photos in motion, or a video clip you upload, with the logo, the text and a closing card. It downloads as an MP4; add music in Instagram when you post.',
     'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>',
     'styles'  => ['/assets/css/social.css'],
     'active'  => 'social',

@@ -3664,6 +3664,20 @@ licensed track cannot be baked in; it is added in Instagram.
   controls at the right. `inc/video.php`: the form check
   (`video_from_request()`), the uploaded clips, the jobs,
   `video_send_file()` (byte ranges: a `<video>` needs them).
+- **The look and the closing card** (Nikki, 2026-11-26): the opening takes
+  the picture templates' options (`video_look()`: text place lower left or
+  centered, logo kind, logo place, watermark, badge place and color; the
+  lists are social_render.php's own except `video_logo_places()` and
+  `video_badge_places()`). The logo stays for the whole video while the text
+  may leave, so it keeps to the top and is never placed on the text. The
+  watermark is off unless picked. Everything on the closing card is a box on
+  the form (address, name, phone, one more contact text, website) filled from
+  the listing and the broker picked, plus a Show the headshot tick: a cleared
+  box is left off, so a card can be bare for Instagram's stickers. On screen
+  it is "Text", never "Words".
+- A pan drifts at a pace (`VIDEO_PAN_SPEED`, `video_pan_travel()`), centered
+  on the photo, not across a share of it: crossing a wide photo in three
+  seconds read as rushed.
 - `inc/video_render.php` (standalone): `video_timeline()` and
   `video_motion()` are the ONE record of the timing and the movement. The
   layers and the closing card are HTML (`video_layer_html()`), screenshotted

@@ -154,10 +154,10 @@ function video_build(array $v, string $dir, ?callable $say = null): array {
     if (!$n) return $fail('There is nothing in the video yet.');
 
     // 1. The layers and the closing card.
-    $say('Drawing the words and the logo', 2);
+    $say('Drawing the text and the logo', 2);
     $layers = video_layers($v);
     foreach (array_merge($layers, !empty($v['end']) ? ['end'] : []) as $key) {
-        if (!video_shot(video_layer_document($v, $key), "{$dir}/layer-{$key}.png", $dir)) return $fail('The words could not be drawn. Please try again in a minute.');
+        if (!video_shot(video_layer_document($v, $key), "{$dir}/layer-{$key}.png", $dir)) return $fail('The text could not be drawn. Please try again in a minute.');
     }
 
     // 2. Each segment by itself.

@@ -33,11 +33,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         </div>
         <label class="sp-field" style="margin-top:16px">Listing (every Mont Haus listing in the feed)
           <select name="listing" id="vdListing">
-            <option value="" data-agent="0" id="vdNoListing" hidden>No listing: type the words yourself</option>
+            <option value="" data-agent="0" id="vdNoListing" hidden>No listing: type the text yourself</option>
             <?php $first = true; foreach (plan_listing_groups($vd_listings) as $gname => $group): ?>
             <optgroup label="<?= $e($gname) ?>">
               <?php foreach ($group as $l): ?>
-              <option value="<?= $e($l['id']) ?>" data-agent="<?= (int)ads_agent_for_listing($l, $vd_agents) ?>" data-label="<?= $e($vd_label($l)) ?>" data-headline="<?= $e($l['headline']) ?>"
+              <option value="<?= $e($l['id']) ?>" data-agent="<?= (int)ads_agent_for_listing($l, $vd_agents) ?>" data-label="<?= $e($vd_label($l)) ?>" data-headline="<?= $e($l['headline']) ?>" data-end="<?= $e(trim((string)$l['address']) !== '' ? social_short_address((string)$l['address']) . ($l['town'] !== '' ? "\n" . $l['town'] : '') : '') ?>"
                       data-line1="<?= $e($l['town']) ?>" data-line2="<?= $e($l['closed'] && $l['close_price'] !== null ? social_price_text($l['close_price']) : $l['price_text']) ?>" data-line3="<?= $e($l['specs_text']) ?>"<?= $first ? ' selected' : '' ?>><?= $e(implode('  ·  ', array_filter([($l['address'] !== '' ? $l['address'] : 'Address withheld') . ', ' . $l['city'], $l['price_text'], social_status_words((string)$l['status']), $l['agent']]))) ?></option>
               <?php $first = false; endforeach; ?>
             </optgroup>
@@ -99,22 +99,20 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       </section>
 
       <section class="sp-step">
-        <h2 class="sp-step-h">Words</h2>
-        <div class="sp-two">
-          <label class="sp-field">Badge
-            <select name="label">
-              <option value="">None</option>
-              <?php foreach (plan_labels() as $t): ?><option value="<?= $e($t) ?>"><?= $e($t) ?></option><?php endforeach; ?>
-            </select>
-          </label>
-          <div class="sp-look" style="margin-top:0;align-self:end">
-            <span class="sp-look-l">Words stay</span>
-            <?php foreach (video_words_shows() as $k => $t): ?>
-            <label class="sp-pillopt"><input type="radio" name="words_show" value="<?= $e($k) ?>"<?= $k === 'open' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-            <?php endforeach; ?>
-          </div>
+        <h2 class="sp-step-h">Text</h2>
+        <div class="sp-look">
+          <span class="sp-look-l">Text stays</span>
+          <?php foreach (video_words_shows() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="words_show" value="<?= $e($k) ?>"<?= $k === 'open' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
         </div>
-        <label class="sp-field" style="margin-top:12px">Headline (Enter for a second line)
+        <div class="sp-look">
+          <span class="sp-look-l">Text place</span>
+          <?php foreach (social_layouts() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="layout" value="<?= $e($k) ?>"<?= $k === 'corner' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <label class="sp-field" style="margin-top:14px">Headline (Enter for a second line)
           <textarea name="headline" rows="2" maxlength="70"></textarea>
         </label>
         <div class="sp-two" style="margin-top:12px">
@@ -122,20 +120,73 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
           <label class="sp-field">Text 2 <input name="line2" maxlength="60"></label>
         </div>
         <label class="sp-field" style="margin-top:12px">Text 3 <input name="line3" maxlength="60"></label>
-        <p class="sp-note" style="margin-top:8px">Filled in from the listing; change or clear anything. An empty box takes no room.</p>
+      </section>
+
+      <section class="sp-step">
+        <h2 class="sp-step-h">Badge, logo and watermark</h2>
+        <label class="sp-field">Badge
+          <select name="label">
+            <option value="">None</option>
+            <?php foreach (plan_labels() as $t): ?><option value="<?= $e($t) ?>"><?= $e($t) ?></option><?php endforeach; ?>
+          </select>
+        </label>
+        <div class="sp-look">
+          <span class="sp-look-l">Badge place</span>
+          <?php foreach (video_badge_places() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="badge" value="<?= $e($k) ?>"<?= $k === 'text' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look sp-badgecolor">
+          <span class="sp-look-l">Badge color</span>
+          <?php foreach (social_badge_colors() as $k => [$t, $bg]): ?>
+          <label class="sp-pillopt"><input type="radio" name="badge_color" value="<?= $e($k) ?>"<?= $k === 'slate' ? ' checked' : '' ?>><span><i class="sp-swatch" style="background:<?= $e($bg) ?>"></i><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Logo</span>
+          <?php foreach (social_logo_kinds() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="logo_kind" value="<?= $e($k) ?>"<?= $k === 'full' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Logo place</span>
+          <?php foreach (video_logo_places() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === 'right' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">Watermark</span>
+          <?php foreach (social_marks() as $k => $t): ?>
+          <label class="sp-pillopt"><input type="radio" name="mark" value="<?= $e($k) ?>"<?= $k === 'none' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+          <?php endforeach; ?>
+        </div>
       </section>
 
       <section class="sp-step">
         <h2 class="sp-step-h">Closing card</h2>
-        <label class="sp-check"><input type="checkbox" name="end" value="1" checked> End on a card with the logo, the address and monthaus.com</label>
-        <label class="sp-field" id="vdAgentField" style="margin-top:12px">Presented by (headshot, name and phone on the card)
-          <select name="agent" id="vdAgent">
-            <option value="0">Nobody</option>
-            <?php foreach ($vd_agents as $a): ?>
-            <option value="<?= (int)$a['id'] ?>"><?= $e($a['name']) ?><?= isset($vd_phones[$a['id']]) ? ' · ' . $e($vd_phones[$a['id']]) : ' · no phone on the profile' ?></option>
-            <?php endforeach; ?>
-          </select>
-        </label>
+        <label class="sp-check"><input type="checkbox" name="end" value="1" checked> End on a closing card</label>
+        <div id="vdEndFields">
+          <label class="sp-field" style="margin-top:12px">Address (Enter for a second line)
+            <textarea name="end_address" rows="2" maxlength="90"></textarea>
+          </label>
+          <label class="sp-field" id="vdAgentField" style="margin-top:12px">Presented by
+            <select name="agent" id="vdAgent">
+              <option value="0" data-name="" data-phone="">Nobody</option>
+              <?php foreach ($vd_agents as $a): ?>
+              <option value="<?= (int)$a['id'] ?>" data-name="<?= $e($a['name']) ?>" data-phone="<?= $e($vd_phones[$a['id']] ?? '') ?>"><?= $e($a['name']) ?><?= isset($vd_phones[$a['id']]) ? ' · ' . $e($vd_phones[$a['id']]) : ' · no phone on the profile' ?></option>
+              <?php endforeach; ?>
+            </select>
+          </label>
+          <label class="sp-check"><input type="checkbox" name="end_headshot" value="1" checked> Show the headshot</label>
+          <div class="sp-two" style="margin-top:12px">
+            <label class="sp-field">Name <input name="end_name" maxlength="50"></label>
+            <label class="sp-field">Phone <input name="end_phone" maxlength="40"></label>
+          </div>
+          <div class="sp-two" style="margin-top:12px">
+            <label class="sp-field">More contact text (optional) <input name="end_extra" maxlength="50" placeholder="An email or an Instagram name"></label>
+            <label class="sp-field">Website <input name="end_site" maxlength="40" value="monthaus.com"></label>
+          </div>
+        </div>
       </section>
 
       <section class="sp-step">
@@ -145,7 +196,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
           <a class="sp-btn sp-btn-soft" id="vdDownload" href="#" hidden>Download MP4</a>
         </div>
         <div class="vd-bar" id="vdBar" hidden><i></i></div>
-        <p class="sp-help" id="vdMsg">The preview shows the timing and the words; the finished video is made on the server, which takes a minute or two. It has no music: add a track in Instagram when you post.</p>
+        <p class="sp-help" id="vdMsg">The preview shows the timing and the text; the finished video is made on the server, which takes a minute or two. It has no music: add a track in Instagram when you post.</p>
       </section>
     </div>
   </div>
@@ -165,7 +216,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const photosEl = document.getElementById('vdPhotos'), picked = document.getElementById('vdPicked');
   const msg = document.getElementById('vdMsg'), bar = document.getElementById('vdBar'), make = document.getElementById('vdMake'), dl = document.getElementById('vdDownload');
   const listing = document.getElementById('vdListing'), clipSel = document.getElementById('vdClip'), upMsg = document.getElementById('vdUpMsg');
-  let order = [], agentTouched = false, busy = false;
+  let order = [], agentTouched = false, byTouched = false, addrTouched = false, busy = false;
   const isClip = () => val('kind') === 'clip';
 
   // ── The preview ──
@@ -234,7 +285,13 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       f('headline').value = d.headline || ''; f('line1').value = d.line1 || ''; f('line2').value = d.line2 || ''; f('line3').value = d.line3 || '';
       f('label').value = Array.from(f('label').options).some(x => x.value === d.label) ? d.label : '';
     }
-    if (!agentTouched) f('agent').value = f('agent').querySelector('option[value="' + (d.agent || '0') + '"]') ? (d.agent || '0') : '0';
+    if (!addrTouched) f('end_address').value = d.end || '';
+    if (!agentTouched) { f('agent').value = f('agent').querySelector('option[value="' + (d.agent || '0') + '"]') ? (d.agent || '0') : '0'; if (!byTouched) fromAgent(); }
+  }
+  // The broker picked fills the card's name and phone; both stay editable.
+  function fromAgent() {
+    const d = (f('agent').selectedOptions[0] || { dataset: {} }).dataset;
+    f('end_name').value = d.name || ''; f('end_phone').value = d.phone || '';
   }
   function syncKind() {
     const c = isClip();
@@ -247,12 +304,17 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     const n = e.target.name;
     if (n === 'kind') { syncKind(); return; }
     if (n === 'listing') { fromListing(); if (!isClip()) { loadPhotos(); return; } }
-    if (n === 'agent') agentTouched = true;
-    if (n === 'end') document.getElementById('vdAgentField').hidden = !f('end').checked;
+    if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(); }
+    if (n === 'end') document.getElementById('vdEndFields').hidden = !f('end').checked;
     if (n === 'clip') { f('clip_start').value = 0; }
     update();
   });
-  form.addEventListener('input', e => { if (['headline', 'line1', 'line2', 'line3', 'clip_start', 'clip_length'].includes(e.target.name)) update(); });
+  form.addEventListener('input', e => {
+    const n = e.target.name;
+    if (n === 'end_name' || n === 'end_phone') byTouched = true;
+    if (n === 'end_address') addrTouched = true;
+    if (['headline', 'line1', 'line2', 'line3', 'clip_start', 'clip_length', 'end_address', 'end_name', 'end_phone', 'end_extra', 'end_site'].includes(n)) update();
+  });
 
   // ── Uploading a clip, in pieces (a phone clip is far over PHP's upload limits) ──
   const file = document.getElementById('vdFile');
