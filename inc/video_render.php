@@ -25,7 +25,8 @@
  * The normalised video (video_from_request() in inc/video.php):
  *   kind photos|clip, photos [[url, file]], clip [file, start, length, w, h,
  *   audio], hold (seconds a photo is on screen), motion mix|zoom|pan,
- *   captions [photo's place => its own text] (video_captions()),
+ *   captions [photo's place => its own text] (video_captions()), zooms
+ *   [photo's place => 1..2] (video_photo_zoom()),
  *   label, headline (Enter = a new line), lines [3], words_show open|all,
  *   the look (video_look(): layout, logo, logo_kind, mark, badge,
  *   badge_color), end (bool), end_address, end_site, end_extra, agent and
@@ -86,13 +87,21 @@ function video_look(array $v): array {
  * video_pan_travel(), a pace, not a share of the photo: crossing most of a
  * wide photo in three seconds read as rushed, Nikki 2026-11-26).
  * $i is the photo's place, so the direction alternates;
- * $wide says the photo is wider than the frame by VIDEO_WIDE. Mix pans a
- * wide photo and zooms the rest; Pan zooms a photo with nothing to pan across.
+ * $wide says the photo is wider than the frame by VIDEO_WIDE. Mix takes
+ * turns: zoom, pan, zoom, pan, the cover a zoom (nearly every listing photo
+ * is wide for a 9:16 frame, so "pan the wide ones" was a pan on every photo:
+ * Nikki, 2026-11-26). A photo with nothing to pan across always zooms.
  */
 function video_motion(string $mode, int $i, bool $wide): array {
-    $pan = $mode === 'pan' ? $wide : ($mode === 'mix' && $wide);
-    if ($pan) return ['type' => 'pan', 'dir' => $i % 2 === 0 ? 1 : -1];
-    return $i % 2 === 0 ? ['type' => 'zoom', 'from' => 1.0, 'to' => 1.0 + VIDEO_ZOOM] : ['type' => 'zoom', 'from' => 1.0 + VIDEO_ZOOM, 'to' => 1.0];
+    $pan = $wide && ($mode === 'pan' || ($mode === 'mix' && $i % 2 === 1));
+    $turn = $mode === 'mix' ? intdiv($i, 2) : $i;   // in Mix each kind comes every other photo, so its direction turns every other time
+    if ($pan) return ['type' => 'pan', 'dir' => $turn % 2 === 0 ? 1 : -1];
+    return $turn % 2 === 0 ? ['type' => 'zoom', 'from' => 1.0, 'to' => 1.0 + VIDEO_ZOOM] : ['type' => 'zoom', 'from' => 1.0 + VIDEO_ZOOM, 'to' => 1.0];
+}
+
+/** A photo's own zoom (1 to 2, 1 = the whole height), set on the form to crop a board's watermark out of the frame. */
+function video_photo_zoom(array $v, int $i): float {
+    return max(1.0, min(2.0, round((float)($v['zooms'][$i] ?? 1), 2)));
 }
 
 /** How far a pan drifts over $frames frames, in the frame's own pixels (the export and the preview both cap it at VIDEO_PAN_MAX of the photo's spare width). */
@@ -110,8 +119,9 @@ function video_is_wide(int $w, int $h): bool {
  * frames]], 'total' => frames, 'layers' => [key => [in, out|null]] in
  * seconds, 'end_start' => frame | null]. Every segment but the first begins
  * VIDEO_XF frames before the one ahead of it ends: that overlap is the
- * cross-fade. The logo and the words fade out as the closing card fades in;
- * with Opening only, the words leave before the third photo arrives.
+ * cross-fade. The layers (shade, mark, logo, words, cap{n}) fade out as the
+ * closing card fades in; the cover text and the watermark leave before the
+ * second photo arrives unless the text is kept for the whole video.
  */
 function video_timeline(array $v): array {
     $segs = []; $at = 0;
@@ -131,39 +141,42 @@ function video_timeline(array $v): array {
     if (!empty($v['end'])) { $push('end', 0, (int)round(VIDEO_END_SECONDS * VIDEO_FPS) + VIDEO_XF); $endStart = $segs[count($segs) - 1]['start']; }
     $total = $at;
     $out = $endStart !== null ? $endStart / VIDEO_FPS : null;          // the layers leave as the closing card arrives
-    $wordsOut = $out;
-    if (($v['words_show'] ?? 'open') === 'open' && ($v['kind'] ?? 'photos') === 'photos' && $content >= 3) {
-        $wordsOut = $segs[2]['start'] / VIDEO_FPS - VIDEO_FADE;        // gone before the third photo fades in
-    } elseif (($v['words_show'] ?? 'open') === 'open' && ($v['kind'] ?? 'photos') === 'clip') {
-        $w = min(6.0, $segs[0]['frames'] / VIDEO_FPS / 2);             // a clip: the first six seconds, or half of a short one
-        if ($out === null || $w < $out) $wordsOut = $w;
+    // The cover text (Nikki, 2026-11-26: the first photo is the cover): on the
+    // first photo and gone before the second, unless it is kept for the whole
+    // video ('words_show' all). A clip: its first six seconds, or half of a
+    // short one.
+    $wordsOut = $out; $coverOut = $out;
+    if (($v['kind'] ?? 'photos') === 'photos') {
+        if ($content >= 2) $coverOut = $segs[1]['start'] / VIDEO_FPS - VIDEO_FADE;
+    } else {
+        $w = min(6.0, $segs[0]['frames'] / VIDEO_FPS / 2);
+        if ($out === null || $w < $out) $coverOut = $w;
     }
-    $layers = ['logo' => [0.3, $out], 'words' => [0.6, $wordsOut]];
-    // A photo's own text (Nikki, 2026-11-26: "custom text on every slide.
-    // This will make for proper reels"): on with its photo, off before the
-    // next one arrives. The opening text leaves before the first photo that
-    // has its own, and does not come back.
-    $caps = video_captions($v);
-    foreach ($caps as $i => $text) {
+    if (($v['words_show'] ?? 'open') === 'open') $wordsOut = $coverOut;
+    // The watermark belongs to the cover alone, whatever the text does.
+    $layers = ['logo' => [0.3, $out], 'mark' => [0.3, $coverOut], 'words' => [0.6, $wordsOut]];
+    // A photo's own text ("custom text on every slide. This will make for
+    // proper reels"): from the second photo on, on with its photo and off
+    // before the next one arrives.
+    $shadeOut = $wordsOut; $any = video_has_words($v);
+    foreach (video_captions($v) as $i => $text) {
         $s = $segs[$i];
         $next = ($i + 1 < $content || $endStart !== null) ? ($s['start'] + $s['frames'] - VIDEO_XF) / VIDEO_FPS - 0.3 : null;
-        $layers['cap' . $i] = [$i === 0 ? 0.6 : ($s['start'] + VIDEO_XF / 2) / VIDEO_FPS, $next];
+        $layers['cap' . $i] = [($s['start'] + VIDEO_XF / 2) / VIDEO_FPS, $next];
+        $shadeOut = $next; $any = true;
     }
-    if ($caps) {
-        $first = array_key_first($caps);
-        $leave = $first > 0 ? $segs[$first]['start'] / VIDEO_FPS - VIDEO_FADE : 0.0;
-        if ($layers['words'][1] === null || $leave < $layers['words'][1]) $layers['words'][1] = $leave;
-    }
+    // The shade under the text is ONE layer from the first text to the last: fading it out and in again with every photo
+    // flickered, and showed worst on a watermark.
+    if ($any) $layers['shade'] = [video_has_words($v) ? 0.6 : (array_values(array_filter($layers, fn($k) => str_starts_with($k, 'cap'), ARRAY_FILTER_USE_KEY))[0][0] ?? 0.6), $shadeOut];
     return ['segs' => $segs, 'total' => $total, 'end_start' => $endStart, 'layers' => $layers];
 }
-
-/** The photos that carry their own text: [photo's place => text], in play order. Photos only; a clip has none. */
+/** The photos that carry their own text: [photo's place => text], in play order, never the first (the cover). Photos only; a clip has none. */
 function video_captions(array $v): array {
-    if (($v['kind'] ?? 'photos') !== 'photos') return [];
+    if (($v['kind'] ?? 'photos') !== 'photos' || ($v['words_show'] ?? 'open') === 'all') return [];
     $out = [];
     foreach (array_keys((array)($v['photos'] ?? [])) as $i) {
         $t = trim((string)($v['captions'][$i] ?? ''));
-        if ($t !== '') $out[$i] = $t;
+        if ($i > 0 && $t !== '') $out[$i] = $t;   // the first photo is the cover: its text is the cover's
     }
     return $out;
 }
@@ -177,11 +190,10 @@ function video_has_words(array $v): bool {
 function video_layers(array $v): array {
     $k = video_look($v);
     $caps = video_captions($v);
-    // The opening text is left out when the first photo has its own.
-    return array_merge(($k['logo'] !== 'none' || $k['mark'] !== 'none') ? ['logo'] : [], (video_has_words($v) && !isset($caps[0])) ? ['words'] : [],
-                       array_map(fn($i) => 'cap' . $i, array_keys($caps)));
+    $words = video_has_words($v);
+    return array_merge(($words || $caps) ? ['shade'] : [], $k['mark'] !== 'none' ? ['mark'] : [], $k['logo'] !== 'none' ? ['logo'] : [],
+                       $words ? ['words'] : [], array_map(fn($i) => 'cap' . $i, array_keys($caps)));
 }
-
 /** The CSS of every layer and the closing card, scoped by the wrapper's class (.L-logo, .L-words, .L-end). */
 function video_layer_css(): string {
     $c = social_palette('dark');
@@ -192,9 +204,11 @@ function video_layer_css(): string {
          . ".L-logo .logo{position:absolute;right:72px;top:{$top}px;height:150px}.L-logo .logo.mk{height:118px}"
          . ".L-logo .logo.left{right:auto;left:72px}.L-logo .logo.center{right:auto;left:50%;transform:translateX(-50%)}"
          // The watermark, lower right, as a story carries it: the triangle cut off by the edge, or the M mark flush to the corner.
-         . ".L-logo .ghost{position:absolute;right:-220px;bottom:0;width:970px;opacity:{$c['ghost']}}.L-logo .ghost.m{right:0;width:745px}"
+         . ".L-mark .ghost{position:absolute;right:-220px;bottom:0;width:970px;opacity:{$c['ghost']}}.L-mark .ghost.m{right:0;width:745px}"
+         // The shade under the text: the posts' fade from the bottom, or a veil over the whole frame when the text is centered.
+         . ".L-shade .fade{position:absolute;left:0;right:0;bottom:0;height:1240px;background:linear-gradient(180deg, rgba(20,24,30,0) 0%, rgba(20,24,30,.55) 45%, rgba(20,24,30,.9) 100%)}"
+         . ".L-shade.center .fade{top:0;height:auto;background:rgba(20,24,30,.42)}"
          // The words: lower left on the posts' fade; the badge, a short rule, the headline, three lines.
-         . ".L-words .fade{position:absolute;left:0;right:0;bottom:0;height:1240px;background:linear-gradient(180deg, rgba(20,24,30,0) 0%, rgba(20,24,30,.55) 45%, rgba(20,24,30,.9) 100%)}"
          . ".L-words .in{position:absolute;left:72px;right:72px;bottom:{$bot}px}"
          . ".L-words .pill{display:inline-block;background:{$c['pill']};color:{$c['pilltext']};font-weight:500;font-size:26px;line-height:1;letter-spacing:.22em;text-transform:uppercase;padding:15px 24px 14px 28px;margin:0 0 36px}"
          . ".L-words .rule{width:92px;height:2px;background:{$c['accent']};margin:0 0 30px}"
@@ -204,14 +218,11 @@ function video_layer_css(): string {
          . ".L-words .l2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:62px;line-height:1.15;font-variant-numeric:lining-nums;margin-top:14px}"
          . ".L-words .l3{font-size:27px;line-height:1.3;letter-spacing:.17em;text-transform:uppercase;color:{$c['muted']};margin-top:16px}"
          // Centered: the text in the middle of the frame on a veil instead of the bottom fade.
-         . ".L-words.center .fade{top:0;height:auto;background:rgba(20,24,30,.42)}"
          . ".L-words.center .in{bottom:auto;top:50%;transform:translateY(-50%);text-align:center}.L-words.center .rule{margin-left:auto;margin-right:auto}"
          // A photo's own text: where the opening text sits, on a shorter fade, in the headline's face.
-         . ".L-cap .fade{position:absolute;left:0;right:0;bottom:0;height:980px;background:linear-gradient(180deg, rgba(20,24,30,0) 0%, rgba(20,24,30,.5) 45%, rgba(20,24,30,.88) 100%)}"
          . ".L-cap .in{position:absolute;left:72px;right:72px;bottom:{$bot}px}"
          . ".L-cap .rule{width:92px;height:2px;background:{$c['accent']};margin:0 0 30px}"
          . ".L-cap p{font-family:'Cormorant Garamond',serif;font-weight:500;line-height:1.1;margin:0;font-variant-numeric:lining-nums;text-shadow:0 2px 18px rgba(0,0,0,.45);text-wrap:balance}"
-         . ".L-cap.center .fade{top:0;height:auto;background:rgba(20,24,30,.42)}"
          . ".L-cap.center .in{bottom:auto;top:50%;transform:translateY(-50%);text-align:center}.L-cap.center .rule{margin-left:auto;margin-right:auto}"
          // The badge in an upper corner; under the logo when that is in the same corner (.low, the top set inline).
          . ".L-words .pill.up{position:absolute;top:{$top}px;margin:0}.L-words .pill.up.left{left:72px}.L-words .pill.up.right{right:72px}"
@@ -258,12 +269,13 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
         $d = realpath(__DIR__ . '/../assets/images/' . $file);
         return ($export && $d) ? 'file://' . $d : $base . '/assets/images/' . $file;
     };
+    if ($key === 'shade') return '<div class="L L-shade' . ($k['layout'] === 'center' ? ' center' : '') . '"><div class="fade"></div></div>';
+    if ($key === 'mark') return '<div class="L L-mark"><img class="ghost' . ($k['mark'] === 'mmark' ? ' m' : '') . '" src="' . $e($img($k['mark'] === 'mmark' ? 'M-mark_white.svg' : 'triangle_mark-white.svg')) . '" alt=""></div>';
     if ($key === 'logo') {
         $h = '';
         if ($k['logo'] !== 'none') {
             $h .= '<div class="fade"></div><img class="logo ' . $k['logo'] . ($k['logo_kind'] === 'mark' ? ' mk' : '') . '" src="' . $e($k['logo_kind'] === 'mark' ? $img('M-mark_white.svg') : $logo) . '" alt="Mont Haus International Realty">';
         }
-        if ($k['mark'] !== 'none') $h .= '<img class="ghost' . ($k['mark'] === 'mmark' ? ' m' : '') . '" src="' . $e($img($k['mark'] === 'mmark' ? 'M-mark_white.svg' : 'triangle_mark-white.svg')) . '" alt="">';
         return '<div class="L L-logo">' . $h . '</div>';
     }
     if (str_starts_with($key, 'cap')) {
@@ -272,7 +284,7 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
         foreach (explode("\n", $text) as $row) $long = max($long, mb_strlen(trim($row)));
         $size = mb_strlen($text) <= 28 ? 96 : (mb_strlen($text) <= 60 ? 82 : (mb_strlen($text) <= 100 ? 70 : 60));
         if ($long > 0 && $long <= 18 && $size < 96 && substr_count($text, "\n") > 0) $size = min(96, $size + 12);   // short rows the writer broke by hand can run larger
-        return '<div class="L L-cap' . ($k['layout'] === 'center' ? ' center' : '') . '"><div class="fade"></div><div class="in"><div class="rule"></div>'
+        return '<div class="L L-cap' . ($k['layout'] === 'center' ? ' center' : '') . '"><div class="in"><div class="rule"></div>'
              . '<p style="font-size:' . $size . 'px">' . nl2br($e($text), false) . '</p></div></div>';
     }
     if ($key === 'words') {
@@ -294,7 +306,7 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
         foreach (array_values((array)($v['lines'] ?? [])) as $i => $line) {
             if ($i < 3 && trim((string)$line) !== '') $h .= '<p class="l' . ($i + 1) . '">' . $e(trim((string)$line)) . '</p>';
         }
-        return '<div class="L L-words' . ($k['layout'] === 'center' ? ' center' : '') . '"><div class="fade"></div>' . $up . '<div class="in">' . $h . '</div></div>';
+        return '<div class="L L-words' . ($k['layout'] === 'center' ? ' center' : '') . '">' . $up . '<div class="in">' . $h . '</div></div>';
     }
     // The closing card.
     $h = '<img class="logo" src="' . $e($logo) . '" alt="Mont Haus International Realty">';
@@ -363,13 +375,14 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
                 $m = video_motion((string)($v['motion'] ?? 'mix'), $s['i'], $wide);
                 $k = ($wide ? 'w' : 'n') . $n;
                 [$from, $to] = $m['type'] === 'pan'
-                    ? ['object-position:calc(50% - ' . $m['dir'] . '*var(--p,5%)) 50%', 'object-position:calc(50% + ' . $m['dir'] . '*var(--p,5%)) 50%']
-                    : ['transform:scale(' . $m['from'] . ')', 'transform:scale(' . $m['to'] . ')'];
+                    ? ['transform:scale(var(--z,1));object-position:calc(50% - ' . $m['dir'] . '*var(--p,5%)) 50%', 'transform:scale(var(--z,1));object-position:calc(50% + ' . $m['dir'] . '*var(--p,5%)) 50%']
+                    : ['transform:scale(calc(var(--z,1)*' . $m['from'] . '))', 'transform:scale(calc(var(--z,1)*' . $m['to'] . '))'];
                 $css .= "@keyframes {$k}{0%{{$from}}" . $pct($a) . "{{$from}}" . $pct($b) . "{{$to}}100%{{$to}}}";
                 $css .= ".s{$n}." . ($wide ? 'w' : 'n') . ">img{animation:{$k} {$secs}s linear infinite}";
             }
             $url = (string)($v['photos'][$s['i']][0] ?? '');
-            $html .= '<div class="seg s' . $n . '"><img src="' . $e($url) . '" alt="" onload="var r=this.naturalWidth/this.naturalHeight,s=r*' . $H . '-' . $W . ',c=Math.min(r,2)*' . $H . '-' . $W . ';this.style.animationDelay=(-document.timeline.currentTime)+\'ms\';this.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?\'w\':\'n\');if(s>0)this.style.setProperty(\'--p\',(50*Math.min(' . video_pan_travel((int)$s['frames']) . ',' . VIDEO_PAN_MAX . '*c)/s)+\'%\')"></div>';
+            $z = video_photo_zoom($v, (int)$s['i']);
+            $html .= '<div class="seg s' . $n . '"><img src="' . $e($url) . '" alt="" style="--z:' . $z . '" onload="var z=' . $z . ',r=this.naturalWidth/this.naturalHeight,s=r*' . $H . '-' . $W . ',c=Math.min(r*z,2)*' . $H . '-' . $W . ';this.style.animationDelay=(-document.timeline.currentTime)+\'ms\';this.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?\'w\':\'n\');if(s>0)this.style.setProperty(\'--p\',(50*Math.min(' . video_pan_travel((int)$s['frames']) . ',' . VIDEO_PAN_MAX . '*c)/(z*s))+\'%\')"></div>';
         } elseif ($s['type'] === 'clip') {
             $c = $v['clip'];
             $html .= '<div class="seg s' . $n . '"><video id="clip" src="' . $e($clip_url) . '#t=' . round((float)$c['start'], 2) . '" muted playsinline preload="auto" data-start="' . round((float)$c['start'], 2) . '"></video></div>';

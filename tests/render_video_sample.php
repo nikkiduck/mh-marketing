@@ -5,7 +5,7 @@
  * sign-in: inc/video_export.php alone. Run it ON THE SERVER (Chromium and
  * ffmpeg), as any user, into a folder of its own:
  *
- *   php tests/render_video_sample.php <outdir> [--photos=N] [--motion=mix|zoom|pan] [--all] [--no-end] [--captions[=all]] [--clip=/path/to/clip.mp4] [--blur] [--html]
+ *   php tests/render_video_sample.php <outdir> [--photos=N] [--motion=mix|zoom|pan] [--all] [--no-end] [--captions] [--zoom=1.4] [--mark] [--clip=/path/to/clip.mp4] [--blur] [--html]
  *
  * Writes <outdir>/out.mp4 (and preview.html, the page's preview, whose
  * photos load from the live portal), then prints the frame count against the
@@ -35,6 +35,9 @@ $v = [
                 'headshot_file' => realpath(__DIR__ . '/../agent-photos/jonathan-boxer-30-square.jpg') ?: null],
     'name' => 'MH_sample-video',
 ];
+// --zoom=1.4: that zoom on the second and third photos (one pans, one zooms, in Mix). --mark: the triangle watermark. --all-text: the cover text for the whole video.
+if (isset($flags['zoom'])) $v['zooms'] = [1 => (float)$flags['zoom'], 2 => (float)$flags['zoom']];
+if (isset($flags['mark'])) $v['mark'] = 'triangle';
 // --captions: a text of its own on every photo but the first (--captions=all: the first too, which drops the opening text).
 if (isset($flags['captions'])) {
     $own = ['Morning light on the ridge', "Four minutes\nto the gondola", 'Room for everyone, and for the friends who turn up for the weekend', 'The view from the kitchen', 'Yours this winter'];

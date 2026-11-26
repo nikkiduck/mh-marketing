@@ -58,78 +58,15 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         </label>
       </section>
 
-      <section class="sp-step" id="vdPhotosStep">
-        <h2 class="sp-step-h">Photos</h2>
-        <p class="sp-note">Click the photos in the order they should play, up to <?= VIDEO_MAX_PHOTOS ?>. Click one again to take it out.</p>
-        <div class="sp-two" style="margin-top:12px">
-          <label class="sp-field">Each photo stays
-            <select name="hold">
-              <?php foreach (video_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (string)$k === '3' ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
-            </select>
-          </label>
-          <div class="sp-look" style="margin-top:0;align-self:end">
-            <span class="sp-look-l">Movement</span>
-            <?php foreach (video_motions() as $k => $t): ?>
-            <label class="sp-pillopt"><input type="radio" name="motion" value="<?= $e($k) ?>"<?= $k === 'mix' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-            <?php endforeach; ?>
-          </div>
-        </div>
-        <p class="sp-note" style="margin-top:8px">Mix slides across a wide photo and zooms slowly on the rest.</p>
-        <div class="vd-photos" id="vdPhotos"><div class="sp-wait">Loading photos…</div></div>
-        <div id="vdCapsWrap" hidden>
-          <h3 class="vd-sub">Text on each photo (optional)</h3>
-          <p class="sp-note">Text here shows while its photo is on screen. The opening text leaves when the first photo with its own text arrives.</p>
-          <div class="vd-caps" id="vdCaps"></div>
-        </div>
-      </section>
-
-      <section class="sp-step" id="vdClipStep" hidden>
-        <h2 class="sp-step-h">Video clip</h2>
-        <label class="sp-field">Which clip
-          <select name="clip" id="vdClip">
-            <option value=""<?= $vd_clips ? '' : ' selected' ?>>Upload a clip to begin</option>
-            <?php $first = true; foreach ($vd_clips as $c): $p = video_clip_public($c); ?>
-            <option value="<?= $e($p['id']) ?>" data-duration="<?= $e($p['duration']) ?>"<?= $first ? ' selected' : '' ?>><?= $e($p['text']) ?></option>
-            <?php $first = false; endforeach; ?>
-          </select>
-        </label>
-        <div class="vd-up">
-          <input type="file" id="vdFile" accept="video/*,.mp4,.mov,.m4v" hidden>
-          <button type="button" class="sp-btn sp-btn-soft" id="vdUpload">Upload a clip</button>
-          <button type="button" class="sp-btn sp-btn-soft" id="vdClipDel">Remove this clip</button>
-          <p class="sp-help" id="vdUpMsg">MP4 or MOV from a phone or camera, up to <?= (int)(VIDEO_CLIP_MAX_BYTES / 1048576) ?> MB. Uploads are kept <?= VIDEO_CLIP_DAYS ?> days.</p>
-        </div>
-        <div class="sp-two" style="margin-top:14px">
-          <label class="sp-field">Start at (seconds into the clip)
-            <input type="number" name="clip_start" value="0" min="0" step="0.5">
-          </label>
-          <label class="sp-field">Use this many seconds (<?= VIDEO_CLIP_MIN_SECONDS ?> to <?= VIDEO_CLIP_MAX_SECONDS ?>)
-            <input type="number" name="clip_length" value="15" min="<?= VIDEO_CLIP_MIN_SECONDS ?>" max="<?= VIDEO_CLIP_MAX_SECONDS ?>" step="0.5">
-          </label>
-        </div>
-        <div class="sp-look">
-          <span class="sp-look-l">A wide clip</span>
-          <label class="sp-pillopt"><input type="radio" name="clip_fit" value="fill" checked><span>Fills the frame (sides cropped)</span></label>
-          <label class="sp-pillopt"><input type="radio" name="clip_fit" value="blur"><span>Whole picture, blurred above and below</span></label>
-        </div>
-        <label class="sp-check"><input type="checkbox" name="clip_mute" value="1"> Remove the clip's sound</label>
-      </section>
-
       <section class="sp-step">
-        <h2 class="sp-step-h">Text</h2>
+        <h2 class="sp-step-h">Cover Design</h2>
         <div class="sp-look">
-          <span class="sp-look-l">Text stays</span>
-          <?php foreach (video_words_shows() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="words_show" value="<?= $e($k) ?>"<?= $k === 'open' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Text place</span>
+          <span class="sp-look-l">Placement</span>
           <?php foreach (social_layouts() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="layout" value="<?= $e($k) ?>"<?= $k === 'corner' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
-        <label class="sp-field" style="margin-top:14px">Headline (Enter for a second line)
+        <label class="sp-field" style="margin-top:14px">Headline (Line breaks allowed)
           <textarea name="headline" rows="2" maxlength="70"></textarea>
         </label>
         <div class="sp-two" style="margin-top:12px">
@@ -137,11 +74,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
           <label class="sp-field">Text 2 <input name="line2" maxlength="60"></label>
         </div>
         <label class="sp-field" style="margin-top:12px">Text 3 <input name="line3" maxlength="60"></label>
-      </section>
-
-      <section class="sp-step">
-        <h2 class="sp-step-h">Badge, logo and watermark</h2>
-        <label class="sp-field">Badge
+        <label class="sp-field" style="margin-top:14px">Badge
           <select name="label">
             <option value="">None</option>
             <?php foreach (plan_labels() as $t): ?><option value="<?= $e($t) ?>"><?= $e($t) ?></option><?php endforeach; ?>
@@ -179,11 +112,70 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         </div>
       </section>
 
+      <section class="sp-step" id="vdPhotosStep">
+        <h2 class="sp-step-h">Photos</h2>
+        <p class="sp-note">Click the photos in the order they should play, up to <?= VIDEO_MAX_PHOTOS ?>. Click one again to take it out.</p>
+        <div class="sp-two" style="margin-top:12px">
+          <label class="sp-field">Each photo stays
+            <select name="hold">
+              <?php foreach (video_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (string)$k === '3' ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
+            </select>
+          </label>
+          <div class="sp-look" style="margin-top:0;align-self:end">
+            <span class="sp-look-l">Movement</span>
+            <?php foreach (video_motions() as $k => $t): ?>
+            <label class="sp-pillopt"><input type="radio" name="motion" value="<?= $e($k) ?>"<?= $k === 'mix' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
+            <?php endforeach; ?>
+          </div>
+        </div>
+        <div class="vd-photos" id="vdPhotos"><div class="sp-wait">Loading photos…</div></div>
+        <div id="vdCapsWrap" hidden>
+          <div class="vd-subrow">
+            <h3 class="vd-sub">Zoom and text on each photo</h3>
+            <label class="sp-check" style="margin:0"><input type="checkbox" name="words_all" value="1"> Use Cover Text on all slides</label>
+          </div>
+          <div class="vd-caps" id="vdCaps"></div>
+        </div>
+      </section>
+
+      <section class="sp-step" id="vdClipStep" hidden>
+        <h2 class="sp-step-h">Video clip</h2>
+        <label class="sp-field">Which clip
+          <select name="clip" id="vdClip">
+            <option value=""<?= $vd_clips ? '' : ' selected' ?>>Upload a clip to begin</option>
+            <?php $first = true; foreach ($vd_clips as $c): $p = video_clip_public($c); ?>
+            <option value="<?= $e($p['id']) ?>" data-duration="<?= $e($p['duration']) ?>"<?= $first ? ' selected' : '' ?>><?= $e($p['text']) ?></option>
+            <?php $first = false; endforeach; ?>
+          </select>
+        </label>
+        <div class="vd-up">
+          <input type="file" id="vdFile" accept="video/*,.mp4,.mov,.m4v" hidden>
+          <button type="button" class="sp-btn sp-btn-soft" id="vdUpload">Upload a clip</button>
+          <button type="button" class="sp-btn sp-btn-soft" id="vdClipDel">Remove this clip</button>
+          <p class="sp-help" id="vdUpMsg">MP4 or MOV from a phone or camera, up to <?= (int)(VIDEO_CLIP_MAX_BYTES / 1048576) ?> MB. Uploads are kept <?= VIDEO_CLIP_DAYS ?> days.</p>
+        </div>
+        <div class="sp-two" style="margin-top:14px">
+          <label class="sp-field">Start at (seconds into the clip)
+            <input type="number" name="clip_start" value="0" min="0" step="0.5">
+          </label>
+          <label class="sp-field">Use this many seconds (<?= VIDEO_CLIP_MIN_SECONDS ?> to <?= VIDEO_CLIP_MAX_SECONDS ?>)
+            <input type="number" name="clip_length" value="15" min="<?= VIDEO_CLIP_MIN_SECONDS ?>" max="<?= VIDEO_CLIP_MAX_SECONDS ?>" step="0.5">
+          </label>
+        </div>
+        <div class="sp-look">
+          <span class="sp-look-l">A wide clip</span>
+          <label class="sp-pillopt"><input type="radio" name="clip_fit" value="fill" checked><span>Fills the frame (sides cropped)</span></label>
+          <label class="sp-pillopt"><input type="radio" name="clip_fit" value="blur"><span>Whole picture, blurred above and below</span></label>
+        </div>
+        <label class="sp-check"><input type="checkbox" name="clip_mute" value="1"> Remove the clip's sound</label>
+        <label class="sp-check"><input type="checkbox" name="words_all_clip" value="1"> Keep the Cover Text on for the whole clip</label>
+      </section>
+
       <section class="sp-step">
         <h2 class="sp-step-h">Closing card</h2>
         <label class="sp-check"><input type="checkbox" name="end" value="1" checked> End on a closing card</label>
         <div id="vdEndFields">
-          <label class="sp-field" style="margin-top:12px">Address (Enter for a second line)
+          <label class="sp-field" style="margin-top:12px">Address (Line breaks allowed)
             <textarea name="end_address" rows="2" maxlength="90"></textarea>
           </label>
           <label class="sp-field" id="vdAgentField" style="margin-top:12px">Presented by
@@ -243,7 +235,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const photosEl = document.getElementById('vdPhotos'), picked = document.getElementById('vdPicked');
   const msg = document.getElementById('vdMsg'), bar = document.getElementById('vdBar'), make = document.getElementById('vdMake'), dl = document.getElementById('vdDownload');
   const listing = document.getElementById('vdListing'), clipSel = document.getElementById('vdClip'), upMsg = document.getElementById('vdUpMsg');
-  let order = [], caps = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
+  let order = [], caps = {}, zooms = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
   const isClip = () => val('kind') === 'clip';
 
   // ── The preview ──
@@ -278,25 +270,36 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   }
 
   // ── Photos: click to add in play order, click again to remove ──
-  // photos[] and captions[] go to the server side by side, in play order.
+  // photos[], captions[] and zooms[] go to the server side by side, in play order.
   function pick() {
-    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '"><input type="hidden" name="captions[]" value="' + esc(caps[id] || '') + '">').join('');
+    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '"><input type="hidden" name="captions[]" value="' + esc(caps[id] || '') + '"><input type="hidden" name="zooms[]" value="' + (zooms[id] || 100) + '">').join('');
   }
   function paint() {
     photosEl.querySelectorAll('.sp-photo').forEach(el => {
       const i = order.indexOf(el.dataset.id);
-      el.classList.toggle('on', i >= 0); el.querySelector('.vd-n').textContent = i >= 0 ? i + 1 : '';
+      el.classList.toggle('on', i >= 0); el.querySelector('.vd-n').textContent = i === 0 ? 'COVER' : (i > 0 ? i + 1 : '');
     });
-    // One text box per chosen photo, in play order; what was typed stays with its photo.
+    // One row per chosen photo, in play order: its zoom, and from the second photo on its own text (the first is the
+    // cover, whose text is the Cover Design). What was set stays with its photo.
     capsWrap.hidden = !order.length;
     capsEl.innerHTML = order.map((id, i) => {
-      const t = photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(id) + '"] img');
-      return '<label class="vd-cap"><span class="vd-cap-p"><img src="' + esc(t ? t.src : '') + '" alt=""><b>' + (i + 1) + '</b></span><textarea rows="2" maxlength="140" data-id="' + esc(id) + '" placeholder="Text for photo ' + (i + 1) + '">' + esc(caps[id] || '') + '</textarea></label>';
+      const t = photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(id) + '"] img'), z = zooms[id] || 100;
+      return '<div class="vd-cap"><span class="vd-cap-p"><img src="' + esc(t ? t.src : '') + '" alt=""><b>' + (i === 0 ? 'COVER' : i + 1) + '</b></span><div class="vd-cap-b">'
+        + '<label class="vd-zoom">Zoom <input type="range" min="100" max="200" step="5" value="' + z + '" data-zoom="' + esc(id) + '"><output>' + z + '%</output></label>'
+        + (i > 0 ? '<textarea rows="2" maxlength="140" data-id="' + esc(id) + '" placeholder="Text for photo ' + (i + 1) + '">' + esc(caps[id] || '') + '</textarea>' : '')
+        + '</div></div>';
     }).join('');
+    syncAll();
   }
-  capsEl.addEventListener('input', e => { if (e.target.dataset.id) { caps[e.target.dataset.id] = e.target.value; update(); } });
+  // "Use Cover Text on all slides" hides the photos' own text boxes; what was typed is kept for when it is unticked.
+  function syncAll() { capsEl.classList.toggle('no-text', f('words_all').checked); }
+  capsEl.addEventListener('input', e => {
+    const d = e.target.dataset;
+    if (d.id) { caps[d.id] = e.target.value; update(); }
+    if (d.zoom) { zooms[d.zoom] = +e.target.value; e.target.nextElementSibling.textContent = e.target.value + '%'; update(); }
+  });
   async function loadPhotos() {
-    order = []; caps = {}; paint();
+    order = []; caps = {}; zooms = {}; paint();
     if (!listing.value) { photosEl.innerHTML = '<div class="sp-wait">Choose a listing to see its photos.</div>'; update(); return; }
     photosEl.innerHTML = '<div class="sp-wait">Loading photos…</div>';
     const u = new URL(PHOTOS, location.href); u.searchParams.set('kind', 'property'); u.searchParams.set('subject', listing.value);
@@ -390,6 +393,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(1); syncBy(); }
     if (n === 'agent2') { agentTouched = true; by2Touched = false; fromAgent(2); syncBy(); }
     if (n === 'end') document.getElementById('vdEndFields').hidden = !f('end').checked;
+    if (n === 'words_all') syncAll();
     if (n === 'clip') { f('clip_start').value = 0; }
     update();
   });

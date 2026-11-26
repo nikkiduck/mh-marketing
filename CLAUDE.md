@@ -3664,27 +3664,36 @@ licensed track cannot be baked in; it is added in Instagram.
   controls at the right. `inc/video.php`: the form check
   (`video_from_request()`), the uploaded clips, the jobs,
   `video_send_file()` (byte ranges: a `<video>` needs them).
-- **The look and the closing card** (Nikki, 2026-11-26): the opening takes
-  the picture templates' options (`video_look()`: text place lower left or
-  centered, logo kind, logo place, watermark, badge place and color; the
-  lists are social_render.php's own except `video_logo_places()` and
-  `video_badge_places()`). The logo stays for the whole video while the text
-  may leave, so it keeps to the top and is never placed on the text. The
-  watermark is off unless picked. Everything on the closing card is a box on
-  the form (address, name, phone, one more contact text, website) filled from
-  the listing and the broker picked, plus a Show the headshot tick: a cleared
-  box is left off, so a card can be bare for Instagram's stickers. On screen
-  it is "Text", never "Words".
-- A pan drifts at a pace (`VIDEO_PAN_SPEED`, `video_pan_travel()`), centered
-  on the photo, not across a share of it: crossing a wide photo in three
-  seconds read as rushed.
-- **Text on each photo** (Nikki, 2026-11-26: "custom text on every slide.
-  This will make for proper reels"): one optional text box per chosen photo
-  (the form sends `captions[]` beside `photos[]`; `video_captions()`). Each
-  is a layer of its own (`cap{n}`), on with its photo and off before the
-  next, drawn where the Text place puts the opening text. The opening text
-  leaves before the first photo that has its own text and does not come
-  back; when that is the first photo it is not drawn at all. Photos only.
+- **The cover** (Nikki, 2026-11-26): the first photo is the COVER, and its
+  text is the form's "Cover Design" section (headline, Text 1 to 3, badge,
+  logo, watermark, Placement). It takes the picture templates' options
+  (`video_look()`: text lower left or centered, logo kind, logo place,
+  watermark, badge place and color; the lists are social_render.php's own
+  except `video_logo_places()` and `video_badge_places()`). The cover text
+  and the watermark are on the cover only and leave before the second photo;
+  "Use Cover Text on all slides" keeps the text (not the watermark) for the
+  whole video and hides the photos' own text boxes. The logo stays
+  throughout, so it keeps to the top. The watermark is off unless picked. On
+  screen it is "Text", never "Words".
+- **The closing card:** everything on it is a box on the form (address,
+  name, phone, one more contact text, website) filled from the listing and
+  the presenters picked, plus a Show the headshot or team logo tick: a
+  cleared box is left off, so a card can be bare for Instagram's stickers.
+- **Each photo** has a row under the grid: its own Zoom (100 to 200 %, the
+  form's `zooms[]`, `video_photo_zoom()`: a crop of the middle, there to
+  push a board's watermark out of the frame, the Aspen board's above all),
+  and from the second photo on its own text (`captions[]`,
+  `video_captions()`, a layer `cap{n}` on with its photo and off before the
+  next: "custom text on every slide. This will make for proper reels").
+- **The shade under the text is one layer** (`shade`) from the first text to
+  the last. It was part of each text layer and faded out and in with every
+  photo, which flickered and showed worst on a watermark.
+- **Movement:** Mix takes turns, zoom then pan, the cover a zoom
+  (`video_motion()`). Nearly every listing photo is wide for a 9:16 frame,
+  so the first rule, "pan the wide ones", panned every photo. A pan drifts
+  at a pace (`VIDEO_PAN_SPEED`, `video_pan_travel()`), centered on the
+  photo, not across a share of it: crossing a wide photo in three seconds
+  read as rushed.
 - **Presented by: two, and teams** (Nikki, 2026-11-26). The card takes up
   to two presenters (`agent`, `agent2`), each a roster broker or a team
   (`t:{key}`, the site's list, `mk_site_teams()`); two sit side by side
