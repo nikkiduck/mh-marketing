@@ -25,7 +25,8 @@
  * The normalised video (video_from_request() in inc/video.php):
  *   kind photos|clip, photos [[url, file]], clip [file, start, length, w, h,
  *   audio], hold (seconds a photo is on screen), motion mix|zoom|pan,
- *   captions [photo's place => its own text] (video_captions()), zooms
+ *   captions [photo's place => its own text] (video_captions()), logos
+ *   [photo's place => bool] (video_logo_runs()), zooms
  *   [photo's place => 1..2] (video_photo_zoom()),
  *   label, headline (Enter = a new line), lines [3], words_show open|all,
  *   the look (video_look(): logo_kind full|mark|none, mark, badge,
@@ -176,7 +177,14 @@ function video_timeline(array $v): array {
     }
     if (($v['words_show'] ?? 'open') === 'open') $wordsOut = $coverOut;
     // The watermark belongs to the cover alone, whatever the text does.
-    $layers = ['logo' => [0.3, $out], 'mark' => [0.3, $coverOut], 'words' => [0.6, $wordsOut]];
+    $layers = ['mark' => [0.3, $coverOut], 'words' => [0.6, $wordsOut]];
+    // The logo: on the photos ticked for it (Nikki, 2026-11-26: a "Logo?" tick on each photo), one layer for each run of
+    // them, on with the run's first photo and off before the photo after its last. A clip carries it throughout.
+    foreach (video_logo_runs($v) as [$a, $b]) {
+        $sa = $segs[$a]; $sb = $segs[$b];
+        $layers['logo' . $a] = [$a === 0 ? 0.3 : ($sa['start'] + VIDEO_XF / 2) / VIDEO_FPS,
+                               $b + 1 < $content ? ($sb['start'] + $sb['frames'] - VIDEO_XF) / VIDEO_FPS - 0.3 : $out];
+    }
     // A photo's own text ("custom text on every slide. This will make for
     // proper reels"): from the second photo on, on with its photo and off
     // before the next one arrives.
@@ -192,6 +200,26 @@ function video_timeline(array $v): array {
     if ($any) $layers['shade'] = [video_has_words($v) ? 0.6 : (array_values(array_filter($layers, fn($k) => str_starts_with($k, 'cap'), ARRAY_FILTER_USE_KEY))[0][0] ?? 0.6), $shadeOut];
     return ['segs' => $segs, 'total' => $total, 'end_start' => $endStart, 'layers' => $layers];
 }
+/**
+ * The runs of photos that show the logo: [[first, last]], places in play
+ * order. 'logos' is the form's tick for each photo; a video with no such
+ * list (a clip, the test harness) shows the logo throughout. None when the
+ * logo is switched off.
+ */
+function video_logo_runs(array $v): array {
+    if (video_look($v)['logo'] === 'none') return [];
+    $n = ($v['kind'] ?? 'photos') === 'photos' ? count((array)($v['photos'] ?? [])) : 1;
+    if ($n < 1) return [];
+    if (($v['kind'] ?? 'photos') !== 'photos' || !isset($v['logos'])) return [[0, $n - 1]];
+    $runs = []; $from = null;
+    for ($i = 0; $i <= $n; $i++) {
+        $on = $i < $n && !empty($v['logos'][$i]);
+        if ($on && $from === null) $from = $i;
+        if (!$on && $from !== null) { $runs[] = [$from, $i - 1]; $from = null; }
+    }
+    return $runs;
+}
+
 /** The photos that carry their own text: [photo's place => text], in play order, never the first (the cover). Photos only; a clip has none. */
 function video_captions(array $v): array {
     if (($v['kind'] ?? 'photos') !== 'photos' || ($v['words_show'] ?? 'open') === 'all') return [];
@@ -213,7 +241,7 @@ function video_layers(array $v): array {
     $k = video_look($v);
     $caps = video_captions($v);
     $words = video_has_words($v);
-    return array_merge(($words || $caps) ? ['shade'] : [], $k['mark'] !== 'none' ? ['mark'] : [], $k['logo'] !== 'none' ? ['logo'] : [],
+    return array_merge(($words || $caps) ? ['shade'] : [], $k['mark'] !== 'none' ? ['mark'] : [], array_map(fn($r) => 'logo' . $r[0], video_logo_runs($v)),
                        $words ? ['words'] : [], array_map(fn($i) => 'cap' . $i, array_keys($caps)));
 }
 /** The CSS of every layer and the closing card, scoped by the wrapper's class (.L-logo, .L-words, .L-end). */
@@ -294,7 +322,7 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
     $mid = video_text_mid($v);
     if ($key === 'shade') return '<div class="L L-shade center"><div class="fade" style="top:' . ($mid - 650) . 'px"></div></div>';
     if ($key === 'mark') return '<div class="L L-mark"><img class="ghost' . ($k['mark'] === 'mmark' ? ' m' : '') . '" src="' . $e($img($k['mark'] === 'mmark' ? 'M-mark_white.svg' : 'triangle_mark-white.svg')) . '" alt=""></div>';
-    if ($key === 'logo') {
+    if (str_starts_with($key, 'logo')) {
         $h = '';
         if ($k['logo'] !== 'none') {
             $o = video_logo_opts($v);

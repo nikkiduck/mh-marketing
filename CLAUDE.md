@@ -3680,6 +3680,11 @@ licensed track cannot be baked in; it is added in Instagram.
   full veil. The logo has the picture templates' sliders (size from 130 %,
   nudge across and down, shadow; `video_logo_opts()`), a kind (full, M mark)
   or None. The badge rides with the text or sits in an upper corner.
+- **The logo is per photo** (Nikki, 2026-11-26): each photo's row has a
+  "Logo?" tick (the form's `logos[]`), on for the cover and off for the
+  rest to begin with. `video_logo_runs()` turns the ticks into runs, each a
+  layer `logo{first}` on with its first photo and off before the photo after
+  its last. A clip, or a video with no `logos` list, carries it throughout.
 - **The closing card:** everything on it is a box on the form (address,
   name, phone, one more contact text, website) filled from the listing and
   the presenters picked, plus a Show the headshot or team logo tick: a

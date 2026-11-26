@@ -125,7 +125,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         <div class="vd-photos" id="vdPhotos"><div class="sp-wait">Loading photos…</div></div>
         <div id="vdCapsWrap" hidden>
           <div class="vd-subrow">
-            <h3 class="vd-sub">Zoom and text on each photo</h3>
+            <h3 class="vd-sub">Zoom, logo and text on each photo</h3>
             <label class="sp-check" style="margin:0"><input type="checkbox" name="words_all" value="1"> Use Cover Text on all slides</label>
           </div>
           <div class="vd-caps" id="vdCaps"></div>
@@ -229,7 +229,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const photosEl = document.getElementById('vdPhotos'), picked = document.getElementById('vdPicked');
   const msg = document.getElementById('vdMsg'), bar = document.getElementById('vdBar'), make = document.getElementById('vdMake'), dl = document.getElementById('vdDownload');
   const listing = document.getElementById('vdListing'), clipSel = document.getElementById('vdClip'), upMsg = document.getElementById('vdUpMsg');
-  let order = [], caps = {}, zooms = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
+  let order = [], caps = {}, zooms = {}, logoSet = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
   const isClip = () => val('kind') === 'clip';
 
   // ── The preview ──
@@ -264,9 +264,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   }
 
   // ── Photos: click to add in play order, click again to remove ──
-  // photos[], captions[] and zooms[] go to the server side by side, in play order.
+  // photos[], captions[], zooms[] and logos[] go to the server side by side, in play order.
+  // The logo shows on a photo when its "Logo?" is ticked: the cover starts ticked, the rest do not.
+  const logoOn = id => id in logoSet ? logoSet[id] : order.indexOf(id) === 0;
   function pick() {
-    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '"><input type="hidden" name="captions[]" value="' + esc(caps[id] || '') + '"><input type="hidden" name="zooms[]" value="' + (zooms[id] || 100) + '">').join('');
+    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '"><input type="hidden" name="captions[]" value="' + esc(caps[id] || '') + '"><input type="hidden" name="zooms[]" value="' + (zooms[id] || 100) + '"><input type="hidden" name="logos[]" value="' + (logoOn(id) ? 1 : 0) + '">').join('');
   }
   function paint() {
     photosEl.querySelectorAll('.sp-photo').forEach(el => {
@@ -279,21 +281,22 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     capsEl.innerHTML = order.map((id, i) => {
       const t = photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(id) + '"] img'), z = zooms[id] || 100;
       return '<div class="vd-cap"><span class="vd-cap-p"><img src="' + esc(t ? t.src : '') + '" alt=""><b>' + (i === 0 ? 'COVER' : i + 1) + '</b></span><div class="vd-cap-b">'
-        + '<label class="vd-zoom">Zoom <input type="range" min="100" max="200" step="5" value="' + z + '" data-zoom="' + esc(id) + '"><output>' + z + '%</output></label>'
+        + '<div class="vd-row"><label class="vd-zoom">Zoom <input type="range" min="100" max="200" step="5" value="' + z + '" data-zoom="' + esc(id) + '"><output>' + z + '%</output></label><label class="vd-logo"><input type="checkbox" data-logo="' + esc(id) + '"' + (logoOn(id) ? ' checked' : '') + '> Logo?</label></div>'
         + (i > 0 ? '<textarea rows="2" maxlength="140" data-id="' + esc(id) + '" placeholder="Text for photo ' + (i + 1) + '">' + esc(caps[id] || '') + '</textarea>' : '')
         + '</div></div>';
     }).join('');
     syncAll();
   }
   // "Use Cover Text on all slides" hides the photos' own text boxes; what was typed is kept for when it is unticked.
-  function syncAll() { capsEl.classList.toggle('no-text', f('words_all').checked); }
+  function syncAll() { capsEl.classList.toggle('no-text', f('words_all').checked); capsEl.classList.toggle('no-logo', val('logo_kind') === 'none'); }
+  capsEl.addEventListener('change', e => { const d = e.target.dataset; if (d.logo) { logoSet[d.logo] = e.target.checked; update(); } });
   capsEl.addEventListener('input', e => {
     const d = e.target.dataset;
     if (d.id) { caps[d.id] = e.target.value; update(); }
     if (d.zoom) { zooms[d.zoom] = +e.target.value; e.target.nextElementSibling.textContent = e.target.value + '%'; update(); }
   });
   async function loadPhotos() {
-    order = []; caps = {}; zooms = {}; paint();
+    order = []; caps = {}; zooms = {}; logoSet = {}; paint();
     if (!listing.value) { photosEl.innerHTML = '<div class="sp-wait">Choose a listing to see its photos.</div>'; update(); return; }
     photosEl.innerHTML = '<div class="sp-wait">Loading photos…</div>';
     const u = new URL(PHOTOS, location.href); u.searchParams.set('kind', 'property'); u.searchParams.set('subject', listing.value);
@@ -388,7 +391,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (n === 'agent2') { agentTouched = true; by2Touched = false; fromAgent(2); syncBy(); }
     if (n === 'end') document.getElementById('vdEndFields').hidden = !f('end').checked;
     if (n === 'words_all') syncAll();
-    if (n === 'logo_kind') document.getElementById('vdLogoRanges').hidden = val('logo_kind') === 'none';
+    if (n === 'logo_kind') { document.getElementById('vdLogoRanges').hidden = val('logo_kind') === 'none'; syncAll(); }
     if (n === 'clip') { f('clip_start').value = 0; }
     update();
   });

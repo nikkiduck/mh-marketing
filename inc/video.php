@@ -215,11 +215,12 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
     $v = ['kind' => $kind, 'photos' => [], 'clip' => null];
     if ($kind === 'photos') {
         if (!$listing) return 'Choose a listing to see the video.';
-        // captions[] and zooms[] run beside photos[]: each photo's own text (three rows at most, blank for none) and its own zoom (100 to 200).
+        // captions[] and zooms[] run beside photos[]: each photo's own text (three rows at most, blank for none), its own zoom (100 to 200) and whether it shows the logo (1 or 0).
         $ids = array_values(array_map('strval', (array)($in['photos'] ?? [])));
         $texts = array_values(array_map('strval', (array)($in['captions'] ?? [])));
         $zooms = array_values((array)($in['zooms'] ?? []));
-        $v['captions'] = []; $v['zooms'] = [];
+        $logos = array_values((array)($in['logos'] ?? []));
+        $v['captions'] = []; $v['zooms'] = []; $v['logos'] = [];
         foreach ($ids as $n => $id) {
             if ($id === '' || count($v['photos']) >= VIDEO_MAX_PHOTOS) continue;
             [$url, $file] = plan_photo($ctx, $id, $listing);
@@ -228,6 +229,7 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
             $rows = array_slice(array_values(array_filter(array_map(fn($r) => trim(preg_replace('/\s+/', ' ', $r)), explode("\n", str_replace("\r", '', $texts[$n] ?? ''))), 'strlen')), 0, 3);
             $v['captions'][] = mb_substr(implode("\n", $rows), 0, 140);
             $v['zooms'][] = max(1.0, min(2.0, round((float)($zooms[$n] ?? 100) / 100, 2)));
+            $v['logos'][] = !empty($logos[$n]);
         }
         if (!$v['photos']) return 'Pick at least one photo. Click the photos in the order they should play.';
         $hold = (string)($in['hold'] ?? '3');

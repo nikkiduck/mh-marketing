@@ -55,6 +55,10 @@ admin_tool_header([
     .vd-zoom output { min-width:44px; font-variant-numeric:tabular-nums; color:#1f242c; }
     .vd-cap textarea { width:100%; box-sizing:border-box; font:inherit; font-size:16px; line-height:1.35; padding:8px 10px; border:1.5px solid #dfe3e8; border-radius:8px; resize:vertical; }
     .vd-caps.no-text textarea { display:none; }
+    .vd-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px 22px; }
+    .vd-logo { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:#1f242c; white-space:nowrap; cursor:pointer; }
+    .vd-logo input { width:auto; max-width:none; accent-color:#4a5566; }
+    .vd-caps.no-logo .vd-logo { display:none; }
     .vd-bar { height:8px; border-radius:999px; background:#e6e9ee; overflow:hidden; margin:14px 0 8px; }
     .vd-bar i { display:block; height:100%; width:0; background:#4a5566; transition:width .4s; }
     .vd-up { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }
