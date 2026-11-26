@@ -3672,8 +3672,13 @@ licensed track cannot be baked in; it is added in Instagram.
   twice, on purpose:** ffmpeg makes it in the export, CSS animation plays it
   in the preview (`video_preview_html()`, one page that loops); both read
   those two functions, so change the numbers there and nowhere else.
-- `inc/video_export.php` (standalone): `video_build()`. **The box has under
-  1 GB and no swap, and that shapes it.** One ffmpeg command cross-fading
+- `inc/video_export.php` (standalone): `video_build()`. **It was built for a box with under
+  1 GB and no swap, and that shapes it** (the server is the 4 GB Lightsail
+  plan since 2026-11-26, still no swap: an uncapped test encode that day
+  used up the memory, systemd-networkd marked ens5 Failed, the DHCP lease
+  ran out 51 minutes later and the box was unreachable for under three hours.
+  Run any heavy test under `systemd-run --scope -p MemoryMax=...` and check
+  `networkctl status ens5` afterwards). One ffmpeg command cross-fading
   five photos buffers the later inputs and was killed by the kernel at
   680 MB on the first try. So: each segment by itself as an all-keyframe
   working file (seg-N.mkv), each cross-fade by itself from the tail of one
