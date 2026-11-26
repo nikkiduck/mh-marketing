@@ -3666,15 +3666,20 @@ licensed track cannot be baked in; it is added in Instagram.
   `video_send_file()` (byte ranges: a `<video>` needs them).
 - **The cover** (Nikki, 2026-11-26): the first photo is the COVER, and its
   text is the form's "Cover Design" section (headline, Text 1 to 3, badge,
-  logo, watermark, Placement). It takes the picture templates' options
-  (`video_look()`: text lower left or centered, logo kind, logo place,
-  watermark, badge place and color; the lists are social_render.php's own
-  except `video_logo_places()` and `video_badge_places()`). The cover text
-  and the watermark are on the cover only and leave before the second photo;
-  "Use Cover Text on all slides" keeps the text (not the watermark) for the
-  whole video and hides the photos' own text boxes. The logo stays
-  throughout, so it keeps to the top. The watermark is off unless picked. On
-  screen it is "Text", never "Words".
+  logo, watermark). The cover text and the watermark are on the cover only
+  and leave before the second photo; "Use Cover Text on all slides" keeps
+  the text (not the watermark) for the whole video and hides the photos' own
+  text boxes. On screen it is "Text", never "Words".
+- **Safe zones and centering** (Nikki, 2026-11-26, from Instagram's 2026
+  guide: "this is going to be a valuable tool for reels"): nothing that must
+  be read sits in the top 250 px (a reel needs 220; 250 covers a story) or
+  the bottom 450 (`VIDEO_SAFE_TOP`, `VIDEO_SAFE_BOTTOM`), the closing card
+  included. **Everything is centered, with no alignment choice**: the logo
+  top center, the cover text and each photo's own text in the middle of
+  what is left under the logo (`video_text_mid()`), on a soft band, not a
+  full veil. The logo has the picture templates' sliders (size from 130 %,
+  nudge across and down, shadow; `video_logo_opts()`), a kind (full, M mark)
+  or None. The badge rides with the text or sits in an upper corner.
 - **The closing card:** everything on it is a box on the form (address,
   name, phone, one more contact text, website) filled from the listing and
   the presenters picked, plus a Show the headshot or team logo tick: a

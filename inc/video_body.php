@@ -60,13 +60,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
 
       <section class="sp-step">
         <h2 class="sp-step-h">Cover Design</h2>
-        <div class="sp-look">
-          <span class="sp-look-l">Placement</span>
-          <?php foreach (social_layouts() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="layout" value="<?= $e($k) ?>"<?= $k === 'corner' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
-        </div>
-        <label class="sp-field" style="margin-top:14px">Headline (Line breaks allowed)
+        <label class="sp-field">Headline (Line breaks allowed)
           <textarea name="headline" rows="2" maxlength="70"></textarea>
         </label>
         <div class="sp-two" style="margin-top:12px">
@@ -94,15 +88,15 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         </div>
         <div class="sp-look">
           <span class="sp-look-l">Logo</span>
-          <?php foreach (social_logo_kinds() as $k => $t): ?>
+          <?php foreach (video_logo_kinds() as $k => $t): ?>
           <label class="sp-pillopt"><input type="radio" name="logo_kind" value="<?= $e($k) ?>"<?= $k === 'full' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
           <?php endforeach; ?>
         </div>
-        <div class="sp-look">
-          <span class="sp-look-l">Logo place</span>
-          <?php foreach (video_logo_places() as $k => $t): ?>
-          <label class="sp-pillopt"><input type="radio" name="logo" value="<?= $e($k) ?>"<?= $k === 'right' ? ' checked' : '' ?>><span><?= $e($t) ?></span></label>
-          <?php endforeach; ?>
+        <div class="sp-ranges" id="vdLogoRanges">
+          <label class="sp-range">Logo size <input type="range" name="logo_scale" min="50" max="200" step="2" value="130"><output>130%</output></label>
+          <label class="sp-range">Nudge across <input type="range" name="logo_dx" min="-200" max="200" step="2" value="0"><output>0</output></label>
+          <label class="sp-range">Logo shadow <input type="range" name="logo_shadow" min="0" max="100" step="5" value="0"><output>0</output></label>
+          <label class="sp-range">Nudge down <input type="range" name="logo_dy" min="-200" max="200" step="2" value="0"><output>0</output></label>
         </div>
         <div class="sp-look">
           <span class="sp-look-l">Watermark</span>
@@ -394,11 +388,14 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (n === 'agent2') { agentTouched = true; by2Touched = false; fromAgent(2); syncBy(); }
     if (n === 'end') document.getElementById('vdEndFields').hidden = !f('end').checked;
     if (n === 'words_all') syncAll();
+    if (n === 'logo_kind') document.getElementById('vdLogoRanges').hidden = val('logo_kind') === 'none';
     if (n === 'clip') { f('clip_start').value = 0; }
     update();
   });
   form.addEventListener('input', e => {
     const n = e.target.name;
+    // The logo's sliders: the figure beside each, then the preview.
+    if (e.target.closest('#vdLogoRanges')) { e.target.nextElementSibling.textContent = e.target.value + (n === 'logo_scale' ? '%' : ''); update(); return; }
     if (n === 'end_name' || n === 'end_phone') byTouched = true;
     if (n === 'end_name2' || n === 'end_phone2') by2Touched = true;
     if (n === 'end_address') addrTouched = true;

@@ -250,8 +250,11 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
     // The cover text is on the cover alone, or kept for the whole video: one tick on the form, beside the photos' own text
     // boxes (which it hides) or, for a clip, in the clip's section.
     $v['words_show'] = !empty($in[$kind === 'clip' ? 'words_all_clip' : 'words_all']) ? 'all' : 'open';
-    foreach (['layout', 'logo', 'logo_kind', 'mark', 'badge', 'badge_color'] as $k) $v[$k] = (string)($in[$k] ?? '');
+    foreach (['logo_kind', 'mark', 'badge', 'badge_color'] as $k) $v[$k] = (string)($in[$k] ?? '');
     $v = array_merge($v, video_look($v));
+    // The logo's size, nudge and shadow: the picture templates' sliders (the size a percentage, 130 to start).
+    $v['logo_scale'] = round((int)($in['logo_scale'] ?? 130) / 100, 2);
+    $v['logo_dx'] = (int)($in['logo_dx'] ?? 0); $v['logo_dy'] = (int)($in['logo_dy'] ?? 0); $v['logo_shadow'] = (int)($in['logo_shadow'] ?? 0);
 
     // The closing card. Everything on it is what the form holds (Nikki,
     // 2026-11-26: "make the contact details editable, as well as the choice

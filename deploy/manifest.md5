@@ -104,10 +104,10 @@ a3981c4f73d7aeeb99f132002f3ab4a5  inc/roster_alerts.php
 157f59a418e26a5ed916585164f96050  inc/social_body.php
 228fc28d7df0fc2b057d42bda679974b  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-a3e56d4ae5855961d7665cc50bbaf733  inc/video.php
-ec2aacfef9e2fce14fd489949459dc6f  inc/video_body.php
+f8986b484fe14ae1b63acfb0cd5623fd  inc/video.php
+d407998845a5d821b3d279145b5c3ca3  inc/video_body.php
 637071a2289af7decea749ff3c70147a  inc/video_export.php
-0d454c6990813d018b6d96b2010b9304  inc/video_render.php
+ac94497874560c567d64d778bca87698  inc/video_render.php
 7a36f2831fc80bb7153aae9c63aad9f8  inc/whats_new.php
 32b5246e79342bed8c7f63f6c45f12c8  index.php
 7252208e5e47725327561af1db631a51  intake.php

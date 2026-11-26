@@ -28,8 +28,9 @@
  *   captions [photo's place => its own text] (video_captions()), zooms
  *   [photo's place => 1..2] (video_photo_zoom()),
  *   label, headline (Enter = a new line), lines [3], words_show open|all,
- *   the look (video_look(): layout, logo, logo_kind, mark, badge,
- *   badge_color), end (bool), end_address, end_site, end_extra, agent and
+ *   the look (video_look(): logo_kind full|mark|none, mark, badge,
+ *   badge_color; video_logo_opts(): logo_scale, logo_dx, logo_dy,
+ *   logo_shadow), end (bool), end_address, end_site, end_extra, agent and
  *   agent2 [name, phone, headshot_url, headshot_file, logo (the picture is a
  *   team's logo), dark (show it in white)] | null (any part may be blank:
  *   the card's contact is typed on the form), name (the file name, no extension).
@@ -47,8 +48,10 @@ const VIDEO_ZOOM = 0.10;        // a zoom runs between 1 and 1 + this
 const VIDEO_PAN_SPEED = 0.06;   // a pan drifts this many frame widths a second (65 px): about the pace of the zoom, whatever the photo's shape
 const VIDEO_PAN_MAX = 0.7;      // and never crosses more than this share of the photo's spare width
 const VIDEO_FADE = 0.5;         // a layer's fade, in seconds
-const VIDEO_SAFE_TOP = 200;     // clear of the story and reel controls
-const VIDEO_SAFE_BOTTOM = 330;  // clear of a reel's caption and buttons
+// The safe zones (Nikki, 2026-11-26, from Instagram's 2026 guide): a reel keeps 220 px clear at the top and 450 at the
+// bottom; 250 at the top covers a story as well. Nothing that must be read sits outside them.
+const VIDEO_SAFE_TOP = 250;
+const VIDEO_SAFE_BOTTOM = 450;
 
 /** The movements offered. */
 function video_motions(): array { return ['mix' => 'Mix', 'zoom' => 'Zoom', 'pan' => 'Pan']; }
@@ -60,26 +63,45 @@ function video_holds(): array { return ['2.5' => '2.5 seconds', '3' => '3 second
 function video_words_shows(): array { return ['open' => 'Opening only', 'all' => 'Whole video']; }
 
 /**
- * The look of the opening, as the picture templates offer it (Nikki,
- * 2026-11-26: "similar options ... badge, watermark, logo position, centered
- * or left aligned"). The lists a picture template shares are its own
- * (social_layouts(), social_logo_kinds(), social_marks(),
- * social_badge_colors()); these two are the video's. The logo stays for the
- * whole video while the text may leave after the opening, so it keeps to the
- * top and never sits on the text. The badge rides with the text or sits in
- * an upper corner (under the logo when that is in the same corner).
+ * The look of the cover. Everything is CENTERED (Nikki, 2026-11-26: "remove
+ * lower left/upper right alignment options for text and logo. Center only",
+ * to work inside the reels' safe zones): the logo top center, the text in
+ * the middle of what is left under it. What is chosen: the logo's kind (or
+ * none), its size, nudge and shadow as the picture templates set them
+ * (social_logo_options(); the size starts at 130 % as theirs does), the
+ * watermark, and the badge's place and color. The lists the picture
+ * templates share are their own (social_logo_kinds(), social_marks(),
+ * social_badge_colors()).
  */
-function video_logo_places(): array { return ['right' => 'Upper right', 'left' => 'Upper left', 'center' => 'Top center', 'none' => 'None']; }
+function video_logo_kinds(): array { return social_logo_kinds() + ['none' => 'None']; }
 function video_badge_places(): array { return ['text' => 'With the text', 'left' => 'Upper left', 'right' => 'Upper right']; }
 
-/** The look a video was asked for, every value one of its list (the defaults are the video as first built). */
+/** The look a video was asked for, every value one of its list. */
 function video_look(array $v): array {
     $pick = fn(string $k, array $list, string $d) => isset($list[(string)($v[$k] ?? '')]) ? (string)$v[$k] : $d;
-    return ['layout' => $pick('layout', social_layouts(), 'corner'), 'logo' => $pick('logo', video_logo_places(), 'right'),
-            'logo_kind' => $pick('logo_kind', social_logo_kinds(), 'full'), 'mark' => $pick('mark', social_marks(), 'none'),
+    $kind = $pick('logo_kind', video_logo_kinds(), 'full');
+    return ['layout' => 'center', 'logo' => ($kind === 'none' || ($v['logo'] ?? '') === 'none') ? 'none' : 'center',
+            'logo_kind' => $kind === 'mark' ? 'mark' : 'full', 'mark' => $pick('mark', social_marks(), 'none'),
             'badge' => $pick('badge', video_badge_places(), 'text'), 'badge_color' => $pick('badge_color', social_badge_colors(), 'slate')];
 }
 
+/** The logo's size (a share of its own, .5 to 2), nudge (px) and shadow (0 to 100), as social_logo_options() reads them. */
+function video_logo_opts(array $v): array {
+    return social_logo_options(['logo_scale' => $v['logo_scale'] ?? 1.3, 'logo_dx' => $v['logo_dx'] ?? 0, 'logo_dy' => $v['logo_dy'] ?? 0, 'logo_shadow' => $v['logo_shadow'] ?? 0]);
+}
+
+/** The logo's height in px, 0 for none. */
+function video_logo_height(array $v): int {
+    $k = video_look($v);
+    return $k['logo'] === 'none' ? 0 : (int)round(($k['logo_kind'] === 'mark' ? 118 : 150) * video_logo_opts($v)['scale']);
+}
+
+/** Where the middle of the text sits, px from the top: halfway between the logo's foot (the top safe zone with no logo) and the bottom safe zone. */
+function video_text_mid(array $v): int {
+    $h = video_logo_height($v);
+    $from = VIDEO_SAFE_TOP + ($h > 0 ? $h + max(0, video_logo_opts($v)['dy']) : 0);
+    return (int)round(($from + VIDEO_H - VIDEO_SAFE_BOTTOM) / 2);
+}
 /**
  * One photo's movement: ['type' => 'zoom', 'from' => 1.0, 'to' => 1.1] or
  * ['type' => 'pan', 'dir' => 1] (1 drifts the view to the right, -1 to the
@@ -201,13 +223,13 @@ function video_layer_css(): string {
     return ".L{position:absolute;inset:0;overflow:hidden;font-family:'Jost',sans-serif;color:#fff}"
          // The logo: upper right on a soft fade, as the posts carry it.
          . ".L-logo .fade{position:absolute;left:0;right:0;top:0;height:620px;background:linear-gradient(180deg, rgba(20,24,30,.62) 0%, rgba(20,24,30,.28) 55%, rgba(20,24,30,0) 100%)}"
-         . ".L-logo .logo{position:absolute;right:72px;top:{$top}px;height:150px}.L-logo .logo.mk{height:118px}"
-         . ".L-logo .logo.left{right:auto;left:72px}.L-logo .logo.center{right:auto;left:50%;transform:translateX(-50%)}"
+         . ".L-logo .logo{position:absolute;left:50%;top:{$top}px;height:150px;transform:translateX(-50%)}"   // its height, nudge and shadow are set inline
          // The watermark, lower right, as a story carries it: the triangle cut off by the edge, or the M mark flush to the corner.
          . ".L-mark .ghost{position:absolute;right:-220px;bottom:0;width:970px;opacity:{$c['ghost']}}.L-mark .ghost.m{right:0;width:745px}"
          // The shade under the text: the posts' fade from the bottom, or a veil over the whole frame when the text is centered.
          . ".L-shade .fade{position:absolute;left:0;right:0;bottom:0;height:1240px;background:linear-gradient(180deg, rgba(20,24,30,0) 0%, rgba(20,24,30,.55) 45%, rgba(20,24,30,.9) 100%)}"
-         . ".L-shade.center .fade{top:0;height:auto;background:rgba(20,24,30,.42)}"
+         // Centered text: a soft band across the middle (its place set inline), so the top and bottom of the photo stay bright.
+         . ".L-shade.center .fade{bottom:auto;height:1300px;background:linear-gradient(180deg, rgba(20,24,30,0) 0%, rgba(20,24,30,.5) 28%, rgba(20,24,30,.5) 72%, rgba(20,24,30,0) 100%)}"
          // The words: lower left on the posts' fade; the badge, a short rule, the headline, three lines.
          . ".L-words .in{position:absolute;left:72px;right:72px;bottom:{$bot}px}"
          . ".L-words .pill{display:inline-block;background:{$c['pill']};color:{$c['pilltext']};font-weight:500;font-size:26px;line-height:1;letter-spacing:.22em;text-transform:uppercase;padding:15px 24px 14px 28px;margin:0 0 36px}"
@@ -218,7 +240,7 @@ function video_layer_css(): string {
          . ".L-words .l2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:62px;line-height:1.15;font-variant-numeric:lining-nums;margin-top:14px}"
          . ".L-words .l3{font-size:27px;line-height:1.3;letter-spacing:.17em;text-transform:uppercase;color:{$c['muted']};margin-top:16px}"
          // Centered: the text in the middle of the frame on a veil instead of the bottom fade.
-         . ".L-words.center .in{bottom:auto;top:50%;transform:translateY(-50%);text-align:center}.L-words.center .rule{margin-left:auto;margin-right:auto}"
+         . ".L-words.center .in{bottom:auto;top:50%;transform:translateY(-50%);text-align:center}.L-words.center .pill{margin-left:auto;margin-right:auto}.L-words.center .rule{margin-left:auto;margin-right:auto}"
          // A photo's own text: where the opening text sits, on a shorter fade, in the headline's face.
          . ".L-cap .in{position:absolute;left:72px;right:72px;bottom:{$bot}px}"
          . ".L-cap .rule{width:92px;height:2px;background:{$c['accent']};margin:0 0 30px}"
@@ -227,16 +249,16 @@ function video_layer_css(): string {
          // The badge in an upper corner; under the logo when that is in the same corner (.low, the top set inline).
          . ".L-words .pill.up{position:absolute;top:{$top}px;margin:0}.L-words .pill.up.left{left:72px}.L-words .pill.up.right{right:72px}"
          // The closing card: the logo, the address, who presents it, the site.
-         . ".L-end{background:{$c['bg']};display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:" . ($top + 40) . "px 90px " . ($bot + 20) . "px;box-sizing:border-box}"
-         . ".L-end .logo{height:330px}"
-         . ".L-end .rule{width:92px;height:2px;background:{$c['accent']};margin:70px 0 56px}"
+         . ".L-end{background:{$c['bg']};display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:" . ($top + 20) . "px 90px " . ($bot + 80) . "px;box-sizing:border-box}"
+         . ".L-end .logo{height:280px}"
+         . ".L-end .rule{width:92px;height:2px;background:{$c['accent']};margin:54px 0 44px}"
          . ".L-end .addr{font-weight:500;font-size:32px;line-height:1.45;letter-spacing:.2em;text-transform:uppercase;color:{$c['accent']}}"
-         . ".L-end .by{margin-top:78px;display:flex;flex-direction:column;align-items:center}"
+         . ".L-end .by{margin-top:58px;display:flex;flex-direction:column;align-items:center}"
          . ".L-end .by img.shot{width:230px;height:230px;object-fit:cover;display:block;margin-bottom:34px}"   // square, never a circle
          // A team's logo where a headshot goes. A dark logo (said at upload) is turned to white: greyed, inverted, and screened onto the card so a white ground drops out.
          . ".L-end .by img.tlogo{display:block;max-width:600px;max-height:210px;width:auto;height:auto;margin-bottom:34px}.L-end .by img.tlogo.inv{filter:grayscale(1) invert(1) contrast(1.15);mix-blend-mode:screen}"
          // Two presenters: side by side, each with its own picture, name and phone, under one "Presented by".
-         . ".L-end .by.two{margin-top:64px}.L-end .by.two .pair{display:flex;justify-content:center;align-items:flex-start;gap:44px;margin-top:30px}"
+         . ".L-end .by.two{margin-top:52px}.L-end .by.two .pair{display:flex;justify-content:center;align-items:flex-start;gap:44px;margin-top:30px}"
          . ".L-end .by.two .who{width:430px;display:flex;flex-direction:column;align-items:center}"
          . ".L-end .by.two img.shot{width:200px;height:200px;margin-bottom:26px}.L-end .by.two img.tlogo{max-width:400px;max-height:200px;margin-bottom:26px}"
          . ".L-end .by.two b{font-size:50px;margin-top:0}.L-end .by.two .who span{font-size:29px}"
@@ -269,12 +291,16 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
         $d = realpath(__DIR__ . '/../assets/images/' . $file);
         return ($export && $d) ? 'file://' . $d : $base . '/assets/images/' . $file;
     };
-    if ($key === 'shade') return '<div class="L L-shade' . ($k['layout'] === 'center' ? ' center' : '') . '"><div class="fade"></div></div>';
+    $mid = video_text_mid($v);
+    if ($key === 'shade') return '<div class="L L-shade center"><div class="fade" style="top:' . ($mid - 650) . 'px"></div></div>';
     if ($key === 'mark') return '<div class="L L-mark"><img class="ghost' . ($k['mark'] === 'mmark' ? ' m' : '') . '" src="' . $e($img($k['mark'] === 'mmark' ? 'M-mark_white.svg' : 'triangle_mark-white.svg')) . '" alt=""></div>';
     if ($key === 'logo') {
         $h = '';
         if ($k['logo'] !== 'none') {
-            $h .= '<div class="fade"></div><img class="logo ' . $k['logo'] . ($k['logo_kind'] === 'mark' ? ' mk' : '') . '" src="' . $e($k['logo_kind'] === 'mark' ? $img('M-mark_white.svg') : $logo) . '" alt="Mont Haus International Realty">';
+            $o = video_logo_opts($v);
+            $style = 'height:' . video_logo_height($v) . 'px;transform:translate(calc(-50% + ' . $o['dx'] . 'px),' . $o['dy'] . 'px);'
+                   . ($o['logo_shadow'] > 0 ? 'filter:drop-shadow(' . social_shadow_css($o['logo_shadow']) . ');' : '');
+            $h .= '<div class="fade"></div><img class="logo" style="' . $style . '" src="' . $e($k['logo_kind'] === 'mark' ? $img('M-mark_white.svg') : $logo) . '" alt="Mont Haus International Realty">';
         }
         return '<div class="L L-logo">' . $h . '</div>';
     }
@@ -284,7 +310,7 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
         foreach (explode("\n", $text) as $row) $long = max($long, mb_strlen(trim($row)));
         $size = mb_strlen($text) <= 28 ? 96 : (mb_strlen($text) <= 60 ? 82 : (mb_strlen($text) <= 100 ? 70 : 60));
         if ($long > 0 && $long <= 18 && $size < 96 && substr_count($text, "\n") > 0) $size = min(96, $size + 12);   // short rows the writer broke by hand can run larger
-        return '<div class="L L-cap' . ($k['layout'] === 'center' ? ' center' : '') . '"><div class="in"><div class="rule"></div>'
+        return '<div class="L L-cap center"><div class="in" style="top:' . $mid . 'px"><div class="rule"></div>'
              . '<p style="font-size:' . $size . 'px">' . nl2br($e($text), false) . '</p></div></div>';
     }
     if ($key === 'words') {
@@ -296,7 +322,7 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
         $up = '';
         if ($label !== '' && $k['badge'] !== 'text') {
             // In the logo's corner the badge goes under it.
-            $under = $k['logo'] === $k['badge'] ? 'top:' . (VIDEO_SAFE_TOP + ($k['logo_kind'] === 'mark' ? 118 : 150) + 34) . 'px;' : '';
+            $under = '';   // the logo is top center: a corner badge never meets it
             $up = '<span class="pill up ' . $k['badge'] . '" style="' . $pstyle . $under . '">' . $e($label) . '</span>';
         } elseif ($label !== '') {
             $h .= '<div><span class="pill"' . ($pstyle !== '' ? ' style="' . $pstyle . '"' : '') . '>' . $e($label) . '</span></div>';
@@ -306,7 +332,7 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
         foreach (array_values((array)($v['lines'] ?? [])) as $i => $line) {
             if ($i < 3 && trim((string)$line) !== '') $h .= '<p class="l' . ($i + 1) . '">' . $e(trim((string)$line)) . '</p>';
         }
-        return '<div class="L L-words' . ($k['layout'] === 'center' ? ' center' : '') . '">' . $up . '<div class="in">' . $h . '</div></div>';
+        return '<div class="L L-words center">' . $up . '<div class="in" style="top:' . $mid . 'px">' . $h . '</div></div>';
     }
     // The closing card.
     $h = '<img class="logo" src="' . $e($logo) . '" alt="Mont Haus International Realty">';
