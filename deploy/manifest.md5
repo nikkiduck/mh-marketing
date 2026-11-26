@@ -106,8 +106,8 @@ a3981c4f73d7aeeb99f132002f3ab4a5  inc/roster_alerts.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 0c89d07f711d3393fdf688e1bd5e815e  inc/video.php
 aeba90f391234f1dadaebc3a8d5a6d47  inc/video_body.php
-3187f6778e9de56577419658db6e114b  inc/video_export.php
-f06a27aebea5b3926543a04f9f928db2  inc/video_render.php
+39a88ba5b8642b7d9c2ab6d216a1c2a0  inc/video_export.php
+d2051577b987b8c56e8056d0b797ecb1  inc/video_render.php
 7a36f2831fc80bb7153aae9c63aad9f8  inc/whats_new.php
 32b5246e79342bed8c7f63f6c45f12c8  index.php
 7252208e5e47725327561af1db631a51  intake.php

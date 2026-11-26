@@ -39,7 +39,8 @@ const VIDEO_END_SECONDS = 3.0;  // the closing card, after its fade in
 const VIDEO_MAX_PHOTOS = 10;
 const VIDEO_WIDE = 1.3;         // a photo this many times wider than the frame's shape is "wide": it pans in Mix
 const VIDEO_ZOOM = 0.10;        // a zoom runs between 1 and 1 + this
-const VIDEO_PAN = [0.15, 0.85]; // a pan runs between these shares of the photo's spare width
+const VIDEO_PAN_SPEED = 0.06;   // a pan drifts this many frame widths a second (65 px): about the pace of the zoom, whatever the photo's shape
+const VIDEO_PAN_MAX = 0.7;      // and never crosses more than this share of the photo's spare width
 const VIDEO_FADE = 0.5;         // a layer's fade, in seconds
 const VIDEO_SAFE_TOP = 200;     // clear of the story and reel controls
 const VIDEO_SAFE_BOTTOM = 330;  // clear of a reel's caption and buttons
@@ -55,15 +56,23 @@ function video_words_shows(): array { return ['open' => 'Opening only', 'all' =>
 
 /**
  * One photo's movement: ['type' => 'zoom', 'from' => 1.0, 'to' => 1.1] or
- * ['type' => 'pan', 'from' => .15, 'to' => .85] (shares of the spare width,
- * left to right). $i is the photo's place, so the direction alternates;
+ * ['type' => 'pan', 'dir' => 1] (1 drifts the view to the right, -1 to the
+ * left; a pan is centered on the photo and its distance is
+ * video_pan_travel(), a pace, not a share of the photo: crossing most of a
+ * wide photo in three seconds read as rushed, Nikki 2026-11-26).
+ * $i is the photo's place, so the direction alternates;
  * $wide says the photo is wider than the frame by VIDEO_WIDE. Mix pans a
  * wide photo and zooms the rest; Pan zooms a photo with nothing to pan across.
  */
 function video_motion(string $mode, int $i, bool $wide): array {
     $pan = $mode === 'pan' ? $wide : ($mode === 'mix' && $wide);
-    if ($pan) return $i % 2 === 0 ? ['type' => 'pan', 'from' => VIDEO_PAN[0], 'to' => VIDEO_PAN[1]] : ['type' => 'pan', 'from' => VIDEO_PAN[1], 'to' => VIDEO_PAN[0]];
+    if ($pan) return ['type' => 'pan', 'dir' => $i % 2 === 0 ? 1 : -1];
     return $i % 2 === 0 ? ['type' => 'zoom', 'from' => 1.0, 'to' => 1.0 + VIDEO_ZOOM] : ['type' => 'zoom', 'from' => 1.0 + VIDEO_ZOOM, 'to' => 1.0];
+}
+
+/** How far a pan drifts over $frames frames, in the frame's own pixels (the export and the preview both cap it at VIDEO_PAN_MAX of the photo's spare width). */
+function video_pan_travel(int $frames): float {
+    return round(VIDEO_PAN_SPEED * VIDEO_W * $frames / VIDEO_FPS, 2);
 }
 
 /** True when a picture of $w x $h is "wide" for the frame. */
@@ -229,13 +238,13 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
                 $m = video_motion((string)($v['motion'] ?? 'mix'), $s['i'], $wide);
                 $k = ($wide ? 'w' : 'n') . $n;
                 [$from, $to] = $m['type'] === 'pan'
-                    ? ['object-position:' . round($m['from'] * 100, 2) . '% 50%', 'object-position:' . round($m['to'] * 100, 2) . '% 50%']
+                    ? ['object-position:calc(50% - ' . $m['dir'] . '*var(--p,5%)) 50%', 'object-position:calc(50% + ' . $m['dir'] . '*var(--p,5%)) 50%']
                     : ['transform:scale(' . $m['from'] . ')', 'transform:scale(' . $m['to'] . ')'];
                 $css .= "@keyframes {$k}{0%{{$from}}" . $pct($a) . "{{$from}}" . $pct($b) . "{{$to}}100%{{$to}}}";
                 $css .= ".s{$n}." . ($wide ? 'w' : 'n') . ">img{animation:{$k} {$secs}s linear infinite}";
             }
             $url = (string)($v['photos'][$s['i']][0] ?? '');
-            $html .= '<div class="seg s' . $n . '"><img src="' . $e($url) . '" alt="" onload="this.parentNode.classList.add(this.naturalWidth/this.naturalHeight>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?\'w\':\'n\')"></div>';
+            $html .= '<div class="seg s' . $n . '"><img src="' . $e($url) . '" alt="" onload="var r=this.naturalWidth/this.naturalHeight,s=r*' . $H . '-' . $W . ',c=Math.min(r,2)*' . $H . '-' . $W . ';this.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?\'w\':\'n\');if(s>0)this.style.setProperty(\'--p\',(50*Math.min(' . video_pan_travel((int)$s['frames']) . ',' . VIDEO_PAN_MAX . '*c)/s)+\'%\')"></div>';
         } elseif ($s['type'] === 'clip') {
             $c = $v['clip'];
             $html .= '<div class="seg s' . $n . '"><video id="clip" src="' . $e($clip_url) . '#t=' . round((float)$c['start'], 2) . '" muted playsinline preload="auto" data-start="' . round((float)$c['start'], 2) . '"></video></div>';

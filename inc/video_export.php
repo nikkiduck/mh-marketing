@@ -117,10 +117,10 @@ function video_photo_filter(array $m, int $F): string {
     $last = max(1, $F - 1);
     $tail = "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p";
     if ($m['type'] === 'pan') {
-        $d = $m['to'] - $m['from'];
-        // The photo at twice the frame's height (never wider than two heights), held, a window slid across it, then halved: the half pixels keep a slow pan smooth.
+        $t2 = video_pan_travel($F) * 2; $max = VIDEO_PAN_MAX;
+        // A drift of video_pan_travel() centered on the photo, never more than VIDEO_PAN_MAX of its spare width. The photo at twice the frame's height (never wider than two heights), held, a window slid across it, then halved: the half pixels keep a slow pan smooth.
         return "crop='min(iw,ih*2)':ih,scale=-2:{$H2}:flags=bicubic,format=gbrp,loop=loop={$F}:size=1:start=0,setpts=N/({$fps}*TB),"
-             . "crop={$W2}:{$H2}:x='(iw-{$W2})*({$m['from']}+({$d})*n/{$last})':y=0,scale={$W}:{$H}:flags=bicubic,fps={$fps},{$tail}";
+             . "crop={$W2}:{$H2}:x='(iw-{$W2})/2+({$m['dir']})*min({$t2},{$max}*(iw-{$W2}))*(n/{$last}-0.5)':y=0,scale={$W}:{$H}:flags=bicubic,fps={$fps},{$tail}";
     }
     $d = $m['to'] - $m['from'];
     return "scale={$W2}:{$H2}:force_original_aspect_ratio=increase:flags=bicubic,crop={$W2}:{$H2},format=gbrp,"
