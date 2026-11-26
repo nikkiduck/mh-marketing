@@ -58,6 +58,10 @@ admin_tool_header([
     .vd-bar { height:8px; border-radius:999px; background:#e6e9ee; overflow:hidden; margin:14px 0 8px; }
     .vd-bar i { display:block; height:100%; width:0; background:#4a5566; transition:width .4s; }
     .vd-up { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }
+    /* The small buttons (upload, replace, remove): the size and line of the option pills beside them. */
+    .vd-mini { font:inherit; font-size:15px; line-height:1.35; padding:7px 16px; border:2px solid var(--line, #dfe3e8); border-radius:999px; background:#fff; color:inherit; white-space:nowrap; cursor:pointer; }
+    .vd-mini:hover { border-color:#4a5566; }
+    .vd-mini:disabled { opacity:.45; cursor:not-allowed; }
     .sp-help.bad { color:#8f2424; }
     .sp-btn:disabled { opacity:.45; cursor:not-allowed; }
     .sp-field textarea { font-family:inherit; }

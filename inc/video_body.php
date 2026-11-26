@@ -150,8 +150,8 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         </label>
         <div class="vd-up">
           <input type="file" id="vdFile" accept="video/*,.mp4,.mov,.m4v" hidden>
-          <button type="button" class="sp-btn sp-btn-soft" id="vdUpload">Upload a clip</button>
-          <button type="button" class="sp-btn sp-btn-soft" id="vdClipDel">Remove this clip</button>
+          <button type="button" class="vd-mini" id="vdUpload">Upload a clip</button>
+          <button type="button" class="vd-mini" id="vdClipDel">Remove this clip</button>
           <p class="sp-help" id="vdUpMsg">MP4 or MOV from a phone or camera, up to <?= (int)(VIDEO_CLIP_MAX_BYTES / 1048576) ?> MB. Uploads are kept <?= VIDEO_CLIP_DAYS ?> days.</p>
         </div>
         <div class="sp-two" style="margin-top:14px">
@@ -195,8 +195,8 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
           <label class="sp-check" style="margin-top:12px"><input type="checkbox" name="end_headshot" value="1" checked> Show the headshot or team logo</label>
           <div class="vd-up" id="vdTeamLogo" hidden>
             <input type="file" id="vdLogoFile" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml" hidden>
-            <button type="button" class="sp-btn sp-btn-soft" id="vdLogoUp">Upload a team logo</button>
-            <button type="button" class="sp-btn sp-btn-soft" id="vdLogoDel" hidden>Remove the logo</button>
+            <button type="button" class="vd-mini" id="vdLogoUp">Upload a team logo</button>
+            <button type="button" class="vd-mini" id="vdLogoDel" hidden>Remove the logo</button>
             <label class="sp-check" style="margin:0"><input type="checkbox" id="vdLogoDark" checked> It is a dark logo: show it in white</label>
             <p class="sp-help" id="vdLogoMsg" style="flex-basis:100%;margin:0"></p>
           </div>
