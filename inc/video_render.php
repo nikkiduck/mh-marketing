@@ -274,7 +274,10 @@ function video_layer_document(array $v, string $key): string {
  * layers the export's own markup. A clip plays as a <video> from $clip_url.
  * The movement of a photo depends on its shape, known only once it loads, so
  * each photo carries both animations and its onload picks one (the same test
- * as video_is_wide()).
+ * as video_is_wide()). An animation picked that way starts counting when the
+ * photo loads, late against the page's own clock, which held each photo
+ * still for that long before it moved (Nikki, 2026-11-26): the onload sets
+ * a negative animation-delay of the page's age to put it back in step.
  */
 function video_preview_html(array $v, ?string $base = null, string $clip_url = ''): string {
     $base = rtrim($base ?? (defined('SITE_URL') ? SITE_URL : ''), '/');
@@ -301,7 +304,7 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
                 $css .= ".s{$n}." . ($wide ? 'w' : 'n') . ">img{animation:{$k} {$secs}s linear infinite}";
             }
             $url = (string)($v['photos'][$s['i']][0] ?? '');
-            $html .= '<div class="seg s' . $n . '"><img src="' . $e($url) . '" alt="" onload="var r=this.naturalWidth/this.naturalHeight,s=r*' . $H . '-' . $W . ',c=Math.min(r,2)*' . $H . '-' . $W . ';this.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?\'w\':\'n\');if(s>0)this.style.setProperty(\'--p\',(50*Math.min(' . video_pan_travel((int)$s['frames']) . ',' . VIDEO_PAN_MAX . '*c)/s)+\'%\')"></div>';
+            $html .= '<div class="seg s' . $n . '"><img src="' . $e($url) . '" alt="" onload="var r=this.naturalWidth/this.naturalHeight,s=r*' . $H . '-' . $W . ',c=Math.min(r,2)*' . $H . '-' . $W . ';this.style.animationDelay=(-document.timeline.currentTime)+\'ms\';this.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?\'w\':\'n\');if(s>0)this.style.setProperty(\'--p\',(50*Math.min(' . video_pan_travel((int)$s['frames']) . ',' . VIDEO_PAN_MAX . '*c)/s)+\'%\')"></div>';
         } elseif ($s['type'] === 'clip') {
             $c = $v['clip'];
             $html .= '<div class="seg s' . $n . '"><video id="clip" src="' . $e($clip_url) . '#t=' . round((float)$c['start'], 2) . '" muted playsinline preload="auto" data-start="' . round((float)$c['start'], 2) . '"></video></div>';
