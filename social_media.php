@@ -20,6 +20,7 @@ $cards = [
     ['Broker Feature', 'template_broker.php', 'Spotlight a broker tied to their market with one of the plan\'s hooks, or a milestone: their cutout in front of a location photo under the slate veil.', 'Make a feature ›'],
     ['Location Feature', 'template_location.php', 'An office, an area or a town: the office or a view, the brokers based there with their faces in a row, or a local real estate angle.', 'Make a feature ›'],
     ['Branding Story', 'template_branding.php', 'The seasonal taglines on a mountain photo, centred, with the logo. Two a week in the plan.', 'Make a story ›'],
+    ['Video', 'template_video.php', 'A story or reel as an MP4: a listing\'s photos in slow motion with cross-fades, or a video clip you upload, with the logo, the words and a closing card.', 'Make a video ›'],   // 2026-11-26
 ];
 
 admin_tool_header([

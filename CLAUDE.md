@@ -3633,6 +3633,89 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   aligned with `frames[]`; the tile's number badge reads "2 L" / "3 M" for
   what the frame will carry.
 
+### Video (super admin only, 2026-11-26)
+
+Nikki: "Is it possible to include video in our Admin and Agent social
+templates so we can build video stories and reels?" Yes; she asked for both
+kinds, admin only for now, on a page of its own "so we don't screw up what's
+there". A card on social_media.php ("Video"), `plan_gate()`, so super_admin.
+The agents' side is NOT built: opening it is her call, and it is
+agent-facing work (her OK per deploy).
+
+A video is a 1080 x 1920 MP4 at 30 frames a second (H.264, a sound track
+always), for a story or a reel. Two kinds:
+
+- **Listing photos:** up to 10 photos, clicked in play order, each on screen
+  2.5 to 5 seconds, cross-fading (0.6 s). Movement: Mix (a wide photo pans,
+  the rest zoom slowly), Zoom or Pan; the direction alternates.
+- **A video clip:** one uploaded clip (MP4 or MOV, up to 600 MB, kept 30
+  days), a start and a length (3 to 60 seconds), filling the frame (sides
+  cropped) or whole on a blurred copy of itself, its own sound or none. An
+  iPhone's HDR is brought to ordinary color (zscale + tonemap).
+
+Both carry LAYERS that fade in and out: the logo upper right, and the words
+lower left (badge, headline, three lines, pre-filled from the listing;
+Opening only = gone before the third photo, or after six seconds of a clip;
+or the whole video), and end on an optional closing card (logo, address, a
+Presented by broker with a SQUARE headshot, monthaus.com). No music: a
+licensed track cannot be baked in; it is added in Instagram.
+
+- `template_video.php` + `inc/video_body.php`: the preview at the left, the
+  controls at the right. `inc/video.php`: the form check
+  (`video_from_request()`), the uploaded clips, the jobs,
+  `video_send_file()` (byte ranges: a `<video>` needs them).
+- `inc/video_render.php` (standalone): `video_timeline()` and
+  `video_motion()` are the ONE record of the timing and the movement. The
+  layers and the closing card are HTML (`video_layer_html()`), screenshotted
+  by Chromium on a TRANSPARENT ground (`--default-background-color=00000000`)
+  for the export and placed as they are in the preview. **The motion exists
+  twice, on purpose:** ffmpeg makes it in the export, CSS animation plays it
+  in the preview (`video_preview_html()`, one page that loops); both read
+  those two functions, so change the numbers there and nowhere else.
+- `inc/video_export.php` (standalone): `video_build()`. **The box has under
+  1 GB and no swap, and that shapes it.** One ffmpeg command cross-fading
+  five photos buffers the later inputs and was killed by the kernel at
+  680 MB on the first try. So: each segment by itself as an all-keyframe
+  working file (seg-N.mkv), each cross-fade by itself from the tail of one
+  and the head of the next (x-N.mkv), then ffmpeg's concat list reads
+  segment-minus-its-ends, cross-fade, segment … into the one quality encode
+  with the layers over it. Do not fold it back into one command. Peak about
+  390 MB. A zoom is zoompan on the photo at twice the frame's size; a pan is
+  a crop slid across the photo at twice the height, then halved (the half
+  pixels keep slow movement smooth). Colors go through RGB to BT.709.
+- **A background job, never the request:** `video_export.php` POST writes
+  CREATIVES_DIR/video/admin-<user id>/jobs/<id>/job.json and starts
+  `cron/video_job.php <folder>` detached (not on the crontab); the page asks
+  `?job=` every two seconds and then plays `?job=&file=1`. One video at a
+  time (a lock, CREATIVES_DIR/video/.lock). The worker raises its own
+  oom_score_adj, so if memory runs out it is the video that stops, not
+  Apache; a worker that is gone reads as failed (its pid is in status.json).
+  Jobs are kept a week. The worker runs from the command line, where /tmp
+  is not Apache's private one: Chromium's home is the job folder.
+- `video_clip.php`: a clip arrives in 4 MB pieces read from the request body
+  (PHP's limits here are 2M a file, 8M a post), each piece checked to begin
+  where the file ends, the CSRF token in the X-CSRF-Token header; the last
+  piece is checked with ffprobe. The preview plays the uploaded file itself:
+  a format the browser cannot play (HEVC in some) previews black and still
+  exports.
+- ffmpeg 5.1 is Debian's package (`apt-get install --no-install-recommends
+  ffmpeg`, 2026-11-26, new packages only).
+- Timings on the server: 5 photos + card (18.6 s) in about 90 s; 6 listing
+  photos (21.6 s) in 98 s; a 12 s clip from 4K in 40 s.
+- Harness: `php tests/render_video_sample.php <outdir> [--photos=N]
+  [--motion=] [--all] [--no-end] [--clip=file] [--blur] [--html]` on the
+  server; it exits 2 when the frame count is not the timeline's. Headless
+  Chromium's virtual time does not advance CSS animations: to look at the
+  preview at a moment, pause `document.getAnimations()` and set
+  `currentTime`.
+- Checked from the command line as www-data with a stand-in session (the
+  page, a real job for 221 Wrights Rd, the upload in pieces). **Not yet
+  walked in a browser by anyone signed in.**
+- Known: Aspen's board photos carry the board's watermark, which a 9:16
+  crop cuts into. Not built: the agents' side, per-photo framing, a team or
+  location video, saved videos on the Weekly Plans, a bigger server for
+  several videos at once.
+
 ### Digital Ads (PROTOTYPE, super admin only, 2026-11-09)
 
 **Its own area since 2026-11-18** (Nikki: "move this Digital Ads section out
