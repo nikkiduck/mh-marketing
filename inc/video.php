@@ -132,10 +132,17 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
     $v = ['kind' => $kind, 'photos' => [], 'clip' => null];
     if ($kind === 'photos') {
         if (!$listing) return 'Choose a listing to see the video.';
-        foreach (array_slice(array_values(array_filter(array_map('strval', (array)($in['photos'] ?? [])), 'strlen')), 0, VIDEO_MAX_PHOTOS) as $id) {
+        // captions[] runs beside photos[]: each photo's own text (two rows at most), blank for none.
+        $ids = array_values(array_map('strval', (array)($in['photos'] ?? [])));
+        $texts = array_values(array_map('strval', (array)($in['captions'] ?? [])));
+        $v['captions'] = [];
+        foreach ($ids as $n => $id) {
+            if ($id === '' || count($v['photos']) >= VIDEO_MAX_PHOTOS) continue;
             [$url, $file] = plan_photo($ctx, $id, $listing);
             // A board photo has no file here: the preview takes the site's 1600 copy, the export its 2048 (the board's own file).
             $v['photos'][] = [$url, $file, $file ? '' : str_replace('&w=1600', '&w=2048', $url)];
+            $rows = array_slice(array_values(array_filter(array_map(fn($r) => trim(preg_replace('/\s+/', ' ', $r)), explode("\n", str_replace("\r", '', $texts[$n] ?? ''))), 'strlen')), 0, 3);
+            $v['captions'][] = mb_substr(implode("\n", $rows), 0, 140);
         }
         if (!$v['photos']) return 'Pick at least one photo. Click the photos in the order they should play.';
         $hold = (string)($in['hold'] ?? '3');

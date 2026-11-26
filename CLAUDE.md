@@ -3678,6 +3678,13 @@ licensed track cannot be baked in; it is added in Instagram.
 - A pan drifts at a pace (`VIDEO_PAN_SPEED`, `video_pan_travel()`), centered
   on the photo, not across a share of it: crossing a wide photo in three
   seconds read as rushed.
+- **Text on each photo** (Nikki, 2026-11-26: "custom text on every slide.
+  This will make for proper reels"): one optional text box per chosen photo
+  (the form sends `captions[]` beside `photos[]`; `video_captions()`). Each
+  is a layer of its own (`cap{n}`), on with its photo and off before the
+  next, drawn where the Text place puts the opening text. The opening text
+  leaves before the first photo that has its own text and does not come
+  back; when that is the first photo it is not drawn at all. Photos only.
 - `inc/video_render.php` (standalone): `video_timeline()` and
   `video_motion()` are the ONE record of the timing and the movement. The
   layers and the closing card are HTML (`video_layer_html()`), screenshotted

@@ -25,6 +25,7 @@
  * The normalised video (video_from_request() in inc/video.php):
  *   kind photos|clip, photos [[url, file]], clip [file, start, length, w, h,
  *   audio], hold (seconds a photo is on screen), motion mix|zoom|pan,
+ *   captions [photo's place => its own text] (video_captions()),
  *   label, headline (Enter = a new line), lines [3], words_show open|all,
  *   the look (video_look(): layout, logo, logo_kind, mark, badge,
  *   badge_color), end (bool), end_address, end_site, agent [name, phone,
@@ -136,8 +137,34 @@ function video_timeline(array $v): array {
         $w = min(6.0, $segs[0]['frames'] / VIDEO_FPS / 2);             // a clip: the first six seconds, or half of a short one
         if ($out === null || $w < $out) $wordsOut = $w;
     }
-    return ['segs' => $segs, 'total' => $total, 'end_start' => $endStart,
-            'layers' => ['logo' => [0.3, $out], 'words' => [0.6, $wordsOut]]];
+    $layers = ['logo' => [0.3, $out], 'words' => [0.6, $wordsOut]];
+    // A photo's own text (Nikki, 2026-11-26: "custom text on every slide.
+    // This will make for proper reels"): on with its photo, off before the
+    // next one arrives. The opening text leaves before the first photo that
+    // has its own, and does not come back.
+    $caps = video_captions($v);
+    foreach ($caps as $i => $text) {
+        $s = $segs[$i];
+        $next = ($i + 1 < $content || $endStart !== null) ? ($s['start'] + $s['frames'] - VIDEO_XF) / VIDEO_FPS - 0.3 : null;
+        $layers['cap' . $i] = [$i === 0 ? 0.6 : ($s['start'] + VIDEO_XF / 2) / VIDEO_FPS, $next];
+    }
+    if ($caps) {
+        $first = array_key_first($caps);
+        $leave = $first > 0 ? $segs[$first]['start'] / VIDEO_FPS - VIDEO_FADE : 0.0;
+        if ($layers['words'][1] === null || $leave < $layers['words'][1]) $layers['words'][1] = $leave;
+    }
+    return ['segs' => $segs, 'total' => $total, 'end_start' => $endStart, 'layers' => $layers];
+}
+
+/** The photos that carry their own text: [photo's place => text], in play order. Photos only; a clip has none. */
+function video_captions(array $v): array {
+    if (($v['kind'] ?? 'photos') !== 'photos') return [];
+    $out = [];
+    foreach (array_keys((array)($v['photos'] ?? [])) as $i) {
+        $t = trim((string)($v['captions'][$i] ?? ''));
+        if ($t !== '') $out[$i] = $t;
+    }
+    return $out;
 }
 
 /** True when the video has any words to show. */
@@ -148,7 +175,10 @@ function video_has_words(array $v): bool {
 /** The layers this video uses, in stacking order. */
 function video_layers(array $v): array {
     $k = video_look($v);
-    return array_merge(($k['logo'] !== 'none' || $k['mark'] !== 'none') ? ['logo'] : [], video_has_words($v) ? ['words'] : []);
+    $caps = video_captions($v);
+    // The opening text is left out when the first photo has its own.
+    return array_merge(($k['logo'] !== 'none' || $k['mark'] !== 'none') ? ['logo'] : [], (video_has_words($v) && !isset($caps[0])) ? ['words'] : [],
+                       array_map(fn($i) => 'cap' . $i, array_keys($caps)));
 }
 
 /** The CSS of every layer and the closing card, scoped by the wrapper's class (.L-logo, .L-words, .L-end). */
@@ -175,6 +205,13 @@ function video_layer_css(): string {
          // Centered: the text in the middle of the frame on a veil instead of the bottom fade.
          . ".L-words.center .fade{top:0;height:auto;background:rgba(20,24,30,.42)}"
          . ".L-words.center .in{bottom:auto;top:50%;transform:translateY(-50%);text-align:center}.L-words.center .rule{margin-left:auto;margin-right:auto}"
+         // A photo's own text: where the opening text sits, on a shorter fade, in the headline's face.
+         . ".L-cap .fade{position:absolute;left:0;right:0;bottom:0;height:980px;background:linear-gradient(180deg, rgba(20,24,30,0) 0%, rgba(20,24,30,.5) 45%, rgba(20,24,30,.88) 100%)}"
+         . ".L-cap .in{position:absolute;left:72px;right:72px;bottom:{$bot}px}"
+         . ".L-cap .rule{width:92px;height:2px;background:{$c['accent']};margin:0 0 30px}"
+         . ".L-cap p{font-family:'Cormorant Garamond',serif;font-weight:500;line-height:1.1;margin:0;font-variant-numeric:lining-nums;text-shadow:0 2px 18px rgba(0,0,0,.45);text-wrap:balance}"
+         . ".L-cap.center .fade{top:0;height:auto;background:rgba(20,24,30,.42)}"
+         . ".L-cap.center .in{bottom:auto;top:50%;transform:translateY(-50%);text-align:center}.L-cap.center .rule{margin-left:auto;margin-right:auto}"
          // The badge in an upper corner; under the logo when that is in the same corner (.low, the top set inline).
          . ".L-words .pill.up{position:absolute;top:{$top}px;margin:0}.L-words .pill.up.left{left:72px}.L-words .pill.up.right{right:72px}"
          // The closing card: the logo, the address, who presents it, the site.
@@ -219,6 +256,15 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
         }
         if ($k['mark'] !== 'none') $h .= '<img class="ghost' . ($k['mark'] === 'mmark' ? ' m' : '') . '" src="' . $e($img($k['mark'] === 'mmark' ? 'M-mark_white.svg' : 'triangle_mark-white.svg')) . '" alt="">';
         return '<div class="L L-logo">' . $h . '</div>';
+    }
+    if (str_starts_with($key, 'cap')) {
+        $text = video_captions($v)[(int)substr($key, 3)] ?? '';
+        $long = 0;
+        foreach (explode("\n", $text) as $row) $long = max($long, mb_strlen(trim($row)));
+        $size = mb_strlen($text) <= 28 ? 96 : (mb_strlen($text) <= 60 ? 82 : (mb_strlen($text) <= 100 ? 70 : 60));
+        if ($long > 0 && $long <= 18 && $size < 96 && substr_count($text, "\n") > 0) $size = min(96, $size + 12);   // short rows the writer broke by hand can run larger
+        return '<div class="L L-cap' . ($k['layout'] === 'center' ? ' center' : '') . '"><div class="fade"></div><div class="in"><div class="rule"></div>'
+             . '<p style="font-size:' . $size . 'px">' . nl2br($e($text), false) . '</p></div></div>';
     }
     if ($key === 'words') {
         $h = '';

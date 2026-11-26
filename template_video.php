@@ -42,6 +42,13 @@ admin_tool_header([
     .vd-photos .sp-photo.on { outline-color:#4a5566; }
     .vd-n { position:absolute; left:6px; top:6px; min-width:22px; height:22px; padding:0 6px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font:600 12px/1 var(--sans); color:#fff; background:rgba(43,48,56,.92); border-radius:999px; }
     .vd-n:empty { display:none; }
+    .vd-sub { font:600 14px/1.3 var(--sans); color:#1f242c; margin:22px 0 4px; }
+    .vd-caps { display:grid; gap:8px; margin-top:10px; }
+    .vd-cap { display:grid; grid-template-columns:64px 1fr; gap:10px; align-items:start; }
+    .vd-cap-p { position:relative; display:block; aspect-ratio:4 / 3; border-radius:6px; overflow:hidden; background:#e6e9ee; }
+    .vd-cap-p img { display:block; width:100%; height:100%; object-fit:cover; }
+    .vd-cap-p b { position:absolute; left:4px; top:4px; min-width:18px; height:18px; padding:0 5px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font:600 11px/1 var(--sans); color:#fff; background:rgba(43,48,56,.92); border-radius:999px; }
+    .vd-cap textarea { width:100%; box-sizing:border-box; font:inherit; font-size:16px; line-height:1.35; padding:8px 10px; border:1.5px solid #dfe3e8; border-radius:8px; resize:vertical; }
     .vd-bar { height:8px; border-radius:999px; background:#e6e9ee; overflow:hidden; margin:14px 0 8px; }
     .vd-bar i { display:block; height:100%; width:0; background:#4a5566; transition:width .4s; }
     .vd-up { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }

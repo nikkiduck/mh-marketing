@@ -64,6 +64,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         </div>
         <p class="sp-note" style="margin-top:8px">Mix slides across a wide photo and zooms slowly on the rest.</p>
         <div class="vd-photos" id="vdPhotos"><div class="sp-wait">Loading photos…</div></div>
+        <div id="vdCapsWrap" hidden>
+          <h3 class="vd-sub">Text on each photo (optional)</h3>
+          <p class="sp-note">Text here shows while its photo is on screen. The opening text leaves when the first photo with its own text arrives.</p>
+          <div class="vd-caps" id="vdCaps"></div>
+        </div>
       </section>
 
       <section class="sp-step" id="vdClipStep" hidden>
@@ -213,10 +218,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const XF = <?= json_encode(VIDEO_XF / VIDEO_FPS) ?>, ENDS = <?= json_encode(VIDEO_END_SECONDS) ?>;
   const stage = document.getElementById('vdStage'), frame = document.getElementById('vdFrame'), result = document.getElementById('vdResult');
   const tabP = document.getElementById('vdTabPreview'), tabR = document.getElementById('vdTabResult'), lenOut = document.getElementById('vdLen');
+  const capsEl = document.getElementById('vdCaps'), capsWrap = document.getElementById('vdCapsWrap');
   const photosEl = document.getElementById('vdPhotos'), picked = document.getElementById('vdPicked');
   const msg = document.getElementById('vdMsg'), bar = document.getElementById('vdBar'), make = document.getElementById('vdMake'), dl = document.getElementById('vdDownload');
   const listing = document.getElementById('vdListing'), clipSel = document.getElementById('vdClip'), upMsg = document.getElementById('vdUpMsg');
-  let order = [], agentTouched = false, byTouched = false, addrTouched = false, busy = false;
+  let order = [], caps = {}, agentTouched = false, byTouched = false, addrTouched = false, busy = false;
   const isClip = () => val('kind') === 'clip';
 
   // ── The preview ──
@@ -234,7 +240,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   function update() { clearTimeout(timer); timer = setTimeout(render, 400); length(); }
   async function render() {
     const n = ++seq;
-    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '">').join('');
+    pick();
     try {
       const r = await fetch(RENDER, { method: 'POST', body: new FormData(form), credentials: 'same-origin' });
       const html = await r.text();
@@ -251,14 +257,25 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   }
 
   // ── Photos: click to add in play order, click again to remove ──
+  // photos[] and captions[] go to the server side by side, in play order.
+  function pick() {
+    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '"><input type="hidden" name="captions[]" value="' + esc(caps[id] || '') + '">').join('');
+  }
   function paint() {
     photosEl.querySelectorAll('.sp-photo').forEach(el => {
       const i = order.indexOf(el.dataset.id);
       el.classList.toggle('on', i >= 0); el.querySelector('.vd-n').textContent = i >= 0 ? i + 1 : '';
     });
+    // One text box per chosen photo, in play order; what was typed stays with its photo.
+    capsWrap.hidden = !order.length;
+    capsEl.innerHTML = order.map((id, i) => {
+      const t = photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(id) + '"] img');
+      return '<label class="vd-cap"><span class="vd-cap-p"><img src="' + esc(t ? t.src : '') + '" alt=""><b>' + (i + 1) + '</b></span><textarea rows="2" maxlength="140" data-id="' + esc(id) + '" placeholder="Text for photo ' + (i + 1) + '">' + esc(caps[id] || '') + '</textarea></label>';
+    }).join('');
   }
+  capsEl.addEventListener('input', e => { if (e.target.dataset.id) { caps[e.target.dataset.id] = e.target.value; update(); } });
   async function loadPhotos() {
-    order = [];
+    order = []; caps = {}; paint();
     if (!listing.value) { photosEl.innerHTML = '<div class="sp-wait">Choose a listing to see its photos.</div>'; update(); return; }
     photosEl.innerHTML = '<div class="sp-wait">Loading photos…</div>';
     const u = new URL(PHOTOS, location.href); u.searchParams.set('kind', 'property'); u.searchParams.set('subject', listing.value);
@@ -362,7 +379,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     e.preventDefault();
     if (busy) return;
     busy = true; make.disabled = true; dl.hidden = true; tabR.disabled = true; show('preview');
-    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '">').join('');
+    pick();
     say('Starting…'); progress(0);
     const stop = (t, bad) => { busy = false; make.disabled = false; progress(null); say(t, bad); };
     let job;
