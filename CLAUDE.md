@@ -3705,6 +3705,24 @@ licensed track cannot be baked in; it is added in Instagram.
   card of their own, Slides, UNDER Cover Design, though the photos are
   chosen above it. `syncKind()` in inc/video_body.php moves the cards. The
   pills are led by "Made from:" (taken off and put back the same day).
+- **Suggest Texts** (Nikki, 2026-11-27: "integrate our Anthropic API into
+  this video template, just for the Listing reels"): a button beside "Use
+  Cover Text on all slides", Listing source only, two photos or more.
+  `video_suggest.php` → `inc/video_ai.php`: ONE Claude API request writes a
+  few words for each photo after the cover from the listing's PUBLIC
+  remarks, lot, year built and subdivision (the site feed's `scope=detail`,
+  by MLS number), this portal's own row, and the photos themselves (each
+  sent as the site's 800 px copy, so a text is about its own photo). It
+  fills boxes that are empty or still hold an untouched suggestion, never
+  text the person typed; a second click sends the earlier ones as `avoid`.
+  **The SDK is not vendored here: this file loads MH Send's copy**
+  (`../send.monthaus.com/vendor/autoload.php`, same server); the key is
+  `ANTHROPIC_API_KEY` in inc/db.php. Model `claude-opus-5-5`, effort medium,
+  refusal fallbacks on, as MH Send's inc/ai.php; the house voice and Fair
+  Housing rules in `VIDEO_AI_SYSTEM` are that file's, and change in both.
+  About 10 to 16 seconds and four or five cents a request. No key or no
+  SDK = no button. **No usage table or daily cap here yet** (one line per
+  request in the PHP error log): both are wanted before agents get this.
 - **The cover and the closing card have times of their own** (Nikki,
   2026-11-26: the cover "may need a second or two longer to read", "and the
   closing slide as well"): Cover Slide length (`cover_hold`, in Cover Design, 5 seconds to

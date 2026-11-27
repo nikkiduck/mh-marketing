@@ -138,7 +138,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
           <div class="vd-subrow">
             <h3 class="vd-sub">Zoom, logo and text on each photo</h3>
             <label class="sp-check" style="margin:0"><input type="checkbox" name="words_all" value="1"> Use Cover Text on all slides</label>
+            <?php if ($suggest_url !== ''): /* a listing's photos only: the texts come from its description, details and photos (inc/video_ai.php) */ ?>
+            <button type="button" class="vd-mini" id="vdSuggest" hidden>Suggest Texts</button>
+            <?php endif; ?>
           </div>
+          <p class="sp-help" id="vdSuggestMsg" style="margin:6px 0 0" hidden></p>
           <div class="vd-caps" id="vdCaps"></div>
         </div>
       </section>
@@ -241,7 +245,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const f = n => form.querySelector('[name="' + n + '"]');
   const val = n => (form.querySelector('[name="' + n + '"]:checked') || f(n) || {}).value || '';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>;
+  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>, SUGGEST = <?= json_encode($suggest_url) ?>;
   const CSRF = <?= json_encode($csrf) ?>, MAXP = <?= VIDEO_MAX_PHOTOS ?>, CHUNK = <?= VIDEO_CHUNK_BYTES ?>, MAXBYTES = <?= VIDEO_CLIP_MAX_BYTES ?>;
   const XF = <?= json_encode(VIDEO_XF / VIDEO_FPS) ?>, ENDS = <?= json_encode(VIDEO_END_SECONDS) ?>, COVERS = <?= json_encode(VIDEO_COVER_SECONDS) ?>;
   const stage = document.getElementById('vdStage'), frame = document.getElementById('vdFrame'), result = document.getElementById('vdResult');
@@ -311,7 +315,40 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     syncAll();
   }
   // "Use Cover Text on all slides" hides the photos' own text boxes; what was typed is kept for when it is unticked.
-  function syncAll() { capsEl.classList.toggle('no-text', f('words_all').checked); capsEl.classList.toggle('no-logo', val('logo_kind') === 'none'); }
+  function syncAll() { capsEl.classList.toggle('no-text', f('words_all').checked); capsEl.classList.toggle('no-logo', val('logo_kind') === 'none'); syncSuggest(); }
+  // Suggest Texts (a listing's photos only): a few words for each photo after the cover, written from the listing's
+  // description, its details and the photos themselves. It fills the boxes that are empty or still hold an earlier
+  // suggestion nobody changed; text the person typed is never replaced. A second click asks for different ones.
+  const sugBtn = document.getElementById('vdSuggest'), sugMsg = document.getElementById('vdSuggestMsg');
+  let suggested = {}, sugSeen = [], sugBusy = false;
+  function syncSuggest() {
+    if (!sugBtn) return;
+    sugBtn.hidden = !isListing() || order.length < 2 || f('words_all').checked;
+    if (sugBtn.hidden) sugMsg.hidden = true;
+  }
+  function sugSay(t, bad) { sugMsg.hidden = !t; sugMsg.textContent = t; sugMsg.classList.toggle('bad', !!bad); }
+  if (sugBtn) sugBtn.addEventListener('click', async () => {
+    if (sugBusy) return;
+    const ids = order.slice(), free = ids.slice(1).filter(id => !(caps[id] || '').trim() || caps[id] === suggested[id]);
+    if (!free.length) { sugSay('Every photo has text you wrote. Clear a box to have it suggested.'); return; }
+    sugBusy = true; sugBtn.disabled = true; sugBtn.textContent = 'Writing…';
+    sugSay('Reading the listing and the photos. This takes about 20 seconds.');
+    const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('listing', listing.value);
+    ids.forEach(id => fd.append('photos[]', id)); sugSeen.forEach(t => fd.append('avoid[]', t));
+    let j;
+    try { j = await (await fetch(SUGGEST, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); }
+    catch (e) { j = { error: 'The suggestions did not come back. Please try again.' }; }
+    sugBusy = false; sugBtn.disabled = false; sugBtn.textContent = 'Suggest Texts';
+    if (j.error || !j.texts) { sugSay(j.error || 'The suggestions did not come back. Please try again.', true); return; }
+    let n = 0;
+    free.forEach(id => {
+      const t = j.texts[id];
+      if (!t || !order.includes(id) || ((caps[id] || '').trim() && caps[id] !== suggested[id])) return;   // typed into while this was on its way
+      caps[id] = suggested[id] = t; sugSeen.push(t); n++;
+    });
+    paint(); update();
+    sugSay(n ? 'Suggested from the listing\'s description and photos. Change any of them, or click again for different ones.' : 'Nothing new came back. Please try again.', !n);
+  });
   capsEl.addEventListener('change', e => { const d = e.target.dataset; if (d.logo) { logoSet[d.logo] = e.target.checked; update(); } });
   capsEl.addEventListener('input', e => {
     const d = e.target.dataset;
@@ -322,7 +359,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   // stock library, one folding group each, nothing picked to begin with. keep = the picks stay (after an upload or a removal).
   async function loadPhotos(keep) {
     const mine = isMine();
-    if (!keep) { order = []; caps = {}; zooms = {}; logoSet = {}; }
+    if (!keep) { order = []; caps = {}; zooms = {}; logoSet = {}; suggested = {}; sugSeen = []; }
     paint();
     gridFor = mine ? 'mine' : 'l:' + listing.value;
     if (!mine && !listing.value) { photosEl.innerHTML = '<div class="sp-wait">Choose a listing to see its photos.</div>'; update(); return; }
