@@ -110,11 +110,18 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         <h2 class="sp-step-h">Photos</h2>
         <p class="sp-note">Click the photos in the order they should play, up to <?= VIDEO_MAX_PHOTOS ?>. Click one again to take it out.</p>
         <div class="sp-two" style="margin-top:12px">
-          <label class="sp-field">Each photo stays
+          <label class="sp-field">Cover photo stays
+            <select name="cover_hold">
+              <?php foreach (video_card_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (float)$k === VIDEO_COVER_SECONDS ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
+            </select>
+          </label>
+          <label class="sp-field">Each other photo stays
             <select name="hold">
               <?php foreach (video_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (string)$k === '3' ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
             </select>
           </label>
+        </div>
+        <div class="sp-two" style="margin-top:12px">
           <div class="sp-look" style="margin-top:0;align-self:end">
             <span class="sp-look-l">Movement</span>
             <?php foreach (video_motions() as $k => $t): ?>
@@ -169,6 +176,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         <h2 class="sp-step-h">Closing card</h2>
         <label class="sp-check"><input type="checkbox" name="end" value="1" checked> End on a closing card</label>
         <div id="vdEndFields">
+          <label class="sp-field" style="margin-top:12px;max-width:240px">Closing card stays
+            <select name="end_hold">
+              <?php foreach (video_card_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (float)$k === VIDEO_END_SECONDS ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
+            </select>
+          </label>
           <label class="sp-field" style="margin-top:12px">Address (Line breaks allowed)
             <textarea name="end_address" rows="2" maxlength="90"></textarea>
           </label>
@@ -222,7 +234,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>;
   const CSRF = <?= json_encode($csrf) ?>, MAXP = <?= VIDEO_MAX_PHOTOS ?>, CHUNK = <?= VIDEO_CHUNK_BYTES ?>, MAXBYTES = <?= VIDEO_CLIP_MAX_BYTES ?>;
-  const XF = <?= json_encode(VIDEO_XF / VIDEO_FPS) ?>, ENDS = <?= json_encode(VIDEO_END_SECONDS) ?>;
+  const XF = <?= json_encode(VIDEO_XF / VIDEO_FPS) ?>, ENDS = <?= json_encode(VIDEO_END_SECONDS) ?>, COVERS = <?= json_encode(VIDEO_COVER_SECONDS) ?>;
   const stage = document.getElementById('vdStage'), frame = document.getElementById('vdFrame'), result = document.getElementById('vdResult');
   const tabP = document.getElementById('vdTabPreview'), tabR = document.getElementById('vdTabResult'), lenOut = document.getElementById('vdLen');
   const capsEl = document.getElementById('vdCaps'), capsWrap = document.getElementById('vdCapsWrap');
@@ -258,8 +270,8 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   function length() {
     let s = 0;
     if (isClip()) s = clipSel.value ? Math.max(3, +f('clip_length').value || 0) : 0;
-    else s = order.length ? order.length * ((+val('hold') || 3) + XF) - (order.length - 1) * XF : 0;
-    if (s && f('end').checked) s += ENDS;
+    else s = order.length ? (+val('cover_hold') || COVERS) + (order.length - 1) * (+val('hold') || 3) + XF : 0;
+    if (s && f('end').checked) s += +val('end_hold') || ENDS;
     lenOut.textContent = s ? 'About ' + (Math.round(s * 10) / 10) + ' seconds, 1080 × 1920' : '';
   }
 

@@ -3689,6 +3689,14 @@ licensed track cannot be baked in; it is added in Instagram.
   name, phone, one more contact text, website) filled from the listing and
   the presenters picked, plus a Show the headshot or team logo tick: a
   cleared box is left off, so a card can be bare for Instagram's stickers.
+- **The cover and the closing card have times of their own** (Nikki,
+  2026-11-26: the cover "may need a second or two longer to read", "and the
+  closing slide as well"): Cover photo stays (`cover_hold`, 5 seconds to
+  begin with) beside Each other photo stays (`hold`), and Closing card stays
+  (`end_hold`, 4 seconds to begin with); 2 to 8 seconds,
+  `video_card_holds()`. `video_timeline()` reads them through
+  `video_cover_seconds()` / `video_end_seconds()`; the page's length readout
+  repeats the sum. A clip has no cover time.
 - **Each photo** has a row under the grid: its own Zoom (100 to 200 %, the
   form's `zooms[]`, `video_photo_zoom()`: a crop of the middle, there to
   push a board's watermark out of the frame, the Aspen board's above all),

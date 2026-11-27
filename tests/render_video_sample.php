@@ -38,6 +38,9 @@ $v = [
 // --zoom=1.4: that zoom on the second and third photos (one pans, one zooms, in Mix). --mark: the triangle watermark. --all-text: the cover text for the whole video.
 if (isset($flags['zoom'])) $v['zooms'] = [1 => (float)$flags['zoom'], 2 => (float)$flags['zoom']];
 if (isset($flags['mark'])) $v['mark'] = 'triangle';
+// --cover=6 --end=5: the cover's and the closing card's own seconds.
+if (isset($flags['cover'])) $v['cover_hold'] = (float)$flags['cover'];
+if (isset($flags['end'])) $v['end_hold'] = (float)$flags['end'];
 // --logos=1001: the logo on the photos marked 1 (without it, the logo is on throughout).
 if (isset($flags['logos'])) $v['logos'] = array_map(fn($c) => $c === '1', str_split((string)$flags['logos']));
 // --captions: a text of its own on every photo but the first (--captions=all: the first too, which drops the opening text).

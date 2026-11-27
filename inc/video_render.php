@@ -24,7 +24,8 @@
  *
  * The normalised video (video_from_request() in inc/video.php):
  *   kind photos|clip, photos [[url, file]], clip [file, start, length, w, h,
- *   audio], hold (seconds a photo is on screen), motion mix|zoom|pan,
+ *   audio], hold (seconds a photo is on screen), cover_hold (the first
+ *   photo's own seconds), end_hold (the closing card's), motion mix|zoom|pan,
  *   captions [photo's place => its own text] (video_captions()), logos
  *   [photo's place => bool] (video_logo_runs()), zooms
  *   [photo's place => 1..2] (video_photo_zoom()),
@@ -42,7 +43,7 @@ const VIDEO_W = 1080;
 const VIDEO_H = 1920;
 const VIDEO_FPS = 30;
 const VIDEO_XF = 18;            // a cross-fade, in frames (0.6 s)
-const VIDEO_END_SECONDS = 3.0;  // the closing card, after its fade in
+const VIDEO_END_SECONDS = 4.0;  // the closing card, after its fade in, to begin with (video_end_seconds())
 const VIDEO_MAX_PHOTOS = 10;
 const VIDEO_WIDE = 1.3;         // a photo this many times wider than the frame's shape is "wide": it pans in Mix
 const VIDEO_ZOOM = 0.10;        // a zoom runs between 1 and 1 + this
@@ -59,6 +60,17 @@ function video_motions(): array { return ['mix' => 'Mix', 'zoom' => 'Zoom', 'pan
 
 /** The seconds a photo can stay on screen. */
 function video_holds(): array { return ['2.5' => '2.5 seconds', '3' => '3 seconds', '4' => '4 seconds', '5' => '5 seconds']; }
+
+/**
+ * The seconds the cover (the first photo) and the closing card can stay: times of their own (Nikki, 2026-11-26: the cover
+ * "may need a second or two longer to read", "and the closing slide as well"), longer than a photo's to begin with.
+ */
+function video_card_holds(): array { $o = []; foreach ([2, 3, 4, 5, 6, 7, 8] as $s) $o[(string)$s] = $s . ' seconds'; return $o; }
+const VIDEO_COVER_SECONDS = 5.0;
+/** The cover's seconds: its own time, or a photo's when the video carries none (an older caller). */
+function video_cover_seconds(array $v): float { return (float)($v['cover_hold'] ?? ($v['hold'] ?? 3)); }
+/** The closing card's seconds after its fade in. */
+function video_end_seconds(array $v): float { return (float)($v['end_hold'] ?? VIDEO_END_SECONDS); }
 
 /** How long the words stay: over the first two photos, or the whole video. */
 function video_words_shows(): array { return ['open' => 'Opening only', 'all' => 'Whole video']; }
@@ -157,11 +169,12 @@ function video_timeline(array $v): array {
         $push('clip', 0, max(VIDEO_XF * 2 + 1, (int)round((float)$v['clip']['length'] * VIDEO_FPS)));
     } else {
         $hold = (int)round((float)($v['hold'] ?? 3) * VIDEO_FPS);
-        foreach (array_keys($v['photos']) as $i) $push('photo', $i, $hold + VIDEO_XF);
+        $cover = (int)round(video_cover_seconds($v) * VIDEO_FPS);
+        foreach (array_keys($v['photos']) as $i) $push('photo', $i, ($i === 0 ? $cover : $hold) + VIDEO_XF);
     }
     $content = count($segs);
     $endStart = null;
-    if (!empty($v['end'])) { $push('end', 0, (int)round(VIDEO_END_SECONDS * VIDEO_FPS) + VIDEO_XF); $endStart = $segs[count($segs) - 1]['start']; }
+    if (!empty($v['end'])) { $push('end', 0, (int)round(video_end_seconds($v) * VIDEO_FPS) + VIDEO_XF); $endStart = $segs[count($segs) - 1]['start']; }
     $total = $at;
     $out = $endStart !== null ? $endStart / VIDEO_FPS : null;          // the layers leave as the closing card arrives
     // The cover text (Nikki, 2026-11-26: the first photo is the cover): on the

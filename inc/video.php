@@ -234,6 +234,8 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
         if (!$v['photos']) return 'Pick at least one photo. Click the photos in the order they should play.';
         $hold = (string)($in['hold'] ?? '3');
         $v['hold'] = isset(video_holds()[$hold]) ? (float)$hold : 3.0;
+        $ch = (string)($in['cover_hold'] ?? '');
+        $v['cover_hold'] = isset(video_card_holds()[$ch]) ? (float)$ch : VIDEO_COVER_SECONDS;
         $v['motion'] = isset(video_motions()[(string)($in['motion'] ?? '')]) ? (string)$in['motion'] : 'mix';
     } else {
         $c = video_clip($ctx, (string)($in['clip'] ?? ''));
@@ -265,6 +267,8 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
     // can be left bare for Instagram's own stickers. The broker picked only
     // supplies the headshot here.
     $v['end'] = !empty($in['end']);
+    $eh = (string)($in['end_hold'] ?? '');
+    $v['end_hold'] = isset(video_card_holds()[$eh]) ? (float)$eh : VIDEO_END_SECONDS;
     $v['end_address'] = '';
     $v['end_site'] = '';
     $v['end_extra'] = '';
