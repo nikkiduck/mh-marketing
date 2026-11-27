@@ -158,7 +158,12 @@ function video_photo_zoom(array $v, int $i): float {
 
 /** How far a pan drifts over $frames frames, in the frame's own pixels (the export and the preview both cap it at VIDEO_PAN_MAX of the photo's spare width). */
 function video_pan_travel(int $frames): float {
-    return round(VIDEO_PAN_SPEED * VIDEO_W * $frames / VIDEO_FPS, 2);
+    // A whole number of pixels of the export's doubled picture each frame (video_photo_filter()), so every step is the same: 4 of them, 60 px a second.
+    return video_pan_step() * max(1, $frames - 1) / 2;
+}
+/** A pan's step: pixels of the doubled picture a frame, the nearest whole number to VIDEO_PAN_SPEED. */
+function video_pan_step(): int {
+    return max(1, (int)round(VIDEO_PAN_SPEED * VIDEO_W * 2 / VIDEO_FPS));
 }
 
 /** True when a picture of $w x $h is "wide" for the frame. */
@@ -481,7 +486,7 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
             // data-i = the photo's place; data-s, data-a, data-b = when it is fully there, starts and ends, in ms (the form holds the preview on a photo while its zoom is dragged: vz() and vseek() below).
             $ms = fn(float $frame) => (int)round($frame / VIDEO_FPS * 1000);
             [$fx, $fy] = video_photo_focus($v, (int)$s['i']);
-            $html .= '<div class="seg s' . $n . '" data-i="' . (int)$s['i'] . '" data-s="' . $ms($a > 0 ? $a + VIDEO_XF : 1) . '" data-a="' . $ms($a) . '" data-b="' . $ms($b) . '"><img src="' . $e($url) . '" alt="" style="--z:' . $z . '" data-t="' . video_pan_travel((int)$s['frames']) . '" data-fx="' . $fx . '" data-fy="' . $fy . '" onload="vz(this,' . $z . ',1)"></div>';
+            $html .= '<div class="seg s' . $n . '" data-i="' . (int)$s['i'] . '" data-s="' . $ms($a > 0 ? $a + VIDEO_XF : 1) . '" data-a="' . $ms($a) . '" data-b="' . $ms($b) . '"><img src="' . $e($url) . '" alt="" style="--z:' . $z . '" data-t="' . video_pan_travel((int)$s['frames']) . '" data-n="' . max(1, (int)$s['frames'] - 1) . '" data-fx="' . $fx . '" data-fy="' . $fy . '" onload="vz(this,' . $z . ',1)"></div>';
         } elseif ($s['type'] === 'clip') {
             $c = $v['clip'];
             $html .= '<div class="seg s' . $n . '"><video id="clip" src="' . $e($clip_url) . '#t=' . round((float)$c['start'], 2) . '" muted playsinline preload="auto" data-start="' . round((float)$c['start'], 2) . '"></video></div>';
@@ -516,7 +521,7 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
          . 'var r=m.naturalWidth/m.naturalHeight,s=r*H-W,wc=Math.min(r*z,2)*H,c=wc-W;'
          . 'm.style.setProperty("--z",z);m.style.setProperty("--fx",(fx*100)+"%");m.style.setProperty("--fy",(fy*100)+"%");'
          . 'if(first){m.style.animationDelay=(-document.timeline.currentTime)+"ms";m.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?"w":"n")}'
-         . 'if(s>0){var t=Math.min(+m.dataset.t,' . VIDEO_PAN_MAX . '*c),l=fx*(r*z*H-wc)+Math.max(t/2,Math.min(c-t/2,fx*c));'
+         . 'if(s>0){var n=+m.dataset.n||1,t=Math.max(1,Math.floor(2*Math.min(+m.dataset.t,' . VIDEO_PAN_MAX . '*c)/n))*n/2,l=fx*(r*z*H-wc)+Math.max(t/2,Math.min(c-t/2,fx*c));'
          . 'm.style.setProperty("--p",(50*t/(z*s))+"%");m.style.setProperty("--q",(100*((l+W/2)/z-W/2)/s)+"%")}}'
          . 'function vspare(m){var r=m.naturalWidth/m.naturalHeight,z=+m.dataset.z||1;return[Math.max(W,r*H)*z-W,Math.max(H,W/r)*z-H]}'
          . 'function vseek(t,play){document.getAnimations().forEach(function(a){var e=a.effect.getComputedTiming(),D=+e.duration,d=+e.delay;if(!(D>0))return;a.currentTime=((t+d)%D+D)%D;play?a.play():a.pause()})}'

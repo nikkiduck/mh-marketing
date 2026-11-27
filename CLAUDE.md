@@ -3797,6 +3797,15 @@ licensed track cannot be baked in; it is added in Instagram.
 - **The shade under the text is one layer** (`shade`) from the first text to
   the last. It was part of each text layer and faded out and in with every
   photo, which flickered and showed worst on a watermark.
+- **A pan must be even** (Nikki, 2026-11-27: "there's a stutter on the
+  pans"; measured: one frame in six a repeat, the next a double step). Two
+  rules in `video_photo_filter()`: a still is given a 1/30 s clock
+  (`settb`) BEFORE its frames are numbered (it comes in on 1/25 s, on
+  which thirty frames a second cannot be stamped, and `fps` then drops and
+  repeats); and the window moves a WHOLE number of pixels of the doubled
+  picture each frame, the same every frame (`video_pan_step()`, 4 = 60 px a
+  second; the crop cannot sit between pixels). To check a video, measure
+  the movement frame to frame, do not judge by eye.
 - **Movement:** Mix takes turns, zoom then pan, the cover a zoom
   (`video_motion()`). Nearly every listing photo is wide for a 9:16 frame,
   so the first rule, "pan the wide ones", panned every photo. A pan drifts

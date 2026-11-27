@@ -122,9 +122,14 @@ function video_photo_filter(array $m, int $F, float $z = 1.0, array $at = [0.5, 
         // A drift of video_pan_travel() centered on the photo, never more than VIDEO_PAN_MAX of its spare width. The photo at twice the frame's height (never wider than two heights), held, a window slid across it, then halved: the half pixels keep a slow pan smooth.
         // The photo's own zoom is a crop of its middle, taken before anything is scaled (no larger picture is ever held).
         // The pan's middle is the photo's own position, kept half the pan's distance clear of either edge.
-        $T = "min({$t2},{$max}*(iw-{$W2}))";
-        return "crop='min(iw,ih/{$z}*2)':'ih/{$z}':'(iw-ow)*{$fx}':'(ih-oh)*{$fy}',scale=-2:{$H2}:flags=bicubic,format=gbrp,loop=loop={$F}:size=1:start=0,setpts=N/({$fps}*TB),"
-             . "crop={$W2}:{$H2}:x='clip({$fx}*(iw-{$W2}),{$T}/2,(iw-{$W2})-{$T}/2)+({$m['dir']})*{$T}*(n/{$last}-0.5)':y=0,scale={$W}:{$H}:flags=bicubic,fps={$fps},{$tail}";
+        // Two things keep a pan even (Nikki, 2026-11-27: "there's a stutter on the pans"; one frame in six was a repeat
+        // and the next a double step). settb: a still comes in on a 1/25 s clock, on which thirty frames a second cannot be
+        // stamped, so the frames are given a 1/30 s clock before they are numbered. And the window moves a WHOLE number of
+        // pixels a frame ($S, of the doubled picture), the same number every frame: the crop cannot place it between pixels.
+        $S = "max(1,floor(min({$t2},{$max}*(iw-{$W2}))/{$last}))";
+        $T = "({$S}*{$last})";
+        return "crop='min(iw,ih/{$z}*2)':'ih/{$z}':'(iw-ow)*{$fx}':'(ih-oh)*{$fy}',scale=-2:{$H2}:flags=bicubic,format=gbrp,loop=loop={$F}:size=1:start=0,settb=expr=1/{$fps},setpts=N,"
+             . "crop={$W2}:{$H2}:x='floor(clip({$fx}*(iw-{$W2}),{$T}/2,(iw-{$W2})-{$T}/2)-{$T}/2)+{$S}*" . ($m['dir'] > 0 ? 'n' : "({$last}-n)") . "':y=0,scale={$W}:{$H}:flags=bicubic,fps={$fps},{$tail}";
     }
     $d = $m['to'] - $m['from'];
     return ($z > 1 ? "crop='iw/{$z}':'ih/{$z}':'(iw-ow)*{$fx}':'(ih-oh)*{$fy}'," : '') . "scale={$W2}:{$H2}:force_original_aspect_ratio=increase:flags=bicubic,crop={$W2}:{$H2}:'(iw-ow)*{$fx}':'(ih-oh)*{$fy}',format=gbrp,"
@@ -189,7 +194,7 @@ function video_build(array $v, string $dir, ?callable $say = null): array {
         } else {
             $say('The closing card', $pct);
             $ok = video_ffmpeg(array_merge(['-i', "{$dir}/layer-end.png", '-vf',
-                "format=gbrp,loop=loop={$F}:size=1:start=0,setpts=N/({$fps}*TB),fps={$fps},scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", '-frames:v', $F], $work, [$out]), $log);
+                "format=gbrp,loop=loop={$F}:size=1:start=0,settb=expr=1/{$fps},setpts=N,fps={$fps},scale=out_color_matrix=bt709:out_range=tv,format=yuv420p", '-frames:v', $F], $work, [$out]), $log);
         }
         if (!$ok || !is_file($out)) return $fail($s['type'] === 'clip' ? 'The clip could not be read as video. Try another file.' : 'A piece of the video could not be made. Please try again in a minute.');
     }
