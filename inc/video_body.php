@@ -189,7 +189,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
             <label class="sp-field">Name <input name="end_name" maxlength="50"></label>
             <label class="sp-field">Phone <input name="end_phone" maxlength="40"></label>
           </div>
-          <label class="sp-field" style="margin-top:12px">And (a second broker, optional)
+          <label class="sp-field" style="margin-top:12px">Add second broker (optional)
             <select name="agent2" id="vdAgent2"><?= $vd_by_options() ?></select>
           </label>
           <div class="sp-two" id="vdBy2" style="margin-top:12px" hidden>
