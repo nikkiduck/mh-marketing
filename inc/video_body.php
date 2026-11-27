@@ -355,7 +355,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (d.id) { caps[d.id] = e.target.value; update(); }
     if (d.zoom) { zooms[d.zoom] = +e.target.value; e.target.nextElementSibling.textContent = e.target.value + '%'; update(); }
   });
-  // The grid: a listing's photos (its first five picked to begin with), or for My Photos the person's uploads and the
+  // The grid: a listing's photos (its first five picked to begin with) with the person's uploads apart below, or for My Photos the person's uploads and the
   // stock library, one folding group each, nothing picked to begin with. keep = the picks stay (after an upload or a removal).
   async function loadPhotos(keep) {
     const mine = isMine();
@@ -376,8 +376,14 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     order = order.filter(id => tiles.some(p => p.id === id));
     const tile = (p, extra) => '<label class="sp-photo"' + (extra || '') + ' data-id="' + esc(p.id) + '" title="' + esc(p.own ? 'Your upload' : (p.caption || '')) + '"><img src="' + esc(p.thumb) + '" alt="" loading="lazy"><span class="vd-n"></span>'
       + (mine && p.own ? '<button type="button" class="sp-del" data-id="' + esc(p.id) + '" title="Remove this photo" aria-label="Remove this photo">×</button>' : '') + '</label>';
-    if (!mine) photosEl.innerHTML = tiles.map(p => tile(p)).join('');
-    else {
+    if (!mine) {
+      // A listing: its own photos, then the person's uploads apart under a folding header, shut unless one of them is picked
+      // (Nikki, 2026-11-27: "my random uploads are being blended into the end of the Listing photos").
+      const own = tiles.filter(p => p.own), openOwn = own.some(p => order.includes(p.id));
+      photosEl.innerHTML = tiles.filter(p => !p.own).map(p => tile(p)).join('')
+        + (own.length ? '<button type="button" class="sp-group sp-grp" data-grp="own" aria-expanded="' + openOwn + '">Your photos <b>' + own.length + '</b></button>'
+          + own.map(p => tile(p, ' data-grp="own"' + (openOwn ? '' : ' hidden'))).join('') : '');
+    } else {
       const groups = [];
       for (const p of tiles) { const g = groups.find(x => x[0] === p.group); if (g) g[1].push(p); else groups.push([p.group || 'Photos', [p]]); }
       // A group is open when it is the person's own or holds a picked photo; with neither, the first one.

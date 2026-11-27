@@ -3691,7 +3691,10 @@ licensed track cannot be baked in; it is added in Instagram.
   cleared box is left off, so a card can be bare for Instagram's stickers.
 - **Three sources** (Nikki, 2026-11-26, "moving on to non-listing videos"):
   the pills Listing, My Photos, Video Clip (the form's `kind`: listing |
-  mine | clip; the first two are both the `photos` kind of video). **My
+  mine | clip; the first two are both the `photos` kind of video). In
+  **Listing** the grid is the listing's photos, then the person's own
+  uploads apart under a folding "Your photos" header, shut unless one of
+  them is picked. **My
   Photos** needs no listing: its card sits ABOVE Cover Design with the
   uploader first (several photos at once, through the social tools'
   portal/social_upload.php into the same uploads folder), then the
