@@ -3736,8 +3736,10 @@ licensed track cannot be baked in; it is added in Instagram.
   remarks, lot, year built and subdivision (the site feed's `scope=detail`,
   by MLS number), this portal's own row, and the photos themselves (each
   sent as the site's 800 px copy, so a text is about its own photo). It
-  fills boxes that are empty or still hold an untouched suggestion, never
-  text the person typed; a second click sends the earlier ones as `avoid`.
+  fills EMPTY boxes only (Nikki, 2026-11-27: a second click after adding a
+  photo overwrote them all): a box with anything in it is left alone, and
+  clearing one asks for a new text for it. What was offered before and what
+  the other boxes hold are sent as `avoid`.
   **The SDK is not vendored here: this file loads MH Send's copy**
   (`../send.monthaus.com/vendor/autoload.php`, same server); the key is
   `ANTHROPIC_API_KEY` in inc/db.php. Model `claude-opus-5-5`, effort medium,

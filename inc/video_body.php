@@ -420,8 +420,9 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   // "Use Cover Text on all slides" hides the photos' own text boxes; what was typed is kept for when it is unticked.
   function syncAll() { capsEl.classList.toggle('no-text', f('words_all').checked); capsEl.classList.toggle('no-logo', val('logo_kind') === 'none'); syncSuggest(); }
   // Suggest Texts (a listing's photos only): a few words for each photo after the cover, written from the listing's
-  // description, its details and the photos themselves. It fills the boxes that are empty or still hold an earlier
-  // suggestion nobody changed; text the person typed is never replaced. A second click asks for different ones.
+  // description, its details and the photos themselves. It fills EMPTY boxes only (Nikki, 2026-11-27: a second click
+  // after adding a photo "overwrote all of them"): a box with anything in it, typed or suggested, is left alone. For a
+  // different suggestion on one photo, clear its box and click again; texts already offered are sent so they are not repeated.
   const sugBtn = document.getElementById('vdSuggest'), sugMsg = document.getElementById('vdSuggestMsg');
   let suggested = {}, sugSeen = [], sugBusy = false;
   function syncSuggest() {
@@ -432,12 +433,14 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   function sugSay(t, bad) { sugMsg.hidden = !t; sugMsg.textContent = t; sugMsg.classList.toggle('bad', !!bad); }
   if (sugBtn) sugBtn.addEventListener('click', async () => {
     if (sugBusy) return;
-    const ids = order.slice(), free = ids.slice(1).filter(id => !(caps[id] || '').trim() || caps[id] === suggested[id]);
-    if (!free.length) { sugSay('Every photo has text you wrote. Clear a box to have it suggested.'); return; }
+    const ids = order.slice(), free = ids.slice(1).filter(id => !(caps[id] || '').trim());
+    if (!free.length) { sugSay('Every photo has text. Clear a box to have a new one suggested for it.'); return; }
     sugBusy = true; sugBtn.disabled = true; sugBtn.textContent = 'Writing…';
     sugSay('Reading the listing and the photos. This takes about 20 seconds.');
     const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('listing', listing.value);
-    ids.forEach(id => fd.append('photos[]', id)); sugSeen.forEach(t => fd.append('avoid[]', t));
+    ids.forEach(id => fd.append('photos[]', id));
+    // Not to be repeated: what was offered before, and what the other boxes hold now.
+    [...new Set(sugSeen.concat(ids.slice(1).map(id => (caps[id] || '').trim()).filter(Boolean)))].forEach(t => fd.append('avoid[]', t));
     let j;
     try { j = await (await fetch(SUGGEST, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); }
     catch (e) { j = { error: 'The suggestions did not come back. Please try again.' }; }
@@ -446,11 +449,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     let n = 0;
     free.forEach(id => {
       const t = j.texts[id];
-      if (!t || !order.includes(id) || ((caps[id] || '').trim() && caps[id] !== suggested[id])) return;   // typed into while this was on its way
+      if (!t || !order.includes(id) || (caps[id] || '').trim()) return;   // typed into while this was on its way
       caps[id] = suggested[id] = t; sugSeen.push(t); n++;
     });
     paint(); update();
-    sugSay(n ? 'Suggested from the listing\'s description and photos. Change any of them, or click again for different ones.' : 'Nothing new came back. Please try again.', !n);
+    sugSay(n ? 'Suggested from the listing\'s description and photos. Only empty boxes are filled: clear one and click again for a different suggestion.' : 'Nothing new came back. Please try again.', !n);
   });
   capsEl.addEventListener('change', e => {
     const d = e.target.dataset;
