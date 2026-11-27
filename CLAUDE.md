@@ -3740,6 +3740,12 @@ licensed track cannot be baked in; it is added in Instagram.
   and from the second photo on its own text (`captions[]`,
   `video_captions()`, a layer `cap{n}` on with its photo and off before the
   next: "custom text on every slide. This will make for proper reels").
+  **A zoom is seen as it is dragged** (Nikki, 2026-11-27): the preview
+  stops on that photo and takes the zoom at once, with no new preview
+  fetched (the preview page's own `vz()` and `vseek()`, written by
+  `video_preview_html()`; each photo's `.seg` carries its place and times);
+  let go and it plays on from that photo. A change to a photo's text or
+  logo starts the new preview on that photo too (`startAt` in the form).
 - **The shade under the text is one layer** (`shade`) from the first text to
   the last. It was part of each text layer and faded out and in with every
   photo, which flickered and showed worst on a watermark.

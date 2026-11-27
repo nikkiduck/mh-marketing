@@ -449,7 +449,9 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
             }
             $url = (string)($v['photos'][$s['i']][0] ?? '');
             $z = video_photo_zoom($v, (int)$s['i']);
-            $html .= '<div class="seg s' . $n . '"><img src="' . $e($url) . '" alt="" style="--z:' . $z . '" onload="var z=' . $z . ',r=this.naturalWidth/this.naturalHeight,s=r*' . $H . '-' . $W . ',c=Math.min(r*z,2)*' . $H . '-' . $W . ';this.style.animationDelay=(-document.timeline.currentTime)+\'ms\';this.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?\'w\':\'n\');if(s>0)this.style.setProperty(\'--p\',(50*Math.min(' . video_pan_travel((int)$s['frames']) . ',' . VIDEO_PAN_MAX . '*c)/(z*s))+\'%\')"></div>';
+            // data-i = the photo's place; data-s, data-a, data-b = when it is fully there, starts and ends, in ms (the form holds the preview on a photo while its zoom is dragged: vz() and vseek() below).
+            $ms = fn(float $frame) => (int)round($frame / VIDEO_FPS * 1000);
+            $html .= '<div class="seg s' . $n . '" data-i="' . (int)$s['i'] . '" data-s="' . $ms($a > 0 ? $a + VIDEO_XF : 0) . '" data-a="' . $ms($a) . '" data-b="' . $ms($b) . '"><img src="' . $e($url) . '" alt="" style="--z:' . $z . '" data-t="' . video_pan_travel((int)$s['frames']) . '" onload="vz(this,' . $z . ',1)"></div>';
         } elseif ($s['type'] === 'clip') {
             $c = $v['clip'];
             $html .= '<div class="seg s' . $n . '"><video id="clip" src="' . $e($clip_url) . '#t=' . round((float)$c['start'], 2) . '" muted playsinline preload="auto" data-start="' . round((float)$c['start'], 2) . '"></video></div>';
@@ -474,5 +476,12 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="robots" content="noindex"><title>Video preview</title><style>' . social_font_css($base, false)
          . "html,body{margin:0;padding:0}body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:#14181e}"
          . ".seg,.lay{position:absolute;inset:0;overflow:hidden;opacity:0}.seg>img,.seg>video{display:block;width:100%;height:100%;object-fit:cover}"
-         . video_layer_css() . $css . '</style></head><body>' . $html . $js . '</body></html>';
+         . video_layer_css() . $css . '</style>'
+         // vz(): a photo's own zoom z, and how far it pans at that zoom (on load, and again from the form while the zoom is dragged).
+         // vseek(): every animation put at t ms of the video, playing or held there.
+         . '<script>function vz(m,z,first){var r=m.naturalWidth/m.naturalHeight,s=r*' . $H . '-' . $W . ',c=Math.min(r*z,2)*' . $H . '-' . $W . ';m.style.setProperty("--z",z);'
+         . 'if(first){m.style.animationDelay=(-document.timeline.currentTime)+"ms";m.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?"w":"n")}'
+         . 'if(s>0)m.style.setProperty("--p",(50*Math.min(+m.dataset.t,' . VIDEO_PAN_MAX . '*c)/(z*s))+"%")}'
+         . 'function vseek(t,play){document.getAnimations().forEach(function(a){var e=a.effect.getComputedTiming(),D=+e.duration,d=+e.delay;if(!(D>0))return;a.currentTime=((t+d)%D+D)%D;play?a.play():a.pause()})}</script>'
+         . '</head><body>' . $html . $js . '</body></html>';
 }

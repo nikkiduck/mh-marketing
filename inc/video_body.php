@@ -270,8 +270,26 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   }
   tabP.addEventListener('click', () => show('preview'));
   tabR.addEventListener('click', () => { if (!tabR.disabled) show('result'); });
-  let timer, seq = 0;
-  function update() { clearTimeout(timer); timer = setTimeout(render, 400); length(); }
+  // stale = a newer preview is on its way; startAt = the photo (its place) the next preview begins on, so a change to
+  // one photo is seen at once and not after the photos before it have played.
+  let timer, seq = 0, stale = true, startAt = null;
+  function update() { stale = true; clearTimeout(timer); timer = setTimeout(render, 400); length(); }
+  const segOf = i => { try { const w = frame.contentWindow; return w && w.vseek ? w.document.querySelector('.seg[data-i="' + i + '"]') : null; } catch (e) { return null; } };
+  frame.addEventListener('load', () => {
+    stale = false;
+    const seg = startAt === null ? null : segOf(startAt); startAt = null;
+    if (seg) frame.contentWindow.vseek(+seg.dataset.s, true);
+  });
+  // A photo's zoom, seen as it is dragged (Nikki, 2026-11-27: "you can't see the zooming while you're doing it"): the
+  // preview stops on that photo and takes the zoom straight away; let go and it plays on from that photo.
+  function zoomLive(id, hold) {
+    const i = order.indexOf(id), seg = stale ? null : segOf(i), img = seg && seg.querySelector('img');
+    if (!img || !img.naturalWidth) { startAt = i; update(); return; }
+    const w = frame.contentWindow;
+    w.vz(img, (zooms[id] || 100) / 100);
+    w.vseek(hold ? (+seg.dataset.a + +seg.dataset.b) / 2 : +seg.dataset.s, !hold);
+    if (!busy) show('preview');
+  }
   async function render() {
     const n = ++seq;
     pick();
@@ -349,12 +367,19 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     paint(); update();
     sugSay(n ? 'Suggested from the listing\'s description and photos. Change any of them, or click again for different ones.' : 'Nothing new came back. Please try again.', !n);
   });
-  capsEl.addEventListener('change', e => { const d = e.target.dataset; if (d.logo) { logoSet[d.logo] = e.target.checked; update(); } });
+  capsEl.addEventListener('change', e => {
+    const d = e.target.dataset;
+    if (d.logo) { logoSet[d.logo] = e.target.checked; startAt = order.indexOf(d.logo); update(); }
+    if (d.zoom) zoomLive(d.zoom, false);
+  });
   capsEl.addEventListener('input', e => {
     const d = e.target.dataset;
-    if (d.id) { caps[d.id] = e.target.value; update(); }
-    if (d.zoom) { zooms[d.zoom] = +e.target.value; e.target.nextElementSibling.textContent = e.target.value + '%'; update(); }
+    if (d.id) { caps[d.id] = e.target.value; startAt = order.indexOf(d.id); update(); }
+    if (d.zoom) { zooms[d.zoom] = +e.target.value; e.target.nextElementSibling.textContent = e.target.value + '%'; zoomLive(d.zoom, true); }
   });
+  // Pressing on a zoom shows its photo before the handle has moved; letting go without a change plays on.
+  capsEl.addEventListener('pointerdown', e => { const d = e.target.dataset; if (d && d.zoom) zoomLive(d.zoom, true); });
+  capsEl.addEventListener('pointerup', e => { const d = e.target.dataset; if (d && d.zoom) zoomLive(d.zoom, false); });
   // The grid: a listing's photos (its first five picked to begin with) with the person's uploads apart below, or for My Photos the person's uploads and the
   // stock library, one folding group each, nothing picked to begin with. keep = the picks stay (after an upload or a removal).
   async function loadPhotos(keep) {
@@ -537,6 +562,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   }
   form.addEventListener('change', e => {
     const n = e.target.name;
+    if (e.target.dataset.zoom || e.target.dataset.id) return;   // a photo's zoom and text see to the preview themselves (above)
     if (n === 'kind') { syncKind(); return; }
     if (n === 'listing') { fromListing(); if (isListing()) { loadPhotos(); return; } }
     if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(1); syncBy(); }
