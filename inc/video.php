@@ -224,7 +224,9 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
         $texts = array_values(array_map('strval', (array)($in['captions'] ?? [])));
         $zooms = array_values((array)($in['zooms'] ?? []));
         $logos = array_values((array)($in['logos'] ?? []));
-        $v['captions'] = []; $v['zooms'] = []; $v['logos'] = [];
+        // focus_x[] and focus_y[] run beside them too: where the photo sits in the frame, 0 to 100 each way, 50 = centered (video_photo_focus()).
+        $fxs = array_values((array)($in['focus_x'] ?? [])); $fys = array_values((array)($in['focus_y'] ?? []));
+        $v['captions'] = []; $v['zooms'] = []; $v['logos'] = []; $v['focus'] = [];
         foreach ($ids as $n => $id) {
             if ($id === '' || count($v['photos']) >= VIDEO_MAX_PHOTOS) continue;
             // My Photos takes an upload of this person's or a stock photo and nothing else; a listing may be chosen there only to fill the text in.
@@ -236,6 +238,7 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
             $v['captions'][] = mb_substr(implode("\n", $rows), 0, 140);
             $v['zooms'][] = max(1.0, min(2.0, round((float)($zooms[$n] ?? 100) / 100, 2)));
             $v['logos'][] = !empty($logos[$n]);
+            $v['focus'][] = [max(0.0, min(1.0, round((float)($fxs[$n] ?? 50) / 100, 4))), max(0.0, min(1.0, round((float)($fys[$n] ?? 50) / 100, 4)))];
         }
         if (!$v['photos']) return 'Pick at least one photo. Click the photos in the order they should play.';
         $hold = (string)($in['hold'] ?? '3');

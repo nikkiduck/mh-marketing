@@ -134,6 +134,22 @@ function video_motion(string $mode, int $i, bool $wide): array {
     return $turn % 2 === 0 ? ['type' => 'zoom', 'from' => 1.0, 'to' => 1.0 + VIDEO_ZOOM] : ['type' => 'zoom', 'from' => 1.0 + VIDEO_ZOOM, 'to' => 1.0];
 }
 
+/**
+ * Where a photo sits in the frame: [x, y], each 0 to 1, 0.5 0.5 = centered
+ * (Nikki, 2026-11-27: "drag and move each photo so we can control the starting
+ * position of the zoom or pan"). It is the share of the photo's spare width
+ * and height left out on the left and at the top, at every step: the cut for
+ * the photo's own zoom, the fit to the frame, the point a zoom moves about and
+ * the middle of a pan (kept far enough from the photo's edge for the pan to
+ * run its distance). The preview (vz() in video_preview_html()) and the
+ * export (video_photo_filter()) work it out the same way.
+ */
+function video_photo_focus(array $v, int $i): array {
+    $f = $v['focus'][$i] ?? null;
+    $c = fn($n) => max(0.0, min(1.0, round((float)$n, 4)));
+    return is_array($f) && count($f) >= 2 ? [$c(array_values($f)[0]), $c(array_values($f)[1])] : [0.5, 0.5];
+}
+
 /** A photo's own zoom (1 to 2, 1 = the whole height), set on the form to crop a board's watermark out of the frame. */
 function video_photo_zoom(array $v, int $i): float {
     return max(1.0, min(2.0, round((float)($v['zooms'][$i] ?? 1), 2)));
@@ -442,16 +458,19 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
                 $m = video_motion((string)($v['motion'] ?? 'mix'), $s['i'], $wide);
                 $k = ($wide ? 'w' : 'n') . $n;
                 [$from, $to] = $m['type'] === 'pan'
-                    ? ['transform:scale(var(--z,1));object-position:calc(50% - ' . $m['dir'] . '*var(--p,5%)) 50%', 'transform:scale(var(--z,1));object-position:calc(50% + ' . $m['dir'] . '*var(--p,5%)) 50%']
+                    ? ['transform:scale(var(--z,1));object-position:calc(var(--q,50%) - ' . $m['dir'] . '*var(--p,5%)) 50%', 'transform:scale(var(--z,1));object-position:calc(var(--q,50%) + ' . $m['dir'] . '*var(--p,5%)) 50%']
                     : ['transform:scale(calc(var(--z,1)*' . $m['from'] . '))', 'transform:scale(calc(var(--z,1)*' . $m['to'] . '))'];
                 $css .= "@keyframes {$k}{0%{{$from}}" . $pct($a) . "{{$from}}" . $pct($b) . "{{$to}}100%{{$to}}}";
-                $css .= ".s{$n}." . ($wide ? 'w' : 'n') . ">img{animation:{$k} {$secs}s linear infinite}";
+                // The photo's own position: a zoom moves about that point of the frame; a pan takes its middle (--q, from vz()) and its height from it.
+                $css .= ".s{$n}." . ($wide ? 'w' : 'n') . ">img{animation:{$k} {$secs}s linear infinite;"
+                      . ($m['type'] === 'pan' ? 'transform-origin:50% var(--fy,50%)' : 'transform-origin:var(--fx,50%) var(--fy,50%);object-position:var(--fx,50%) var(--fy,50%)') . '}';
             }
             $url = (string)($v['photos'][$s['i']][0] ?? '');
             $z = video_photo_zoom($v, (int)$s['i']);
             // data-i = the photo's place; data-s, data-a, data-b = when it is fully there, starts and ends, in ms (the form holds the preview on a photo while its zoom is dragged: vz() and vseek() below).
             $ms = fn(float $frame) => (int)round($frame / VIDEO_FPS * 1000);
-            $html .= '<div class="seg s' . $n . '" data-i="' . (int)$s['i'] . '" data-s="' . $ms($a > 0 ? $a + VIDEO_XF : 0) . '" data-a="' . $ms($a) . '" data-b="' . $ms($b) . '"><img src="' . $e($url) . '" alt="" style="--z:' . $z . '" data-t="' . video_pan_travel((int)$s['frames']) . '" onload="vz(this,' . $z . ',1)"></div>';
+            [$fx, $fy] = video_photo_focus($v, (int)$s['i']);
+            $html .= '<div class="seg s' . $n . '" data-i="' . (int)$s['i'] . '" data-s="' . $ms($a > 0 ? $a + VIDEO_XF : 1) . '" data-a="' . $ms($a) . '" data-b="' . $ms($b) . '"><img src="' . $e($url) . '" alt="" style="--z:' . $z . '" data-t="' . video_pan_travel((int)$s['frames']) . '" data-fx="' . $fx . '" data-fy="' . $fy . '" onload="vz(this,' . $z . ',1)"></div>';
         } elseif ($s['type'] === 'clip') {
             $c = $v['clip'];
             $html .= '<div class="seg s' . $n . '"><video id="clip" src="' . $e($clip_url) . '#t=' . round((float)$c['start'], 2) . '" muted playsinline preload="auto" data-start="' . round((float)$c['start'], 2) . '"></video></div>';
@@ -477,11 +496,19 @@ function video_preview_html(array $v, ?string $base = null, string $clip_url = '
          . "html,body{margin:0;padding:0}body{position:relative;width:{$W}px;height:{$H}px;overflow:hidden;background:#14181e}"
          . ".seg,.lay{position:absolute;inset:0;overflow:hidden;opacity:0}.seg>img,.seg>video{display:block;width:100%;height:100%;object-fit:cover}"
          . video_layer_css() . $css . '</style>'
-         // vz(): a photo's own zoom z, and how far it pans at that zoom (on load, and again from the form while the zoom is dragged).
-         // vseek(): every animation put at t ms of the video, playing or held there.
-         . '<script>function vz(m,z,first){var r=m.naturalWidth/m.naturalHeight,s=r*' . $H . '-' . $W . ',c=Math.min(r*z,2)*' . $H . '-' . $W . ';m.style.setProperty("--z",z);'
+         // vz(): a photo's own zoom z and its position fx fy (0 to 1; left out = as they were), and from them how far it pans and about where
+         // (on load, and again from the form while the zoom is dragged or the photo is moved). vspare(): the px of the photo out of the
+         // frame across and down, what a drag has to move it by. vseek(): every animation put at t ms of the video, playing or held
+         // there. vnow(): where the video is, in ms.
+         . '<script>var W=' . $W . ',H=' . $H . ';'
+         . 'function vz(m,z,first,fx,fy){if(fx==null)fx=+m.dataset.fx;else m.dataset.fx=fx;if(fy==null)fy=+m.dataset.fy;else m.dataset.fy=fy;m.dataset.z=z;'
+         . 'var r=m.naturalWidth/m.naturalHeight,s=r*H-W,wc=Math.min(r*z,2)*H,c=wc-W;'
+         . 'm.style.setProperty("--z",z);m.style.setProperty("--fx",(fx*100)+"%");m.style.setProperty("--fy",(fy*100)+"%");'
          . 'if(first){m.style.animationDelay=(-document.timeline.currentTime)+"ms";m.parentNode.classList.add(r>=' . round(VIDEO_WIDE * VIDEO_W / VIDEO_H, 4) . '?"w":"n")}'
-         . 'if(s>0)m.style.setProperty("--p",(50*Math.min(+m.dataset.t,' . VIDEO_PAN_MAX . '*c)/(z*s))+"%")}'
-         . 'function vseek(t,play){document.getAnimations().forEach(function(a){var e=a.effect.getComputedTiming(),D=+e.duration,d=+e.delay;if(!(D>0))return;a.currentTime=((t+d)%D+D)%D;play?a.play():a.pause()})}</script>'
+         . 'if(s>0){var t=Math.min(+m.dataset.t,' . VIDEO_PAN_MAX . '*c),l=fx*(r*z*H-wc)+Math.max(t/2,Math.min(c-t/2,fx*c));'
+         . 'm.style.setProperty("--p",(50*t/(z*s))+"%");m.style.setProperty("--q",(100*((l+W/2)/z-W/2)/s)+"%")}}'
+         . 'function vspare(m){var r=m.naturalWidth/m.naturalHeight,z=+m.dataset.z||1;return[Math.max(W,r*H)*z-W,Math.max(H,W/r)*z-H]}'
+         . 'function vseek(t,play){document.getAnimations().forEach(function(a){var e=a.effect.getComputedTiming(),D=+e.duration,d=+e.delay;if(!(D>0))return;a.currentTime=((t+d)%D+D)%D;play?a.play():a.pause()})}'
+         . 'function vnow(){var a=document.getAnimations()[0];if(!a)return 0;var e=a.effect.getComputedTiming(),D=+e.duration;return D>0?(((+a.currentTime||0)-e.delay)%D+D)%D:0}</script>'
          . '</head><body>' . $html . $js . '</body></html>';
 }

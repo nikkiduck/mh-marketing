@@ -35,6 +35,11 @@ admin_tool_header([
     .vd-stage iframe, .vd-stage video { position:absolute; left:0; top:0; border:0; }
     .vd-stage iframe { width:1080px; height:1920px; transform-origin:0 0; pointer-events:none; background:#14181e; }
     .vd-stage video { width:100%; height:100%; background:#000; }
+    /* A photo is moved by dragging the preview, or its thumbnail in its row. */
+    .vd-stage { cursor:grab; user-select:none; -webkit-user-select:none; }
+    .vd-stage.drag, .vd-stage.drag ~ * { cursor:grabbing; }
+    .vd-cap-p[data-move] { cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+    .vd-cap-p[data-move] img { -webkit-user-drag:none; pointer-events:none; }
     .vd-tabs { display:flex; gap:6px; justify-content:center; margin:12px 0 0; }
     .vd-tab { font:500 13px/1 var(--sans); padding:8px 14px; border:1.5px solid #dfe3e8; border-radius:999px; background:#fff; color:#1f242c; cursor:pointer; }
     .vd-tab.on { border-color:#4a5566; background:#4a5566; color:#fff; }

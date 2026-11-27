@@ -3746,6 +3746,18 @@ licensed track cannot be baked in; it is added in Instagram.
   `video_preview_html()`; each photo's `.seg` carries its place and times);
   let go and it plays on from that photo. A change to a photo's text or
   logo starts the new preview on that photo too (`startAt` in the form).
+  **Each photo can be moved in the frame** (Nikki, 2026-11-27: "drag and
+  move each photo so we can control the starting position of the zoom or
+  pan"): drag the preview (the photo showing stops and follows the
+  pointer) or a row's thumbnail (the preview stops on that photo's start);
+  a double-click centers it. The form posts `focus_x[]` / `focus_y[]` (0 to
+  100, 50 = centered) beside `photos[]`; `video_photo_focus()` gives [x, y]
+  as 0 to 1: the share of the photo's spare width and height left out on
+  the left and at the top, used at every step (the zoom's cut, the fit, the
+  point a zoom moves about, the middle of a pan, kept clear of the edge by
+  half the pan's distance). **The preview's `vz()` and
+  `video_photo_filter()` must work it out the same way**: change one, change
+  the other, and compare frames (`tests/render_video_sample.php --focus=`).
 - **The shade under the text is one layer** (`shade`) from the first text to
   the last. It was part of each text layer and faded out and in with every
   photo, which flickered and showed worst on a watermark.

@@ -5,7 +5,7 @@
  * sign-in: inc/video_export.php alone. Run it ON THE SERVER (Chromium and
  * ffmpeg), as any user, into a folder of its own:
  *
- *   php tests/render_video_sample.php <outdir> [--photos=N] [--motion=mix|zoom|pan] [--all] [--no-end] [--captions] [--zoom=1.4] [--mark] [--logos=1001] [--clip=/path/to/clip.mp4] [--blur] [--html]
+ *   php tests/render_video_sample.php <outdir> [--photos=N] [--motion=mix|zoom|pan] [--all] [--no-end] [--captions] [--zoom=1.4] [--focus=0.1,0.9] [--mark] [--logos=1001] [--clip=/path/to/clip.mp4] [--blur] [--html]
  *
  * Writes <outdir>/out.mp4 (and preview.html, the page's preview, whose
  * photos load from the live portal), then prints the frame count against the
@@ -37,6 +37,8 @@ $v = [
 ];
 // --zoom=1.4: that zoom on the second and third photos (one pans, one zooms, in Mix). --mark: the triangle watermark. --all-text: the cover text for the whole video.
 if (isset($flags['zoom'])) $v['zooms'] = [1 => (float)$flags['zoom'], 2 => (float)$flags['zoom']];
+// --focus=0.1,0.9: that position (x,y, 0 to 1) on the first three photos.
+if (isset($flags['focus'])) { $at = array_map('floatval', explode(',', $flags['focus'] . ',0.5')); $v['focus'] = [[$at[0], $at[1]], [$at[0], $at[1]], [$at[0], $at[1]]]; }
 if (isset($flags['mark'])) $v['mark'] = 'triangle';
 // --cover=6 --end=5: the cover's and the closing card's own seconds.
 if (isset($flags['cover'])) $v['cover_hold'] = (float)$flags['cover'];

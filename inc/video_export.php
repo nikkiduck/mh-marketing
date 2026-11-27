@@ -112,7 +112,8 @@ function video_fetch_photo(array $photo, string $to): ?string {
 }
 
 /** The filter that turns one still into a moving segment of $F frames. */
-function video_photo_filter(array $m, int $F, float $z = 1.0): string {
+function video_photo_filter(array $m, int $F, float $z = 1.0, array $at = [0.5, 0.5]): string {
+    [$fx, $fy] = $at;   // the photo's own position, video_photo_focus()
     $W = VIDEO_W; $H = VIDEO_H; $W2 = $W * 2; $H2 = $H * 2; $fps = VIDEO_FPS;
     $last = max(1, $F - 1);
     $tail = "scale=out_color_matrix=bt709:out_range=tv,format=yuv420p";
@@ -120,12 +121,14 @@ function video_photo_filter(array $m, int $F, float $z = 1.0): string {
         $t2 = video_pan_travel($F) * 2; $max = VIDEO_PAN_MAX;
         // A drift of video_pan_travel() centered on the photo, never more than VIDEO_PAN_MAX of its spare width. The photo at twice the frame's height (never wider than two heights), held, a window slid across it, then halved: the half pixels keep a slow pan smooth.
         // The photo's own zoom is a crop of its middle, taken before anything is scaled (no larger picture is ever held).
-        return "crop='min(iw,ih/{$z}*2)':'ih/{$z}',scale=-2:{$H2}:flags=bicubic,format=gbrp,loop=loop={$F}:size=1:start=0,setpts=N/({$fps}*TB),"
-             . "crop={$W2}:{$H2}:x='(iw-{$W2})/2+({$m['dir']})*min({$t2},{$max}*(iw-{$W2}))*(n/{$last}-0.5)':y=0,scale={$W}:{$H}:flags=bicubic,fps={$fps},{$tail}";
+        // The pan's middle is the photo's own position, kept half the pan's distance clear of either edge.
+        $T = "min({$t2},{$max}*(iw-{$W2}))";
+        return "crop='min(iw,ih/{$z}*2)':'ih/{$z}':'(iw-ow)*{$fx}':'(ih-oh)*{$fy}',scale=-2:{$H2}:flags=bicubic,format=gbrp,loop=loop={$F}:size=1:start=0,setpts=N/({$fps}*TB),"
+             . "crop={$W2}:{$H2}:x='clip({$fx}*(iw-{$W2}),{$T}/2,(iw-{$W2})-{$T}/2)+({$m['dir']})*{$T}*(n/{$last}-0.5)':y=0,scale={$W}:{$H}:flags=bicubic,fps={$fps},{$tail}";
     }
     $d = $m['to'] - $m['from'];
-    return ($z > 1 ? "crop='iw/{$z}':'ih/{$z}'," : '') . "scale={$W2}:{$H2}:force_original_aspect_ratio=increase:flags=bicubic,crop={$W2}:{$H2},format=gbrp,"
-         . "zoompan=z='{$m['from']}+({$d})*on/{$last}':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d={$F}:s={$W}x{$H}:fps={$fps},{$tail}";
+    return ($z > 1 ? "crop='iw/{$z}':'ih/{$z}':'(iw-ow)*{$fx}':'(ih-oh)*{$fy}'," : '') . "scale={$W2}:{$H2}:force_original_aspect_ratio=increase:flags=bicubic,crop={$W2}:{$H2}:'(iw-ow)*{$fx}':'(ih-oh)*{$fy}',format=gbrp,"
+         . "zoompan=z='{$m['from']}+({$d})*on/{$last}':x='(iw-iw/zoom)*{$fx}':y='(ih-ih/zoom)*{$fy}':d={$F}:s={$W}x{$H}:fps={$fps},{$tail}";
 }
 
 /** The filter that cuts a clip to the frame: filled (cropped), or whole on a blurred copy of itself. HDR (an iPhone's) is brought to ordinary color first. */
@@ -172,7 +175,7 @@ function video_build(array $v, string $dir, ?callable $say = null): array {
             if (!$p) return $fail('Photo ' . ($s['i'] + 1) . ' could not be read. Take it out, or pick another, and try again.');
             $info = getimagesize($p);
             $m = video_motion((string)($v['motion'] ?? 'mix'), $s['i'], video_is_wide((int)$info[0], (int)$info[1]));
-            $ok = video_ffmpeg(array_merge(['-i', $p, '-vf', video_photo_filter($m, $F, video_photo_zoom($v, (int)$s['i'])), '-frames:v', $F], $work, [$out]), $log);
+            $ok = video_ffmpeg(array_merge(['-i', $p, '-vf', video_photo_filter($m, $F, video_photo_zoom($v, (int)$s['i']), video_photo_focus($v, (int)$s['i'])), '-frames:v', $F], $work, [$out]), $log);
             @unlink($p);
         } elseif ($s['type'] === 'clip') {
             $say('Cutting the clip to shape', $pct);

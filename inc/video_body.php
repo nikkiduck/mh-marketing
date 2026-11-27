@@ -34,6 +34,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       <div class="vd-stage" id="vdStage"><iframe id="vdFrame" title="Preview" scrolling="no"></iframe><video id="vdResult" controls playsinline hidden></video></div>
       <div class="vd-tabs"><button type="button" class="vd-tab on" id="vdTabPreview">Preview</button><button type="button" class="vd-tab" id="vdTabResult" disabled>Finished video</button></div>
       <p class="vd-len" id="vdLen"></p>
+      <p class="vd-len" id="vdMoveTip" hidden>Drag a photo in the preview to move it.</p>
     </aside>
 
     <div class="vd-main">
@@ -254,7 +255,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const photosEl = document.getElementById('vdPhotos'), picked = document.getElementById('vdPicked');
   const msg = document.getElementById('vdMsg'), bar = document.getElementById('vdBar'), make = document.getElementById('vdMake'), dl = document.getElementById('vdDownload');
   const listing = document.getElementById('vdListing'), clipSel = document.getElementById('vdClip'), upMsg = document.getElementById('vdUpMsg');
-  let order = [], caps = {}, zooms = {}, logoSet = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
+  let order = [], caps = {}, zooms = {}, focus = {}, logoSet = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
   // Three sources (Nikki, 2026-11-26): a listing's photos, My Photos (uploads and the stock library, no listing needed), a video clip.
   const isClip = () => val('kind') === 'clip', isMine = () => val('kind') === 'mine', isListing = () => !isClip() && !isMine();
   let gridFor = null;   // what the photo grid shows: 'mine', or 'l:' + a listing's id
@@ -309,11 +310,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   }
 
   // ── Photos: click to add in play order, click again to remove ──
-  // photos[], captions[], zooms[] and logos[] go to the server side by side, in play order.
+  // photos[], captions[], zooms[], focus_x[], focus_y[] and logos[] go to the server side by side, in play order.
   // The logo shows on a photo when its "Logo?" is ticked: the cover starts ticked, the rest do not.
   const logoOn = id => id in logoSet ? logoSet[id] : order.indexOf(id) === 0;
   function pick() {
-    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '"><input type="hidden" name="captions[]" value="' + esc(caps[id] || '') + '"><input type="hidden" name="zooms[]" value="' + (zooms[id] || 100) + '"><input type="hidden" name="logos[]" value="' + (logoOn(id) ? 1 : 0) + '">').join('');
+    picked.innerHTML = order.map(id => '<input type="hidden" name="photos[]" value="' + esc(id) + '"><input type="hidden" name="captions[]" value="' + esc(caps[id] || '') + '"><input type="hidden" name="zooms[]" value="' + (zooms[id] || 100) + '"><input type="hidden" name="focus_x[]" value="' + (focus[id] || [50, 50])[0] + '"><input type="hidden" name="focus_y[]" value="' + (focus[id] || [50, 50])[1] + '"><input type="hidden" name="logos[]" value="' + (logoOn(id) ? 1 : 0) + '">').join('');
   }
   function paint() {
     photosEl.querySelectorAll('.sp-photo').forEach(el => {
@@ -322,16 +323,64 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     });
     // One row per chosen photo, in play order: its zoom, and from the second photo on its own text (the first is the
     // cover, whose text is the Cover Design). What was set stays with its photo.
-    capsWrap.hidden = !order.length; document.getElementById('vdSlidesStep').hidden = !isMine() || !order.length;
+    capsWrap.hidden = !order.length; document.getElementById('vdMoveTip').hidden = isClip() || !order.length; document.getElementById('vdSlidesStep').hidden = !isMine() || !order.length;
     capsEl.innerHTML = order.map((id, i) => {
       const t = photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(id) + '"] img'), z = zooms[id] || 100;
-      return '<div class="vd-cap"><span class="vd-cap-p"><img src="' + esc(t ? t.src : '') + '" alt=""><b>' + (i === 0 ? 'COVER' : i + 1) + '</b></span><div class="vd-cap-b">'
+      return '<div class="vd-cap"><span class="vd-cap-p" data-move="' + esc(id) + '" title="Drag to move this photo in the frame. Double-click to center it."><img src="' + esc(t ? t.src : '') + '" alt="" draggable="false"><b>' + (i === 0 ? 'COVER' : i + 1) + '</b></span><div class="vd-cap-b">'
         + '<div class="vd-row"><label class="vd-zoom">Zoom <input type="range" min="100" max="200" step="5" value="' + z + '" data-zoom="' + esc(id) + '"><output>' + z + '%</output></label><label class="vd-logo"><input type="checkbox" data-logo="' + esc(id) + '"' + (logoOn(id) ? ' checked' : '') + '> Logo?</label></div>'
         + (i > 0 ? '<textarea rows="2" maxlength="140" data-id="' + esc(id) + '" placeholder="Text for photo ' + (i + 1) + '">' + esc(caps[id] || '') + '</textarea>' : '')
         + '</div></div>';
     }).join('');
     syncAll();
   }
+  // Moving a photo in the frame (Nikki, 2026-11-27: "drag and move each photo so we can control the starting position of
+  // the zoom or pan"): drag the preview and the photo showing stops where it is and follows the pointer; drag a row's
+  // thumbnail and the preview stops on that photo's start. Let go and it plays on. focus = { photo id: [x, y] }, 0 to 100
+  // each way, 50 = centered: the share of the photo's spare width and height left out on the left and at the top.
+  let drag = null;
+  function showing() {
+    try {
+      const w = frame.contentWindow; if (!w || !w.vnow) return -1;
+      const t = w.vnow(); let at = -1;
+      w.document.querySelectorAll('.seg[data-i]').forEach(g => { if (+g.dataset.a <= t && t < +g.dataset.b) at = +g.dataset.i; });
+      return at;
+    } catch (e) { return -1; }
+  }
+  function dragStart(e, i, atStart) {
+    if (e.button || stale || isClip() || frame.hidden || i < 0 || !order[i]) return;
+    const seg = segOf(i), img = seg && seg.querySelector('img'); if (!img || !img.naturalWidth) return;
+    const w = frame.contentWindow, id = order[i];
+    const t = Math.min(atStart ? +seg.dataset.s : Math.max(w.vnow(), +seg.dataset.s), +seg.dataset.b - 1);
+    w.vseek(t, false);
+    drag = { id, img, t, x: e.clientX, y: e.clientY, from: (focus[id] || [50, 50]).slice(), spare: w.vspare(img), k: 1080 / stage.clientWidth };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+    stage.classList.add('drag'); e.preventDefault();
+  }
+  function moveTo(id, img, x, y) {
+    const c = n => Math.round(Math.max(0, Math.min(100, n)) * 10) / 10;
+    focus[id] = [c(x), c(y)];
+    frame.contentWindow.vz(img, (zooms[id] || 100) / 100, 0, focus[id][0] / 100, focus[id][1] / 100);
+  }
+  window.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const d = drag, by = (px, spare, from) => spare > 1 ? from - px * d.k / spare * 100 : from;   // the photo follows the pointer: dragged right, less of it is left out on the left
+    moveTo(d.id, d.img, by(e.clientX - d.x, d.spare[0], d.from[0]), by(e.clientY - d.y, d.spare[1], d.from[1]));
+  });
+  ['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => {
+    if (!drag) return;
+    const d = drag; drag = null; stage.classList.remove('drag');
+    try { frame.contentWindow.vseek(d.t, true); } catch (e) {}
+  }));
+  stage.addEventListener('pointerdown', e => dragStart(e, showing(), false));
+  capsEl.addEventListener('pointerdown', e => { const p = e.target.closest('[data-move]'); if (p) { if (!busy) show('preview'); dragStart(e, order.indexOf(p.dataset.move), true); } });
+  // A double-click puts the photo back in the middle.
+  function center(i) {
+    const seg = stale ? null : segOf(i), img = seg && seg.querySelector('img'); if (!order[i]) return;
+    if (!img || !img.naturalWidth) { delete focus[order[i]]; startAt = i; update(); return; }
+    moveTo(order[i], img, 50, 50); frame.contentWindow.vseek(+seg.dataset.s, true);
+  }
+  stage.addEventListener('dblclick', () => { if (!frame.hidden && !isClip()) center(showing()); });
+  capsEl.addEventListener('dblclick', e => { const p = e.target.closest('[data-move]'); if (p) center(order.indexOf(p.dataset.move)); });
   // "Use Cover Text on all slides" hides the photos' own text boxes; what was typed is kept for when it is unticked.
   function syncAll() { capsEl.classList.toggle('no-text', f('words_all').checked); capsEl.classList.toggle('no-logo', val('logo_kind') === 'none'); syncSuggest(); }
   // Suggest Texts (a listing's photos only): a few words for each photo after the cover, written from the listing's
@@ -384,7 +433,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   // stock library, one folding group each, nothing picked to begin with. keep = the picks stay (after an upload or a removal).
   async function loadPhotos(keep) {
     const mine = isMine();
-    if (!keep) { order = []; caps = {}; zooms = {}; logoSet = {}; suggested = {}; sugSeen = []; }
+    if (!keep) { order = []; caps = {}; zooms = {}; focus = {}; logoSet = {}; suggested = {}; sugSeen = []; }
     paint();
     gridFor = mine ? 'mine' : 'l:' + listing.value;
     if (!mine && !listing.value) { photosEl.innerHTML = '<div class="sp-wait">Choose a listing to see its photos.</div>'; update(); return; }
