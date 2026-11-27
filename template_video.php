@@ -55,7 +55,13 @@ admin_tool_header([
     #vdSlidesStep .vd-subrow { margin-top:0; }
     .vd-sub { font:600 14px/1.3 var(--sans); color:#1f242c; margin:0; }
     .vd-caps { display:grid; gap:10px; margin-top:10px; }
-    .vd-cap { display:grid; grid-template-columns:76px 1fr; gap:12px; align-items:start; }
+    .vd-cap { display:grid; grid-template-columns:22px 76px 1fr; gap:10px; align-items:start; }
+    /* The grip a row is dragged by to change the play order. */
+    .vd-grip { width:22px; height:57px; padding:0; border:0; background:none; color:#9aa5b5; font:600 16px/1 var(--sans); letter-spacing:-2px; cursor:grab; touch-action:none; }
+    .vd-grip:hover { color:#4a5566; }
+    .vd-caps.sorting { user-select:none; -webkit-user-select:none; cursor:grabbing; }
+    .vd-caps.sorting .vd-grip { cursor:grabbing; }
+    .vd-cap.sorting { background:#f1f3f6; outline:2px dashed #9aa5b5; outline-offset:4px; border-radius:6px; }
     .vd-cap-p { position:relative; display:block; aspect-ratio:4 / 3; border-radius:6px; overflow:hidden; background:#e6e9ee; }
     .vd-cap-p img { display:block; width:100%; height:100%; object-fit:cover; }
     .vd-cap-p b { position:absolute; left:4px; top:4px; min-width:18px; height:18px; padding:0 5px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font:600 10.5px/1 var(--sans); letter-spacing:.04em; color:#fff; background:rgba(43,48,56,.92); border-radius:999px; }

@@ -3685,6 +3685,13 @@ licensed track cannot be baked in; it is added in Instagram.
   rest to begin with. `video_logo_runs()` turns the ticks into runs, each a
   layer `logo{first}` on with its first photo and off before the photo after
   its last. A clip, or a video with no `logos` list, carries it throughout.
+- **The play order is changed by dragging** (Nikki, 2026-11-27): each
+  photo's row has a grip (`.vd-grip`); the row moves among the others as
+  the pointer passes them and the rows' order on letting go is `order`.
+  Everything set stays with its photo (text, zoom, position, logo, the
+  closing card's background); the photo that lands first is the cover. The
+  row's thumbnail is NOT the handle: dragging it moves the photo in the
+  frame.
 - **Stop** (Nikki, 2026-11-27): while a video is being made a Stop button
   sits beside Make video. It posts `stop=<job>` to video_export.php;
   `video_job_stop()` ends the worker and everything it started (the worker

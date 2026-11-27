@@ -335,7 +335,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     document.getElementById('vdEndBgField').hidden = isClip() || !order.length; document.getElementById('vdSlidesStep').hidden = !isMine() || !order.length;
     capsEl.innerHTML = order.map((id, i) => {
       const t = photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(id) + '"] img'), z = zooms[id] || 100;
-      return '<div class="vd-cap"><span class="vd-cap-p" data-move="' + esc(id) + '" title="Drag to move this photo in the frame. Double-click to center it."><img src="' + esc(t ? t.src : '') + '" alt="" draggable="false"><b>' + (i === 0 ? 'COVER' : i + 1) + '</b></span><div class="vd-cap-b">'
+      return '<div class="vd-cap" data-row="' + esc(id) + '">' + (order.length > 1 ? '<button type="button" class="vd-grip" title="Drag to change the order" aria-label="Drag to change the order">⋮⋮</button>' : '<span></span>') + '<span class="vd-cap-p" data-move="' + esc(id) + '" title="Drag to move this photo in the frame. Double-click to center it."><img src="' + esc(t ? t.src : '') + '" alt="" draggable="false"><b>' + (i === 0 ? 'COVER' : i + 1) + '</b></span><div class="vd-cap-b">'
         + '<div class="vd-row"><label class="vd-zoom">Zoom <input type="range" min="100" max="200" step="5" value="' + z + '" data-zoom="' + esc(id) + '"><output>' + z + '%</output></label><label class="vd-logo"><input type="checkbox" data-logo="' + esc(id) + '"' + (logoOn(id) ? ' checked' : '') + '> Logo?</label></div>'
         + (i > 0 ? '<textarea rows="2" maxlength="140" data-id="' + esc(id) + '" placeholder="Text for photo ' + (i + 1) + '">' + esc(caps[id] || '') + '</textarea>' : '')
         + '</div></div>';
@@ -382,6 +382,33 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   }));
   stage.addEventListener('pointerdown', e => dragStart(e, showing(), false));
   capsEl.addEventListener('pointerdown', e => { const p = e.target.closest('[data-move]'); if (p) { if (!busy) show('preview'); dragStart(e, order.indexOf(p.dataset.move), true); } });
+  // The play order: drag a row by its grip (Nikki, 2026-11-27: "a drag-to-reorder of the photos"). The row moves among
+  // the others as the pointer passes them; let go and that is the order. What was set stays with its photo (text, zoom,
+  // position, logo); the photo that lands first is the cover.
+  let sort = null;
+  capsEl.addEventListener('pointerdown', e => {
+    const g = e.target.closest('.vd-grip'); if (!g || e.button) return;
+    sort = g.closest('.vd-cap'); sort.classList.add('sorting'); capsEl.classList.add('sorting');
+    e.preventDefault();
+  });
+  window.addEventListener('pointermove', e => {
+    if (!sort) return;
+    let before = null;
+    for (const r of capsEl.querySelectorAll('.vd-cap')) {
+      if (r === sort) continue;
+      const b = r.getBoundingClientRect();
+      if (e.clientY < b.top + b.height / 2) { before = r; break; }
+    }
+    if (before ? sort.nextElementSibling !== before : capsEl.lastElementChild !== sort) capsEl.insertBefore(sort, before);
+  });
+  ['pointerup', 'pointercancel'].forEach(ev => window.addEventListener(ev, () => {
+    if (!sort) return;
+    const id = sort.dataset.row; sort = null; capsEl.classList.remove('sorting');
+    const ids = [...capsEl.querySelectorAll('.vd-cap')].map(r => r.dataset.row);
+    const moved = ids.join('\n') !== order.join('\n');
+    if (moved) { order = ids; startAt = order.indexOf(id); }
+    paint(); if (moved) update();
+  }));
   // A double-click puts the photo back in the middle.
   function center(i) {
     const seg = stale ? null : segOf(i), img = seg && seg.querySelector('img'); if (!order[i]) return;
