@@ -8,7 +8,7 @@
  * Expects: $ctx, $csrf, $vd_listings (plan_listings()), $vd_agents
  * (plan_agents()), $vd_clips (video_clips()), and the endpoint URLs
  * ($render_url, $export_url, $clip_url, $logo_url, $photos_url,
- * $upload_url, $delete_url).
+ * $upload_url, $delete_url, $saved_url).
  */
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $vd_phones = ads_agent_phones($conn);
@@ -38,6 +38,16 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     </aside>
 
     <div class="vd-main">
+      <?php /* Saved videos (video_saved.php): shown once there is one. Opening one fills this form again. */ ?>
+      <section class="sp-step" id="vdSavedStep" hidden>
+        <h2 class="sp-step-h">Saved videos</h2>
+        <div class="vd-up" style="margin-top:0">
+          <select id="vdSaved" aria-label="Saved videos" style="flex:1 1 260px;min-width:0"></select>
+          <button type="button" class="vd-mini" id="vdSavedOpen">Open</button>
+          <button type="button" class="vd-mini" id="vdSavedDel">Delete</button>
+        </div>
+        <p class="sp-help" id="vdSavedMsg" style="margin:8px 0 0" hidden></p>
+      </section>
       <section class="sp-step" id="vdVideoStep">
         <h2 class="sp-step-h">Video</h2>
         <div class="sp-look" style="margin-top:0">
@@ -235,6 +245,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         <div class="sp-actions">
           <button type="submit" class="sp-btn" id="vdMake">Make video</button>
           <button type="button" class="sp-btn sp-btn-soft" id="vdStop" hidden>Stop</button>
+          <button type="button" class="sp-btn sp-btn-soft" id="vdSave">Save for later</button>
           <a class="sp-btn sp-btn-soft" id="vdDownload" href="#" hidden>Download MP4</a>
         </div>
         <div class="vd-bar" id="vdBar" hidden><i></i></div>
@@ -621,7 +632,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   // as an optional way to fill the text in.
   const videoStep = document.getElementById('vdVideoStep'), coverStep = document.getElementById('vdCoverStep'), photosStep = document.getElementById('vdPhotosStep'), clipStep = document.getElementById('vdClipStep');
   const listingField = document.getElementById('vdListingField');
-  let lastKind = null;
+  let lastKind = null, restoring = false;   // restoring = a saved video is being opened: nothing is filled in from a listing
   function syncKind() {
     const c = isClip(), m = isMine(), k = val('kind');
     photosStep.hidden = c; clipStep.hidden = !c;
@@ -644,13 +655,15 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       listing.value = ''; fromListing();
     }
     lastKind = k;
-    if (!c && !m && !listing.value) { listing.selectedIndex = 1; fromListing(); }
+    if (!c && !m && !listing.value && !restoring) { listing.selectedIndex = 1; fromListing(); }
     if (!c && gridFor !== (m ? 'mine' : 'l:' + listing.value)) { loadPhotos(); return; }
     update();
   }
   form.addEventListener('change', e => {
     const n = e.target.name;
     if (e.target.dataset.zoom || e.target.dataset.id) return;   // a photo's zoom and text see to the preview themselves (above)
+    // Another source, or another listing's photos, is another video: it no longer saves over the one that was opened.
+    if (n === 'kind' || (n === 'listing' && isListing())) savedId = '';
     if (n === 'kind') { syncKind(); return; }
     if (n === 'listing') { fromListing(); if (isListing()) { loadPhotos(); return; } }
     if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(1); syncBy(); }
@@ -742,6 +755,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       const j = await (await fetch(EXPORT, { method: 'POST', body: new FormData(form), credentials: 'same-origin' })).json();
       if (j.error) return run.stopped ? null : stop(j.error, true);
       job = run.job = j.job;
+      saveVideo(true);   // every video made can be opened again later
       if (run.stopped) { stopJob(job); return; }   // Stop was pressed before the server had answered
     } catch (err) { return run.stopped ? null : stop('The video could not be started. Please try again.', true); }
     let misses = 0;
@@ -765,6 +779,100 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     };
     ask();
   });
+
+  // ── Saved videos: the form as it stands, kept to open again (Nikki, 2026-11-27) ──
+  // snapshot() is everything a video is made from: the form's boxes by name, the photos picked in order and what was
+  // set on each. restore() puts it back and fills nothing in from a listing. Saved by the button, and by itself each
+  // time Make video is pressed; an opened one is saved over until the source or the listing is changed.
+  const SAVED = <?= json_encode($saved_url ?? '') ?>;
+  const savedStep = document.getElementById('vdSavedStep'), savedSel = document.getElementById('vdSaved'), savedMsg = document.getElementById('vdSavedMsg');
+  let savedId = '';
+  const skip = n => n === 'csrf_token' || n === 'end_bg' || n.endsWith('[]');
+  function snapshot() {
+    const fields = {};
+    form.querySelectorAll('[name]').forEach(el => {
+      const n = el.name; if (skip(n)) return;
+      if (el.type === 'radio') { if (el.checked) fields[n] = el.value; }
+      else if (el.type === 'checkbox') fields[n] = el.checked ? '1' : '';
+      else fields[n] = el.value;
+    });
+    const mine = o => Object.fromEntries(order.filter(id => id in o).map(id => [id, o[id]]));
+    return { v: 1, fields, order: order.slice(), caps: mine(caps), zooms: mine(zooms), focus: mine(focus), logos: mine(logoSet), endBg };
+  }
+  const firstRow = t => String(t || '').split('\n')[0].trim();
+  const savedName = () => firstRow(f('end_address').value) || firstRow(f('headline').value) || firstRow(f('line1').value) || 'Video';
+  const savedWhen = t => new Date(t * 1000).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  function savedSay(t, bad) { savedMsg.hidden = !t; savedMsg.textContent = t; savedMsg.classList.toggle('bad', !!bad); }
+  function listSaved(list) {
+    savedStep.hidden = !list.length;
+    savedSel.innerHTML = list.map(s => '<option value="' + esc(s.id) + '"' + (s.id === savedId ? ' selected' : '') + '>' + esc(s.name + '  ·  ' + savedWhen(s.saved)) + '</option>').join('');
+  }
+  async function saveVideo(quiet) {
+    if (!SAVED) return false;
+    const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('data', JSON.stringify(snapshot())); fd.append('name', savedName());
+    if (savedId) fd.append('id', savedId);
+    let j;
+    try { j = await (await fetch(SAVED, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); } catch (e) { j = { error: 'That could not be saved. Please try again.' }; }
+    if (!j || j.error || !j.id) { if (!quiet) say((j && j.error) || 'That could not be saved. Please try again.', true); return false; }
+    savedId = j.id; listSaved(j.saved || []);
+    if (!quiet) say('Saved. Open it again from Saved videos at the top of this page.');
+    return true;
+  }
+  document.getElementById('vdSave').addEventListener('click', () => saveVideo(busy));
+  async function restore(d) {
+    const fl = d.fields || {};
+    let gone = '';
+    form.querySelectorAll('[name]').forEach(el => {
+      const n = el.name; if (skip(n) || !(n in fl)) return;
+      const v = String(fl[n]);
+      if (el.type === 'radio') { if ([...form.querySelectorAll('[name="' + n + '"]')].some(r => r.value === v)) el.checked = el.value === v; }
+      else if (el.type === 'checkbox') el.checked = v === '1';
+      else if (el.tagName === 'SELECT') {
+        if ([...el.options].some(o => o.value === v)) el.value = v;
+        else if (n === 'listing' || n === 'clip') { el.value = ''; gone = n; }
+        else if (n === 'agent' || n === 'agent2') el.value = '0';
+      }
+      else el.value = v;
+    });
+    const obj = o => (o && typeof o === 'object' && !Array.isArray(o)) ? Object.assign({}, o) : {};
+    order = (Array.isArray(d.order) ? d.order : []).map(String).slice(0, MAXP);
+    caps = obj(d.caps); zooms = obj(d.zooms); focus = obj(d.focus); logoSet = obj(d.logos); endBg = String(d.endBg || ''); suggested = {}; sugSeen = [];
+    if (isListing() && !listing.value) order = [];   // the listing has left the feed: its photos cannot be shown
+    agentTouched = byTouched = by2Touched = addrTouched = true;   // everything is as it was saved: nothing is filled in again
+    document.getElementById('vdEndFields').hidden = !f('end').checked;
+    document.getElementById('vdLogoRanges').hidden = val('logo_kind') === 'none';
+    document.querySelectorAll('#vdLogoRanges input').forEach(i => { i.nextElementSibling.textContent = i.value + (i.name === 'logo_scale' ? '%' : ''); });
+    syncBy();
+    dl.hidden = true; tabR.disabled = true; show('preview');
+    const want = order.length;
+    lastKind = val('kind'); gridFor = isMine() ? 'mine' : 'l:' + listing.value;
+    restoring = true; syncKind(); restoring = false;
+    if (!isClip()) await loadPhotos(true); else paint();
+    const lost = want - order.length;
+    return gone === 'listing' && !isMine() && !isClip() ? 'That listing is no longer in the feed, so its photos could not be loaded. The text is as it was saved.'
+         : gone === 'clip' && isClip() ? 'That clip is no longer on the server. Upload it again; everything else is as it was saved.'
+         : lost > 0 ? (lost === 1 ? 'One photo is' : lost + ' photos are') + ' no longer there and ' + (lost === 1 ? 'was' : 'were') + ' left out. Everything else is as it was saved.' : '';
+  }
+  document.getElementById('vdSavedOpen').addEventListener('click', async () => {
+    const id = savedSel.value; if (!id || busy) return;
+    let j;
+    try { j = await (await fetch(SAVED + '?id=' + encodeURIComponent(id), { credentials: 'same-origin' })).json(); } catch (e) { j = null; }
+    if (!j || j.error || !j.data) { savedSay((j && j.error) || 'That saved video could not be opened. Please try again.', true); return; }
+    const note = await restore(j.data);
+    savedId = id;
+    savedSay(note || 'Opened: ' + j.name + '. Make your changes, then Make video.', !!note);
+  });
+  document.getElementById('vdSavedDel').addEventListener('click', async () => {
+    const id = savedSel.value; if (!id) return;
+    if (!confirm('Delete this saved video? Videos you already downloaded are not affected.')) return;
+    const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('delete', id);
+    let j;
+    try { j = await (await fetch(SAVED, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); } catch (e) { j = null; }
+    if (!j || j.error) { savedSay('That could not be deleted. Please try again.', true); return; }
+    if (id === savedId) savedId = '';
+    listSaved(j.saved || []); savedSay('');
+  });
+  if (SAVED) fetch(SAVED, { credentials: 'same-origin' }).then(r => r.json()).then(j => listSaved((j && j.saved) || [])).catch(() => {});
 
   scale(); fromListing(); syncKind();
 })();

@@ -3692,6 +3692,20 @@ licensed track cannot be baked in; it is added in Instagram.
   closing card's background); the photo that lands first is the cover. The
   row's thumbnail is NOT the handle: dragging it moves the photo in the
   frame.
+- **Saved videos** (Nikki, 2026-11-27: "save the video for editing later
+  ... all my settings and photos are there"): one JSON file per saved video
+  in the person's own folder (`video/admin-{id}/saved/{id}.json`, no
+  table; `video_saved_*()` in inc/video.php, endpoint video_saved.php). What
+  is saved is the FORM as the page holds it (`snapshot()` in
+  inc/video_body.php: the boxes by name, the photos picked in order, what was
+  set on each), not a video; `restore()` puts it back and fills nothing in
+  from a listing. Saved by Save for later, and by itself each time Make
+  video is pressed; an opened one is saved over until the source or the
+  listing is changed (then it is a new one). **A new form field with a
+  `name` is saved by itself; new per-photo state must be added to
+  `snapshot()` and `restore()`.** A listing that has left the feed opens
+  with its text and no photos; a photo or clip that is gone is left out and
+  said so. 200 a person, the oldest dropped.
 - **Stop** (Nikki, 2026-11-27): while a video is being made a Stop button
   sits beside Make video. It posts `stop=<job>` to video_export.php;
   `video_job_stop()` ends the worker and everything it started (the worker

@@ -49,6 +49,60 @@ function video_root(array $ctx, string $sub = ''): string {
     return $dir;
 }
 
+// ── Saved videos ─────────────────────────────────────────────────────────────
+// A video saved for editing later (Nikki, 2026-11-27: "if the price changes on
+// a reel I've created, I can open up the editor and all my settings and photos
+// are there"). One JSON file per saved video in the person's own folder
+// (video/admin-{id}/saved/{id}.json: id, name, saved, data), no table. `data`
+// is the FORM as the page holds it (the boxes by name, the photos picked in
+// order and what was set on each), written and read back by the page alone
+// (snapshot() and restore() in inc/video_body.php); the server only keeps it.
+// Nothing in it is trusted: a video is still made from the posted form, through
+// video_from_request(). The page saves by itself when Make video is pressed.
+
+const VIDEO_SAVED_MAX = 200;                 // a person's saved videos; the oldest go when there are more
+const VIDEO_SAVED_MAX_BYTES = 300 * 1024;    // one saved form
+
+function video_saved_id_ok(string $id): bool { return (bool)preg_match('/^[a-f0-9]{12}$/', $id); }
+
+/** This person's saved videos, newest first: [['id', 'name', 'saved' => unix time], …]. */
+function video_saved_list(array $ctx): array {
+    if (($dir = video_root($ctx, 'saved')) === '') return [];
+    $out = [];
+    foreach (glob($dir . '/*.json') ?: [] as $file) {
+        $s = json_decode((string)@file_get_contents($file), true);
+        if (is_array($s) && video_saved_id_ok((string)($s['id'] ?? ''))) $out[] = ['id' => $s['id'], 'name' => (string)($s['name'] ?? 'Video'), 'saved' => (int)($s['saved'] ?? 0)];
+    }
+    usort($out, fn($a, $b) => $b['saved'] <=> $a['saved']);
+    return $out;
+}
+
+/** One saved video: ['id', 'name', 'saved', 'data'], or null. */
+function video_saved_read(array $ctx, string $id): ?array {
+    if (!video_saved_id_ok($id) || ($dir = video_root($ctx, 'saved')) === '') return null;
+    $s = json_decode((string)@file_get_contents("{$dir}/{$id}.json"), true);
+    return is_array($s) && is_array($s['data'] ?? null) ? ['id' => $id, 'name' => (string)($s['name'] ?? 'Video'), 'saved' => (int)($s['saved'] ?? 0), 'data' => $s['data']] : null;
+}
+
+/** Save one: over $id when it is this person's, else a new one. Its id, or null. */
+function video_saved_write(array $ctx, string $id, string $name, array $data): ?string {
+    if (($dir = video_root($ctx, 'saved')) === '') return null;
+    if (!video_saved_id_ok($id) || !is_file("{$dir}/{$id}.json")) $id = bin2hex(random_bytes(6));
+    $name = mb_substr(trim(preg_replace('/\s+/', ' ', $name)), 0, 80);
+    $json = json_encode(['id' => $id, 'name' => $name !== '' ? $name : 'Video', 'saved' => time(), 'data' => $data], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    if ($json === false || strlen($json) > VIDEO_SAVED_MAX_BYTES + 1024) return null;
+    $tmp = "{$dir}/{$id}.tmp";
+    if (file_put_contents($tmp, $json) === false || !rename($tmp, "{$dir}/{$id}.json")) { @unlink($tmp); return null; }
+    @chmod("{$dir}/{$id}.json", 0664);
+    foreach (array_slice(video_saved_list($ctx), VIDEO_SAVED_MAX) as $old) @unlink("{$dir}/{$old['id']}.json");
+    return $id;
+}
+
+function video_saved_delete(array $ctx, string $id): bool {
+    if (!video_saved_id_ok($id) || ($dir = video_root($ctx, 'saved')) === '') return false;
+    return @unlink("{$dir}/{$id}.json");
+}
+
 // ── Uploaded clips ───────────────────────────────────────────────────────────
 
 /** A clip's id is 16 hex characters, nothing else. */
