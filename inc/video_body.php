@@ -195,6 +195,9 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
               <?php foreach (video_card_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (float)$k === VIDEO_END_SECONDS ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
             </select>
           </label>
+          <label class="sp-field" id="vdEndBgField" style="margin-top:12px;max-width:240px">Background photo
+            <select name="end_bg" id="vdEndBg"><option value="">None</option></select>
+          </label>
           <label class="sp-field" style="margin-top:12px">Address (Line breaks allowed)
             <textarea name="end_address" rows="2" maxlength="90"></textarea>
           </label>
@@ -231,6 +234,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         <h2 class="sp-step-h">Make the video</h2>
         <div class="sp-actions">
           <button type="submit" class="sp-btn" id="vdMake">Make video</button>
+          <button type="button" class="sp-btn sp-btn-soft" id="vdStop" hidden>Stop</button>
           <a class="sp-btn sp-btn-soft" id="vdDownload" href="#" hidden>Download MP4</a>
         </div>
         <div class="vd-bar" id="vdBar" hidden><i></i></div>
@@ -323,7 +327,12 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     });
     // One row per chosen photo, in play order: its zoom, and from the second photo on its own text (the first is the
     // cover, whose text is the Cover Design). What was set stays with its photo.
-    capsWrap.hidden = !order.length; document.getElementById('vdMoveTip').hidden = isClip() || !order.length; document.getElementById('vdSlidesStep').hidden = !isMine() || !order.length;
+    capsWrap.hidden = !order.length; document.getElementById('vdMoveTip').hidden = isClip() || !order.length;
+    // The closing card's Background photo: None, or one of the photos picked. The choice stays with its photo when the order changes.
+    const bgSel = document.getElementById('vdEndBg');
+    if (endBg && !order.includes(endBg)) endBg = '';
+    bgSel.innerHTML = '<option value="">None</option>' + order.map((id, i) => '<option value="' + (i + 1) + '"' + (id === endBg ? ' selected' : '') + '>' + (i === 0 ? 'Cover photo' : 'Photo ' + (i + 1)) + '</option>').join('');
+    document.getElementById('vdEndBgField').hidden = isClip() || !order.length; document.getElementById('vdSlidesStep').hidden = !isMine() || !order.length;
     capsEl.innerHTML = order.map((id, i) => {
       const t = photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(id) + '"] img'), z = zooms[id] || 100;
       return '<div class="vd-cap"><span class="vd-cap-p" data-move="' + esc(id) + '" title="Drag to move this photo in the frame. Double-click to center it."><img src="' + esc(t ? t.src : '') + '" alt="" draggable="false"><b>' + (i === 0 ? 'COVER' : i + 1) + '</b></span><div class="vd-cap-b">'
@@ -337,7 +346,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   // the zoom or pan"): drag the preview and the photo showing stops where it is and follows the pointer; drag a row's
   // thumbnail and the preview stops on that photo's start. Let go and it plays on. focus = { photo id: [x, y] }, 0 to 100
   // each way, 50 = centered: the share of the photo's spare width and height left out on the left and at the top.
-  let drag = null;
+  let drag = null, endBg = '';   // endBg = the photo (its id) ghosted behind the closing card
   function showing() {
     try {
       const w = frame.contentWindow; if (!w || !w.vnow) return -1;
@@ -433,7 +442,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   // stock library, one folding group each, nothing picked to begin with. keep = the picks stay (after an upload or a removal).
   async function loadPhotos(keep) {
     const mine = isMine();
-    if (!keep) { order = []; caps = {}; zooms = {}; focus = {}; logoSet = {}; suggested = {}; sugSeen = []; }
+    if (!keep) { order = []; caps = {}; zooms = {}; focus = {}; endBg = ''; logoSet = {}; suggested = {}; sugSeen = []; }
     paint();
     gridFor = mine ? 'mine' : 'l:' + listing.value;
     if (!mine && !listing.value) { photosEl.innerHTML = '<div class="sp-wait">Choose a listing to see its photos.</div>'; update(); return; }
@@ -617,6 +626,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(1); syncBy(); }
     if (n === 'agent2') { agentTouched = true; by2Touched = false; fromAgent(2); syncBy(); }
     if (n === 'end') document.getElementById('vdEndFields').hidden = !f('end').checked;
+    if (n === 'end_bg') endBg = order[+e.target.value - 1] || '';
     if (n === 'words_all') syncAll();
     if (n === 'logo_kind') { document.getElementById('vdLogoRanges').hidden = val('logo_kind') === 'none'; syncAll(); }
     if (n === 'clip') { f('clip_start').value = 0; }
@@ -674,24 +684,44 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   // ── Make video: started on the server, then asked about every two seconds ──
   function say(t, bad) { msg.textContent = t; msg.classList.toggle('bad', !!bad); }
   function progress(p) { bar.hidden = p === null; if (p !== null) bar.firstElementChild.style.width = Math.max(2, p) + '%'; }
+  // Stop: the video being made is ended on the server; the form stays exactly as it is, ready for Make video again.
+  const stopBtn = document.getElementById('vdStop');
+  let making = null;
+  function stopJob(job) {
+    const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('stop', job);
+    return fetch(EXPORT, { method: 'POST', body: fd, credentials: 'same-origin' }).catch(() => {});
+  }
+  stopBtn.addEventListener('click', async () => {
+    const run = making; if (!run || run.stopped) return;
+    run.stopped = true; stopBtn.disabled = true; say('Stopping…');
+    if (run.job) await stopJob(run.job);
+    busy = false; make.disabled = false; stopBtn.hidden = true; progress(null);
+    say('Stopped. Nothing on this page has changed: make your changes, then click Make video.');
+  });
   form.addEventListener('submit', async e => {
     e.preventDefault();
     if (busy) return;
     busy = true; make.disabled = true; dl.hidden = true; tabR.disabled = true; show('preview');
     pick();
     say('Starting…'); progress(0);
-    const stop = (t, bad) => { busy = false; make.disabled = false; progress(null); say(t, bad); };
+    const run = making = { job: '', stopped: false };
+    stopBtn.hidden = false; stopBtn.disabled = false;
+    const stop = (t, bad) => { busy = false; make.disabled = false; stopBtn.hidden = true; progress(null); say(t, bad); };
     let job;
     try {
       const j = await (await fetch(EXPORT, { method: 'POST', body: new FormData(form), credentials: 'same-origin' })).json();
-      if (j.error) return stop(j.error, true);
-      job = j.job;
-    } catch (err) { return stop('The video could not be started. Please try again.', true); }
+      if (j.error) return run.stopped ? null : stop(j.error, true);
+      job = run.job = j.job;
+      if (run.stopped) { stopJob(job); return; }   // Stop was pressed before the server had answered
+    } catch (err) { return run.stopped ? null : stop('The video could not be started. Please try again.', true); }
     let misses = 0;
     const ask = async () => {
+      if (run.stopped) return;
       let s;
       try { s = await (await fetch(EXPORT + '?job=' + encodeURIComponent(job), { credentials: 'same-origin' })).json(); misses = 0; }
       catch (err) { if (++misses > 15) return stop('The page lost touch with the server. Reload it; the video may still be finishing.', true); return setTimeout(ask, 2000); }
+      if (run.stopped) return;
+      if (s.state === 'stopped') return stop('Stopped.');
       if (s.state === 'failed') return stop(s.error || 'The video could not be made. Please try again in a minute.', true);
       if (s.state === 'done') {
         const src = EXPORT + '?job=' + encodeURIComponent(job) + '&file=1';

@@ -4,6 +4,8 @@
  *
  *   POST (the builder form, with csrf_token)  → the video is started in the
  *        background (video_job_start()); JSON {job} or {error}
+ *   POST stop=<id> (with csrf_token)          → the video being made is stopped
+ *        (video_job_stop()); JSON {stopped}
  *   GET ?job=<id>                             → JSON {state, step, pct, …}
  *   GET ?job=<id>&file=1[&dl=1]               → the finished MP4 (byte
  *        ranges honoured, so the page can play it; dl=1 as a download)
@@ -24,6 +26,7 @@ $json = function (array $a, int $code = 200): never {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!portal_csrf_ok()) $json(['error' => 'That page had been open too long. Reload it and try again.'], 400);
+    if (isset($_POST['stop'])) { session_write_close(); $json(['stopped' => video_job_stop($ctx, (string)$_POST['stop'])]); }
     $v = video_from_request($conn, $ctx, $_POST);
     if (is_string($v)) $json(['error' => $v]);
     $id = video_job_start($ctx, $v);

@@ -50,6 +50,7 @@ const VIDEO_ZOOM = 0.10;        // a zoom runs between 1 and 1 + this
 const VIDEO_PAN_SPEED = 0.06;   // a pan drifts this many frame widths a second (65 px): about the pace of the zoom, whatever the photo's shape
 const VIDEO_PAN_MAX = 0.7;      // and never crosses more than this share of the photo's spare width
 const VIDEO_FADE = 0.5;         // a layer's fade, in seconds
+const VIDEO_END_GHOST = 0.2;    // how much of the closing card's background photo shows through (it is drawn in gray)
 // The safe zones (Nikki, 2026-11-26, from Instagram's 2026 guide): a reel keeps 220 px clear at the top and 450 at the
 // bottom; 250 at the top covers a story as well. Nothing that must be read sits outside them.
 const VIDEO_SAFE_TOP = 250;
@@ -307,6 +308,7 @@ function video_layer_css(): string {
          . ".L-words .pill.up{position:absolute;top:{$top}px;margin:0}.L-words .pill.up.left{left:72px}.L-words .pill.up.right{right:72px}"
          // The closing card: the logo, the address, who presents it, the site.
          . ".L-end{background:{$c['bg']};display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:" . ($top + 20) . "px 90px " . ($bot + 80) . "px;box-sizing:border-box}"
+         . ".L-end{isolation:isolate}.L-end img.bg{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:" . VIDEO_END_GHOST . ";filter:grayscale(1)}"
          . ".L-end .logo{height:280px}"
          . ".L-end .rule{width:92px;height:2px;background:{$c['accent']};margin:54px 0 44px}"
          . ".L-end .addr{font-weight:500;font-size:32px;line-height:1.45;letter-spacing:.2em;text-transform:uppercase;color:{$c['accent']}}"
@@ -417,7 +419,16 @@ function video_layer_html(array $v, string $key, ?string $base = null, bool $exp
     // The site line is the caller's ('end_site'); a video made before it was a field says monthaus.com.
     $site = array_key_exists('end_site', $v) ? trim((string)$v['end_site']) : 'monthaus.com';
     if ($site !== '') $h .= '<div class="site">' . $e($site) . '</div>';
-    return '<div class="L L-end">' . $h . '</div>';
+    // A ghosted photo behind it all: one of the video's photos, where it sits in its own slide (video_photo_focus()). The
+    // export reads the copy video_build() fetched ('end_bg_file').
+    $bg = '';
+    $at = $v['end_bg'] ?? null;
+    if ($at !== null && isset($v['photos'][(int)$at])) {
+        $src = $export ? (!empty($v['end_bg_file']) ? 'file://' . $v['end_bg_file'] : '') : (string)$v['photos'][(int)$at][0];
+        [$fx, $fy] = video_photo_focus($v, (int)$at);
+        if ($src !== '') $bg = '<img class="bg" src="' . $e($src) . '" alt="" style="object-position:' . ($fx * 100) . '% ' . ($fy * 100) . '%">';
+    }
+    return '<div class="L L-end">' . $bg . $h . '</div>';
 }
 
 /** One layer as a complete document on a transparent ground, for the export's screenshot. */

@@ -3685,6 +3685,19 @@ licensed track cannot be baked in; it is added in Instagram.
   rest to begin with. `video_logo_runs()` turns the ticks into runs, each a
   layer `logo{first}` on with its first photo and off before the photo after
   its last. A clip, or a video with no `logos` list, carries it throughout.
+- **Stop** (Nikki, 2026-11-27): while a video is being made a Stop button
+  sits beside Make video. It posts `stop=<job>` to video_export.php;
+  `video_job_stop()` ends the worker and everything it started (the worker
+  runs under `setsid`, so the whole session is ended with `pkill -s`; only
+  a process whose command line names the worker and that job folder),
+  clears the working files and leaves the job `stopped`. The form is never
+  touched: Make video starts a new one from what is on the page.
+- **The closing card may have a ghosted photo behind it** (Nikki,
+  2026-11-27): the form's Background photo (`end_bg`, None or one of the
+  photos picked, 1 = the cover; `$v['end_bg']` is its place), drawn in
+  gray at `VIDEO_END_GHOST`, placed as that photo is in its own slide. The
+  export fetches the photo before the card is captured (`end_bg_file`).
+  Photo videos only, not a clip.
 - **The closing card:** everything on it is a box on the form (address,
   name, phone, one more contact text, website) filled from the listing and
   the presenters picked, plus a Show the headshot or team logo tick: a

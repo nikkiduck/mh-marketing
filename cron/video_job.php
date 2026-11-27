@@ -27,6 +27,8 @@ set_time_limit(0);
 @file_put_contents('/proc/self/oom_score_adj', '800');
 $pid = getmypid(); $t0 = time();
 $write = function (array $s) use ($dir, $pid): void {
+    // Stopped from the page (video_job_stop()): nothing more is written, should this worker outlive the signal by a moment.
+    if ((json_decode((string)@file_get_contents("{$dir}/status.json"), true)['state'] ?? '') === 'stopped') exit(0);
     $tmp = "{$dir}/status.json.{$pid}";
     if (file_put_contents($tmp, json_encode($s + ['pid' => $pid, 'updated' => time()])) !== false) { @chmod($tmp, 0664); rename($tmp, "{$dir}/status.json"); }
 };

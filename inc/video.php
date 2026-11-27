@@ -281,6 +281,9 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
     $v['end_address'] = '';
     $v['end_site'] = '';
     $v['end_extra'] = '';
+    // A ghosted photo behind the closing card (Nikki, 2026-11-27): one of the video's own photos, by its place (the form's end_bg, 1 = the cover), or none.
+    $bg = (int)($in['end_bg'] ?? 0);
+    $v['end_bg'] = ($v['end'] && $kind === 'photos' && $bg >= 1 && isset($v['photos'][$bg - 1])) ? $bg - 1 : null;
     $v['agent'] = null;
     $v['agent2'] = null;
     if ($v['end']) {
@@ -348,12 +351,43 @@ function video_job_start(array $ctx, array $v): ?string {
     if (file_put_contents("{$dir}/job.json", json_encode($v, JSON_UNESCAPED_SLASHES)) === false) return null;
     video_status_write($dir, ['state' => 'queued', 'step' => 'Starting', 'pct' => 0, 'pid' => 0]);
     $worker = realpath(__DIR__ . '/../cron/video_job.php');
-    exec('nohup /usr/bin/php ' . escapeshellarg((string)$worker) . ' ' . escapeshellarg($dir) . ' > ' . escapeshellarg("{$dir}/job.log") . ' 2>&1 &');
+    // setsid: the worker and everything it starts (ffmpeg, Chromium) are one session, which video_job_stop() ends as a whole.
+    exec('nohup /usr/bin/setsid /usr/bin/php ' . escapeshellarg((string)$worker) . ' ' . escapeshellarg($dir) . ' > ' . escapeshellarg("{$dir}/job.log") . ' 2>&1 &');
     return $id;
 }
 
 /**
- * Where a job stands, for the page: ['state' => queued|running|done|failed,
+ * Stop a video that is being made (Nikki, 2026-11-27: "if I click Make the
+ * Video and then realise I've forgotten something, I need to be able to say
+ * Stop"). The worker and what it started are ended, its working files
+ * removed, and the job reads 'stopped'. Nothing on the page is touched: the
+ * form is as the person left it. True when the job is no longer running
+ * (stopped now, or already over).
+ */
+function video_job_stop(array $ctx, string $id): bool {
+    if (($dir = video_job_dir($ctx, $id)) === '') return false;
+    $s = json_decode((string)@file_get_contents("{$dir}/status.json"), true);
+    if (!is_array($s)) return false;
+    if (!in_array((string)($s['state'] ?? ''), ['queued', 'running'], true)) return true;
+    $pid = (int)($s['pid'] ?? 0);
+    // Only ever a process that is this job's own worker: its command line names the worker and this folder.
+    $cmd = $pid > 1 ? str_replace("\0", ' ', (string)@file_get_contents("/proc/{$pid}/cmdline")) : '';
+    if ($cmd !== '' && str_contains($cmd, 'video_job.php') && str_contains($cmd, $dir)) {
+        $own = function_exists('posix_getsid') && posix_getsid($pid) === $pid;   // started with setsid: the whole session is this video
+        foreach (['TERM', 'KILL'] as $n => $sig) {
+            if ($own) exec('/usr/bin/pkill -' . $sig . ' -s ' . $pid . ' 2>/dev/null');
+            else exec('/usr/bin/pkill -' . $sig . ' -P ' . $pid . ' 2>/dev/null; /bin/kill -' . $sig . ' ' . $pid . ' 2>/dev/null');
+            for ($k = 0; $k < 10 && is_dir("/proc/{$pid}"); $k++) usleep(100000);
+            if (!is_dir("/proc/{$pid}")) break;
+        }
+    }
+    video_tidy($dir);
+    video_status_write($dir, ['state' => 'stopped', 'step' => 'Stopped', 'pct' => 0, 'pid' => 0]);
+    return true;
+}
+
+/**
+ * Where a job stands, for the page: ['state' => queued|running|stopped|done|failed,
  * 'step', 'pct', and when done 'name', 'size', 'seconds'; when failed
  * 'error']. A worker that is gone without finishing (the box ran out of
  * memory, Apache restarted) reads as failed. Null when there is no such job.

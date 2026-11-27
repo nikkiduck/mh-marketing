@@ -160,9 +160,13 @@ function video_build(array $v, string $dir, ?callable $say = null): array {
     // 1. The layers and the closing card.
     $say('Drawing the text and the logo', 2);
     $layers = video_layers($v);
+    // The closing card's ghosted photo is brought in first: the card is captured from a page with no session.
+    $bg = (!empty($v['end']) && isset($v['end_bg'], $v['photos'][(int)$v['end_bg']])) ? video_fetch_photo($v['photos'][(int)$v['end_bg']], "{$dir}/end-bg.img") : null;
+    if ($bg) $v['end_bg_file'] = $bg;
     foreach (array_merge($layers, !empty($v['end']) ? ['end'] : []) as $key) {
         if (!video_shot(video_layer_document($v, $key), "{$dir}/layer-{$key}.png", $dir)) return $fail('The text could not be drawn. Please try again in a minute.');
     }
+    if ($bg) @unlink($bg);
 
     // 2. Each segment by itself.
     $work = video_work_args();
@@ -245,7 +249,7 @@ function video_build(array $v, string $dir, ?callable $say = null): array {
 
 /** The working files gone: everything in the folder but the video, its record and its log. */
 function video_tidy(string $dir): void {
-    foreach (glob($dir . '/{seg-*.mkv,x-*.mkv,layer-*.png,photo-*.img,list.txt,shot-*.html}', GLOB_BRACE) ?: [] as $f) @unlink($f);
+    foreach (glob($dir . '/{seg-*.mkv,x-*.mkv,layer-*.png,photo-*.img,end-bg.img,list.txt,shot-*.html}', GLOB_BRACE) ?: [] as $f) @unlink($f);
     $rm = function (string $d) use (&$rm): void {
         foreach (@scandir($d) ?: [] as $f) { if ($f === '.' || $f === '..') continue; $p = "$d/$f"; (is_dir($p) && !is_link($p)) ? $rm($p) : @unlink($p); }
         @rmdir($d);
