@@ -105,7 +105,7 @@ a3981c4f73d7aeeb99f132002f3ab4a5  inc/roster_alerts.php
 228fc28d7df0fc2b057d42bda679974b  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
 055653846d94067254f8540cb61c7eb4  inc/video.php
-67b2fee58bbecfa8161cafa4666bf0e0  inc/video_body.php
+bbebc2d1172645916e3ed2d0f49dbe7a  inc/video_body.php
 637071a2289af7decea749ff3c70147a  inc/video_export.php
 8f91bf9a4704c42d9a7172b70cda1c21  inc/video_render.php
 7a36f2831fc80bb7153aae9c63aad9f8  inc/whats_new.php
@@ -182,7 +182,7 @@ cc3066d6d79a0a78fa47a82575240194  template_flyer.php
 b5b24996763589a68d2c3f44b975fb73  template_location.php
 a924eed66e26f032bfcc7863ab458146  template_property.php
 816362f93bbbb55630243e539b9e2a45  template_social.php
-555c7217c9191fa55ad204d3cda2b29f  template_video.php
+292f3042b77ae4ec805d178ef4b592b3  template_video.php
 f56e1d5ba1e302967b6e19b93b31b56b  templates.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 2bc330146401a15cfb7318a7d81e94b1  users.php

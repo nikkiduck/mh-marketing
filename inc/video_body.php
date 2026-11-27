@@ -40,6 +40,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       <section class="sp-step" id="vdVideoStep">
         <h2 class="sp-step-h">Video</h2>
         <div class="sp-look" style="margin-top:0">
+          <span class="sp-look-l">Made from:</span>
           <label class="sp-pillopt"><input type="radio" name="kind" value="listing" checked><span>Listing</span></label>
           <label class="sp-pillopt"><input type="radio" name="kind" value="mine"><span>My Photos</span></label>
           <label class="sp-pillopt"><input type="radio" name="kind" value="clip"><span>Video Clip</span></label>
@@ -140,6 +141,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
           </div>
           <div class="vd-caps" id="vdCaps"></div>
         </div>
+      </section>
+
+      <?php /* My Photos: the rows for each photo (zoom, logo, text) move here, under Cover Design, though the photos are chosen above it. */ ?>
+      <section class="sp-step" id="vdSlidesStep" hidden>
+        <h2 class="sp-step-h">Slides</h2>
       </section>
 
       <section class="sp-step" id="vdClipStep" hidden>
@@ -294,7 +300,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     });
     // One row per chosen photo, in play order: its zoom, and from the second photo on its own text (the first is the
     // cover, whose text is the Cover Design). What was set stays with its photo.
-    capsWrap.hidden = !order.length;
+    capsWrap.hidden = !order.length; document.getElementById('vdSlidesStep').hidden = !isMine() || !order.length;
     capsEl.innerHTML = order.map((id, i) => {
       const t = photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(id) + '"] img'), z = zooms[id] || 100;
       return '<div class="vd-cap"><span class="vd-cap-p"><img src="' + esc(t ? t.src : '') + '" alt=""><b>' + (i === 0 ? 'COVER' : i + 1) + '</b></span><div class="vd-cap-b">'
@@ -467,6 +473,10 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     document.getElementById('vdNoListing').hidden = !c && !m;
     drop.hidden = !m; document.getElementById('vdPhotosH').textContent = m ? 'My Photos' : 'Photos';
     if (m) coverStep.before(photosStep); else coverStep.after(photosStep);
+    // My Photos: the photos are chosen above Cover Design, their zoom, logo and text set in a card of their own under it.
+    const slidesStep = document.getElementById('vdSlidesStep');
+    if (m) { slidesStep.appendChild(capsWrap); coverStep.after(slidesStep); } else photosStep.appendChild(capsWrap);
+    slidesStep.hidden = !m || !order.length;
     if (c) coverStep.before(clipStep); else photosStep.after(clipStep);
     listingField.firstChild.nodeValue = c || m ? 'Fill in the text from a listing (optional)\n' : 'Listing (every Mont Haus listing in the feed)\n';
     if (c || m) { coverStep.querySelector('h2').after(listingField); listingField.style.margin = '0 0 12px'; }

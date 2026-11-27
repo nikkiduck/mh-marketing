@@ -45,6 +45,7 @@ admin_tool_header([
     .vd-n { position:absolute; left:6px; top:6px; min-width:22px; height:22px; padding:0 6px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font:600 12px/1 var(--sans); color:#fff; background:rgba(43,48,56,.92); border-radius:999px; }
     .vd-n:empty { display:none; }
     .vd-subrow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 20px; margin:22px 0 4px; }
+    #vdSlidesStep .vd-subrow { margin-top:0; }
     .vd-sub { font:600 14px/1.3 var(--sans); color:#1f242c; margin:0; }
     .vd-caps { display:grid; gap:10px; margin-top:10px; }
     .vd-cap { display:grid; grid-template-columns:76px 1fr; gap:12px; align-items:start; }

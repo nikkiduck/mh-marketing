@@ -3701,7 +3701,10 @@ licensed track cannot be baked in; it is added in Instagram.
   **Video Clip** card sits above Cover Design too. In both, the Listing box
   moves into Cover Design as "Fill in the text from a listing (optional)";
   switching to My Photos clears what the listing had filled in and nobody
-  changed. `syncKind()` in inc/video_body.php moves the cards.
+  changed. In My Photos the rows for each photo (zoom, logo, text) are a
+  card of their own, Slides, UNDER Cover Design, though the photos are
+  chosen above it. `syncKind()` in inc/video_body.php moves the cards. The
+  pills are led by "Made from:" (taken off and put back the same day).
 - **The cover and the closing card have times of their own** (Nikki,
   2026-11-26: the cover "may need a second or two longer to read", "and the
   closing slide as well"): Cover Slide length (`cover_hold`, in Cover Design, 5 seconds to
