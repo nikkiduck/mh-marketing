@@ -3689,6 +3689,19 @@ licensed track cannot be baked in; it is added in Instagram.
   name, phone, one more contact text, website) filled from the listing and
   the presenters picked, plus a Show the headshot or team logo tick: a
   cleared box is left off, so a card can be bare for Instagram's stickers.
+- **Three sources** (Nikki, 2026-11-26, "moving on to non-listing videos"):
+  the pills Listing, My Photos, Video Clip (the form's `kind`: listing |
+  mine | clip; the first two are both the `photos` kind of video). **My
+  Photos** needs no listing: its card sits ABOVE Cover Design with the
+  uploader first (several photos at once, through the social tools'
+  portal/social_upload.php into the same uploads folder), then the
+  person's uploads and the stock library in folding groups
+  (`plan_photos.php?kind=library`), nothing picked to begin with; the
+  server takes only an upload of that person's or a stock photo there. The
+  **Video Clip** card sits above Cover Design too. In both, the Listing box
+  moves into Cover Design as "Fill in the text from a listing (optional)";
+  switching to My Photos clears what the listing had filled in and nobody
+  changed. `syncKind()` in inc/video_body.php moves the cards.
 - **The cover and the closing card have times of their own** (Nikki,
   2026-11-26: the cover "may need a second or two longer to read", "and the
   closing slide as well"): Cover Slide length (`cover_hold`, in Cover Design, 5 seconds to

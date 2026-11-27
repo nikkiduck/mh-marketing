@@ -1,7 +1,7 @@
 <?php
 /**
  * plan_photos.php — the photos a Social Media Plan template can pick from.
- * GET ?kind=property|broker|location|branding&subject=<listing id | agent id
+ * GET ?kind=property|broker|location|branding|library&subject=<listing id | agent id
  * | location key | season> → JSON {photos: [{id, thumb, large, own, caption,
  * group}], suggest: <the id to start with>}. A listing's photos come from the
  * site (remembered in the session so a posted one can be checked), a
@@ -43,6 +43,9 @@ if ($kind === 'property') {
     $suggest = $out[0]['id'] ?? '';
     $out = array_merge($out, plan_stock_tiles(), plan_upload_tiles($ctx));
     if ($suggest === '') $suggest = $out[0]['id'] ?? '';
+} elseif ($kind === 'library') {
+    // The Video tool's My Photos (2026-11-26): no subject. The person's own uploads, then the whole stock library by region.
+    $out = array_merge(plan_upload_tiles($ctx), plan_stock_tiles());
 } else {
     http_response_code(400); echo json_encode(['error' => 'kind?']); exit;
 }

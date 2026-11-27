@@ -208,13 +208,17 @@ function video_seconds_text(float $s): string { $s = (int)round($s); return intd
  * one on the approved roster.
  */
 function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
-    $kind = ($in['kind'] ?? 'photos') === 'clip' ? 'clip' : 'photos';
+    // The form's three sources (Nikki, 2026-11-26): listing (a listing's photos), mine (My Photos: the person's uploads
+    // and the stock library, no listing needed) and clip. The first two are both the `photos` kind of video.
+    $src = (string)($in['kind'] ?? 'listing');
+    $kind = $src === 'clip' ? 'clip' : 'photos';
+    $mine = $src === 'mine';
     $listing = plan_listing($conn, (string)($in['listing'] ?? ''));
     $one = fn(string $k, int $max) => mb_substr(trim(preg_replace('/\s+/', ' ', (string)($in[$k] ?? ''))), 0, $max);
 
     $v = ['kind' => $kind, 'photos' => [], 'clip' => null];
     if ($kind === 'photos') {
-        if (!$listing) return 'Choose a listing to see the video.';
+        if (!$mine && !$listing) return 'Choose a listing to see the video.';
         // captions[] and zooms[] run beside photos[]: each photo's own text (three rows at most, blank for none), its own zoom (100 to 200) and whether it shows the logo (1 or 0).
         $ids = array_values(array_map('strval', (array)($in['photos'] ?? [])));
         $texts = array_values(array_map('strval', (array)($in['captions'] ?? [])));
@@ -223,7 +227,9 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
         $v['captions'] = []; $v['zooms'] = []; $v['logos'] = [];
         foreach ($ids as $n => $id) {
             if ($id === '' || count($v['photos']) >= VIDEO_MAX_PHOTOS) continue;
-            [$url, $file] = plan_photo($ctx, $id, $listing);
+            // My Photos takes an upload of this person's or a stock photo and nothing else; a listing may be chosen there only to fill the text in.
+            if ($mine && !(str_starts_with($id, 'upload:') ? social_upload_file($ctx, substr($id, 7)) : (str_starts_with($id, 'stock:') ? social_stock_file(substr($id, 6)) : null))) continue;
+            [$url, $file] = plan_photo($ctx, $id, $mine ? null : $listing);
             // A board photo has no file here: the preview takes the site's 1600 copy, the export its 2048 (the board's own file).
             $v['photos'][] = [$url, $file, $file ? '' : str_replace('&w=1600', '&w=2048', $url)];
             $rows = array_slice(array_values(array_filter(array_map(fn($r) => trim(preg_replace('/\s+/', ' ', $r)), explode("\n", str_replace("\r", '', $texts[$n] ?? ''))), 'strlen')), 0, 3);
@@ -300,7 +306,7 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
         $v['agent'] = $both[0] ?? null;
         $v['agent2'] = $both[1] ?? null;
     }
-    $v['name'] = 'MH_' . ($listing && trim((string)$listing['address']) !== '' ? ads_slug((string)$listing['address']) : ($kind === 'clip' ? 'clip' : 'listing')) . '_video';
+    $v['name'] = 'MH_' . ($listing && trim((string)$listing['address']) !== '' ? ads_slug((string)$listing['address']) : ($kind === 'clip' ? 'clip' : ($mine ? 'photos' : 'listing'))) . '_video';
     return $v;
 }
 

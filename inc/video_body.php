@@ -7,7 +7,8 @@
  *
  * Expects: $ctx, $csrf, $vd_listings (plan_listings()), $vd_agents
  * (plan_agents()), $vd_clips (video_clips()), and the endpoint URLs
- * ($render_url, $export_url, $clip_url, $logo_url, $photos_url).
+ * ($render_url, $export_url, $clip_url, $logo_url, $photos_url,
+ * $upload_url, $delete_url).
  */
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $vd_phones = ads_agent_phones($conn);
@@ -36,14 +37,14 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     </aside>
 
     <div class="vd-main">
-      <section class="sp-step">
+      <section class="sp-step" id="vdVideoStep">
         <h2 class="sp-step-h">Video</h2>
-        <div class="sp-look">
-          <span class="sp-look-l">Made from</span>
-          <label class="sp-pillopt"><input type="radio" name="kind" value="photos" checked><span>Listing photos</span></label>
-          <label class="sp-pillopt"><input type="radio" name="kind" value="clip"><span>A video clip</span></label>
+        <div class="sp-look" style="margin-top:0">
+          <label class="sp-pillopt"><input type="radio" name="kind" value="listing" checked><span>Listing</span></label>
+          <label class="sp-pillopt"><input type="radio" name="kind" value="mine"><span>My Photos</span></label>
+          <label class="sp-pillopt"><input type="radio" name="kind" value="clip"><span>Video Clip</span></label>
         </div>
-        <label class="sp-field" style="margin-top:16px">Listing (every Mont Haus listing in the feed)
+        <label class="sp-field" id="vdListingField" style="margin-top:16px">Listing (every Mont Haus listing in the feed)
           <select name="listing" id="vdListing">
             <option value="" data-agent="0" id="vdNoListing" hidden>No listing: type the text yourself</option>
             <?php $first = true; foreach (plan_listing_groups($vd_listings) as $gname => $group): ?>
@@ -58,7 +59,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         </label>
       </section>
 
-      <section class="sp-step">
+      <section class="sp-step" id="vdCoverStep">
         <h2 class="sp-step-h">Cover Design</h2>
         <label class="sp-field" id="vdCoverHold" style="max-width:240px;margin-bottom:12px">Cover Slide length
             <select name="cover_hold">
@@ -112,7 +113,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       </section>
 
       <section class="sp-step" id="vdPhotosStep">
-        <h2 class="sp-step-h">Photos</h2>
+        <h2 class="sp-step-h" id="vdPhotosH">Photos</h2>
+        <div class="sp-drop" id="vdDrop" style="margin:0 0 14px" hidden>
+          <span id="vdDropMsg">Drop photos here, or <label class="sp-link" for="vdPhotoFile">choose them</label>.</span>
+          <input type="file" id="vdPhotoFile" accept="image/jpeg,image/png,image/webp,image/*" multiple hidden>
+        </div>
         <p class="sp-note">Click the photos in the order they should play, up to <?= VIDEO_MAX_PHOTOS ?>. Click one again to take it out.</p>
         <div class="sp-two" style="margin-top:12px">
           <label class="sp-field">Slide length
@@ -230,7 +235,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const f = n => form.querySelector('[name="' + n + '"]');
   const val = n => (form.querySelector('[name="' + n + '"]:checked') || f(n) || {}).value || '';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>;
+  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>;
   const CSRF = <?= json_encode($csrf) ?>, MAXP = <?= VIDEO_MAX_PHOTOS ?>, CHUNK = <?= VIDEO_CHUNK_BYTES ?>, MAXBYTES = <?= VIDEO_CLIP_MAX_BYTES ?>;
   const XF = <?= json_encode(VIDEO_XF / VIDEO_FPS) ?>, ENDS = <?= json_encode(VIDEO_END_SECONDS) ?>, COVERS = <?= json_encode(VIDEO_COVER_SECONDS) ?>;
   const stage = document.getElementById('vdStage'), frame = document.getElementById('vdFrame'), result = document.getElementById('vdResult');
@@ -240,7 +245,9 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const msg = document.getElementById('vdMsg'), bar = document.getElementById('vdBar'), make = document.getElementById('vdMake'), dl = document.getElementById('vdDownload');
   const listing = document.getElementById('vdListing'), clipSel = document.getElementById('vdClip'), upMsg = document.getElementById('vdUpMsg');
   let order = [], caps = {}, zooms = {}, logoSet = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
-  const isClip = () => val('kind') === 'clip';
+  // Three sources (Nikki, 2026-11-26): a listing's photos, My Photos (uploads and the stock library, no listing needed), a video clip.
+  const isClip = () => val('kind') === 'clip', isMine = () => val('kind') === 'mine', isListing = () => !isClip() && !isMine();
+  let gridFor = null;   // what the photo grid shows: 'mine', or 'l:' + a listing's id
 
   // ── The preview ──
   function scale() { frame.style.transform = 'scale(' + (stage.clientWidth / 1080) + ')'; }
@@ -305,21 +312,82 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (d.id) { caps[d.id] = e.target.value; update(); }
     if (d.zoom) { zooms[d.zoom] = +e.target.value; e.target.nextElementSibling.textContent = e.target.value + '%'; update(); }
   });
-  async function loadPhotos() {
-    order = []; caps = {}; zooms = {}; logoSet = {}; paint();
-    if (!listing.value) { photosEl.innerHTML = '<div class="sp-wait">Choose a listing to see its photos.</div>'; update(); return; }
-    photosEl.innerHTML = '<div class="sp-wait">Loading photos…</div>';
-    const u = new URL(PHOTOS, location.href); u.searchParams.set('kind', 'property'); u.searchParams.set('subject', listing.value);
+  // The grid: a listing's photos (its first five picked to begin with), or for My Photos the person's uploads and the
+  // stock library, one folding group each, nothing picked to begin with. keep = the picks stay (after an upload or a removal).
+  async function loadPhotos(keep) {
+    const mine = isMine();
+    if (!keep) { order = []; caps = {}; zooms = {}; logoSet = {}; }
+    paint();
+    gridFor = mine ? 'mine' : 'l:' + listing.value;
+    if (!mine && !listing.value) { photosEl.innerHTML = '<div class="sp-wait">Choose a listing to see its photos.</div>'; update(); return; }
+    if (!keep) photosEl.innerHTML = '<div class="sp-wait">Loading photos…</div>';
+    const u = new URL(PHOTOS, location.href);
+    if (mine) u.searchParams.set('kind', 'library'); else { u.searchParams.set('kind', 'property'); u.searchParams.set('subject', listing.value); }
+    const asked = gridFor;
     let j = { photos: [] };
     try { j = await (await fetch(u, { credentials: 'same-origin' })).json(); } catch (e) {}
+    if (asked !== gridFor) return;   // the source changed while this was on its way
     const tiles = j.photos || [];
-    if (!tiles.length) { photosEl.innerHTML = '<div class="sp-wait">No photos for this listing.</div>'; update(); return; }
-    order = tiles.filter(p => !p.own).slice(0, 5).map(p => p.id);   // a fresh listing starts with its first five photos
-    photosEl.innerHTML = tiles.map(p => '<label class="sp-photo" data-id="' + esc(p.id) + '" title="' + esc(p.own ? 'Your upload' : (p.caption || '')) + '"><img src="' + esc(p.thumb) + '" alt="" loading="lazy"><span class="vd-n"></span></label>').join('');
+    if (!tiles.length) { order = []; photosEl.innerHTML = '<div class="sp-wait">' + (mine ? 'No photos yet.' : 'No photos for this listing.') + '</div>'; paint(); update(); return; }
+    if (!mine && !keep) order = tiles.filter(p => !p.own).slice(0, 5).map(p => p.id);   // a fresh listing starts with its first five photos
+    order = order.filter(id => tiles.some(p => p.id === id));
+    const tile = (p, extra) => '<label class="sp-photo"' + (extra || '') + ' data-id="' + esc(p.id) + '" title="' + esc(p.own ? 'Your upload' : (p.caption || '')) + '"><img src="' + esc(p.thumb) + '" alt="" loading="lazy"><span class="vd-n"></span>'
+      + (mine && p.own ? '<button type="button" class="sp-del" data-id="' + esc(p.id) + '" title="Remove this photo" aria-label="Remove this photo">×</button>' : '') + '</label>';
+    if (!mine) photosEl.innerHTML = tiles.map(p => tile(p)).join('');
+    else {
+      const groups = [];
+      for (const p of tiles) { const g = groups.find(x => x[0] === p.group); if (g) g[1].push(p); else groups.push([p.group || 'Photos', [p]]); }
+      // A group is open when it is the person's own or holds a picked photo; with neither, the first one.
+      const open = groups.map(([name, list]) => list[0].own || list.some(p => order.includes(p.id)));
+      if (!open.includes(true)) open[0] = true;
+      photosEl.innerHTML = groups.map(([name, list], gi) => '<button type="button" class="sp-group sp-grp" data-grp="' + gi + '" aria-expanded="' + open[gi] + '">' + esc(name) + ' <b>' + list.length + '</b></button>'
+        + list.map(p => tile(p, ' data-grp="' + gi + '"' + (open[gi] ? '' : ' hidden'))).join('')).join('');
+    }
     paint(); update();
   }
+  // A group's header folds or unfolds its photos.
   photosEl.addEventListener('click', e => {
-    const t = e.target.closest('.sp-photo'); if (!t) return;
+    const h = e.target.closest('.sp-grp'); if (!h) return;
+    const open = h.getAttribute('aria-expanded') !== 'true';
+    h.setAttribute('aria-expanded', String(open));
+    photosEl.querySelectorAll('.sp-photo[data-grp="' + h.dataset.grp + '"]').forEach(t => t.hidden = !open);
+  });
+  // My Photos: the person's own photos, one or several at a time; each joins the end of the play order.
+  const drop = document.getElementById('vdDrop'), dropMsg = document.getElementById('vdDropMsg'), photoFile = document.getElementById('vdPhotoFile');
+  const dropAsk = 'Drop more here, or <label class="sp-link" for="vdPhotoFile">choose them</label>.';
+  async function uploadPhotos(list) {
+    const files = Array.from(list || []); if (!files.length) return;
+    drop.classList.add('busy'); let added = 0, err = '';
+    for (let k = 0; k < files.length; k++) {
+      dropMsg.textContent = 'Uploading ' + (files.length > 1 ? (k + 1) + ' of ' + files.length : files[k].name) + '…';
+      const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('photo', files[k]);
+      let j;
+      try { j = await (await fetch(UPLOAD, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); }
+      catch (e) { j = { error: 'The upload did not go through. Please try again.' }; }
+      if (j.error) { err = j.error; continue; }
+      added++; if (order.length < MAXP) order.push(j.id);
+    }
+    drop.classList.remove('busy'); photoFile.value = '';
+    dropMsg.innerHTML = (err ? esc(err) + ' ' : '') + (added ? (added > 1 ? added + ' photos added. ' : 'Added. ') : '') + dropAsk;
+    if (added) loadPhotos(true);
+  }
+  photoFile.addEventListener('change', e => uploadPhotos(e.target.files));
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => uploadPhotos(e.dataTransfer.files));
+  photosEl.addEventListener('click', async e => {
+    const b = e.target.closest('.sp-del'); if (!b) return;
+    e.preventDefault();
+    if (!confirm('Remove this photo from your uploads? Videos you already downloaded are not affected.')) return;
+    const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('id', b.dataset.id);
+    let j = {};
+    try { j = await (await fetch(DELETE_URL, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); } catch (err) { j = { error: 'That did not work. Please try again.' }; }
+    if (j.error) { alert(j.error); return; }
+    order = order.filter(id => id !== b.dataset.id);
+    loadPhotos(true);
+  });
+  photosEl.addEventListener('click', e => {
+    const t = e.target.closest('.sp-photo'); if (!t || e.target.closest('.sp-del')) return;
     e.preventDefault();
     const i = order.indexOf(t.dataset.id);
     if (i >= 0) order.splice(i, 1); else if (order.length < MAXP) order.push(t.dataset.id); else { say('A video takes up to ' + MAXP + ' photos. Take one out first.', true); return; }
@@ -386,18 +454,38 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (!confirm('Remove this team\'s logo? It comes off every later video too.')) return;
     const fd = new FormData(); fd.set('remove', '1'); teamLogo(fd);
   });
+  // The source decides the order of the cards: My Photos and Video Clip have their card (the uploader first) above
+  // Cover Design; a listing's photos stay under it. With no listing to choose, the Listing box moves into Cover Design
+  // as an optional way to fill the text in.
+  const videoStep = document.getElementById('vdVideoStep'), coverStep = document.getElementById('vdCoverStep'), photosStep = document.getElementById('vdPhotosStep'), clipStep = document.getElementById('vdClipStep');
+  const listingField = document.getElementById('vdListingField');
+  let lastKind = null;
   function syncKind() {
-    const c = isClip();
-    document.getElementById('vdPhotosStep').hidden = c; document.getElementById('vdClipStep').hidden = !c;
+    const c = isClip(), m = isMine(), k = val('kind');
+    photosStep.hidden = c; clipStep.hidden = !c;
     document.getElementById('vdCoverHold').hidden = c;   // a clip has no cover photo to time
-    document.getElementById('vdNoListing').hidden = !c;
-    if (!c && !listing.value) { listing.selectedIndex = 1; fromListing(); loadPhotos(); return; }
+    document.getElementById('vdNoListing').hidden = !c && !m;
+    drop.hidden = !m; document.getElementById('vdPhotosH').textContent = m ? 'My Photos' : 'Photos';
+    if (m) coverStep.before(photosStep); else coverStep.after(photosStep);
+    if (c) coverStep.before(clipStep); else photosStep.after(clipStep);
+    listingField.firstChild.nodeValue = c || m ? 'Fill in the text from a listing (optional)\n' : 'Listing (every Mont Haus listing in the feed)\n';
+    if (c || m) { coverStep.querySelector('h2').after(listingField); listingField.style.margin = '0 0 12px'; }
+    else { videoStep.appendChild(listingField); listingField.style.margin = '16px 0 0'; }
+    // My Photos starts with no listing: what the listing had filled in and nobody changed is cleared with it.
+    if (m && lastKind !== null && lastKind !== 'mine' && listing.value) {
+      const d = (listing.selectedOptions[0] || { dataset: {} }).dataset;
+      [['headline', d.headline], ['line1', d.line1], ['line2', d.line2], ['line3', d.line3], ['label', d.label]].forEach(([n, v]) => { if (f(n).value === (v || '')) f(n).value = ''; });
+      listing.value = ''; fromListing();
+    }
+    lastKind = k;
+    if (!c && !m && !listing.value) { listing.selectedIndex = 1; fromListing(); }
+    if (!c && gridFor !== (m ? 'mine' : 'l:' + listing.value)) { loadPhotos(); return; }
     update();
   }
   form.addEventListener('change', e => {
     const n = e.target.name;
     if (n === 'kind') { syncKind(); return; }
-    if (n === 'listing') { fromListing(); if (!isClip()) { loadPhotos(); return; } }
+    if (n === 'listing') { fromListing(); if (isListing()) { loadPhotos(); return; } }
     if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(1); syncBy(); }
     if (n === 'agent2') { agentTouched = true; by2Touched = false; fromAgent(2); syncBy(); }
     if (n === 'end') document.getElementById('vdEndFields').hidden = !f('end').checked;
@@ -490,6 +578,6 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     ask();
   });
 
-  scale(); fromListing(); syncKind(); loadPhotos();
+  scale(); fromListing(); syncKind();
 })();
 </script>
