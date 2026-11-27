@@ -14,7 +14,7 @@ $vd_phones = ads_agent_phones($conn);
 $vd_teams = mk_site_teams();
 // The options of both Presented by dropdowns: nobody, the teams (a team with a logo on file shows the logo and needs no name), the brokers.
 $vd_by_options = function () use ($vd_teams, $vd_agents, $vd_phones, $e): string {
-    $h = '<option value="0" data-name="" data-phone="">Nobody</option>';
+    $h = '<option value="0" data-name="" data-phone="">None</option>';
     if ($vd_teams) {
         $h .= '<optgroup label="Teams">';
         foreach ($vd_teams as $t) { $has = video_team_logo($t['key']) !== null; $h .= '<option value="t:' . $e($t['key']) . '" data-team="' . $e($t['key']) . '" data-team-name="' . $e($t['name']) . '" data-logo="' . ($has ? 1 : 0) . '" data-name="' . $e($has ? '' : $t['name']) . '" data-phone="">' . $e($t['name']) . '</option>'; }
