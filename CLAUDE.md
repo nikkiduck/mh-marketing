@@ -3691,8 +3691,8 @@ licensed track cannot be baked in; it is added in Instagram.
   cleared box is left off, so a card can be bare for Instagram's stickers.
 - **The cover and the closing card have times of their own** (Nikki,
   2026-11-26: the cover "may need a second or two longer to read", "and the
-  closing slide as well"): Cover photo stays (`cover_hold`, 5 seconds to
-  begin with) beside Each other photo stays (`hold`), and Closing card stays
+  closing slide as well"): Cover Slide length (`cover_hold`, in Cover Design, 5 seconds to
+  begin with), Slide length (`hold`, in Photos) and Closing Slide length
   (`end_hold`, 4 seconds to begin with); 2 to 8 seconds,
   `video_card_holds()`. `video_timeline()` reads them through
   `video_cover_seconds()` / `video_end_seconds()`; the page's length readout

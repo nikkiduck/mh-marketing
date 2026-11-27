@@ -60,6 +60,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
 
       <section class="sp-step">
         <h2 class="sp-step-h">Cover Design</h2>
+        <label class="sp-field" id="vdCoverHold" style="max-width:240px;margin-bottom:12px">Cover Slide length
+            <select name="cover_hold">
+              <?php foreach (video_card_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (float)$k === VIDEO_COVER_SECONDS ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
+            </select>
+        </label>
         <label class="sp-field">Headline (Line breaks allowed)
           <textarea name="headline" rows="2" maxlength="70"></textarea>
         </label>
@@ -110,18 +115,11 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         <h2 class="sp-step-h">Photos</h2>
         <p class="sp-note">Click the photos in the order they should play, up to <?= VIDEO_MAX_PHOTOS ?>. Click one again to take it out.</p>
         <div class="sp-two" style="margin-top:12px">
-          <label class="sp-field">Cover photo stays
-            <select name="cover_hold">
-              <?php foreach (video_card_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (float)$k === VIDEO_COVER_SECONDS ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
-            </select>
-          </label>
-          <label class="sp-field">Each other photo stays
+          <label class="sp-field">Slide length
             <select name="hold">
               <?php foreach (video_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (string)$k === '3' ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
             </select>
           </label>
-        </div>
-        <div class="sp-two" style="margin-top:12px">
           <div class="sp-look" style="margin-top:0;align-self:end">
             <span class="sp-look-l">Movement</span>
             <?php foreach (video_motions() as $k => $t): ?>
@@ -176,7 +174,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         <h2 class="sp-step-h">Closing card</h2>
         <label class="sp-check"><input type="checkbox" name="end" value="1" checked> End on a closing card</label>
         <div id="vdEndFields">
-          <label class="sp-field" style="margin-top:12px;max-width:240px">Closing card stays
+          <label class="sp-field" style="margin-top:12px;max-width:240px">Closing Slide length
             <select name="end_hold">
               <?php foreach (video_card_holds() as $k => $t): ?><option value="<?= $e($k) ?>"<?= (float)$k === VIDEO_END_SECONDS ? ' selected' : '' ?>><?= $e($t) ?></option><?php endforeach; ?>
             </select>
@@ -391,6 +389,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   function syncKind() {
     const c = isClip();
     document.getElementById('vdPhotosStep').hidden = c; document.getElementById('vdClipStep').hidden = !c;
+    document.getElementById('vdCoverHold').hidden = c;   // a clip has no cover photo to time
     document.getElementById('vdNoListing').hidden = !c;
     if (!c && !listing.value) { listing.selectedIndex = 1; fromListing(); loadPhotos(); return; }
     update();
