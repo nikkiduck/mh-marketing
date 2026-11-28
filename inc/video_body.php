@@ -269,7 +269,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const photosEl = document.getElementById('vdPhotos'), picked = document.getElementById('vdPicked');
   const msg = document.getElementById('vdMsg'), bar = document.getElementById('vdBar'), make = document.getElementById('vdMake'), dl = document.getElementById('vdDownload');
   const listing = document.getElementById('vdListing'), clipSel = document.getElementById('vdClip'), upMsg = document.getElementById('vdUpMsg');
-  let order = [], caps = {}, zooms = {}, focus = {}, logoSet = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, busy = false;
+  let order = [], caps = {}, zooms = {}, focus = {}, logoSet = {}, agentTouched = false, byTouched = false, by2Touched = false, addrTouched = false, endTouched = false, busy = false;
   // Three sources (Nikki, 2026-11-26): a listing's photos, My Photos (uploads and the stock library, no listing needed), a video clip.
   const isClip = () => val('kind') === 'clip', isMine = () => val('kind') === 'mine', isListing = () => !isClip() && !isMine();
   let gridFor = null;   // what the photo grid shows: 'mine', or 'l:' + a listing's id
@@ -675,6 +675,8 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       [['headline', d.headline], ['line1', d.line1], ['line2', d.line2], ['line3', d.line3], ['label', d.label]].forEach(([n, v]) => { if (f(n).value === (v || '')) f(n).value = ''; });
       listing.value = ''; fromListing();
     }
+    // My Photos starts with no closing card (Nikki, 2026-11-28); a listing or a clip starts with one. A tick set by hand stays.
+    if (!endTouched && !restoring && lastKind !== k) { f('end').checked = !m; document.getElementById('vdEndFields').hidden = m; }
     lastKind = k;
     if (!c && !m && !listing.value && !restoring) { listing.selectedIndex = 1; fromListing(); }
     if (!c && gridFor !== (m ? 'mine' : 'l:' + listing.value)) { loadPhotos(); return; }
@@ -690,7 +692,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (n === 'listing') { fromListing(); if (isListing()) { loadPhotos(); return; } }
     if (n === 'agent') { agentTouched = true; byTouched = false; fromAgent(1); syncBy(); }
     if (n === 'agent2') { agentTouched = true; by2Touched = false; fromAgent(2); syncBy(); }
-    if (n === 'end') document.getElementById('vdEndFields').hidden = !f('end').checked;
+    if (n === 'end') { endTouched = true; document.getElementById('vdEndFields').hidden = !f('end').checked; }
     if (n === 'end_bg') endBg = order[+e.target.value - 1] || '';
     if (n === 'words_all') syncAll();
     if (n === 'logo_kind') { document.getElementById('vdLogoRanges').hidden = val('logo_kind') === 'none'; syncAll(); }
@@ -861,7 +863,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     order = (Array.isArray(d.order) ? d.order : []).map(String).slice(0, MAXP);
     caps = obj(d.caps); zooms = obj(d.zooms); focus = obj(d.focus); logoSet = obj(d.logos); endBg = String(d.endBg || ''); suggested = {}; sugSeen = [];
     if (isListing() && !listing.value) order = [];   // the listing has left the feed: its photos cannot be shown
-    agentTouched = byTouched = by2Touched = addrTouched = true;   // everything is as it was saved: nothing is filled in again
+    agentTouched = byTouched = by2Touched = addrTouched = endTouched = true;   // everything is as it was saved: nothing is filled in again
     document.getElementById('vdEndFields').hidden = !f('end').checked;
     document.getElementById('vdLogoRanges').hidden = val('logo_kind') === 'none';
     document.querySelectorAll('#vdLogoRanges input').forEach(i => { i.nextElementSibling.textContent = i.value + (i.name === 'logo_scale' ? '%' : ''); });
