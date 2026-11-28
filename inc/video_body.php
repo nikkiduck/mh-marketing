@@ -36,6 +36,12 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       <div class="vd-tabs"><button type="button" class="vd-tab on" id="vdTabPreview">Preview</button><button type="button" class="vd-tab" id="vdTabResult" disabled>Finished video</button></div>
       <p class="vd-len" id="vdLen"></p>
       <p class="vd-len" id="vdMoveTip" hidden>Drag a photo in the preview to move it.</p>
+      <?php /* The caption for the post: a listing writes it (video_caption.php), the person changes and copies it; kept with a saved video. */ ?>
+      <div class="vd-capbox">
+        <label for="vdCaption">Caption</label>
+        <textarea name="caption" id="vdCaption" rows="6" maxlength="<?= CAPTION_MAX ?>"></textarea>
+        <p><button type="button" class="sp-btn" id="vdCapCopy">Copy caption</button><button type="button" class="sp-btn sp-btn-soft" id="vdCapFill" hidden>Fill from the listing</button></p>
+      </div>
     </aside>
 
     <div class="vd-main">
@@ -254,7 +260,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const f = n => form.querySelector('[name="' + n + '"]');
   const val = n => (form.querySelector('[name="' + n + '"]:checked') || f(n) || {}).value || '';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>, SUGGEST = <?= json_encode($suggest_url) ?>;
+  const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>, SUGGEST = <?= json_encode($suggest_url) ?>, CAPTION = <?= json_encode($caption_url ?? '') ?>;
   const CSRF = <?= json_encode($csrf) ?>, MAXP = <?= VIDEO_MAX_PHOTOS ?>, CHUNK = <?= VIDEO_CHUNK_BYTES ?>, MAXBYTES = <?= VIDEO_CLIP_MAX_BYTES ?>;
   const XF = <?= json_encode(VIDEO_XF / VIDEO_FPS) ?>, ENDS = <?= json_encode(VIDEO_END_SECONDS) ?>, COVERS = <?= json_encode(VIDEO_COVER_SECONDS) ?>;
   const stage = document.getElementById('vdStage'), frame = document.getElementById('vdFrame'), result = document.getElementById('vdResult');
@@ -570,6 +576,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       f('label').value = Array.from(f('label').options).some(x => x.value === d.label) ? d.label : '';
     }
     if (!addrTouched) f('end_address').value = d.end || '';
+    fillCaption(false);
     if (!agentTouched) {
       const set = (n, v) => { f(n).value = f(n).querySelector('option[value="' + (v || '0') + '"]') ? (v || '0') : '0'; };
       set('agent', d.agent); set('agent2', d.agent2);
@@ -578,6 +585,25 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       syncBy();
     }
   }
+  // The caption is the listing's (video_caption.php) and changes with it. With the listing taken away, a caption nobody
+  // changed goes with it. asked = the button: the listing's own caption again, over what is there.
+  const capBox = document.getElementById('vdCaption'), capFill = document.getElementById('vdCapFill'), capCopy = document.getElementById('vdCapCopy');
+  let capFrom = '', capSeq = 0;
+  async function fillCaption(asked) {
+    const id = listing.value, seq = ++capSeq;
+    capFill.hidden = !id || !CAPTION;
+    if (!id || !CAPTION) { if (capBox.value === capFrom) capBox.value = ''; capFrom = ''; return; }
+    let j;
+    try { j = await (await fetch(CAPTION + '?listing=' + encodeURIComponent(id), { credentials: 'same-origin' })).json(); } catch (e) { j = null; }
+    if (seq !== capSeq) return;   // another listing was picked meanwhile
+    if (!j || typeof j.caption !== 'string') { if (asked) say((j && j.error) || 'The caption could not be written. Please try again.', true); return; }
+    capBox.value = capFrom = j.caption;
+  }
+  capFill.addEventListener('click', () => fillCaption(true));
+  capCopy.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(capBox.value); } catch (e) { capBox.select(); document.execCommand('copy'); }
+    capCopy.textContent = 'Copied'; setTimeout(() => { capCopy.textContent = 'Copy caption'; }, 1500);
+  });
   // The presenter picked fills that side's name and phone; both stay editable.
   function fromAgent(k) {
     const d = (f(k === 2 ? 'agent2' : 'agent').selectedOptions[0] || { dataset: {} }).dataset;
@@ -657,6 +683,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   form.addEventListener('change', e => {
     const n = e.target.name;
     if (e.target.dataset.zoom || e.target.dataset.id) return;   // a photo's zoom and text see to the preview themselves (above)
+    if (n === 'caption') return;   // not in the video
     // Another source, or another listing's photos, is another video: it no longer saves over the one that was opened.
     if (n === 'kind' || (n === 'listing' && isListing())) savedId = '';
     if (n === 'kind') { syncKind(); return; }
@@ -839,6 +866,9 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     document.getElementById('vdLogoRanges').hidden = val('logo_kind') === 'none';
     document.querySelectorAll('#vdLogoRanges input').forEach(i => { i.nextElementSibling.textContent = i.value + (i.name === 'logo_scale' ? '%' : ''); });
     syncBy();
+    // The caption is as it was saved. A video saved before there was a caption box gets its listing's.
+    capSeq++; capFrom = ''; capFill.hidden = !listing.value || !CAPTION;
+    if (!('caption' in fl) && listing.value) fillCaption(false);
     dl.hidden = true; tabR.disabled = true; show('preview');
     const want = order.length;
     lastKind = val('kind'); gridFor = isMine() ? 'mine' : 'l:' + listing.value;

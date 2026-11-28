@@ -35,6 +35,28 @@
 require_once __DIR__ . '/plan.php';
 require_once __DIR__ . '/ads.php';            // the brokers' phones, the address slug
 require_once __DIR__ . '/video_export.php';   // includes video_render.php
+require_once __DIR__ . '/captions.php';       // caption_clean(), caption_units()
+
+/**
+ * The Caption box's text for a listing (Nikki's own caption for 89 Bunker
+ * Loop, 2026-11-27, is the shape):
+ *
+ *   Presenting <address>, <town>          (a closing: Just Sold: … / Just Leased: …)
+ *   Offered at $<price>                   (a sale that is not closed; a rental shows no rate)
+ *
+ *   the listing's description, its paragraphs kept
+ *
+ * No hashtags and nobody tagged: hers had none. $remarks '' = no description.
+ */
+function video_caption(array $l, string $remarks): string {
+    $rental = (int)($l['is_rental'] ?? 0) === 1;
+    $closed = !empty($l['closed']);
+    $where  = implode(', ', array_filter([trim((string)($l['address'] ?? '')), trim((string)($l['city'] ?? ''))], 'strlen'));
+    $head   = [($closed ? ($rental ? 'Just Leased: ' : 'Just Sold: ') : 'Presenting ') . $where];
+    if (!$closed && !$rental && (float)($l['list_price'] ?? 0) > 0) $head[] = 'Offered at $' . number_format((float)$l['list_price']);
+    $body = trim((string)preg_replace("/\n{3,}/", "\n\n", caption_clean($remarks)));
+    return caption_clean(caption_units(implode("\n", $head) . ($body !== '' ? "\n\n" . $body : '')));
+}
 
 const VIDEO_CLIP_MAX_BYTES = 600 * 1024 * 1024;   // one uploaded clip
 const VIDEO_CHUNK_BYTES    = 4 * 1024 * 1024;     // a piece of an upload (PHP's post_max_size here is 8M)

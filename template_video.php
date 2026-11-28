@@ -25,7 +25,7 @@ $vd_listings = plan_listings($conn);
 $vd_agents   = plan_agents($conn);
 $vd_clips    = video_clips($ctx);
 $csrf = (string)$_SESSION['csrf_token'];
-$render_url = 'video_render.php'; $export_url = 'video_export.php'; $clip_url = 'video_clip.php'; $logo_url = 'video_team_logo.php'; $photos_url = 'plan_photos.php'; $saved_url = 'video_saved.php';
+$render_url = 'video_render.php'; $export_url = 'video_export.php'; $clip_url = 'video_clip.php'; $logo_url = 'video_team_logo.php'; $photos_url = 'plan_photos.php'; $saved_url = 'video_saved.php'; $caption_url = 'video_caption.php';
 // My Photos: the person's own uploads go through the social tools' endpoints, into the same folder those tools read.
 require_once __DIR__ . '/inc/video_ai.php';
 $suggest_url = video_ai_enabled() ? 'video_suggest.php' : '';   // Suggest Texts, when the Claude API key and client are there
@@ -40,7 +40,7 @@ admin_tool_header([
     'css'     => plan_admin_css() . '
     .wrap { max-width:1180px; }
     .vd { display:grid; grid-template-columns:1fr; gap:20px; align-items:start; }
-    @media (min-width:900px) { .vd { grid-template-columns:340px 1fr; } .vd-side { position:sticky; top:82px; } }
+    @media (min-width:900px) { .vd { grid-template-columns:340px 1fr; } .vd-side { position:sticky; top:82px; max-height:calc(100vh - 94px); overflow-y:auto; scrollbar-width:thin; } }
     .vd-stage { position:relative; width:100%; max-width:340px; margin:0 auto; aspect-ratio:9 / 16; overflow:hidden; border-radius:14px; background:#14181e; }
     .vd-stage iframe, .vd-stage video { position:absolute; left:0; top:0; border:0; }
     .vd-stage iframe { width:1080px; height:1920px; transform-origin:0 0; pointer-events:none; background:#14181e; }
@@ -54,6 +54,12 @@ admin_tool_header([
     .vd-tab { font:500 13px/1 var(--sans); padding:8px 14px; border:1.5px solid #dfe3e8; border-radius:999px; background:#fff; color:#1f242c; cursor:pointer; }
     .vd-tab.on { border-color:#4a5566; background:#4a5566; color:#fff; }
     .vd-tab:disabled { opacity:.35; cursor:not-allowed; }
+    /* The caption for the post, under the preview: written from the listing, then changed and copied by hand. */
+    .vd-capbox { max-width:340px; margin:16px auto 2px; }
+    .vd-capbox label { display:block; font:600 13px/1.2 var(--sans); color:#1f242c; margin:0 0 6px; }
+    .vd-capbox textarea { display:block; width:100%; box-sizing:border-box; min-height:120px; resize:vertical; font:400 14px/1.45 var(--sans); color:#1f242c; padding:10px 12px; border:1.5px solid #dfe3e8; border-radius:8px; background:#fff; }
+    .vd-capbox p { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 0; }
+    .vd-capbox .sp-btn { font-size:13px; padding:8px 14px; }
     .vd-len { text-align:center; font-size:13px; color:#6b7a8f; margin:10px 0 0; }
     .vd-photos { display:grid; grid-template-columns:repeat(auto-fill, minmax(92px, 1fr)); gap:8px; margin-top:14px; }
     .vd-photos .sp-photo { position:relative; display:block; aspect-ratio:4 / 3; overflow:hidden; border-radius:6px; cursor:pointer; outline:3px solid transparent; outline-offset:-3px; }

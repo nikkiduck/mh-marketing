@@ -3702,6 +3702,16 @@ licensed track cannot be baked in; it is added in Instagram.
   save; the one copied is never touched). The saved video is handed to the
   page as `OPEN`; after a save the address becomes `?open=<its id>`. A
   card's picture and length are `thumb` and `secs` in what the page saved.
+- **Caption** (Nikki, 2026-11-27: "a field for Caption ... below the
+  preview"): a box under the preview with Copy caption. A listing writes it
+  (`video_caption()` in inc/video.php, endpoint video_caption.php): her own
+  caption for 89 Bunker Loop is the shape, "Presenting {address}, {town}" /
+  "Offered at ${price}" / the listing's description with its paragraphs. A
+  closing reads Just Sold: or Just Leased: with no price, a rental shows no
+  rate, and there are no hashtags or tags. No model writes it. Another
+  listing picked replaces it; Fill from the listing puts the listing's back.
+  It is a form field (`caption`), so it is kept with a saved video; it is
+  not in the video. The preview column scrolls by itself on a short window.
 - **Saved videos** (Nikki, 2026-11-27: "save the video for editing later
   ... all my settings and photos are there"): one JSON file per saved video
   in the person's own folder (`video/admin-{id}/saved/{id}.json`, no
