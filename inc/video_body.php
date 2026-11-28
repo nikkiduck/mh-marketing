@@ -675,8 +675,8 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       [['headline', d.headline], ['line1', d.line1], ['line2', d.line2], ['line3', d.line3], ['label', d.label]].forEach(([n, v]) => { if (f(n).value === (v || '')) f(n).value = ''; });
       listing.value = ''; fromListing();
     }
-    // My Photos starts with no closing card (Nikki, 2026-11-28); a listing or a clip starts with one. A tick set by hand stays.
-    if (!endTouched && !restoring && lastKind !== k) { f('end').checked = !m; document.getElementById('vdEndFields').hidden = m; }
+    // My Photos and Video Clip start with no closing card (Nikki, 2026-11-28); a listing starts with one. A tick set by hand stays.
+    if (!endTouched && !restoring && lastKind !== k) { f('end').checked = !m && !c; document.getElementById('vdEndFields').hidden = m || c; }
     lastKind = k;
     if (!c && !m && !listing.value && !restoring) { listing.selectedIndex = 1; fromListing(); }
     if (!c && gridFor !== (m ? 'mine' : 'l:' + listing.value)) { loadPhotos(); return; }

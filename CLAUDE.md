@@ -3702,8 +3702,8 @@ licensed track cannot be baked in; it is added in Instagram.
   save; the one copied is never touched). The saved video is handed to the
   page as `OPEN`; after a save the address becomes `?open=<its id>`. A
   card's picture and length are `thumb` and `secs` in what the page saved.
-- **My Photos starts with no closing card** (Nikki, 2026-11-28); Listing and
-  Video Clip start with one. Changing the source sets the tick until someone
+- **My Photos and Video Clip start with no closing card** (Nikki,
+  2026-11-28); Listing starts with one. Changing the source sets the tick until someone
   sets it by hand (`endTouched` in inc/video_body.php); a saved video opens
   as it was saved.
 - **Caption** (Nikki, 2026-11-27: "a field for Caption ... below the
