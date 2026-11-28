@@ -11,6 +11,16 @@ require_once __DIR__ . '/inc/video.php';
 require_once __DIR__ . '/inc/admin_tool_shell.php';
 $ctx = plan_gate($conn);
 
+// The first page is the saved videos (inc/video_list.php). The editor (inc/video_body.php) opens with ?new=1 (a blank
+// one), ?open=<id> (a saved one, saved over when it is saved again) or ?copy=<id> (Replicate: everything a saved one
+// holds, as a new video).
+$vd_edit = isset($_GET['new']) || isset($_GET['open']) || isset($_GET['copy']);
+$vd_copy = !isset($_GET['open']) && isset($_GET['copy']);
+$vd_open = null;
+if (isset($_GET['open']) || isset($_GET['copy'])) {
+    $vd_open = video_saved_read($ctx, (string)($_GET['open'] ?? $_GET['copy']));
+    if (!$vd_open) { header('Location: template_video.php'); exit; }
+}
 $vd_listings = plan_listings($conn);
 $vd_agents   = plan_agents($conn);
 $vd_clips    = video_clips($ctx);
@@ -24,7 +34,7 @@ $upload_url = social_url($ctx, '/portal/social_upload.php'); $delete_url = socia
 admin_tool_header([
     'title'   => 'Video',
     'hint'    => 'A story or reel as a video: a listing\'s photos in motion, or a video clip you upload, with the logo, the text and a closing card. It downloads as an MP4; add music in Instagram when you post.',
-    'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>',
+    'actions' => ($vd_edit ? '<a class="btn btn-outline btn-sm" href="template_video.php"><i class="ti ti-movie"></i> Saved videos</a> ' : '') . '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>',
     'styles'  => ['/assets/css/social.css'],
     'active'  => 'social',
     'css'     => plan_admin_css() . '
@@ -85,8 +95,19 @@ admin_tool_header([
     .sp-help.bad { color:#8f2424; }
     .sp-btn:disabled { opacity:.45; cursor:not-allowed; }
     .sp-field textarea { font-family:inherit; }
+    /* The first page: the saved videos. */
+    .vl-top { display:flex; align-items:center; gap:14px; margin:0 0 18px; }
+    .vl-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:16px; }
+    .vl-card { background:var(--card, #fff); border:1px solid var(--line, #dfe3e8); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; }
+    .vl-thumb { display:block; aspect-ratio:4 / 3; background:#14181e; }
+    .vl-thumb img { display:block; width:100%; height:100%; object-fit:cover; }
+    .vl-body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:4px; flex:1; }
+    .vl-name { font-family:var(--serif); font-size:22px; font-weight:500; line-height:1.2; margin:0; overflow-wrap:anywhere; }
+    .vl-about, .vl-when { font-size:13px; color:#6b7a8f; margin:0; }
+    .vl-acts { display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; padding-top:12px; }
+    .vl-acts .vd-mini { text-decoration:none; font-size:14px; padding:6px 14px; }
     [hidden] { display:none !important; }
     ',
 ]);
-include __DIR__ . '/inc/video_body.php';
+include __DIR__ . ($vd_edit ? '/inc/video_body.php' : '/inc/video_list.php');
 admin_tool_footer();

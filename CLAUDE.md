@@ -3692,6 +3692,16 @@ licensed track cannot be baked in; it is added in Instagram.
   closing card's background); the photo that lands first is the cover. The
   row's thumbnail is NOT the handle: dragging it moves the photo in the
   frame.
+- **The Video page opens on the saved videos** (Nikki, 2026-11-27: "a
+  separate landing page with the saved videos ... Replicate an existing
+  video"): template_video.php with no query is the list
+  (inc/video_list.php: Create new video, and a card for each saved one
+  with Edit, Replicate, Delete). The editor (inc/video_body.php) is
+  `?new=1`, `?open=<id>` (saved over when saved again) or `?copy=<id>`
+  (Replicate: everything that video holds, as a NEW video from its first
+  save; the one copied is never touched). The saved video is handed to the
+  page as `OPEN`; after a save the address becomes `?open=<its id>`. A
+  card's picture and length are `thumb` and `secs` in what the page saved.
 - **Saved videos** (Nikki, 2026-11-27: "save the video for editing later
   ... all my settings and photos are there"): one JSON file per saved video
   in the person's own folder (`video/admin-{id}/saved/{id}.json`, no

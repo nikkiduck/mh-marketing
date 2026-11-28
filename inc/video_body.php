@@ -8,7 +8,8 @@
  * Expects: $ctx, $csrf, $vd_listings (plan_listings()), $vd_agents
  * (plan_agents()), $vd_clips (video_clips()), and the endpoint URLs
  * ($render_url, $export_url, $clip_url, $logo_url, $photos_url,
- * $upload_url, $delete_url, $saved_url).
+ * $upload_url, $delete_url, $saved_url), and $vd_open (a saved video to
+ * open: video_saved_read(), or null) with $vd_copy (open it as a new one).
  */
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $vd_phones = ads_agent_phones($conn);
@@ -38,16 +39,8 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     </aside>
 
     <div class="vd-main">
-      <?php /* Saved videos (video_saved.php): shown once there is one. Opening one fills this form again. */ ?>
-      <section class="sp-step" id="vdSavedStep" hidden>
-        <h2 class="sp-step-h">Saved videos</h2>
-        <div class="vd-up" style="margin-top:0">
-          <select id="vdSaved" aria-label="Saved videos" style="flex:1 1 260px;min-width:0"></select>
-          <button type="button" class="vd-mini" id="vdSavedOpen">Open</button>
-          <button type="button" class="vd-mini" id="vdSavedDel">Delete</button>
-        </div>
-        <p class="sp-help" id="vdSavedMsg" style="margin:8px 0 0" hidden></p>
-      </section>
+      <?php /* What was opened or copied from the saved videos (template_video.php ?open= / ?copy=), and anything it could not bring back. */ ?>
+      <p class="sp-help" id="vdOpenMsg" style="margin:0 0 12px" hidden></p>
       <section class="sp-step" id="vdVideoStep">
         <h2 class="sp-step-h">Video</h2>
         <div class="sp-look" style="margin-top:0">
@@ -316,11 +309,13 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     } catch (e) { /* the previous preview stays */ }
   }
   // The length, worked out as the server's timeline does (inc/video_render.php, video_timeline()): a readout only.
+  let lastSecs = 0;   // the length last worked out, kept with a saved video for its card
   function length() {
     let s = 0;
     if (isClip()) s = clipSel.value ? Math.max(3, +f('clip_length').value || 0) : 0;
     else s = order.length ? (+val('cover_hold') || COVERS) + (order.length - 1) * (+val('hold') || 3) + XF : 0;
     if (s && f('end').checked) s += +val('end_hold') || ENDS;
+    lastSecs = s ? Math.round(s * 10) / 10 : 0;
     lenOut.textContent = s ? 'About ' + (Math.round(s * 10) / 10) + ' seconds, 1080 × 1920' : '';
   }
 
@@ -785,7 +780,9 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   // set on each. restore() puts it back and fills nothing in from a listing. Saved by the button, and by itself each
   // time Make video is pressed; an opened one is saved over until the source or the listing is changed.
   const SAVED = <?= json_encode($saved_url ?? '') ?>;
-  const savedStep = document.getElementById('vdSavedStep'), savedSel = document.getElementById('vdSaved'), savedMsg = document.getElementById('vdSavedMsg');
+  // The saved video this page was opened with (template_video.php ?open= or ?copy=), or null for a new one.
+  const OPEN = <?= json_encode(!empty($vd_open) ? ['id' => $vd_open['id'], 'name' => $vd_open['name'], 'data' => $vd_open['data']] : null, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) ?>, COPY = <?= !empty($vd_copy) ? 'true' : 'false' ?>;
+  const openMsg = document.getElementById('vdOpenMsg');
   let savedId = '';
   const skip = n => n === 'csrf_token' || n === 'end_bg' || n.endsWith('[]');
   function snapshot() {
@@ -797,16 +794,13 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
       else fields[n] = el.value;
     });
     const mine = o => Object.fromEntries(order.filter(id => id in o).map(id => [id, o[id]]));
-    return { v: 1, fields, order: order.slice(), caps: mine(caps), zooms: mine(zooms), focus: mine(focus), logos: mine(logoSet), endBg };
+    // thumb and secs are for the card on the first page only: the cover's small picture and the video's length.
+    const t = order.length ? photosEl.querySelector('.sp-photo[data-id="' + CSS.escape(order[0]) + '"] img') : null;
+    return { v: 1, fields, order: order.slice(), caps: mine(caps), zooms: mine(zooms), focus: mine(focus), logos: mine(logoSet), endBg, thumb: t ? t.src : '', secs: lastSecs };
   }
   const firstRow = t => String(t || '').split('\n')[0].trim();
   const savedName = () => firstRow(f('end_address').value) || firstRow(f('headline').value) || firstRow(f('line1').value) || 'Video';
-  const savedWhen = t => new Date(t * 1000).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-  function savedSay(t, bad) { savedMsg.hidden = !t; savedMsg.textContent = t; savedMsg.classList.toggle('bad', !!bad); }
-  function listSaved(list) {
-    savedStep.hidden = !list.length;
-    savedSel.innerHTML = list.map(s => '<option value="' + esc(s.id) + '"' + (s.id === savedId ? ' selected' : '') + '>' + esc(s.name + '  ·  ' + savedWhen(s.saved)) + '</option>').join('');
-  }
+  function openSay(t, bad) { openMsg.hidden = !t; openMsg.textContent = t; openMsg.classList.toggle('bad', !!bad); }
   async function saveVideo(quiet) {
     if (!SAVED) return false;
     const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('data', JSON.stringify(snapshot())); fd.append('name', savedName());
@@ -814,8 +808,10 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     let j;
     try { j = await (await fetch(SAVED, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); } catch (e) { j = { error: 'That could not be saved. Please try again.' }; }
     if (!j || j.error || !j.id) { if (!quiet) say((j && j.error) || 'That could not be saved. Please try again.', true); return false; }
-    savedId = j.id; listSaved(j.saved || []);
-    if (!quiet) say('Saved. Open it again from Saved videos at the top of this page.');
+    savedId = j.id;
+    // The address now names this saved video: a reload opens it, and does not copy or start again.
+    try { history.replaceState(null, '', location.pathname + '?open=' + encodeURIComponent(savedId)); } catch (e) {}
+    if (!quiet) say('Saved. It is on the Saved videos page, to open or replicate later.');
     return true;
   }
   document.getElementById('vdSave').addEventListener('click', () => saveVideo(busy));
@@ -853,27 +849,13 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
          : gone === 'clip' && isClip() ? 'That clip is no longer on the server. Upload it again; everything else is as it was saved.'
          : lost > 0 ? (lost === 1 ? 'One photo is' : lost + ' photos are') + ' no longer there and ' + (lost === 1 ? 'was' : 'were') + ' left out. Everything else is as it was saved.' : '';
   }
-  document.getElementById('vdSavedOpen').addEventListener('click', async () => {
-    const id = savedSel.value; if (!id || busy) return;
-    let j;
-    try { j = await (await fetch(SAVED + '?id=' + encodeURIComponent(id), { credentials: 'same-origin' })).json(); } catch (e) { j = null; }
-    if (!j || j.error || !j.data) { savedSay((j && j.error) || 'That saved video could not be opened. Please try again.', true); return; }
-    const note = await restore(j.data);
-    savedId = id;
-    savedSay(note || 'Opened: ' + j.name + '. Make your changes, then Make video.', !!note);
-  });
-  document.getElementById('vdSavedDel').addEventListener('click', async () => {
-    const id = savedSel.value; if (!id) return;
-    if (!confirm('Delete this saved video? Videos you already downloaded are not affected.')) return;
-    const fd = new FormData(); fd.append('csrf_token', CSRF); fd.append('delete', id);
-    let j;
-    try { j = await (await fetch(SAVED, { method: 'POST', body: fd, credentials: 'same-origin' })).json(); } catch (e) { j = null; }
-    if (!j || j.error) { savedSay('That could not be deleted. Please try again.', true); return; }
-    if (id === savedId) savedId = '';
-    listSaved(j.saved || []); savedSay('');
-  });
-  if (SAVED) fetch(SAVED, { credentials: 'same-origin' }).then(r => r.json()).then(j => listSaved((j && j.saved) || [])).catch(() => {});
 
-  scale(); fromListing(); syncKind();
+  scale();
+  if (OPEN) restore(OPEN.data).then(note => {
+    // Opened to edit: saved over. Replicated: a new video from the first time it is saved or made; the one copied is not touched.
+    savedId = COPY ? '' : OPEN.id;
+    openSay((COPY ? 'A copy of ' + OPEN.name + '. It is saved as a new video; the one you copied stays as it is.' : 'Editing ' + OPEN.name + '.') + (note ? ' ' + note : ''), !!note);
+  });
+  else { fromListing(); syncKind(); }
 })();
 </script>

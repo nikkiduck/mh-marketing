@@ -65,13 +65,21 @@ const VIDEO_SAVED_MAX_BYTES = 300 * 1024;    // one saved form
 
 function video_saved_id_ok(string $id): bool { return (bool)preg_match('/^[a-f0-9]{12}$/', $id); }
 
-/** This person's saved videos, newest first: [['id', 'name', 'saved' => unix time], …]. */
+/** This person's saved videos, newest first: [['id', 'name', 'saved' => unix time, 'kind', 'photos', 'secs', 'thumb'], …]. */
 function video_saved_list(array $ctx): array {
     if (($dir = video_root($ctx, 'saved')) === '') return [];
     $out = [];
     foreach (glob($dir . '/*.json') ?: [] as $file) {
         $s = json_decode((string)@file_get_contents($file), true);
-        if (is_array($s) && video_saved_id_ok((string)($s['id'] ?? ''))) $out[] = ['id' => $s['id'], 'name' => (string)($s['name'] ?? 'Video'), 'saved' => (int)($s['saved'] ?? 0)];
+        if (!is_array($s) || !video_saved_id_ok((string)($s['id'] ?? ''))) continue;
+        // What a card on the first page shows, from what the page saved: the source, the photos picked, the length, the cover's small picture.
+        $d = is_array($s['data'] ?? null) ? $s['data'] : [];
+        $thumb = is_string($d['thumb'] ?? null) && preg_match('~^(https://|/)[^\s"<>]{1,600}$~', $d['thumb']) ? $d['thumb'] : '';
+        $out[] = ['id' => $s['id'], 'name' => (string)($s['name'] ?? 'Video'), 'saved' => (int)($s['saved'] ?? 0),
+                  'kind' => (string)(is_array($d['fields'] ?? null) && is_string($d['fields']['kind'] ?? null) ? $d['fields']['kind'] : ''),
+                  'photos' => is_array($d['order'] ?? null) ? count($d['order']) : 0,
+                  'secs' => is_numeric($d['secs'] ?? null) ? max(0.0, min(600.0, round((float)$d['secs'], 1))) : 0.0,
+                  'thumb' => $thumb];
     }
     usort($out, fn($a, $b) => $b['saved'] <=> $a['saved']);
     return $out;

@@ -104,8 +104,8 @@ a3981c4f73d7aeeb99f132002f3ab4a5  inc/roster_alerts.php
 157f59a418e26a5ed916585164f96050  inc/social_body.php
 228fc28d7df0fc2b057d42bda679974b  inc/social_render.php
 b3e1949ec8c009c7f17380f820e86130  inc/sso.php
-9f961d75d71a7861d039b1085db85527  inc/video.php
-f6856914836c7a38f9d8fd28f6680d40  inc/video_body.php
+23bddde22c3f39f59decba1be30f9660  inc/video.php
+bad90f41929a38a37ec588a84285f6f1  inc/video_body.php
 c6942120ff3d2d94060c6d298734d88c  inc/video_export.php
 49eb5be5e635e0d121381f370f67f103  inc/video_render.php
 7a36f2831fc80bb7153aae9c63aad9f8  inc/whats_new.php
@@ -182,7 +182,7 @@ cc3066d6d79a0a78fa47a82575240194  template_flyer.php
 b5b24996763589a68d2c3f44b975fb73  template_location.php
 a924eed66e26f032bfcc7863ab458146  template_property.php
 816362f93bbbb55630243e539b9e2a45  template_social.php
-fe2b20569036cfc3667284f798e807e9  template_video.php
+82fed26db61819ee97b886c2baef4fc4  template_video.php
 f56e1d5ba1e302967b6e19b93b31b56b  templates.php
 e69e0bcd18d153a3c3458a065876bcb5  unsubscribe.php
 2bc330146401a15cfb7318a7d81e94b1  users.php
@@ -195,3 +195,4 @@ c0e450d292535e6fe339e8bb1d629997  video_team_logo.php
 e6763cbd998548a42468762382307baa  video_suggest.php
 b36a38739903d0f9638fa2ffc5710354  inc/video_ai.php
 3928cf155d85516895c5df534ed0a705  video_saved.php
+d1e16361031f66ac3f56bce185b4ee3f  inc/video_list.php
