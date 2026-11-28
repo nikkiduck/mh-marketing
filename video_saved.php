@@ -16,7 +16,7 @@
  */
 require_once __DIR__ . '/inc/video.php';
 
-$ctx = plan_gate($conn);
+$ctx = video_gate($conn);
 session_write_close();
 $json = function (array $a, int $code = 200): never {
     http_response_code($code);

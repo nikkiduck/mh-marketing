@@ -7,7 +7,7 @@
  */
 require_once __DIR__ . '/inc/video.php';
 
-$ctx = plan_gate($conn);
+$ctx = video_gate($conn);
 header('Content-Type: text/html; charset=utf-8');
 header('Cache-Control: no-store');
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
@@ -17,4 +17,4 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !portal_csrf_ok()) {
 }
 $v = video_from_request($conn, $ctx, $_POST);
 if (is_string($v)) { echo social_placeholder_html($v); exit; }
-echo video_preview_html($v, null, $v['kind'] === 'clip' ? 'video_clip.php?id=' . rawurlencode($v['clip']['id']) : '');
+echo video_preview_html($v, null, $v['kind'] === 'clip' ? video_url($ctx, 'video_clip.php', ['id' => $v['clip']['id']]) : '');

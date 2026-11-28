@@ -12,6 +12,8 @@
 .tp-group { font-family: var(--serif); font-size: 24px; font-weight: 500; margin: 26px 0 12px; }
 .tp-group:first-of-type { margin-top: 4px; }
 .tp-back { margin: -8px 0 22px; font-size: 15px; }
+/* A card that is new (Templates > Video, 2026-11-28). */
+.tp-new { display: inline-block; vertical-align: middle; margin-left: 8px; padding: 3px 9px 2px; border-radius: 999px; background: var(--btn, #4a5566); color: #fff; font: 600 11px/1.3 var(--sans); letter-spacing: .08em; text-transform: uppercase; }
 .tp-back a { color: var(--gold-deep); text-decoration: none; }
 .tp-back a:hover { text-decoration: underline; }
 

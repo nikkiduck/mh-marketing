@@ -37,6 +37,157 @@ require_once __DIR__ . '/ads.php';            // the brokers' phones, the addres
 require_once __DIR__ . '/video_export.php';   // includes video_render.php
 require_once __DIR__ . '/captions.php';       // caption_clean(), caption_units()
 
+// ── Whose side ───────────────────────────────────────────────────────────────
+// The tool has two doors (Nikki, 2026-11-28: "let's get it live for the
+// agents"): the admin pages at the root (template_video.php, video_*.php,
+// super admin) and the agents' under portal/ (portal/video.php and thin
+// portal/video_*.php files that define VIDEO_PORTAL and include the root
+// one). Everything below asks video_portal() and nothing else: an agent sees
+// their own listings (the Templates tools' list), is presented by themselves,
+// their teams and whoever their listings name, and keeps their uploads, clips,
+// jobs and saved videos in a folder of their own.
+
+/** True on the agents' side. */
+function video_portal(): bool { return defined('VIDEO_PORTAL') && VIDEO_PORTAL; }
+
+/** The gate of every Video page and endpoint: the super admin's (plan_gate()) or the agent's portal. */
+function video_gate(mysqli $conn): array {
+    if (!video_portal()) return plan_gate($conn);
+    $ctx = portal_context($conn);
+    social_gate();
+    return $ctx;
+}
+
+/** A Video endpoint's address from the page: beside the admin page, or under /portal/ carrying ?preview= as every portal link does. */
+function video_url(array $ctx, string $file, array $q = []): string {
+    return video_portal() ? portal_url($ctx, '/portal/' . $file, $q) : $file . ($q ? '?' . http_build_query($q) : '');
+}
+
+/**
+ * The listings offered, keyed "market|listing_key", in plan_listings()'s
+ * shape: every Mont Haus listing in the feed for the admin, the agent's own
+ * for an agent (social_listings(): theirs and their teams'). The two lists
+ * drop a second board's copy by rules of their own, so an agent's listing is
+ * found by its id, then by its address.
+ */
+function video_listings(mysqli $conn, array $ctx): array {
+    $all = plan_listings($conn);
+    if (!video_portal()) return $all;
+    $key = fn(array $l) => strtolower(preg_replace('/\s+/', ' ', trim((string)$l['address']))) . '|' . strtolower(trim((string)$l['city'])) . '|' . (int)$l['is_rental'];
+    $by = [];
+    foreach ($all as $id => $l) $by[$key($l)] ??= $id;
+    $out = [];
+    foreach (social_listings($conn, $ctx) as $id => $l) {
+        $at = isset($all[$id]) ? $id : ($by[$key($l)] ?? null);
+        if ($at !== null) $out[$at] = $all[$at];
+    }
+    return $out;
+}
+
+function video_listing(mysqli $conn, array $ctx, string $id): ?array { return video_listings($conn, $ctx)[$id] ?? null; }
+
+/** Who may be picked under Presented by: the roster for the admin; for an agent, themselves, their teams' accounts and the brokers their own listings name. */
+function video_agents(mysqli $conn, array $ctx): array {
+    $all = plan_agents($conn);
+    if (!video_portal()) return $all;
+    $ids = array_fill_keys(array_map('intval', $ctx['ids']), true);
+    foreach (video_listings($conn, $ctx) as $l) foreach (video_listing_presenters($l, $all) as $p) if (ctype_digit($p) && $p !== '0') $ids[(int)$p] = true;
+    return array_intersect_key($all, $ids);
+}
+
+/** The teams that may be picked there: the site's list for the admin; for an agent, the teams they are in and those their listings name. */
+function video_teams(mysqli $conn, array $ctx): array {
+    $all = mk_site_teams();
+    if (!video_portal()) return $all;
+    $slug = (string)($ctx['acct']['slug'] ?? '');
+    $mine = array_map(fn($t) => strtolower(trim((string)$t['name'])), (array)$ctx['teams']);
+    $named = [];
+    foreach (video_listings($conn, $ctx) as $l) { $p = video_listing_presenters($l, [])[0]; if (str_starts_with($p, 't:')) $named[substr($p, 2)] = true; }
+    return array_values(array_filter($all, fn($t) => ($slug !== '' && in_array($slug, $t['members'], true)) || in_array(strtolower($t['name']), $mine, true) || isset($named[$t['key']])));
+}
+
+/** The page's own CSS (the admin shell's `css`, the agents' page in a <style>). */
+function video_page_css(): string {
+    return plan_admin_css() . '
+    .wrap { max-width:1180px; }
+    .vd { display:grid; grid-template-columns:1fr; gap:20px; align-items:start; }
+    @media (min-width:900px) { .vd { grid-template-columns:340px 1fr; } .vd-side { position:sticky; top:82px; max-height:calc(100vh - 94px); overflow-y:auto; scrollbar-width:thin; } }
+    .vd-stage { position:relative; width:100%; max-width:340px; margin:0 auto; aspect-ratio:9 / 16; overflow:hidden; border-radius:14px; background:#14181e; }
+    .vd-stage iframe, .vd-stage video { position:absolute; left:0; top:0; border:0; }
+    .vd-stage iframe { width:1080px; height:1920px; transform-origin:0 0; pointer-events:none; background:#14181e; }
+    .vd-stage video { width:100%; height:100%; background:#000; }
+    /* A photo is moved by dragging the preview, or its thumbnail in its row. */
+    .vd-stage { cursor:grab; user-select:none; -webkit-user-select:none; }
+    .vd-stage.drag, .vd-stage.drag ~ * { cursor:grabbing; }
+    .vd-cap-p[data-move] { cursor:grab; touch-action:none; user-select:none; -webkit-user-select:none; }
+    .vd-cap-p[data-move] img { -webkit-user-drag:none; pointer-events:none; }
+    .vd-tabs { display:flex; gap:6px; justify-content:center; margin:12px 0 0; }
+    .vd-tab { font:500 13px/1 var(--sans); padding:8px 14px; border:1.5px solid #dfe3e8; border-radius:999px; background:#fff; color:#1f242c; cursor:pointer; }
+    .vd-tab.on { border-color:#4a5566; background:#4a5566; color:#fff; }
+    .vd-tab:disabled { opacity:.35; cursor:not-allowed; }
+    /* The caption for the post, under the preview: written from the listing, then changed and copied by hand. */
+    .vd-capbox { max-width:340px; margin:16px auto 2px; }
+    .vd-capbox label { display:block; font:600 13px/1.2 var(--sans); color:#1f242c; margin:0 0 6px; }
+    .vd-capbox textarea { display:block; width:100%; box-sizing:border-box; min-height:120px; resize:vertical; font:400 14px/1.45 var(--sans); color:#1f242c; padding:10px 12px; border:1.5px solid #dfe3e8; border-radius:8px; background:#fff; }
+    .vd-capbox p { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 0; }
+    .vd-capbox .sp-btn { font-size:13px; padding:8px 14px; }
+    .vd-len { text-align:center; font-size:13px; color:#6b7a8f; margin:10px 0 0; }
+    .vd-photos { display:grid; grid-template-columns:repeat(auto-fill, minmax(92px, 1fr)); gap:8px; margin-top:14px; }
+    .vd-photos .sp-photo { position:relative; display:block; aspect-ratio:4 / 3; overflow:hidden; border-radius:6px; cursor:pointer; outline:3px solid transparent; outline-offset:-3px; }
+    .vd-photos .sp-photo img { display:block; width:100%; height:100%; object-fit:cover; border:0; border-radius:0; aspect-ratio:auto; }
+    .vd-photos .sp-photo.on { outline-color:#4a5566; }
+    .vd-n { position:absolute; left:6px; top:6px; min-width:22px; height:22px; padding:0 6px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font:600 12px/1 var(--sans); color:#fff; background:rgba(43,48,56,.92); border-radius:999px; }
+    .vd-n:empty { display:none; }
+    .vd-subrow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 20px; margin:22px 0 4px; }
+    #vdSlidesStep .vd-subrow { margin-top:0; }
+    .vd-sub { font:600 14px/1.3 var(--sans); color:#1f242c; margin:0; }
+    .vd-caps { display:grid; gap:10px; margin-top:10px; }
+    .vd-cap { display:grid; grid-template-columns:22px 76px 1fr; gap:10px; align-items:start; }
+    /* The grip a row is dragged by to change the play order. */
+    .vd-grip { width:22px; height:57px; padding:0; border:0; background:none; color:#9aa5b5; font:600 16px/1 var(--sans); letter-spacing:-2px; cursor:grab; touch-action:none; }
+    .vd-grip:hover { color:#4a5566; }
+    .vd-caps.sorting { user-select:none; -webkit-user-select:none; cursor:grabbing; }
+    .vd-caps.sorting .vd-grip { cursor:grabbing; }
+    .vd-cap.sorting { background:#f1f3f6; outline:2px dashed #9aa5b5; outline-offset:4px; border-radius:6px; }
+    .vd-cap-p { position:relative; display:block; aspect-ratio:4 / 3; border-radius:6px; overflow:hidden; background:#e6e9ee; }
+    .vd-cap-p img { display:block; width:100%; height:100%; object-fit:cover; }
+    .vd-cap-p b { position:absolute; left:4px; top:4px; min-width:18px; height:18px; padding:0 5px; box-sizing:border-box; display:flex; align-items:center; justify-content:center; font:600 10.5px/1 var(--sans); letter-spacing:.04em; color:#fff; background:rgba(43,48,56,.92); border-radius:999px; }
+    .vd-cap-b { display:grid; gap:6px; }
+    .vd-zoom { display:flex; align-items:center; gap:10px; font-size:13px; color:#6b7a8f; }
+    .vd-zoom input { width:180px; max-width:50%; accent-color:#4a5566; }
+    .vd-zoom output { min-width:44px; font-variant-numeric:tabular-nums; color:#1f242c; }
+    .vd-cap textarea { width:100%; box-sizing:border-box; font:inherit; font-size:16px; line-height:1.35; padding:8px 10px; border:1.5px solid #dfe3e8; border-radius:8px; resize:vertical; }
+    .vd-caps.no-text textarea { display:none; }
+    .vd-row { display:flex; flex-wrap:wrap; align-items:center; gap:6px 22px; }
+    .vd-logo { display:inline-flex; align-items:center; gap:6px; font-size:13px; color:#1f242c; white-space:nowrap; cursor:pointer; }
+    .vd-logo input { width:auto; max-width:none; accent-color:#4a5566; }
+    .vd-caps.no-logo .vd-logo { display:none; }
+    .vd-bar { height:8px; border-radius:999px; background:#e6e9ee; overflow:hidden; margin:14px 0 8px; }
+    .vd-bar i { display:block; height:100%; width:0; background:#4a5566; transition:width .4s; }
+    .vd-up { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px; }
+    /* The small buttons (upload, replace, remove): the size and line of the option pills beside them. */
+    .vd-mini { font:inherit; font-size:15px; line-height:1.35; padding:7px 16px; border:2px solid var(--line, #dfe3e8); border-radius:999px; background:#fff; color:inherit; white-space:nowrap; cursor:pointer; }
+    .vd-mini:hover { border-color:#4a5566; }
+    .vd-mini:disabled { opacity:.45; cursor:not-allowed; }
+    .sp-help.bad { color:#8f2424; }
+    .sp-btn:disabled { opacity:.45; cursor:not-allowed; }
+    .sp-field textarea { font-family:inherit; }
+    /* The first page: the saved videos. */
+    .vl-top { display:flex; align-items:center; gap:14px; margin:0 0 18px; }
+    .vl-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:16px; }
+    .vl-card { background:var(--card, #fff); border:1px solid var(--line, #dfe3e8); border-radius:14px; overflow:hidden; display:flex; flex-direction:column; }
+    .vl-thumb { display:block; aspect-ratio:4 / 3; background:#14181e; }
+    .vl-thumb img { display:block; width:100%; height:100%; object-fit:cover; }
+    .vl-body { padding:14px 16px 16px; display:flex; flex-direction:column; gap:4px; flex:1; }
+    .vl-name { font-family:var(--serif); font-size:22px; font-weight:500; line-height:1.2; margin:0; overflow-wrap:anywhere; }
+    .vl-about, .vl-when { font-size:13px; color:#6b7a8f; margin:0; }
+    .vl-acts { display:flex; flex-wrap:wrap; gap:8px; margin-top:auto; padding-top:12px; }
+    .vl-acts .vd-mini { text-decoration:none; font-size:14px; padding:6px 14px; }
+    [hidden] { display:none !important; }
+
+    ';
+}
+
 /**
  * The Caption box's text for a listing (Nikki's own caption for 89 Bunker
  * Loop, 2026-11-27, is the shape):
@@ -63,10 +214,10 @@ const VIDEO_CHUNK_BYTES    = 4 * 1024 * 1024;     // a piece of an upload (PHP's
 const VIDEO_JOB_DAYS  = 7;
 const VIDEO_CLIP_DAYS = 30;
 
-/** This person's video folder (made when missing), or '' when CREATIVES_DIR is not set up. */
+/** This person's video folder (made when missing), or '' when CREATIVES_DIR is not set up: admin-{user id} on the admin side, user-{user id} on the agents' (the person signed in, as the uploads are kept; an admin previewing a portal works in their own). */
 function video_root(array $ctx, string $sub = ''): string {
     if (!defined('CREATIVES_DIR')) return '';
-    $dir = rtrim(CREATIVES_DIR, '/') . '/video/admin-' . (int)$ctx['user']['id'] . ($sub !== '' ? '/' . $sub : '');
+    $dir = rtrim(CREATIVES_DIR, '/') . '/video/' . (video_portal() ? 'user-' : 'admin-') . (int)$ctx['user']['id'] . ($sub !== '' ? '/' . $sub : '');
     if (!is_dir($dir)) { if (!@mkdir($dir, 02775, true)) return ''; social_open_dirs($dir); }
     return $dir;
 }
@@ -297,7 +448,7 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
     $src = (string)($in['kind'] ?? 'listing');
     $kind = $src === 'clip' ? 'clip' : 'photos';
     $mine = $src === 'mine';
-    $listing = plan_listing($conn, (string)($in['listing'] ?? ''));
+    $listing = video_listing($conn, $ctx, (string)($in['listing'] ?? ''));
     $one = fn(string $k, int $max) => mb_substr(trim(preg_replace('/\s+/', ' ', (string)($in[$k] ?? ''))), 0, $max);
 
     $v = ['kind' => $kind, 'photos' => [], 'clip' => null];
@@ -378,12 +529,13 @@ function video_from_request(mysqli $conn, array $ctx, array $in): array|string {
         // broker on the roster or a team ('t:{key}'); the choice supplies only the picture (a square headshot, or the
         // team's logo), the name and phone are what the boxes hold.
         $shots = !empty($in['end_headshot']);
-        $who = function (string $pick, string $name, string $phone) use ($conn, $shots): ?array {
+        $who = function (string $pick, string $name, string $phone) use ($conn, $ctx, $shots): ?array {
             $by = ['name' => $name, 'phone' => $phone, 'headshot_url' => '', 'headshot_file' => null, 'logo' => false, 'dark' => false];
             if ($shots && str_starts_with($pick, 't:')) {
                 $key = substr($pick, 2);
-                if ($lg = video_team_logo($key)) $by = ['headshot_url' => 'video_team_logo.php?team=' . rawurlencode($key) . '&v=' . $lg['v'], 'headshot_file' => $lg['file'], 'logo' => true, 'dark' => $lg['dark']] + $by;
-            } elseif ($shots && ($a = plan_agents($conn)[(int)$pick] ?? null)) {
+                $may = in_array($key, array_column(video_teams($conn, $ctx), 'key'), true);
+                if ($may && ($lg = video_team_logo($key))) $by = ['headshot_url' => video_url($ctx, 'video_team_logo.php', ['team' => $key, 'v' => $lg['v']]), 'headshot_file' => $lg['file'], 'logo' => true, 'dark' => $lg['dark']] + $by;
+            } elseif ($shots && ($a = video_agents($conn, $ctx)[(int)$pick] ?? null)) {
                 $u = $a['face_url'] !== '' ? $a['face_url'] : $a['headshot_url'];
                 $f = $u !== '' ? mk_photo_file($u) : '';
                 $by['headshot_url'] = $u;

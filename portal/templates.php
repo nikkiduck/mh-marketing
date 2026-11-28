@@ -1,7 +1,8 @@
 <?php
 /**
  * portal/templates.php — Templates (My Tools): the landing for the template
- * tools, Listing Post/Story (portal/social.php), General Social
+ * tools, Video (portal/video.php, 2026-11-28, first and marked New),
+ * Listing Post/Story (portal/social.php), General Social
  * (portal/general.php, 2026-10-28), Market Snapshot and Listing Flyer
  * (portal/flyer.php). The menu has two levels, so a third for the tools
  * would not fit; each tool page carries a switch to the other instead
@@ -16,6 +17,7 @@ social_gate();
 // Two groups (Nikki, 2026-10-15): the flyer is print, not Instagram.
 $groups = [
     'Instagram Templates' => [
+        ['Video', '/portal/video.php', 'A story or reel as a video: a listing\'s photos in motion, your own photos, or a video clip you upload, with the logo, your text and a closing card. Download the MP4.', 'Make a video ›', 'New'],   // 2026-11-28; the fifth item is a badge beside the title
         ['Listing Post/Story', '/portal/social.php', 'An Instagram or Facebook ready post or story from one of your listings.', 'Make a post ›'],
         ['General Social', '/portal/general.php', 'A post, square or story that is not about a listing: a Mont Haus stock photo or your own, your words, the logo where you want it.', 'Make a post ›'],   // 2026-10-28
         ['Market Snapshot', '/portal/market_post.php', 'One place\'s month on a card: the median sale price, closed sales, days on market and months of supply. A post or a story.', 'Make a snapshot ›'],   // from the Market Report (2026-10-18)
@@ -34,9 +36,9 @@ portal_header($ctx, 'Templates', 'social');
   <?php foreach ($groups as $heading => $cards): ?>
   <h2 class="tp-group"><?= ph($heading) ?></h2>
   <div class="pt-cards">
-    <?php foreach ($cards as [$title, $path, $sub, $go]): ?>
+    <?php foreach ($cards as $card): [$title, $path, $sub, $go] = $card; $badge = (string)($card[4] ?? ''); ?>
     <a class="pt-card" href="<?= ph(portal_url($ctx, (string)strtok($path, '?'), (function ($p) { parse_str((string)parse_url($p, PHP_URL_QUERY), $q); return $q; })($path))) ?>">
-      <h3 class="pt-card-h"><?= ph($title) ?></h3>
+      <h3 class="pt-card-h"><?= ph($title) ?><?php if ($badge !== ''): ?> <span class="tp-new"><?= ph($badge) ?></span><?php endif; ?></h3>
       <p class="pt-card-sub"><?= ph($sub) ?></p>
       <span class="pt-card-go"><?= ph($go) ?></span>
     </a>

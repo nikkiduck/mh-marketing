@@ -6,7 +6,7 @@
  * video with its settings"). Included by template_video.php when no video is
  * being edited.
  *
- * Expects: $ctx, $csrf, $saved_url. Each card: Edit (?open=<id>), Replicate
+ * Expects: $ctx, $csrf, $saved_url, $vd_href (this page's address with a query: the admin's or the agents'). Each card: Edit (?open=<id>), Replicate
  * (?copy=<id>: the editor opens with everything that video holds, as a NEW
  * video; the one copied is not touched) and Delete.
  */
@@ -15,7 +15,7 @@ $vd_saved = video_saved_list($ctx);
 $vd_kinds = ['listing' => 'Listing', 'mine' => 'My Photos', 'clip' => 'Video Clip'];
 ?>
 <div class="vl-top">
-  <a class="sp-btn" href="template_video.php?new=1">Create new video</a>
+  <a class="sp-btn" href="<?= $e($vd_href(['new' => 1])) ?>">Create new video</a>
 </div>
 <p class="sp-help" id="vlMsg" hidden></p>
 <p class="sp-note" id="vlNone"<?= $vd_saved ? ' hidden' : '' ?>>No saved videos yet. A video is saved each time you make one, or with Save for later.</p>
@@ -28,14 +28,14 @@ $vd_kinds = ['listing' => 'Listing', 'mine' => 'My Photos', 'clip' => 'Video Cli
       ]);
   ?>
   <article class="vl-card" data-id="<?= $e($s['id']) ?>">
-    <a class="vl-thumb" href="template_video.php?open=<?= $e($s['id']) ?>" aria-label="Edit <?= $e($s['name']) ?>"><?php if ($s['thumb'] !== ''): ?><img src="<?= $e($s['thumb']) ?>" alt="" loading="lazy"><?php endif; ?></a>
+    <a class="vl-thumb" href="<?= $e($vd_href(['open' => $s['id']])) ?>" aria-label="Edit <?= $e($s['name']) ?>"><?php if ($s['thumb'] !== ''): ?><img src="<?= $e($s['thumb']) ?>" alt="" loading="lazy"><?php endif; ?></a>
     <div class="vl-body">
       <h2 class="vl-name"><?= $e($s['name']) ?></h2>
       <p class="vl-about"><?= $e(implode('  ·  ', $about)) ?></p>
       <p class="vl-when">Saved <time data-t="<?= (int)$s['saved'] ?>"><?= $e(date('M j, Y', $s['saved'])) ?></time></p>
       <div class="vl-acts">
-        <a class="vd-mini" href="template_video.php?open=<?= $e($s['id']) ?>">Edit</a>
-        <a class="vd-mini" href="template_video.php?copy=<?= $e($s['id']) ?>" title="Start a new video with everything this one holds">Replicate</a>
+        <a class="vd-mini" href="<?= $e($vd_href(['open' => $s['id']])) ?>">Edit</a>
+        <a class="vd-mini" href="<?= $e($vd_href(['copy' => $s['id']])) ?>" title="Start a new video with everything this one holds">Replicate</a>
         <button type="button" class="vd-mini vl-del">Delete</button>
       </div>
     </div>

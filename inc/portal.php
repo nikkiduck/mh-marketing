@@ -579,9 +579,9 @@ function portal_nav(): array {
             'memberships' => ['Memberships', '/portal/memberships.php'],   // chambers, associations, clubs Mont Haus joined for them (2026-10-14)
         ]],
         'tools'     => ['My Tools', null, [
+            'social'    => ['Templates', '/portal/templates.php'],   // "Templates" (Nikki, 2026-10-13): a landing with the Instagram Post and Listing Flyer tools, which switch between each other. First under My Tools since 2026-11-28 (Nikki)
             'elevation' => ['Elevation Planner', '/portal/elevation.php'],
             'market'    => ['Market Report', '/portal/market.php'],   // the monthly report of the markets Mont Haus serves (2026-10-18)
-            'social'    => ['Templates', '/portal/templates.php'],   // "Templates" (Nikki, 2026-10-13): a landing with the Instagram Post and Listing Flyer tools, which switch between each other
             'qr'        => ['QR Codes', '/portal/qr.php'],
             'brand'     => ['Brand Tools', '/portal/brand.php'],
         ]],

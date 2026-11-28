@@ -13,7 +13,7 @@
  */
 require_once __DIR__ . '/inc/video.php';
 
-$ctx = plan_gate($conn);
+$ctx = video_gate($conn);
 $json = function (array $a, int $code = 200): never {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
@@ -23,6 +23,7 @@ $json = function (array $a, int $code = 200): never {
 };
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (video_portal()) $json(['error' => 'A team logo is set by the marketing team.'], 403);   // agents see a team's logo; they do not change it
     if (!portal_csrf_ok()) $json(['error' => 'That page had been open too long. Reload it and try again.'], 400);
     $key = (string)($_POST['team'] ?? '');
     if (!video_team($key)) $json(['error' => 'Choose a team first.'], 400);

@@ -3645,14 +3645,50 @@ now Social Media, and they mark that link current (`'active' => 'social'`).**
   aligned with `frames[]`; the tile's number badge reads "2 L" / "3 M" for
   what the frame will carry.
 
-### Video (super admin only, 2026-11-26)
+### Video (admin 2026-11-26; open to agents 2026-11-28)
 
 Nikki: "Is it possible to include video in our Admin and Agent social
 templates so we can build video stories and reels?" Yes; she asked for both
 kinds, admin only for now, on a page of its own "so we don't screw up what's
 there". A card on social_media.php ("Video"), `plan_gate()`, so super_admin.
-The agents' side is NOT built: opening it is her call, and it is
-agent-facing work (her OK per deploy).
+
+**Open to every agent since 2026-11-28** (Nikki: "this is working
+fantastically. Let's get it live for the agents"): `portal/video.php`, the
+FIRST card under Templates > Instagram Templates, marked New (the card's
+fifth item in portal/templates.php, `.tp-new`), and Templates is first under
+My Tools. It is the same tool, not a copy:
+
+- **Two doors, one code** ("Whose side" in inc/video.php). The agents' files
+  are portal/video.php (the page) and portal/video_*.php, each two lines:
+  `define('VIDEO_PORTAL', true)` and the root file. `video_portal()` is the
+  only question asked. `video_gate()` is the gate of every Video page and
+  endpoint (plan_gate() for the admin, portal_context() + social_gate() for
+  an agent). **A new Video endpoint calls video_gate(), takes its listing
+  from video_listing(), and gets a two-line file under portal/.**
+- **What an agent may reach:** `video_listings()` = their own listings (the
+  Templates tools' list, social_listings(): theirs and their teams'), in
+  plan_listings()'s shape; `video_agents()` = themselves, their teams'
+  accounts and the brokers their listings name; `video_teams()` = the teams
+  they are in or their listings name. video_from_request() checks every
+  posted listing, photo, clip and presenter against those. A team's logo is
+  shown to them and changed only on the admin side (the POST is refused).
+- **Their own folder:** `video_root()` is `video/user-{user id}/` on the
+  agents' side (clips, jobs, saved videos, the suggestion count), the admin's
+  `video/admin-{user id}/` as before. Keyed by the person signed in, as the
+  uploads are: an admin previewing a portal works in their own.
+- **Addresses:** `video_url()` builds an endpoint's address (under /portal/
+  with `?preview=` when previewing); the page's JS adds to a query with
+  `withQ()`, never `+ '?…'`. The lists' links come from `$vd_href`.
+- **Suggest Texts is capped for agents:** `VIDEO_AI_DAILY` (30) requests a
+  person a day, counted in `suggest.json` in their video folder
+  (`video_ai_used()`), no table. The admin side is not capped.
+- An agent with no listing in the feed starts on My Photos with the Listing
+  pill off. With no listing chosen, an agent's closing card starts as their
+  own (the admin's starts with nobody).
+- The photos come from `video_photos.php` on the agents' side (the admin
+  page still asks plan_photos.php).
+- One video is made at a time on the server; a second waits its turn (the
+  worker's lock) and the page says so.
 
 A video is a 1080 x 1920 MP4 at 30 frames a second (H.264, a sound track
 always), for a story or a reel. Two kinds:
@@ -3796,8 +3832,8 @@ licensed track cannot be baked in; it is added in Instagram.
   refusal fallbacks on, as MH Send's inc/ai.php; the house voice and Fair
   Housing rules in `VIDEO_AI_SYSTEM` are that file's, and change in both.
   About 10 to 16 seconds and four or five cents a request. No key or no
-  SDK = no button. **No usage table or daily cap here yet** (one line per
-  request in the PHP error log): both are wanted before agents get this.
+  SDK = no button. No usage table (one line per request in the PHP error
+  log); agents are capped a day each by a file count (above).
 - **The cover and the closing card have times of their own** (Nikki,
   2026-11-26: the cover "may need a second or two longer to read", "and the
   closing slide as well"): Cover Slide length (`cover_hold`, in Cover Design, 5 seconds to
@@ -3915,7 +3951,7 @@ licensed track cannot be baked in; it is added in Instagram.
   page, a real job for 221 Wrights Rd, the upload in pieces). **Not yet
   walked in a browser by anyone signed in.**
 - Known: Aspen's board photos carry the board's watermark, which a 9:16
-  crop cuts into. Not built: the agents' side, per-photo framing, a team or
+  crop cuts into. Not built: a team or
   location video, saved videos on the Weekly Plans, a bigger server for
   several videos at once.
 

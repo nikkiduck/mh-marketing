@@ -59,6 +59,21 @@ Reply only in the JSON format requested.
 TXT;
 
 /** Where the SDK's autoloader is: MH Send's vendor folder, beside this project (MH_AI_AUTOLOAD overrides it). */
+/**
+ * How many times this person has asked for suggestions today; $add counts one
+ * more. The agents' side stops at VIDEO_AI_DAILY a day each (every request is
+ * a paid one). One small file in the person's video folder ({d, n}), no table.
+ */
+const VIDEO_AI_DAILY = 30;
+function video_ai_used(array $ctx, bool $add = false): int {
+    if (($dir = video_root($ctx)) === '') return 0;
+    $f = $dir . '/suggest.json';
+    $j = json_decode((string)@file_get_contents($f), true);
+    $n = (is_array($j) && ($j['d'] ?? '') === date('Y-m-d')) ? (int)($j['n'] ?? 0) : 0;
+    if ($add) { $n++; @file_put_contents($f, json_encode(['d' => date('Y-m-d'), 'n' => $n]), LOCK_EX); @chmod($f, 0664); }
+    return $n;
+}
+
 function video_ai_autoload(): string {
     return defined('MH_AI_AUTOLOAD') ? (string)MH_AI_AUTOLOAD : __DIR__ . '/../../send.monthaus.com/vendor/autoload.php';
 }

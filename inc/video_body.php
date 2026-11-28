@@ -5,15 +5,19 @@
  * Make video, the finished MP4 beside it), the controls at the right.
  * Nothing is drawn here but the controls.
  *
- * Expects: $ctx, $csrf, $vd_listings (plan_listings()), $vd_agents
- * (plan_agents()), $vd_clips (video_clips()), and the endpoint URLs
+ * Expects: $ctx, $csrf, $vd_listings (video_listings()), $vd_agents
+ * (video_agents()), $vd_clips (video_clips()), and the endpoint URLs
  * ($render_url, $export_url, $clip_url, $logo_url, $photos_url,
  * $upload_url, $delete_url, $saved_url), and $vd_open (a saved video to
  * open: video_saved_read(), or null) with $vd_copy (open it as a new one).
  */
 $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 $vd_phones = ads_agent_phones($conn);
-$vd_teams = mk_site_teams();
+$vd_portal = video_portal();   // the agents' side: their own listings, themselves and their teams as presenters, no team logo upload
+$vd_teams = video_teams($conn, $ctx);
+$vd_listing_label = $vd_portal ? 'Listing' : 'Listing (every Mont Haus listing in the feed)';
+// With no listing chosen (My Photos, a clip), an agent's closing card is their own to begin with.
+$vd_self = ($vd_portal && isset($vd_agents[(int)$ctx['acct']['id']])) ? (int)$ctx['acct']['id'] : 0;
 // The options of both Presented by dropdowns: nobody, the teams (a team with a logo on file shows the logo and needs no name), the brokers.
 $vd_by_options = function () use ($vd_teams, $vd_agents, $vd_phones, $e): string {
     $h = '<option value="0" data-name="" data-phone="">None</option>';
@@ -51,13 +55,14 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
         <h2 class="sp-step-h">Video</h2>
         <div class="sp-look" style="margin-top:0">
           <span class="sp-look-l">Made from:</span>
-          <label class="sp-pillopt"><input type="radio" name="kind" value="listing" checked><span>Listing</span></label>
-          <label class="sp-pillopt"><input type="radio" name="kind" value="mine"><span>My Photos</span></label>
+          <label class="sp-pillopt"><input type="radio" name="kind" value="listing"<?= $vd_listings ? ' checked' : ' disabled' ?>><span>Listing</span></label>
+          <label class="sp-pillopt"><input type="radio" name="kind" value="mine"<?= $vd_listings ? '' : ' checked' ?>><span>My Photos</span></label>
           <label class="sp-pillopt"><input type="radio" name="kind" value="clip"><span>Video Clip</span></label>
         </div>
-        <label class="sp-field" id="vdListingField" style="margin-top:16px">Listing (every Mont Haus listing in the feed)
+        <label class="sp-field" id="vdListingField" style="margin-top:16px"<?= $vd_listings ? '' : ' hidden' ?>><?= $e($vd_listing_label) ?>
+
           <select name="listing" id="vdListing">
-            <option value="" data-agent="0" id="vdNoListing" hidden>No listing: type the text yourself</option>
+            <option value="" data-agent="<?= $vd_self ?>" id="vdNoListing" hidden>No listing: type the text yourself</option>
             <?php $first = true; foreach (plan_listing_groups($vd_listings) as $gname => $group): ?>
             <optgroup label="<?= $e($gname) ?>">
               <?php foreach ($group as $l): ?>
@@ -261,6 +266,9 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   const val = n => (form.querySelector('[name="' + n + '"]:checked') || f(n) || {}).value || '';
   const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const RENDER = <?= json_encode($render_url) ?>, EXPORT = <?= json_encode($export_url) ?>, CLIP = <?= json_encode($clip_url) ?>, LOGO = <?= json_encode($logo_url) ?>, PHOTOS = <?= json_encode($photos_url) ?>, UPLOAD = <?= json_encode($upload_url) ?>, DELETE_URL = <?= json_encode($delete_url) ?>, SUGGEST = <?= json_encode($suggest_url) ?>, CAPTION = <?= json_encode($caption_url ?? '') ?>;
+  const PORTAL = <?= $vd_portal ? 'true' : 'false' ?>, LISTING_LABEL = <?= json_encode($vd_listing_label) ?>;
+  // An endpoint's address with more put on its query (an agent's may already carry ?preview=).
+  const withQ = (u, q) => u + (u.includes('?') ? '&' : '?') + q;
   const CSRF = <?= json_encode($csrf) ?>, MAXP = <?= VIDEO_MAX_PHOTOS ?>, CHUNK = <?= VIDEO_CHUNK_BYTES ?>, MAXBYTES = <?= VIDEO_CLIP_MAX_BYTES ?>;
   const XF = <?= json_encode(VIDEO_XF / VIDEO_FPS) ?>, ENDS = <?= json_encode(VIDEO_END_SECONDS) ?>, COVERS = <?= json_encode(VIDEO_COVER_SECONDS) ?>;
   const stage = document.getElementById('vdStage'), frame = document.getElementById('vdFrame'), result = document.getElementById('vdResult');
@@ -594,7 +602,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     capFill.hidden = !id || !CAPTION;
     if (!id || !CAPTION) { if (capBox.value === capFrom) capBox.value = ''; capFrom = ''; return; }
     let j;
-    try { j = await (await fetch(CAPTION + '?listing=' + encodeURIComponent(id), { credentials: 'same-origin' })).json(); } catch (e) { j = null; }
+    try { j = await (await fetch(withQ(CAPTION, 'listing=' + encodeURIComponent(id)), { credentials: 'same-origin' })).json(); } catch (e) { j = null; }
     if (seq !== capSeq) return;   // another listing was picked meanwhile
     if (!j || typeof j.caption !== 'string') { if (asked) say((j && j.error) || 'The caption could not be written. Please try again.', true); return; }
     capBox.value = capFrom = j.caption;
@@ -615,7 +623,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
   function syncBy() {
     document.getElementById('vdBy2').hidden = f('agent2').value === '0';
     const t = teamPicked();
-    document.getElementById('vdTeamLogo').hidden = !t;
+    document.getElementById('vdTeamLogo').hidden = !t || PORTAL;   // a team's logo is set on the admin side
     if (t) {
       const has = t.dataset.logo === '1';
       document.getElementById('vdLogoUp').textContent = has ? 'Replace the team logo' : 'Upload a team logo';
@@ -666,7 +674,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (m) { slidesStep.appendChild(capsWrap); coverStep.after(slidesStep); } else photosStep.appendChild(capsWrap);
     slidesStep.hidden = !m || !order.length;
     if (c) coverStep.before(clipStep); else photosStep.after(clipStep);
-    listingField.firstChild.nodeValue = c || m ? 'Fill in the text from a listing (optional)\n' : 'Listing (every Mont Haus listing in the feed)\n';
+    listingField.firstChild.nodeValue = c || m ? 'Fill in the text from a listing (optional)\n' : LISTING_LABEL + '\n';
     if (c || m) { coverStep.querySelector('h2').after(listingField); listingField.style.margin = '0 0 12px'; }
     else { videoStep.appendChild(listingField); listingField.style.margin = '16px 0 0'; }
     // My Photos starts with no listing: what the listing had filled in and nobody changed is cleared with it.
@@ -786,13 +794,13 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     const ask = async () => {
       if (run.stopped) return;
       let s;
-      try { s = await (await fetch(EXPORT + '?job=' + encodeURIComponent(job), { credentials: 'same-origin' })).json(); misses = 0; }
+      try { s = await (await fetch(withQ(EXPORT, 'job=' + encodeURIComponent(job)), { credentials: 'same-origin' })).json(); misses = 0; }
       catch (err) { if (++misses > 15) return stop('The page lost touch with the server. Reload it; the video may still be finishing.', true); return setTimeout(ask, 2000); }
       if (run.stopped) return;
       if (s.state === 'stopped') return stop('Stopped.');
       if (s.state === 'failed') return stop(s.error || 'The video could not be made. Please try again in a minute.', true);
       if (s.state === 'done') {
-        const src = EXPORT + '?job=' + encodeURIComponent(job) + '&file=1';
+        const src = withQ(EXPORT, 'job=' + encodeURIComponent(job) + '&file=1');
         result.src = src; dl.href = src + '&dl=1'; dl.hidden = false; tabR.disabled = false;
         stop('Ready: ' + s.name + ', ' + s.size + ', ' + s.seconds + ' seconds. Made in ' + s.took + ' seconds. Press play to check it, then download.');
         show('result');
@@ -839,7 +847,7 @@ $vd_label = fn(array $l) => $l['closed'] ? 'Just Sold' : ($l['new'] ? 'New Listi
     if (!j || j.error || !j.id) { if (!quiet) say((j && j.error) || 'That could not be saved. Please try again.', true); return false; }
     savedId = j.id;
     // The address now names this saved video: a reload opens it, and does not copy or start again.
-    try { history.replaceState(null, '', location.pathname + '?open=' + encodeURIComponent(savedId)); } catch (e) {}
+    try { const u = new URL(location.href); u.searchParams.delete('new'); u.searchParams.delete('copy'); u.searchParams.set('open', savedId); history.replaceState(null, '', u.pathname + u.search); } catch (e) {}
     if (!quiet) say('Saved. It is on the Saved videos page, to open or replicate later.');
     return true;
   }
