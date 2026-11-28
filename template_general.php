@@ -35,7 +35,7 @@ $line_names = ['Text 1', 'Text 2', 'Text 3', 'Text 4'];
 admin_tool_header([
     'title'   => 'General Social',
     'hint'    => 'A post, square or story that is not about a listing: a stock photo or your own, the words lower left or centred, the logo where you want it.',
-    'actions' => '<a class="btn btn-outline btn-sm" href="templates.php"><i class="ti ti-layout-grid"></i> Templates</a>'
+    'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],
 ]);

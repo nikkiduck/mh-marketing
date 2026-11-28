@@ -6,7 +6,9 @@
  * 2026-11-11, each under 1 MB, plus the slides as 2x JPGs for Photoshop. Super admin only; see inc/ads.php.
  * Its own area, reached from the Digital Ads card on Admin Home (Nikki,
  * 2026-11-18: "it doesn't belong in Social Media"); it was a card on
- * social_media.php until then.
+ * social_media.php until then. Since 2026-11-28 the Admin Home card is
+ * Digital + Print (digital_print.php), which lists this beside the print
+ * pieces.
  */
 require_once __DIR__ . '/inc/ads.php';
 require_once __DIR__ . '/inc/admin_tool_shell.php';
@@ -21,7 +23,8 @@ $render_url = 'ad_render.php'; $export_url = 'ad_export.php'; $photos_url = 'pla
 admin_tool_header([
     'title'   => 'Digital Ads',
     'hint'    => 'Prototype. A property ad for the Vail Daily and Aspen Daily News sites in seven sizes: two or three slides as a looping GIF under 1 MB, or the slides as 2x JPGs for Photoshop. Two layouts: Full Bleed and Classic.',
-    'styles'  => ['/assets/css/social.css'],   // no header buttons and no nav link marked: its own area, reached from Admin Home (the main nav has the way back)
+    'actions' => '<a class="btn btn-outline btn-sm" href="digital_print.php"><i class="ti ti-ad-2"></i> Digital + Print</a>',   // its landing since 2026-11-28
+    'styles'  => ['/assets/css/social.css'],
     'css'     => plan_admin_css() . '
     .wrap { max-width:1180px; }
     .ad-bar { display:flex; flex-wrap:wrap; gap:10px 24px; align-items:center; justify-content:space-between; margin:0 0 14px; }

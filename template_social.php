@@ -43,7 +43,7 @@ if ($agent_id) {
 admin_tool_header([
     'title'   => 'Listing Post/Story',
     'hint'    => 'Pick a listing, choose and frame the photo, edit the text, and download. The post is made for the agent chosen above.',
-    'actions' => '<a class="btn btn-outline btn-sm" href="templates.php' . ($agent_id ? '?agent=' . $agent_id : '') . '"><i class="ti ti-layout-grid"></i> Templates</a>'
+    'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php' . ($agent_id ? '?agent=' . $agent_id : '') . '"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css'],
 ]);

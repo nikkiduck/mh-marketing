@@ -32,7 +32,7 @@ $report_url = '/market_report.php' . ($month !== '' ? '?m=' . rawurlencode($mont
 admin_tool_header([
     'title'   => 'Market Snapshot',
     'hint'    => "One place's month on an Instagram card, from the Market Report's figures. Agents have the same tool under Templates on their portal.",
-    'actions' => '<a class="btn btn-outline btn-sm" href="templates.php"><i class="ti ti-layout-grid"></i> Templates</a>'
+    'actions' => '<a class="btn btn-outline btn-sm" href="social_media.php"><i class="ti ti-brand-instagram"></i> Social Media</a>'
                . '<a class="btn btn-outline btn-sm" href="' . htmlspecialchars($report_url, ENT_QUOTES) . '"><i class="ti ti-chart-bar"></i> Market Report</a>'
                . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
 ]);

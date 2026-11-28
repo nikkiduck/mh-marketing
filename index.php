@@ -4,12 +4,15 @@
  * 2026-11-14: "Agent Roster page should be just for agent management").
  *
  * One card per area, in the order she gave: Agent Roster, Social Media,
- * Digital Ads (2026-11-18), MH Send, Market Reports, Hot Sheets, Templates, QR Codes, Agent Billing, Brand
- * Guidelines, Portal Users, What's New, Anyprop Feed. These used to be the row of buttons in the
+ * Digital + Print, MH Send, Blog, Market Reports, Hot Sheets, QR Codes, Agent Billing, Brand
+ * Guidelines, Portal Users, What's New, Anyprop Feed. (2026-11-28: Templates
+ * was folded into Social Media, its print tools into Digital + Print, which
+ * was Digital Ads; Blog opens MH Send's Blog page directly.) These used to be the row of buttons in the
  * roster's header; the roster is agents.php now and keeps only the agent
- * management ones. A card a role cannot open is not drawn (Social Media,
- * Digital Ads, MH Send, Portal Users and What's New are super admin only, as
- * their pages are).
+ * management ones. A card a role cannot open is not drawn (MH Send, Blog,
+ * Portal Users and What's New are super admin only, as their pages are;
+ * Social Media and Digital + Print open for every admin and hide the super
+ * admin's tools themselves).
  *
  * This file was the roster until 2026-11-14. Its forms posted here, so a POST
  * from a page somebody still had open is passed on to agents.php as it is
@@ -44,12 +47,12 @@ $e = fn($s) => htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8');
 // title, href, icon, what it is, opens a new tab, shown
 $cards = [
     ['Agent Roster',     'agents.php',                 'users',           'Every agent: profiles, onboarding, website approval, leadership and staff.', false, true],
-    ['Social Media',     'social_media.php',           'brand-instagram', 'The Social Media Plan, the weekly plans and the tools that make each piece.', false, $super],
-    ['Digital Ads',      'template_ad.php',            'ad-2',            'Property ads for the Vail Daily and Aspen Daily News sites: every size as a looping GIF under 1 MB.', false, $super],   // its own area (Nikki, 2026-11-18: "it doesn't belong in Social Media")
+    ['Social Media',     'social_media.php',           'brand-instagram', 'Every post, story and video tool: the weekly plans, the pieces they call for, and the agents\' post tool for any agent.', false, true],   // Templates folded in (Nikki, 2026-11-28); a card on it is drawn only for a role that can open it
+    ['Digital + Print',  'digital_print.php',          'ad-2',            'Property ads for the Vail Daily and Aspen Daily News sites, and the printed listing flyer and one-page brochure.', false, true],   // Digital Ads + the Print Templates (Nikki, 2026-11-28)
     ['MH Send',          'https://send.monthaus.com/', 'send',            'B2Bs, Client Emails and mailing lists. Same Microsoft sign-in.', true, $super],
+    ['Blog',             'https://send.monthaus.com/blog.php', 'news',      'Every blog on monthaus.com, the company\'s and each agent\'s: write, publish and manage posts. Opens in MH Send.', true, $super],   // straight to MH Send's Blog page (Nikki, 2026-11-28: "so I don't have to go through MH Send first")
     ['Market Reports',   'market_report.php',          'chart-bar',       'The monthly market report and the snapshot cards.', false, true],
     ['Hot Sheets',       'hot_sheet_preview.php',      'mail',            'This week\'s Hot Sheets by area, the subscribers and the Pipeline deals to review.', false, true],
-    ['Templates',        'templates.php',              'layout-grid',     'The agents\' template tools for any agent: posts, stories, snapshots and flyers.', false, true],
     ['QR Codes',         'qr_codes.php',               'qrcode',          'Make a code, change where it points and see its scans.', false, true],
     ['Agent Billing',    'billing.php',                'receipt-2',       'What each agent owes, month by month, and the invoices to split.', false, true],
     ['Brand Guidelines', '/brand-guidelines/',         'palette',         'The public brand guidelines page.', true, true],

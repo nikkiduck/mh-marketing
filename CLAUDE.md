@@ -20,13 +20,25 @@ made there does not reach here.
 Nikki: "Agent Roster page should be just for agent management."
 
 - **`index.php` is Admin Home**, the landing page after sign-in: one card per
-  area (Agent Roster, Social Media, Digital Ads (2026-11-18), MH Send, Market
-  Reports, Hot Sheets, Templates, QR Codes, Agent Billing, Brand Guidelines,
-  Portal Users, What's New, Anyprop Feed (2026-11-16): her order), from the
-  `$cards` list in that file. A card whose page a role cannot open is not
-  drawn (Social Media, Digital Ads, MH Send, Portal Users, What's New: super admin; Anyprop
-  Feed is for every admin). The Pipeline
-  count that sat on the roster's Hot Sheets button is on the Hot Sheets card.
+  area (Agent Roster, Social Media, Digital + Print, MH Send, Blog, Market
+  Reports, Hot Sheets, QR Codes, Agent Billing, Brand Guidelines, Portal
+  Users, What's New, Anyprop Feed: her order), from the `$cards` list in that
+  file. A card whose page a role cannot open is not drawn (MH Send, Blog,
+  Portal Users, What's New: super admin). The Pipeline count that sat on the
+  roster's Hot Sheets button is on the Hot Sheets card.
+- **Social Media holds every Instagram tool; Digital + Print holds the ads
+  and the printed pieces (Nikki, 2026-11-28: "can we combine Social Media and
+  Templates? It's weird that they are two sections").** `social_media.php` is
+  one list in groups (The Plan, Listings, Features + Branding, Market Stats +
+  Video, For an Agent); `digital_print.php` lists Digital Ads, Listing Flyer
+  and One-Page Brochure. Both open for every admin and draw a card only for a
+  role that can open its page (the Plan's tools and Digital Ads stay super
+  admin, `plan_gate()`); the group whose tools work from an agent's listings
+  carries the agent picker. A new tool is one row in that page's `$groups`.
+  The admin `templates.php` only redirects to Social Media (the agents'
+  `portal/templates.php` is untouched). The Blog card opens
+  `send.monthaus.com/blog.php` directly. Older notes below that speak of a
+  Templates page or a Digital Ads card on the admin side mean these.
 - **The Agent Roster is `agents.php`** (it was `index.php` until that day; an
   older note or a commit message that says `index.php` for the roster means
   this file). Its header buttons are agent management only: Agent Billing,

@@ -7,7 +7,7 @@
  * portal_context(), the path the roster's eye icon takes, so the listing
  * list, the photos, the QR choices, the render and the PDF all act on that
  * agent through ?preview=, and the contact lines are theirs. Admins only.
- * See templates.php and inc/admin_tool_shell.php.
+ * See digital_print.php (its landing since 2026-11-28) and inc/admin_tool_shell.php.
  */
 require_once __DIR__ . '/inc/flyer.php';
 require_once __DIR__ . '/inc/admin_tool_shell.php';
@@ -38,7 +38,7 @@ if ($agent_id) {
 admin_tool_header([
     'title'   => 'Listing Flyer',
     'hint'    => 'A printed Letter-size flyer of one of the agent\'s listings. Pick the listing and up to six photos, check the text, and download the PDF.',
-    'actions' => '<a class="btn btn-outline btn-sm" href="templates.php' . ($agent_id ? '?agent=' . $agent_id : '') . '"><i class="ti ti-layout-grid"></i> Templates</a>'
+    'actions' => '<a class="btn btn-outline btn-sm" href="digital_print.php' . ($agent_id ? '?agent=' . $agent_id : '') . '"><i class="ti ti-ad-2"></i> Digital + Print</a>'
                . '<a class="btn btn-outline btn-sm" href="agents.php"><i class="ti ti-users"></i> Agent Roster</a>',
     'styles'  => ['/assets/css/social.css', '/assets/css/flyer.css'],
 ]);
